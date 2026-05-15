@@ -1,0 +1,49 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+
+# production
+build/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# service account keys (sensitive - DO NOT COMMIT)
+service-account/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# bun
+bun.lock
+node_modules
+
+.vercel
+.env*.local
+.aider*
+
+# firestore export (may contain service account keys)
+portal-pendidikan-appscript/firestore-export.json
+portal-pendidikan-appscript/firestore-data.json
+
+# embedded git repo
+puter/

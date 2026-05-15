@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Portal Pendidikan</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+    .login-page {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 16px;
+      background: linear-gradient(135deg, #0d3b66, #1a5276);
+    }
+    .login-card {
+      background: white; border-radius: 12px; padding: 40px 32px;
+      width: 100%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .login-card h1 { font-size: 20px; color: #0d3b66; text-align: center; margin-bottom: 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    .form-group input {
+      width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px;
+      font-size: 14px;
+    }
+    .form-group input:focus { outline: none; border-color: #0d3b66; box-shadow: 0 0 0 3px rgba(13,59,102,0.1); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-block { width: 100%; }
+    .btn-primary { background: #0d3b66; color: white; }
+    .btn-primary:hover { background: #1a5276; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-success:hover { background: #15803d; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-warning { background: #d97706; color: white; }
+    .btn-warning:hover { background: #b45309; }
+    .error-msg { color: #dc2626; font-size: 13px; margin-top: 8px; text-align: center; }
+
+    .admin-container { display: none; min-height: 100vh; }
+    .admin-container.active { display: flex; }
+    .admin-sidebar {
+      width: 240px; background: linear-gradient(to bottom, #0d3b66, #072240);
+      color: white; padding: 20px 0; flex-shrink: 0;
+    }
+    .admin-sidebar h2 { font-size: 14px; text-align: center; padding: 0 16px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; }
+    .admin-sidebar .user-info { padding: 12px 16px; font-size: 12px; color: #bfdbfe; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; }
+    .admin-sidebar nav a {
+      display: flex; align-items: center; gap: 8px; padding: 10px 16px;
+      color: rgba(255,255,255,0.8); font-size: 13px; cursor: pointer; text-decoration: none;
+    }
+    .admin-sidebar nav a:hover, .admin-sidebar nav a.active { background: rgba(255,255,255,0.1); color: white; }
+    .admin-sidebar .logout-btn {
+      display: block; width: calc(100% - 32px); margin: 16px auto 0;
+      padding: 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px;
+      background: transparent; color: #fca5a5; font-size: 13px; text-align: center; cursor: pointer;
+    }
+    .admin-sidebar .logout-btn:hover { background: rgba(220,38,38,0.2); }
+    .admin-main { flex: 1; display: flex; flex-direction: column; }
+    .admin-header { background: white; padding: 16px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; }
+    .admin-header h1 { font-size: 18px; color: #0d3b66; }
+    .admin-content { flex: 1; padding: 24px; overflow-y: auto; }
+
+    .table-wrapper { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f8fafc; text-align: left; padding: 10px 12px; font-weight: 600; color: #475569; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; }
+    .actions { display: flex; gap: 4px; }
+
+    .form-card { background: white; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
+    .form-card h3 { font-size: 16px; color: #0d3b66; margin-bottom: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .admin-sidebar { width: 100%; } }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; font-family: inherit;
+    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+    .mt-4 { margin-top: 16px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .badge-active { background: #dcfce7; color: #166534; }
+    .badge-inactive { background: #fee2e2; color: #991b1b; }
+    .toast {
+      position: fixed; top: 16px; right: 16px; z-index: 1000;
+      padding: 12px 20px; border-radius: 8px; color: white; font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none;
+    }
+    .toast.success { background: #16a34a; }
+    .toast.error { background: #dc2626; }
+    .role-admin { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ==================== LOGIN ==================== -->
+<div class="login-page" id="loginPage">
+  <div class="login-card">
+    <h1>🔐 Admin Portal Pendidikan</h1>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="username" value="admin" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="admin123" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">🔑 Login</button>
+      <div class="error-msg" id="loginError"></div>
+    </form>
+    <p class="mt-4" style="text-align:center;font-size:13px;color:#64748b;">
+      Default: admin / admin123<br/>
+      <a href="?page=portal" style="color:#0d3b66;">← Kembali ke Portal</a>
+    </p>
+  </div>
+</div>
+
+<!-- ==================== ADMIN ==================== -->
+<div class="admin-container" id="adminContainer">
+  <aside class="admin-sidebar">
+    <h2>📊 Admin Panel</h2>
+    <div class="user-info" id="userInfo">Selamat datang, <strong id="sidebarUser">Admin</strong></div>
+    <nav>
+      <a class="active" onclick="showPage('dashboard',this)">🏠 Dashboard</a>
+      <a onclick="showPage('menus',this)">📋 Menu</a>
+      <a onclick="showPage('announcements',this)">📢 Informasi</a>
+      <a onclick="showPage('gallery',this)">🖼 Galeri</a>
+      <a onclick="showPage('organizations',this)">🏛 Organisasi</a>
+      <a onclick="showPage('links',this)">🔗 Tautan</a>
+      <a onclick="showPage('settings',this)">⚙ Pengaturan</a>
+      <a onclick="showPage('import',this)">📥 Import Data</a>
+      <a onclick="showPage('users',this)">👥 Pengguna</a>
+    </nav>
+    <button class="logout-btn" onclick="handleLogout()">🚪 Keluar</button>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-header"><h1 id="pageTitle">Dashboard</h1></header>
+    <div class="admin-content">
+
+      <!-- DASHBOARD -->
+      <div class="page-section active" id="page-dashboard">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+          <div style="background:white;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="font-size:13px;color:#64748b;">Menu</h3><p style="font-size:32px;font-weight:700;color:#0d3b66;" id="statMenus">0</p>
+          </div>
+          <div style="background:white;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="font-size:13px;color:#64748b;">Informasi</h3><p style="font-size:32px;font-weight:700;color:#0d3b66;" id="statAnn">0</p>
+          </div>
+          <div style="background:white;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="font-size:13px;color:#64748b;">Galeri</h3><p style="font-size:32px;font-weight:700;color:#0d3b66;" id="statGallery">0</p>
+          </div>
+          <div style="background:white;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="font-size:13px;color:#64748b;">Organisasi</h3><p style="font-size:32px;font-weight:700;color:#0d3b66;" id="statOrg">0</p>
+          </div>
+        </div>
+        <div style="background:white;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <h3 style="font-size:14px;color:#0d3b66;margin-bottom:8px;">Selamat Datang di Admin Panel</h3>
+          <p style="font-size:13px;color:#64748b;line-height:1.6;">
+            Kelola konten Portal Pendidikan Kecamatan Lemahabang.<br/>
+            Data tersimpan di Google Sheets. Login menggunakan username & password.
+          </p>
+        </div>
+      </div>
+
+      <!-- MENUS -->
+      <div class="page-section" id="page-menus">
+        <div class="form-card">
+          <h3 id="menuFormTitle">Tambah Menu</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Judul</label><input type="text" id="menuTitle"></div>
+            <div class="form-group"><label>Ikon</label>
+              <select id="menuIcon">
+                <option value="School">🏫 School</option><option value="Baby">👶 Baby</option>
+                <option value="GraduationCap">🎓 GraduationCap</option><option value="BarChart3">📊 BarChart3</option>
+                <option value="FileText">📄 FileText</option><option value="Users">👥 Users</option>
+                <option value="WalletMinimal">💳 WalletMinimal</option><option value="Database">🗄 Database</option>
+                <option value="BookOpen">📖 BookOpen</option><option value="Target">🎯 Target</option>
+                <option value="CalendarDays">📅 CalendarDays</option><option value="FolderOpen">📁 FolderOpen</option>
+                <option value="Globe">🌐 Globe</option><option value="HeartHandshake">🤝 HeartHandshake</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>URL</label><input type="text" id="menuUrl" placeholder="https://"></div>
+            <div class="form-group"><label>Kategori</label><input type="text" id="menuCategory"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Urutan</label><input type="number" id="menuOrder" value="1"></div>
+            <div class="form-group"><label>Aktif</label>
+              <select id="menuActive"><option value="true">Ya</option><option value="false">Tidak</option></select>
+            </div>
+          </div>
+          <input type="hidden" id="menuEditId">
+          <button class="btn btn-success" onclick="saveMenu()">💾 Simpan</button>
+          <button class="btn btn-warning" onclick="cancelEditMenu()" id="cancelMenuBtn" style="display:none;">✖ Batal</button>
+        </div>
+        <div class="table-wrapper">
+          <table><thead><tr><th>Judul</th><th>Ikon</th><th>URL</th><th>Urutan</th><th>Aktif</th><th>Aksi</th></tr></thead>
+            <tbody id="menusTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ANNOUNCEMENTS -->
+      <div class="page-section" id="page-announcements">
+        <div class="form-card">
+          <h3 id="annFormTitle">Tambah Informasi</h3>
+          <div class="form-group"><label>Judul</label><input type="text" id="annTitle"></div>
+          <div class="form-group"><label>Konten</label><textarea id="annContent" rows="4"></textarea></div>
+          <div class="form-group"><label>Penulis</label><input type="text" id="annAuthor" value="Admin"></div>
+          <input type="hidden" id="annEditId">
+          <button class="btn btn-success" onclick="saveAnnouncement()">💾 Simpan</button>
+          <button class="btn btn-warning" onclick="cancelEditAnn()" id="cancelAnnBtn" style="display:none;">✖ Batal</button>
+        </div>
+        <div class="table-wrapper">
+          <table><thead><tr><th>Judul</th><th>Penulis</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+            <tbody id="annTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- GALLERY -->
+      <div class="page-section" id="page-gallery">
+        <div class="form-card">
+          <h3 id="galFormTitle">Tambah Galeri</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Judul</label><input type="text" id="galTitle"></div>
+            <div class="form-group"><label>Kategori</label><input type="text" id="galCategory"></div>
+          </div>
+          <div class="form-group"><label>Deskripsi</label><textarea id="galDesc" rows="2"></textarea></div>
+          <div class="form-group"><label>URL Gambar</label><input type="text" id="galImageUrl"></div>
+          <div class="form-group"><label>Status</label>
+            <select id="galStatus"><option value="approved">Disetujui</option><option value="pending">Pending</option></select>
+          </div>
+          <input type="hidden" id="galEditId">
+          <button class="btn btn-success" onclick="saveGallery()">💾 Simpan</button>
+          <button class="btn btn-warning" onclick="cancelEditGal()" id="cancelGalBtn" style="display:none;">✖ Batal</button>
+        </div>
+        <div class="table-wrapper">
+          <table><thead><tr><th>Gambar</th><th>Judul</th><th>Kategori</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="galTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ORGANIZATIONS -->
+      <div class="page-section" id="page-organizations">
+        <div class="form-card">
+          <h3 id="orgFormTitle">Tambah Organisasi</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Nama</label><input type="text" id="orgName"></div>
+            <div class="form-group"><label>Ketua</label><input type="text" id="orgLeader"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Logo URL</label><input type="text" id="orgLogo"></div>
+            <div class="form-group"><label>Kontak</label><input type="text" id="orgContact"></div>
+          </div>
+          <div class="form-group"><label>Aktif</label>
+            <select id="orgActive"><option value="true">Ya</option><option value="false">Tidak</option></select>
+          </div>
+          <input type="hidden" id="orgEditId">
+          <button class="btn btn-success" onclick="saveOrg()">💾 Simpan</button>
+          <button class="btn btn-warning" onclick="cancelEditOrg()" id="cancelOrgBtn" style="display:none;">✖ Batal</button>
+        </div>
+        <div class="table-wrapper">
+          <table><thead><tr><th>Nama</th><th>Ketua</th><th>Kontak</th><th>Aktif</th><th>Aksi</th></tr></thead>
+            <tbody id="orgTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LINKS -->
+      <div class="page-section" id="page-links">
+        <div class="form-card">
+          <h3 id="linkFormTitle">Tambah Tautan</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Nama</label><input type="text" id="linkName"></div>
+            <div class="form-group"><label>URL</label><input type="text" id="linkUrl"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Logo URL</label><input type="text" id="linkLogo"></div>
+            <div class="form-group"><label>Urutan</label><input type="number" id="linkOrder" value="1"></div>
+          </div>
+          <div class="form-group"><label>Aktif</label>
+            <select id="linkActive"><option value="true">Ya</option><option value="false">Tidak</option></select>
+          </div>
+          <input type="hidden" id="linkEditId">
+          <button class="btn btn-success" onclick="saveLink()">💾 Simpan</button>
+          <button class="btn btn-warning" onclick="cancelEditLink()" id="cancelLinkBtn" style="display:none;">✖ Batal</button>
+        </div>
+        <div class="table-wrapper">
+          <table><thead><tr><th>Nama</th><th>URL</th><th>Urutan</th><th>Aktif</th><th>Aksi</th></tr></thead>
+            <tbody id="linkTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page-section" id="page-settings">
+        <div class="form-card">
+          <h3>Pengaturan Profil</h3>
+          <div class="form-group"><label>Nama Kepala Dinas</label><input type="text" id="setKepala"></div>
+          <div class="form-group"><label>Jabatan</label><input type="text" id="setJabatan"></div>
+          <div class="form-group"><label>Sambutan</label><textarea id="setSambutan" rows="3"></textarea></div>
+          <div class="form-group"><label>Foto URL</label><input type="text" id="setFoto"></div>
+          <button class="btn btn-primary" onclick="saveSettings()">💾 Simpan</button>
+        </div>
+      </div>
+
+      <!-- IMPORT -->
+      <div class="page-section" id="page-import">
+        <div class="form-card">
+          <h3>📥 Import Data dari Firestore</h3>
+          <p style="font-size:13px;color:#64748b;margin-bottom:16px;">
+            Paste data JSON hasil export dari Firestore atau file <code>firestore-data.json</code>.
+          </p>
+          <div class="form-group">
+            <label>Data JSON</label>
+            <textarea id="importJson" rows="12" placeholder='{"menus":[...],"announcements":[...],...}'></textarea>
+          </div>
+          <button class="btn btn-success" onclick="importData()">📥 Import Data</button>
+          <div id="importResult" style="margin-top:12px;font-size:13px;"></div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div class="page-section" id="page-users">
+        <div class="form-card">
+          <h3 id="userFormTitle">Tambah Pengguna</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Email</label><input type="email" id="userEmail"></div>
+            <div class="form-group"><label>Nama</label><input type="text" id="userDisplayName"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Password</label><input type="text" id="userPassword" value="admin123"></div>
+            <div class="form-group"><label>Role</label>
+              <select id="userRole"><option value="admin">Admin</option><option value="viewer">Viewer</option></select>
+            </div>
+          </div>
+          <input type="hidden" id="userEditId">
+          <button class="btn btn-success" onclick="saveUser()">💾 Simpan</button>
+          <button class="btn btn-warning" onclick="cancelEditUser()" id="cancelUserBtn" style="display:none;">✖ Batal</button>
+        </div>
+        <div class="table-wrapper">
+          <table><thead><tr><th>Email</th><th>Nama</th><th>Role</th><th>Aksi</th></tr></thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  var currentUser = null;
+
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type;
+    t.style.display = 'block';
+    setTimeout(function(){t.style.display='none';},3000);
+  }
+
+  // ==================== LOGIN ====================
+  function handleLogin(e) {
+    e.preventDefault();
+    var u = document.getElementById('username').value;
+    var p = document.getElementById('password').value;
+    document.getElementById('loginError').textContent = 'Memproses...';
+    
+    google.script.run.withSuccessHandler(function(res) {
+      if (res.success) {
+        currentUser = res.user;
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('adminContainer').classList.add('active');
+        document.getElementById('sidebarUser').textContent = res.user.displayName || res.user.username;
+        loadAllData();
+        showToast('Login berhasil!', 'success');
+      } else {
+        document.getElementById('loginError').textContent = res.message || 'Login gagal';
+      }
+    }).withFailureHandler(function(err) {
+      document.getElementById('loginError').textContent = 'Error: ' + err.message;
+    }).login(u, p);
+  }
+
+  function handleLogout() {
+    if (!confirm('Keluar?')) return;
+    currentUser = null;
+    document.getElementById('adminContainer').classList.remove('active');
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('username').value = 'admin';
+    document.getElementById('password').value = '';
+  }
+
+  // ==================== NAVIGASI ====================
+  function showPage(page, el) {
+    document.querySelectorAll('.page-section').forEach(function(p){p.classList.remove('active');});
+    document.getElementById('page-'+page).classList.add('active');
+    document.querySelectorAll('.admin-sidebar nav a').forEach(function(a){a.classList.remove('active');});
+    if (el) el.classList.add('active');
+    var titles = {dashboard:'Dashboard',menus:'Menu Layanan',announcements:'Informasi',gallery:'Galeri',
+      organizations:'Organisasi',links:'Tautan',settings:'Pengaturan',import:'Import Data',users:'Pengguna'};
+    document.getElementById('pageTitle').textContent = titles[page]||page;
+  }
+
+  // ==================== LOAD DATA ====================
+  function loadAllData() {
+    loadMenus(); loadAnnouncements(); loadGallery(); loadOrgs(); loadLinks(); loadSettings(); loadUsers(); updateStats();
+  }
+  function updateStats() {
+    google.script.run.withSuccessHandler(function(d){
+      document.getElementById('statMenus').textContent=(d.menus||[]).length;
+      document.getElementById('statAnn').textContent=(d.announcements||[]).length;
+      document.getElementById('statGallery').textContent=(d.gallery||[]).length;
+      document.getElementById('statOrg').textContent=(d.organizations||[]).length;
+    }).getAllData();
+  }
+
+  // ==================== MENUS ====================
+  function loadMenus() {
+    google.script.run.withSuccessHandler(function(items){
+      var t=document.getElementById('menusTableBody'); t.innerHTML='';
+      items.forEach(function(i){
+        t.innerHTML+='<tr><td>'+i.title+'</td><td>'+i.icon+'</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+i.url+'</td><td>'+(i.order||'')+'</td><td><span class="badge '+(i.active==='true'||i.active===true?'badge-active':'badge-inactive')+'">'+(i.active==='true'||i.active===true?'Aktif':'Non')+'</span></td><td class="actions"><button class="btn btn-primary btn-sm" onclick="editMenu(\''+i.id+'\')">✏</button><button class="btn btn-danger btn-sm" onclick="del(\'menu\',\''+i.id+'\')">🗑</button></td></tr>';
+      });
+    }).getMenus();
+  }
+  function saveMenu() {
+    var d={id:document.getElementById('menuEditId').value||'',title:document.getElementById('menuTitle').value,icon:document.getElementById('menuIcon').value,url:document.getElementById('menuUrl').value,category:document.getElementById('menuCategory').value,order:document.getElementById('menuOrder').value,active:document.getElementById('menuActive').value};
+    if(!d.title){showToast('Judul harus diisi','error');return;}
+    google.script.run.withSuccessHandler(function(){showToast('Menu tersimpan','success');cancelEditMenu();loadMenus();updateStats();}).saveMenu(d);
+  }
+  function editMenu(id) {
+    google.script.run.withSuccessHandler(function(items){
+      var i=items.find(function(x){return x.id===id;}); if(!i)return;
+      document.getElementById('menuEditId').value=i.id; document.getElementById('menuTitle').value=i.title;
+      document.getElementById('menuIcon').value=i.icon; document.getElementById('menuUrl').value=i.url;
+      document.getElementById('menuCategory').value=i.category||''; document.getElementById('menuOrder').value=i.order||'1';
+      document.getElementById('menuActive').value=(i.active==='true'||i.active===true)?'true':'false';
+      document.getElementById('menuFormTitle').textContent='Edit Menu'; document.getElementById('cancelMenuBtn').style.display='inline-block';
+    }).getMenus();
+  }
+  function cancelEditMenu(){document.getElementById('menuEditId').value='';document.getElementById('menuTitle').value='';document.getElementById('menuIcon').value='School';document.getElementById('menuUrl').value='';document.getElementById('menuCategory').value='';document.getElementById('menuOrder').value='1';document.getElementById('menuActive').value='true';document.getElementById('menuFormTitle').textContent='Tambah Menu';document.getElementById('cancelMenuBtn').style.display='none';}
+
+  // ==================== ANNOUNCEMENTS ====================
+  function loadAnnouncements() {
+    google.script.run.withSuccessHandler(function(items){
+      var t=document.getElementById('annTableBody'); t.innerHTML='';
+      items.sort(function(a,b){return(parseInt(b.createdAt)||0)-(parseInt(a.createdAt)||0);});
+      items.forEach(function(i){
+        var d=new Date(parseInt(i.createdAt)||Date.now());
+        t.innerHTML+='<tr><td>'+i.title+'</td><td>'+(i.author||'Admin')+'</td><td>'+d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear()+'</td><td class="actions"><button class="btn btn-primary btn-sm" onclick="editAnn(\''+i.id+'\')">✏</button><button class="btn btn-danger btn-sm" onclick="del(\'announcement\',\''+i.id+'\')">🗑</button></td></tr>';
+      });
+    }).getAnnouncements();
+  }
+  function saveAnnouncement() {
+    var d={id:document.getElementById('annEditId').value||'',title:document.getElementById('annTitle').value,content:document.getElementById('annContent').value,author:document.getElementById('annAuthor').value||'Admin'};
+    if(!d.title){showToast('Judul harus diisi','error');return;}
+    google.script.run.withSuccessHandler(function(){showToast('Informasi tersimpan','success');cancelEditAnn();loadAnnouncements();updateStats();}).saveAnnouncement(d);
+  }
+  function editAnn(id) {
+    google.script.run.withSuccessHandler(function(items){
+      var i=items.find(function(x){return x.id===id;}); if(!i)return;
+      document.getElementById('annEditId').value=i.id; document.getElementById('annTitle').value=i.title;
+      document.getElementById('annContent').value=i.content||''; document.getElementById('annAuthor').value=i.author||'Admin';
+      document.getElementById('annFormTitle').textContent='Edit Informasi'; document.getElementById('cancelAnnBtn').style.display='inline-block';
+    }).getAnnouncements();
+  }
+  function cancelEditAnn(){document.getElementById('annEditId').value='';document.getElementById('annTitle').value='';document.getElementById('annContent').value='';document.getElementById('annAuthor').value='';document.getElementById('annFormTitle').textContent='Tambah Informasi';document.getElementById('cancelAnnBtn').style.display='none';}
+
+  // ==================== GALLERY ====================
+  function loadGallery() {
+    google.script.run.withSuccessHandler(function(items){
+      var t=document.getElementById('galTableBody'); t.innerHTML='';
+      items.forEach(function(i){
+        t.innerHTML+='<tr><td><img src="'+(i.imageUrl||'https://placehold.co/40x40')+'" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"/></td><td>'+i.title+'</td><td>'+(i.category||'-')+'</td><td><span class="badge '+(i.status==='approved'||!i.status?'badge-active':'badge-inactive')+'">'+(i.status==='approved'||!i.status?'OK':'Pending')+'</span></td><td class="actions"><button class="btn btn-primary btn-sm" onclick="editGal(\''+i.id+'\')">✏</button><button class="btn btn-danger btn-sm" onclick="del(\'gallery\',\''+i.id+'\')">🗑</button></td></tr>';
+      });
+    }).getGallery();
+  }
+  function saveGallery() {
+    var d={id:document.getElementById('galEditId').value||'',title:document.getElementById('galTitle').value,description:document.getElementById('galDesc').value,imageUrl:document.getElementById('galImageUrl').value,category:document.getElementById('galCategory').value,status:document.getElementById('galStatus').value,authorName:(currentUser?currentUser.displayName:'Admin'),authorRole:'admin'};
+    if(!d.title){showToast('Judul harus diisi','error');return;}
+    google.script.run.withSuccessHandler(function(){showToast('Galeri tersimpan','success');cancelEditGal();loadGallery();updateStats();}).saveGalleryItem(d);
+  }
+  function editGal(id) {
+    google.script.run.withSuccessHandler(function(items){
+      var i=items.find(function(x){return x.id===id;}); if(!i)return;
+      document.getElementById('galEditId').value=i.id; document.getElementById('galTitle').value=i.title; document.getElementById('galDesc').value=i.description||'';
+      document.getElementById('galImageUrl').value=i.imageUrl||''; document.getElementById('galCategory').value=i.category||''; document.getElementById('galStatus').value=i.status||'approved';
+      document.getElementById('galFormTitle').textContent='Edit Galeri'; document.getElementById('cancelGalBtn').style.display='inline-block';
+    }).getGallery();
+  }
+  function cancelEditGal(){document.getElementById('galEditId').value='';document.getElementById('galTitle').value='';document.getElementById('galDesc').value='';document.getElementById('galImageUrl').value='';document.getElementById('galCategory').value='';document.getElementById('galStatus').value='approved';document.getElementById('galFormTitle').textContent='Tambah Galeri';document.getElementById('cancelGalBtn').style.display='none';}
+
+  // ==================== ORGANIZATIONS ====================
+  function loadOrgs() {
+    google.script.run.withSuccessHandler(function(items){
+      var t=document.getElementById('orgTableBody'); t.innerHTML='';
+      items.forEach(function(i){
+        t.innerHTML+='<tr><td>'+i.name+'</td><td>'+(i.leader||'-')+'</td><td>'+(i.contact||'-')+'</td><td><span class="badge '+(i.active==='true'||i.active===true?'badge-active':'badge-inactive')+'">'+(i.active==='true'||i.active===true?'Aktif':'Non')+'</span></td><td class="actions"><button class="btn btn-primary btn-sm" onclick="editOrg(\''+i.id+'\')">✏</button><button class="btn btn-danger btn-sm" onclick="del(\'organization\',\''+i.id+'\')">🗑</button></td></tr>';
+      });
+    }).getOrganizations();
+  }
+  function saveOrg() {
+    var d={id:document.getElementById('orgEditId').value||'',name:document.getElementById('orgName').value,leader:document.getElementById('orgLeader').value,logo:document.getElementById('orgLogo').value,contact:document.getElementById('orgContact').value,active:document.getElementById('orgActive').value};
+    if(!d.name){showToast('Nama harus diisi','error');return;}
+    google.script.run.withSuccessHandler(function(){showToast('Organisasi tersimpan','success');cancelEditOrg();loadOrgs();updateStats();}).saveOrganization(d);
+  }
+  function editOrg(id) {
+    google.script.run.withSuccessHandler(function(items){
+      var i=items.find(function(x){return x.id===id;}); if(!i)return;
+      document.getElementById('orgEditId').value=i.id; document.getElementById('orgName').value=i.name; document.getElementById('orgLeader').value=i.leader||'';
+      document.getElementById('orgLogo').value=i.logo||''; document.getElementById('orgContact').value=i.contact||'';
+      document.getElementById('orgActive').value=(i.active==='true'||i.active===true)?'true':'false';
+      document.getElementById('orgFormTitle').textContent='Edit Organisasi'; document.getElementById('cancelOrgBtn').style.display='inline-block';
+    }).getOrganizations();
+  }
+  function cancelEditOrg(){document.getElementById('orgEditId').value='';document.getElementById('orgName').value='';document.getElementById('orgLeader').value='';document.getElementById('orgLogo').value='';document.getElementById('orgContact').value='';document.getElementById('orgActive').value='true';document.getElementById('orgFormTitle').textContent='Tambah Organisasi';document.getElementById('cancelOrgBtn').style.display='none';}
+
+  // ==================== LINKS ====================
+  function loadLinks() {
+    google.script.run.withSuccessHandler(function(items){
+      var t=document.getElementById('linkTableBody'); t.innerHTML='';
+      items.forEach(function(i){
+        t.innerHTML+='<tr><td>'+i.name+'</td><td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+i.url+'</td><td>'+(i.order||'')+'</td><td><span class="badge '+(i.active==='true'||i.active===true?'badge-active':'badge-inactive')+'">'+(i.active==='true'||i.active===true?'Aktif':'Non')+'</span></td><td class="actions"><button class="btn btn-primary btn-sm" onclick="editLink(\''+i.id+'\')">✏</button><button class="btn btn-danger btn-sm" onclick="del(\'link\',\''+i.id+'\')">🗑</button></td></tr>';
+      });
+    }).getLinks();
+  }
+  function saveLink() {
+    var d={id:document.getElementById('linkEditId').value||'',name:document.getElementById('linkName').value,url:document.getElementById('linkUrl').value,logo:document.getElementById('linkLogo').value,order:document.getElementById('linkOrder').value,active:document.getElementById('linkActive').value};
+    if(!d.name){showToast('Nama harus diisi','error');return;}
+    google.script.run.withSuccessHandler(function(){showToast('Tautan tersimpan','success');cancelEditLink();loadLinks();}).saveLink(d);
+  }
+  function editLink(id) {
+    google.script.run.withSuccessHandler(function(items){
+      var i=items.find(function(x){return x.id===id;}); if(!i)return;
+      document.getElementById('linkEditId').value=i.id; document.getElementById('linkName').value=i.name; document.getElementById('linkUrl').value=i.url||'';
+      document.getElementById('linkLogo').value=i.logo||''; document.getElementById('linkOrder').value=i.order||'1';
+      document.getElementById('linkActive').value=(i.active==='true'||i.active===true)?'true':'false';
+      document.getElementById('linkFormTitle').textContent='Edit Tautan'; document.getElementById('cancelLinkBtn').style.display='inline-block';
+    }).getLinks();
+  }
+  function cancelEditLink(){document.getElementById('linkEditId').value='';document.getElementById('linkName').value='';document.getElementById('linkUrl').value='';document.getElementById('linkLogo').value='';document.getElementById('linkOrder').value='1';document.getElementById('linkActive').value='true';document.getElementById('linkFormTitle').textContent='Tambah Tautan';document.getElementById('cancelLinkBtn').style.display='none';}
+
+  // ==================== SETTINGS ====================
+  function loadSettings() {
+    google.script.run.withSuccessHandler(function(s){
+      if(s){document.getElementById('setKepala').value=s.kepalaDinas||'';document.getElementById('setJabatan').value=s.jabatan||'';document.getElementById('setSambutan').value=s.sambutan||'';document.getElementById('setFoto').value=s.fotoKepalaDinas||'';}
+    }).getSettings();
+  }
+  function saveSettings() {
+    google.script.run.withSuccessHandler(function(){showToast('Pengaturan disimpan','success');loadSettings();}).saveSetting('kepalaDinas',document.getElementById('setKepala').value);
+    google.script.run.withSuccessHandler(function(){}).saveSetting('jabatan',document.getElementById('setJabatan').value);
+    google.script.run.withSuccessHandler(function(){}).saveSetting('sambutan',document.getElementById('setSambutan').value);
+    google.script.run.withSuccessHandler(function(){}).saveSetting('fotoKepalaDinas',document.getElementById('setFoto').value);
+  }
+
+  // ==================== IMPORT ====================
+  function importData() {
+    var json = document.getElementById('importJson').value.trim();
+    if (!json) { showToast('Paste data JSON dulu','error'); return; }
+    document.getElementById('importResult').innerHTML = '<span style="color:#0d3b66;">⏳ Mengimport...</span>';
+    
+    // Parse dulu untuk validasi
+    try { JSON.parse(json); } catch(e) { document.getElementById('importResult').innerHTML = '<span style="color:#dc2626;">❌ JSON tidak valid: '+e.message+'</span>'; return; }
+    
+    google.script.run.withSuccessHandler(function(res) {
+      if (res.success) {
+        var html = '<span style="color:#16a34a;">✅ Import berhasil!</span><ul style="font-size:13px;margin-top:8px;">';
+        for (var key in res.results) {
+          html += '<li>'+key+': '+res.results[key].count+' data → sheet "'+res.results[key].sheet+'"</li>';
+        }
+        html += '</ul>';
+        document.getElementById('importResult').innerHTML = html;
+        showToast('Data berhasil diimport!','success');
+        loadAllData();
+      } else {
+        document.getElementById('importResult').innerHTML = '<span style="color:#dc2626;">❌ Gagal: '+res.message+'</span>';
+      }
+    }).withFailureHandler(function(err) {
+      document.getElementById('importResult').innerHTML = '<span style="color:#dc2626;">❌ Error: '+err.message+'</span>';
+    }).importData(json);
+  }
+
+  // ==================== USERS ====================
+  function loadUsers() {
+    google.script.run.withSuccessHandler(function(items){
+      var t=document.getElementById('userTableBody'); t.innerHTML='';
+      items.forEach(function(i){
+        t.innerHTML+='<tr><td>'+(i.email||i.username||'-')+'</td><td>'+(i.displayName||'-')+'</td><td><span class="role-admin">'+(i.role||'viewer')+'</span></td><td class="actions"><button class="btn btn-danger btn-sm" onclick="del(\'user\',\''+i.id+'\')">🗑</button></td></tr>';
+      });
+    }).getUsers();
+  }
+  function saveUser() {
+    var d={id:document.getElementById('userEditId').value||'',email:document.getElementById('userEmail').value,username:document.getElementById('userEmail').value.split('@')[0],displayName:document.getElementById('userDisplayName').value,password:document.getElementById('userPassword').value,role:document.getElementById('userRole').value};
+    if(!d.email){showToast('Email harus diisi','error');return;}
+    google.script.run.withSuccessHandler(function(res){
+      if(res.success){showToast('Pengguna tersimpan','success');cancelEditUser();loadUsers();}
+      else{showToast(res.message||'Gagal','error');}
+    }).saveUser(d);
+  }
+  function cancelEditUser(){document.getElementById('userEditId').value='';document.getElementById('userEmail').value='';document.getElementById('userDisplayName').value='';document.getElementById('userPassword').value='admin123';document.getElementById('userRole').value='admin';document.getElementById('userFormTitle').textContent='Tambah Pengguna';document.getElementById('cancelUserBtn').style.display='none';}
+
+  // ==================== DELETE ====================
+  function del(type, id) {
+    var labels={menu:'Menu',announcement:'Informasi',gallery:'Galeri',organization:'Organisasi',link:'Tautan',user:'Pengguna'};
+    if(!confirm('Hapus '+(labels[type]||'item')+'?')) return;
+    var fn={menu:'deleteMenu',announcement:'deleteAnnouncement',gallery:'deleteGalleryItem',organization:'deleteOrganization',link:'deleteLink',user:'deleteUser'};
+    google.script.run.withSuccessHandler(function(){
+      showToast((labels[type]||'Item')+' dihapus','success');
+      if(type==='menu')loadMenus();else if(type==='announcement')loadAnnouncements();else if(type==='gallery')loadGallery();else if(type==='organization')loadOrgs();else if(type==='link')loadLinks();else if(type==='user')loadUsers();
+      updateStats();
+    })[fn[type]](id);
+  }
+</script>
+</body>
+</html>

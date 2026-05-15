@@ -1,0 +1,20 @@
+# This is an example configuration file
+# To learn more, see the full config.yaml reference: https://docs.continue.dev/reference
+
+name: "DeepSeek Config"
+version: "1.0.0"
+schema: v1
+
+models:
+  - name: "DeepSeek Chat"
+    provider: "openai"
+    model: "deepseek-chat"
+    apiBase: "https://api.deepseek.com/v1"
+    apiKey: "sk-ad4565d531fb400a957fab291350087c"
+
+tabAutocompleteModel:
+  name: "DeepSeek Chat"
+  provider: "openai"
+  model: "deepseek-chat"
+  apiBase: "https://api.deepseek.com/v1"
+  apiKey: "sk-ad4565d531fb400a957fab291350087c"

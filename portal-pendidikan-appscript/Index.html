@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Pendidikan - Kecamatan Lemahabang</title>
+  <style>
+    /* ==================== RESET & BASE ==================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; font-family: inherit; }
+    img { max-width: 100%; height: auto; display: block; }
+
+    /* ==================== HEADER ==================== */
+    .header {
+      position: sticky; top: 0; z-index: 50;
+      background: linear-gradient(to bottom, #1a5276, #0d3b66);
+      color: white;
+    }
+    .header-inner {
+      max-width: 1280px; margin: 0 auto;
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .header-logo {
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    }
+    .header-logo img {
+      width: 48px; height: 48px; object-fit: contain;
+      border-radius: 50%; border: 2px solid rgba(255,255,255,0.3);
+    }
+    .header-title h1 {
+      font-size: 16px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; line-height: 1.2;
+    }
+    .header-title p {
+      font-size: 11px; color: #bfdbfe; line-height: 1.3;
+    }
+    .header-time {
+      display: flex; flex-direction: column; align-items: flex-end;
+      flex-shrink: 0;
+    }
+    .header-time .date { font-size: 11px; color: #bfdbfe; }
+    .header-time .time { font-size: 14px; font-family: monospace; font-weight: 600; }
+    .header-login-btn {
+      padding: 8px 16px; border: none; border-radius: 6px;
+      background: #eab308; color: #0d3b66; font-weight: 600;
+      font-size: 13px; transition: background 0.2s;
+    }
+    .header-login-btn:hover { background: #facc15; }
+
+    /* Header Nav */
+    .header-nav {
+      background: linear-gradient(to bottom, #0d3b66, #072240);
+      overflow-x: auto;
+    }
+    .header-nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; gap: 2px; padding: 4px 16px;
+    }
+    .header-nav button {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border: none; background: transparent;
+      color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500;
+      white-space: nowrap; border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .header-nav button:hover { background: rgba(255,255,255,0.1); color: white; }
+    .nav-icon { width: 16px; height: 16px; }
+
+    /* Mobile menu */
+    .mobile-menu-toggle {
+      display: none; background: transparent; border: none; color: white; padding: 8px;
+    }
+    .mobile-menu {
+      display: none; border-top: 1px solid rgba(255,255,255,0.1);
+      background: linear-gradient(to bottom, #0d3b66, #082545); padding: 12px 16px;
+    }
+    .mobile-menu button {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      padding: 10px 12px; border: none; background: transparent;
+      color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500;
+      border-radius: 6px; transition: background 0.2s;
+    }
+    .mobile-menu button:hover { background: rgba(255,255,255,0.1); }
+    .mobile-menu-auth { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); }
+
+    /* ==================== HERO ==================== */
+    .hero {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #e6f2ff 0%, #f0f7ff 30%, #ffffff 70%, #ffffff 100%);
+    }
+    .hero-inner {
+      max-width: 1280px; margin: 0 auto; padding: 0 16px;
+      display: flex; flex-direction: row; align-items: stretch;
+    }
+    .hero-photo {
+      flex-shrink: 0; display: flex; align-items: flex-end;
+    }
+    .hero-photo img {
+      height: 320px; width: auto; object-fit: contain;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+    }
+    .hero-content {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center; padding: 24px; gap: 8px;
+    }
+    .hero-greeting {
+      font-family: Georgia, serif; font-style: italic;
+      font-size: 16px; color: #d4af37;
+    }
+    .hero-title {
+      font-size: 36px; font-weight: 800; line-height: 1.1;
+      color: #0d3b66;
+    }
+    .hero-subtitle {
+      font-size: 14px; font-weight: 600; color: #0d3b66;
+    }
+    .hero-divider {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .hero-divider-line {
+      height: 2px; flex: 1; max-width: 60px; background: #d4af37;
+    }
+    .hero-divider-diamond {
+      width: 10px; height: 10px; background: #d4af37;
+      transform: rotate(45deg);
+    }
+    .hero-quote {
+      font-size: 14px; color: #475569; font-style: italic;
+      line-height: 1.5; max-width: 500px;
+    }
+    .hero-name {
+      font-size: 18px; font-weight: 700; color: #0d3b66;
+    }
+    .hero-role {
+      font-size: 13px; color: #0d3b66; opacity: 0.8;
+    }
+
+    /* ==================== SECTION ==================== */
+    .section {
+      max-width: 1280px; margin: 0 auto; padding: 32px 16px;
+    }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(to bottom, #1a5276, #0d3b66);
+      border-radius: 8px 8px 0 0; padding: 12px 20px;
+    }
+    .section-header h2 {
+      color: white; font-size: 16px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .section-header a {
+      color: #facc15; font-size: 13px; font-weight: 500;
+    }
+    .section-header a:hover { text-decoration: underline; }
+    .section-body {
+      background: white; border: 1px solid #e2e8f0;
+      border-top: none; border-radius: 0 0 8px 8px;
+      padding: 16px;
+    }
+
+    /* ==================== MENU GRID ==================== */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .menu-card {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px; padding: 16px 12px;
+      background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .menu-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+    .menu-icon-wrapper {
+      width: 48px; height: 48px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .menu-icon { color: white; font-size: 24px; font-weight: 700; line-height: 1; }
+    .menu-title {
+      font-size: 12px; font-weight: 700; color: #0d3b66;
+      text-align: center; line-height: 1.3;
+    }
+    .menu-category {
+      font-size: 10px; color: #64748b; text-align: center;
+      line-height: 1.2;
+    }
+
+    /* ==================== ANNOUNCEMENTS ==================== */
+    .announcement-item {
+      display: flex; gap: 12px; padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .announcement-item:last-child { border-bottom: none; }
+    .announcement-item:hover { background: #f8fafc; }
+    .announcement-date {
+      flex-shrink: 0; width: 52px; height: 52px;
+      border-radius: 50%; background: #0d3b66;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; color: white;
+    }
+    .announcement-date .day { font-size: 16px; font-weight: 700; line-height: 1; }
+    .announcement-date .month { font-size: 9px; text-transform: uppercase; }
+    .announcement-content { flex: 1; min-width: 0; }
+    .announcement-content h3 {
+      font-size: 13px; font-weight: 600; color: #0d3b66;
+      margin-bottom: 4px; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .announcement-content p {
+      font-size: 12px; color: #64748b; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ==================== GALLERY ==================== */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .gallery-card {
+      border-radius: 8px; overflow: hidden;
+      border: 1px solid #e2e8f0; transition: box-shadow 0.2s;
+    }
+    .gallery-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .gallery-card img {
+      width: 100%; height: 180px; object-fit: cover;
+    }
+    .gallery-card-body { padding: 10px 12px; }
+    .gallery-card-body h4 {
+      font-size: 13px; font-weight: 600; color: #0d3b66;
+    }
+    .gallery-card-body p {
+      font-size: 11px; color: #64748b;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ==================== ORGANIZATIONS ==================== */
+    .org-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .org-card {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px; padding: 20px; border: 1px solid #e2e8f0;
+      border-radius: 8px; text-align: center;
+    }
+    .org-card img {
+      width: 64px; height: 64px; object-fit: contain;
+      border-radius: 50%; border: 2px solid #e2e8f0;
+    }
+    .org-card h4 { font-size: 14px; font-weight: 600; color: #0d3b66; }
+    .org-card p { font-size: 12px; color: #64748b; }
+
+    /* ==================== LINKS ==================== */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .link-card {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px; border: 1px solid #e2e8f0;
+      border-radius: 8px; transition: box-shadow 0.2s;
+    }
+    .link-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .link-card img {
+      width: 36px; height: 36px; object-fit: contain;
+      border-radius: 4px;
+    }
+    .link-card span {
+      font-size: 13px; font-weight: 500; color: #0d3b66;
+    }
+
+    /* ==================== FOOTER ==================== */
+    .footer {
+      margin-top: auto;
+      background: linear-gradient(to bottom, #1a5276, #0d3b66);
+      color: white; padding: 40px 16px 20px;
+    }
+    .footer-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 32px;
+    }
+    .footer-section h3 {
+      font-size: 14px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 12px;
+      padding-bottom: 8px; border-bottom: 2px solid #d4af37;
+    }
+    .footer-section p, .footer-section a {
+      font-size: 13px; color: #bfdbfe; line-height: 1.6;
+    }
+    .footer-section a:hover { color: #facc15; }
+    .footer-bottom {
+      max-width: 1280px; margin: 24px auto 0;
+      padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);
+      text-align: center; font-size: 12px; color: #93c5fd;
+    }
+
+    /* ==================== MODAL ==================== */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.5); justify-content: center;
+      align-items: center; padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white; border-radius: 12px; max-width: 600px;
+      width: 100%; max-height: 90vh; overflow-y: auto;
+      padding: 24px;
+    }
+    .modal h2 { font-size: 18px; color: #0d3b66; margin-bottom: 8px; }
+    .modal-close {
+      float: right; background: transparent; border: none;
+      font-size: 24px; color: #64748b; line-height: 1;
+    }
+    .modal-close:hover { color: #0f172a; }
+
+    /* ==================== SKELETON ==================== */
+    .skeleton {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      .header-nav { display: none; }
+      .mobile-menu-toggle { display: block; }
+      .mobile-menu.open { display: block; }
+      .header-title h1 { font-size: 14px; }
+      .header-logo img { width: 36px; height: 36px; }
+      .hero-inner { flex-direction: column-reverse; }
+      .hero-photo img { height: 200px; margin: 0 auto; }
+      .hero-content { padding: 16px; text-align: center; align-items: center; }
+      .hero-title { font-size: 24px; }
+      .menu-grid { grid-template-columns: repeat(2, 1fr); }
+      .gallery-grid { grid-template-columns: 1fr; }
+      .header-time .date { font-size: 10px; }
+      .header-time .time { font-size: 12px; }
+    }
+    @media (max-width: 480px) {
+      .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .menu-card { padding: 12px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ==================== HEADER ==================== -->
+<header class="header" id="header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <img src="https://placehold.co/96x96/0d3b66/ffffff?text=Logo" alt="Logo" id="logo-img"/>
+      <div class="header-title">
+        <h1>Dinas Pendidikan</h1>
+        <p>Portal Tim Kerja Kecamatan Lemahabang</p>
+        <p style="font-size:10px;color:#93c5fd;">Dinas Pendidikan Kabupaten Cirebon</p>
+      </div>
+    </div>
+    <div class="header-time">
+      <span class="date" id="currentDate"></span>
+      <span class="time" id="currentTime"></span>
+    </div>
+    <button class="header-login-btn" onclick="window.location.href='?page=admin'">Login</button>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+  </div>
+  <nav class="header-nav">
+    <div class="header-nav-inner">
+      <button onclick="scrollToSection('hero')"><span class="nav-icon">🏠</span> Beranda</button>
+      <button onclick="window.location.href='#organisasi'"><span class="nav-icon">🏛</span> Organisasi</button>
+      <button onclick="scrollToSection('informasi')"><span class="nav-icon">📢</span> Berita</button>
+      <button onclick="scrollToSection('galeri')"><span class="nav-icon">📷</span> Galeri</button>
+      <button onclick="scrollToSection('kontak')"><span class="nav-icon">📞</span> Kontak</button>
+    </div>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button onclick="scrollToSection('hero');toggleMobileMenu()">🏠 Beranda</button>
+    <button onclick="window.location.href='#organisasi';toggleMobileMenu()">🏛 Organisasi</button>
+    <button onclick="scrollToSection('informasi');toggleMobileMenu()">📢 Informasi</button>
+    <button onclick="scrollToSection('galeri');toggleMobileMenu()">📷 Galeri</button>
+    <button onclick="scrollToSection('kontak');toggleMobileMenu()">📞 Kontak</button>
+    <div class="mobile-menu-auth">
+      <button onclick="window.location.href='?page=admin'" style="color:#facc15;">🔐 Admin Panel</button>
+    </div>
+  </div>
+</header>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero" id="hero">
+  <div class="hero-inner">
+    <div class="hero-photo">
+      <img id="heroPhoto" src="https://placehold.co/400x500/0d3b66/ffffff?text=Kadis" alt="Kepala Dinas"/>
+    </div>
+    <div class="hero-content">
+      <p class="hero-greeting" id="heroGreeting">Selamat Datang</p>
+      <h2 class="hero-title">DINAS PENDIDIKAN</h2>
+      <p class="hero-subtitle">PORTAL TIM KERJA KECAMATAN LEMAHABANG</p>
+      <div class="hero-divider">
+        <span class="hero-divider-line"></span>
+        <span class="hero-divider-diamond"></span>
+        <span class="hero-divider-line"></span>
+      </div>
+      <p class="hero-quote" id="heroQuote">"DISDIK BERBENAH (Bersih, Edukatif, Religius, Berintegritas, Empati, Normatif, Amanah, Humanis)"</p>
+      <p class="hero-name" id="heroName">H. Asep Hilman, S.Pd., M.Pd.</p>
+      <p class="hero-role" id="heroRole">Kepala Dinas Pendidikan Kab. Cirebon</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MENU LAYANAN ==================== -->
+<section class="section" id="menu">
+  <div class="section-header">
+    <h2>Menu Layanan</h2>
+  </div>
+  <div class="section-body">
+    <div class="menu-grid" id="menuGrid"></div>
+  </div>
+</section>
+
+<!-- ==================== INFORMASI ==================== -->
+<section class="section" id="informasi">
+  <div class="section-header">
+    <h2>Informasi Terbaru</h2>
+  </div>
+  <div class="section-body">
+    <div id="announcementsList"></div>
+  </div>
+</section>
+
+<!-- ==================== GALERI ==================== -->
+<section class="section" id="galeri">
+  <div class="section-header">
+    <h2>Galeri Kegiatan</h2>
+  </div>
+  <div class="section-body">
+    <div class="gallery-grid" id="galleryGrid"></div>
+  </div>
+</section>
+
+<!-- ==================== ORGANISASI ==================== -->
+<section class="section" id="organisasi">
+  <div class="section-header">
+    <h2>Organisasi</h2>
+  </div>
+  <div class="section-body">
+    <div class="org-grid" id="orgGrid"></div>
+  </div>
+</section>
+
+<!-- ==================== TAUTAN INSTITUSI ==================== -->
+<section class="section" id="tautan">
+  <div class="section-header">
+    <h2>Tautan Institusi</h2>
+  </div>
+  <div class="section-body">
+    <div class="links-grid" id="linksGrid"></div>
+  </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="footer" id="kontak">
+  <div class="footer-inner">
+    <div class="footer-section">
+      <h3>Dinas Pendidikan</h3>
+      <p>Portal Tim Kerja Kecamatan Lemahabang</p>
+      <p>Dinas Pendidikan Kabupaten Cirebon</p>
+      <p style="margin-top:8px;">📍 Jl. Raya Lemahabang, Kab. Cirebon</p>
+      <p>📧 disdik.cirebonkab@email.com</p>
+      <p>📞 (0231) 123456</p>
+    </div>
+    <div class="footer-section">
+      <h3>Link Cepat</h3>
+      <a href="#informasi">📢 Informasi Terbaru</a><br/>
+      <a href="#galeri">📷 Galeri Kegiatan</a><br/>
+      <a href="#organisasi">🏛 Organisasi</a><br/>
+      <a href="?page=admin">🔐 Admin Panel</a>
+    </div>
+    <div class="footer-section">
+      <h3>Tentang</h3>
+      <p>Portal ini menyediakan informasi dan layanan pendidikan di lingkungan Dinas Pendidikan Kabupaten Cirebon, khususnya Tim Kerja Kecamatan Lemahabang.</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; <span id="footerYear">2025</span> Dinas Pendidikan Kab. Cirebon. All rights reserved.
+  </div>
+</footer>
+
+<!-- ==================== MODAL ==================== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2 id="modalTitle">Detail</h2>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ==================== SCRIPT ==================== -->
+<script>
+  // ==================== CLOCK ====================
+  function updateClock() {
+    const now = new Date();
+    const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const d = days[now.getDay()];
+    const date = now.getDate();
+    const m = months[now.getMonth()];
+    const y = now.getFullYear();
+    const h = String(now.getHours()).padStart(2,'0');
+    const mi = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('currentDate').textContent = d + ', ' + date + ' ' + m + ' ' + y;
+    document.getElementById('currentTime').textContent = h + ':' + mi + ':' + s;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+  // ==================== SCROLL ====================
+  function scrollToSection(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ==================== MOBILE MENU ====================
+  function toggleMobileMenu() {
+    document.getElementById('mobileMenu').classList.toggle('open');
+  }
+
+  // ==================== MODAL ====================
+  function openModal(title, bodyHTML) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = bodyHTML;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('active');
+  }
+
+  // ==================== MENU ICONS ====================
+  const menuIcons = {
+    School: '🏫', Baby: '👶', GraduationCap: '🎓', BarChart3: '📊',
+    FileText: '📄', Users: '👥', WalletMinimal: '💳', Database: '🗄',
+    BookOpen: '📖', Target: '🎯', CalendarDays: '📅', FolderOpen: '📁',
+    Mail: '✉️', Send: '📤', Globe: '🌐', Phone: '📞', Clock: '⏰',
+    HeartHandshake: '🤝', Megaphone: '📣'
+  };
+  const menuColors = [
+    '#2563eb','#10b981','#f59e0b','#7c3aed','#14b8a6','#1d4ed8',
+    '#16a34a','#1e40af','#d97706','#0d9488','#9333ea','#ea580c',
+    '#3b82f6','#22c55e','#ec4899','#06b6d4','#dc2626','#4f46e5'
+  ];
+
+  // ==================== LOAD DATA ====================
+  function loadData() {
+    // Load hero/settings
+    google.script.run.withSuccessHandler(function(settings) {
+      if (settings && settings.kepalaDinas) {
+        document.getElementById('heroName').textContent = settings.kepalaDinas;
+      }
+      if (settings && settings.jabatan) {
+        document.getElementById('heroRole').textContent = settings.jabatan;
+      }
+      if (settings && settings.sambutan) {
+        document.getElementById('heroGreeting').textContent = settings.sambutan;
+      }
+      if (settings && settings.fotoKepalaDinas) {
+        document.getElementById('heroPhoto').src = settings.fotoKepalaDinas;
+      }
+    }).getSettings();
+
+    // Load menus
+    google.script.run.withSuccessHandler(function(menus) {
+      const grid = document.getElementById('menuGrid');
+      grid.innerHTML = '';
+      const active = menus.filter(m => m.active === 'true' || m.active === true);
+      active.sort((a, b) => (parseInt(a.order) || 99) - (parseInt(b.order) || 99));
+      active.forEach(function(item, idx) {
+        const iconChar = menuIcons[item.icon] || '🔗';
+        const color = menuColors[idx % menuColors.length];
+        const card = document.createElement('div');
+        card.className = 'menu-card';
+        card.onclick = function() {
+          if (item.url && item.url.startsWith('http')) {
+            window.open(item.url, '_blank');
+          } else if (item.url && item.url !== '#') {
+            window.location.href = item.url;
+          }
+        };
+        card.innerHTML =
+          '<div class="menu-icon-wrapper" style="background:' + color + '">' +
+            '<span class="menu-icon">' + iconChar + '</span>' +
+          '</div>' +
+          '<span class="menu-title">' + item.title + '</span>' +
+          '<span class="menu-category">' + (item.category || '') + '</span>';
+        grid.appendChild(card);
+      });
+    }).getMenus();
+
+    // Load announcements
+    google.script.run.withSuccessHandler(function(items) {
+      const list = document.getElementById('announcementsList');
+      list.innerHTML = '';
+      if (!items || items.length === 0) {
+        list.innerHTML = '<p style="color:#64748b;padding:12px;text-align:center;font-size:13px;">Belum ada informasi</p>';
+        return;
+      }
+      items.sort((a, b) => (parseInt(b.createdAt) || 0) - (parseInt(a.createdAt) || 0));
+      const displayed = items.slice(0, 5);
+      displayed.forEach(function(item) {
+        const d = new Date(parseInt(item.createdAt) || Date.now());
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        const el = document.createElement('div');
+        el.className = 'announcement-item';
+        el.onclick = function() {
+          openModal(item.title,
+            '<p style="font-size:13px;color:#64748b;line-height:1.6;">' +
+            (item.content || '') +
+            '</p><p style="font-size:11px;color:#94a3b8;margin-top:12px;">' +
+            d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() +
+            ' | Oleh: ' + (item.author || 'Admin') +
+            '</p>'
+          );
+        };
+        el.innerHTML =
+          '<div class="announcement-date">' +
+            '<span class="day">' + d.getDate() + '</span>' +
+            '<span class="month">' + months[d.getMonth()] + '</span>' +
+          '</div>' +
+          '<div class="announcement-content">' +
+            '<h3>' + item.title + '</h3>' +
+            '<p>' + (item.content || '').substring(0, 120) + '</p>' +
+          '</div>';
+        list.appendChild(el);
+      });
+    }).getAnnouncements();
+
+    // Load gallery
+    google.script.run.withSuccessHandler(function(items) {
+      const grid = document.getElementById('galleryGrid');
+      grid.innerHTML = '';
+      if (!items || items.length === 0) {
+        grid.innerHTML = '<p style="color:#64748b;padding:12px;text-align:center;font-size:13px;">Belum ada galeri</p>';
+        return;
+      }
+      const approved = items.filter(i => i.status === 'approved' || !i.status);
+      const displayed = approved.slice(0, 6);
+      displayed.forEach(function(item) {
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.onclick = function() {
+          openModal(item.title,
+            '<img src="' + (item.imageUrl || 'https://placehold.co/800x600/e2e8f0/64748b?text=Galeri') +
+            '" style="width:100%;max-height:400px;object-fit:cover;border-radius:8px;margin-bottom:12px;" alt="' + item.title + '"/>' +
+            '<p style="font-size:13px;color:#475569;line-height:1.6;">' + (item.description || '') + '</p>' +
+            '<p style="font-size:11px;color:#94a3b8;margin-top:8px;">Kategori: ' + (item.category || 'Umum') + ' | Oleh: ' + (item.authorName || 'Admin') + '</p>'
+          );
+        };
+        card.innerHTML =
+          '<img src="' + (item.imageUrl || 'https://placehold.co/800x600/e2e8f0/64748b?text=Galeri') + '" alt="' + item.title + '"/>' +
+          '<div class="gallery-card-body">' +
+            '<h4>' + item.title + '</h4>' +
+            '<p>' + (item.description || '').substring(0, 80) + '</p>' +
+          '</div>';
+        grid.appendChild(card);
+      });
+    }).getGallery();
+
+    // Load organizations
+    google.script.run.withSuccessHandler(function(items) {
+      const grid = document.getElementById('orgGrid');
+      grid.innerHTML = '';
+      if (!items || items.length === 0) {
+        grid.innerHTML = '<p style="color:#64748b;padding:12px;text-align:center;font-size:13px;">Belum ada organisasi</p>';
+        return;
+      }
+      const active = items.filter(o => o.active === 'true' || o.active === true);
+      active.forEach(function(item) {
+        const card = document.createElement('div');
+        card.className = 'org-card';
+        card.innerHTML =
+          '<img src="' + (item.logo || 'https://placehold.co/64x64/e2e8f0/64748b?text=Org') + '" alt="' + item.name + '"/>' +
+          '<h4>' + item.name + '</h4>' +
+          '<p>' + (item.leader ? 'Ketua: ' + item.leader : '') + '</p>' +
+          (item.contact ? '<p style="font-size:11px;">' + item.contact + '</p>' : '');
+        grid.appendChild(card);
+      });
+    }).getOrganizations();
+
+    // Load links
+    google.script.run.withSuccessHandler(function(items) {
+      const grid = document.getElementById('linksGrid');
+      grid.innerHTML = '';
+      if (!items || items.length === 0) {
+        grid.innerHTML = '<p style="color:#64748b;padding:12px;text-align:center;font-size:13px;">Belum ada tautan</p>';
+        return;
+      }
+      const active = items.filter(l => l.active === 'true' || l.active === true);
+      active.forEach(function(item) {
+        const card = document.createElement('div');
+        card.className = 'link-card';
+        card.onclick = function() {
+          if (item.url && item.url !== '#') window.open(item.url, '_blank');
+        };
+        card.style.cursor = item.url && item.url !== '#' ? 'pointer' : 'default';
+        card.innerHTML =
+          '<img src="' + (item.logo || 'https://placehold.co/36x36/e2e8f0/64748b?text=Link') + '" alt="' + item.name + '"/>' +
+          '<span>' + item.name + '</span>';
+        grid.appendChild(card);
+      });
+    }).getLinks();
+  }
+
+  // Load data after page loads
+  window.onload = function() {
+    loadData();
+  };
+</script>
+</body>
+</html>
