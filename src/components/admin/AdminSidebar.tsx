@@ -15,16 +15,10 @@ import {
   Building2,
   ExternalLink,
   Users,
-  FileText,
   Database,
-  UserPlus,
   ArrowLeft,
   LogOut,
   GraduationCap,
-  BookOpen,
-  WalletMinimal,
-  Heart,
-  BarChart3,
   School,
   CalendarDays,
   BadgeCheck,
@@ -55,37 +49,11 @@ const navSections: NavSection[] = [
       { label: 'Monitoring', icon: Activity, view: 'super-monitoring', permission: 'manage-monitoring' },
       { label: 'Pengaturan Portal', icon: Settings, view: 'super-settings', permission: 'manage-settings' },
       { label: 'Update Data', icon: RefreshCw, view: 'super-update-data', permission: 'manage-schools' },
-    ],
-  },
-  {
-    title: 'Konten',
-    items: [
       { label: 'Kelola Informasi', icon: Bell, view: 'admin-manage-announcements', permission: 'manage-announcements' },
       { label: 'Kelola Galeri', icon: Camera, view: 'admin-manage-gallery', permission: 'manage-gallery' },
       { label: 'Agenda Kegiatan', icon: CalendarDays, view: 'admin-manage-agenda-kegiatan', permission: 'manage-agenda-kegiatan' },
       { label: 'Verifikasi Konten', icon: BadgeCheck, view: 'admin-verifikasi-konten', permission: 'manage-content-verification' },
-    ],
-  },
-  {
-    title: 'Laporan',
-    items: [
       { label: 'Laporan & Ekspor', icon: FileBarChart, view: 'admin-laporan', permission: 'view-reports' },
-    ],
-  },
-  {
-    title: 'Data',
-    items: [
-      { label: 'Data PD', icon: BookOpen, view: 'admin-manage-data-pd', permission: 'manage-data-pd' },
-      { label: 'Data GTK', icon: GraduationCap, view: 'admin-manage-data-gtk', permission: 'manage-data-gtk' },
-      { label: 'KIP SD', icon: WalletMinimal, view: 'admin-manage-kip-sd', permission: 'manage-kip-sd' },
-      { label: 'Yatim Piatu', icon: Heart, view: 'admin-manage-yatim-piatu', permission: 'manage-yatim-piatu' },
-    ],
-  },
-  {
-    title: 'Sekolah',
-    items: [
-      { label: 'Laporan Bulanan', icon: BarChart3, view: 'admin-manage-laporan-bulanan', permission: 'manage-laporan-bulanan' },
-      { label: 'SPMB SD', icon: School, view: 'admin-manage-spmb-sd', permission: 'manage-spmb-sd' },
     ],
   },
   {
@@ -94,9 +62,7 @@ const navSections: NavSection[] = [
       { label: 'Kelola Organisasi', icon: Building2, view: 'admin-manage-organizations', permission: 'manage-organizations' },
       { label: 'Kelola Link Instansi', icon: ExternalLink, view: 'admin-manage-institution-links', permission: 'manage-institution-links' },
       { label: 'Kelola User', icon: Users, view: 'admin-manage-users', permission: 'manage-users' },
-      { label: 'Input Dokumen', icon: FileText, view: 'admin-manage-documents', permission: 'manage-documents' },
       { label: 'Backup & Restore', icon: Database, view: 'admin-backup-restore', permission: 'backup-restore' },
-      { label: 'Tambah Pegawai', icon: UserPlus, view: 'admin-tambah-pegawai', permission: 'add-employees' },
     ],
   },
 ];
