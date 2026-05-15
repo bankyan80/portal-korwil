@@ -159,7 +159,7 @@ export async function POST(req: Request) {
     if (!response.ok) {
       const errText = await response.text();
       console.error("GEMINI HTTP ERROR:", response.status, errText);
-      return NextResponse.json({ success: false, reply: "Gemini error: " + response.status + " - " + errText.slice(0, 200) }, { status: 500 });
+      return NextResponse.json({ success: false, reply: "Maaf, terjadi gangguan pada AI. Silakan coba lagi beberapa saat." }, { status: 500 });
     }
 
     const data = await response.json();
