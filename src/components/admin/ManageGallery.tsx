@@ -23,7 +23,8 @@ import { toast } from 'sonner';
 import type { GalleryItem, GalleryCategory, GalleryStatus } from '@/types';
 import { useGalleryCrud } from '@/hooks/use-firestore-crud';
 import { storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { Progress } from '@/components/ui/progress';
 import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTable';
 
 // Compress image using Canvas API
@@ -98,6 +99,8 @@ export function ManageGallery() {
   const [saving, setSaving] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
    const openAdd = useCallback(() => { crud.openAdd(); setForm(defaultForm); }, [crud.openAdd]);
@@ -115,27 +118,46 @@ export function ManageGallery() {
   const getImageUrls = useCallback(async (files: File[]): Promise<string[]> => {
     if (files.length === 0) return [];
     setUploadingImages(true);
+    setUploadProgress(0);
+    const results: string[] = [];
     try {
-      const tasks = files.map(async (file) => {
-        if (!file.type.startsWith('image/')) return '';
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) continue;
+        setUploadStatus(`${i + 1}/${files.length}: ${file.name}`);
         let fileToUpload: File | Blob = file;
         if (file.size > 3 * 1024 * 1024) {
+          setUploadStatus(`Mengompresi ${file.name}...`);
           fileToUpload = await compressImage(file, 1200, 0.7);
         }
-        if (fileToUpload.size > 5 * 1024 * 1024) return '';
+        if (fileToUpload.size > 5 * 1024 * 1024) continue;
         if (storage) {
           const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
-          await uploadBytes(storageRef, fileToUpload, { contentType: fileToUpload.type });
-          return await getDownloadURL(storageRef);
+          const task = uploadBytesResumable(storageRef, fileToUpload, { contentType: fileToUpload.type });
+          await new Promise<void>((resolve, reject) => {
+            task.on('state_changed',
+              (snap) => {
+                const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+                setUploadProgress(pct);
+              },
+              reject,
+              resolve
+            );
+          });
+          const url = await getDownloadURL(storageRef);
+          results.push(url);
+        } else {
+          results.push(URL.createObjectURL(fileToUpload));
         }
-        return URL.createObjectURL(fileToUpload);
-      });
-      return (await Promise.all(tasks)).filter(Boolean);
+      }
+      return results;
     } catch (e) {
       console.error('Error uploading images:', e);
-      return [];
+      return results;
     } finally {
       setUploadingImages(false);
+      setUploadProgress(0);
+      setUploadStatus('');
     }
   }, []);
 
@@ -359,9 +381,12 @@ export function ManageGallery() {
                 </div>
               )}
               {uploadingImages && (
-                <div className="flex items-center justify-center gap-2 py-2 text-sm text-blue-600">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Mengunggah gambar...
+                <div className="space-y-2 py-2">
+                  <div className="flex items-center gap-2 text-sm text-blue-600">
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                    <span className="truncate">{uploadStatus || 'Mengunggah...'}</span>
+                  </div>
+                  <Progress value={uploadProgress} className="h-2" />
                 </div>
               )}
             </div>
