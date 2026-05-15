@@ -166,18 +166,13 @@ ${message}
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash",
       contents: finalPrompt,
       config: {
         temperature: 0.8,
         topP: 0.95,
         topK: 40,
         maxOutputTokens: 4096,
-        tools: [
-          {
-            googleSearch: {},
-          },
-        ],
       },
     });
 
@@ -190,7 +185,8 @@ ${message}
       reply: text,
     });
   } catch (error: any) {
-    console.error("GEMINI ERROR:", error);
+    console.error("GEMINI ERROR:", error?.message || error);
+    if (error?.stack) console.error("GEMINI STACK:", error.stack);
 
     return NextResponse.json(
       {
