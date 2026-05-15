@@ -22,8 +22,6 @@ import {
 import { toast } from 'sonner';
 import type { GalleryItem, GalleryCategory, GalleryStatus } from '@/types';
 import { useGalleryCrud } from '@/hooks/use-firestore-crud';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTable';
 
@@ -115,6 +113,25 @@ export function ManageGallery() {
      setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
    }, []);
 
+  function fileToBase64(file: File | Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function processFile(file: File): Promise<string> {
+    let fileToProcess: File | Blob = file;
+    if (file.size > 3 * 1024 * 1024) {
+      setUploadStatus(`Mengompresi ${file.name}...`);
+      fileToProcess = await compressImage(file, 1200, 0.7);
+    }
+    if (fileToProcess.size > 5 * 1024 * 1024) return '';
+    return fileToBase64(fileToProcess);
+  }
+
   const getImageUrls = useCallback(async (files: File[]): Promise<string[]> => {
     if (files.length === 0) return [];
     setUploadingImages(true);
@@ -125,36 +142,15 @@ export function ManageGallery() {
         const file = files[i];
         if (!file.type.startsWith('image/')) continue;
         setUploadStatus(`${i + 1}/${files.length}: ${file.name}`);
-        let fileToUpload: File | Blob = file;
-        if (file.size > 3 * 1024 * 1024) {
-          setUploadStatus(`Mengompresi ${file.name}...`);
-          fileToUpload = await compressImage(file, 1200, 0.7);
-        }
-        if (fileToUpload.size > 5 * 1024 * 1024) continue;
-        if (storage) {
-          setUploadProgress(1);
-          const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
-          const task = uploadBytesResumable(storageRef, fileToUpload, { contentType: fileToUpload.type });
-          await new Promise<void>((resolve, reject) => {
-            task.on('state_changed',
-              (snap) => {
-                const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-                setUploadProgress(pct);
-              },
-              (err) => { console.error('Upload error:', err); reject(err); },
-              resolve
-            );
-          });
-          const url = await getDownloadURL(storageRef);
-          results.push(url);
-        } else {
-          results.push(URL.createObjectURL(fileToUpload));
-        }
+        setUploadProgress(Math.round(((i) / files.length) * 100));
+        const dataUrl = await processFile(file);
+        if (dataUrl) results.push(dataUrl);
       }
+      setUploadProgress(100);
       return results;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Gagal mengunggah';
-      toast.error(`Upload gagal: ${msg}`);
+      const msg = e instanceof Error ? e.message : 'Gagal memproses gambar';
+      toast.error(`Gagal: ${msg}`);
       return results;
     } finally {
       setUploadingImages(false);
