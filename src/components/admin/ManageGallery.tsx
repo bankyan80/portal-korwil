@@ -132,6 +132,7 @@ export function ManageGallery() {
         }
         if (fileToUpload.size > 5 * 1024 * 1024) continue;
         if (storage) {
+          setUploadProgress(1);
           const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
           const task = uploadBytesResumable(storageRef, fileToUpload, { contentType: fileToUpload.type });
           await new Promise<void>((resolve, reject) => {
@@ -140,7 +141,7 @@ export function ManageGallery() {
                 const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
                 setUploadProgress(pct);
               },
-              reject,
+              (err) => { console.error('Upload error:', err); reject(err); },
               resolve
             );
           });
@@ -152,7 +153,8 @@ export function ManageGallery() {
       }
       return results;
     } catch (e) {
-      console.error('Error uploading images:', e);
+      const msg = e instanceof Error ? e.message : 'Gagal mengunggah';
+      toast.error(`Upload gagal: ${msg}`);
       return results;
     } finally {
       setUploadingImages(false);
