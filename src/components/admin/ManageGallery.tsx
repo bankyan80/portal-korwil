@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Search, Plus, Pencil, Trash2, Camera, CheckCircle, XCircle, Clock, ImagePlus, Upload, Loader2, FileImage,
+  Search, Plus, Pencil, Trash2, Camera, CheckCircle, XCircle, Clock, ImagePlus, Loader2, FileImage,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { GalleryItem, GalleryCategory, GalleryStatus } from '@/types';
@@ -97,48 +97,26 @@ export function ManageGallery() {
   const [activeTab, setActiveTab] = useState('semua');
   const [saving, setSaving] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-   const openAdd = useCallback(() => { crud.openAdd(); setForm(defaultForm); setUploadedUrls([]); }, [crud.openAdd]);
-   const openEdit = useCallback((item: GalleryItem) => { crud.openEdit(item.id); setForm({ title: item.title, description: item.description, category: item.category, status: item.status }); setUploadedUrls([]); }, [crud.openEdit]);
+   const openAdd = useCallback(() => { crud.openAdd(); setForm(defaultForm); }, [crud.openAdd]);
+   const openEdit = useCallback((item: GalleryItem) => { crud.openEdit(item.id); setForm({ title: item.title, description: item.description, category: item.category, status: item.status }); }, [crud.openEdit]);
 
-   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-     if (!e.target.files) return;
-     const newFiles = Array.from(e.target.files);
-     setSelectedFiles(prev => [...prev, ...newFiles]);
-     const tasks = newFiles.map(async (file) => {
-       if (!file.type.startsWith('image/')) return '';
-       let fileToUpload: File | Blob = file;
-       if (file.size > 3 * 1024 * 1024) {
-         fileToUpload = await compressImage(file, 1200, 0.7);
-       }
-       if (fileToUpload.size > 5 * 1024 * 1024) return '';
-        if (storage) {
-          const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
-          await uploadBytes(storageRef, fileToUpload, {
-            contentType: fileToUpload.type, uploadedBy: 'Admin Kecamatan',
-            category: '', title: '', uploadedAt: Date.now(),
-          });
-          return await getDownloadURL(storageRef);
-        }
-        return URL.createObjectURL(fileToUpload);
-      });
-      const urls = await Promise.all(tasks);
-      setUploadedUrls(prev => [...prev, ...urls.filter(Boolean)]);
+    const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files) return;
+      setSelectedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
     }, []);
 
    const removeSelectedFile = useCallback((idx: number) => {
      setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
    }, []);
 
-  const getImageUrls = useCallback(async (): Promise<string[]> => {
-    const remaining = selectedFiles.filter((_, i) => !uploadedUrls[i]);
-    if (remaining.length === 0) return uploadedUrls;
+  const getImageUrls = useCallback(async (files: File[]): Promise<string[]> => {
+    if (files.length === 0) return [];
     setUploadingImages(true);
     try {
-      const tasks = remaining.map(async (file) => {
+      const tasks = files.map(async (file) => {
         if (!file.type.startsWith('image/')) return '';
         let fileToUpload: File | Blob = file;
         if (file.size > 3 * 1024 * 1024) {
@@ -147,52 +125,44 @@ export function ManageGallery() {
         if (fileToUpload.size > 5 * 1024 * 1024) return '';
         if (storage) {
           const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
-          await uploadBytes(storageRef, fileToUpload, { contentType: fileToUpload.type, uploadedBy: 'Admin Kecamatan', category: form.category, title: form.title, uploadedAt: Date.now() });
+          await uploadBytes(storageRef, fileToUpload, { contentType: fileToUpload.type });
           return await getDownloadURL(storageRef);
         }
         return URL.createObjectURL(fileToUpload);
       });
-      const newUrls = await Promise.all(tasks);
-      const all = [...uploadedUrls, ...newUrls.filter(Boolean)];
-      setUploadedUrls(all);
-      return all;
+      return (await Promise.all(tasks)).filter(Boolean);
     } catch (e) {
       console.error('Error uploading images:', e);
-      return uploadedUrls;
+      return [];
     } finally {
       setUploadingImages(false);
-      setSelectedFiles([]);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  }, [selectedFiles, uploadedUrls, form.category, form.title]);
+  }, []);
 
-   const handleSave = useCallback(async () => {
-     if (!form.title.trim()) { toast.error('Judul galeri tidak boleh kosong'); return; }
-     setSaving(true);
-     try {
-       let imageUrls: string[] = [];
-       if (selectedFiles.length > 0 || uploadedUrls.length > 0) {
-         imageUrls = await getImageUrls();
-       }
+    const handleSave = useCallback(async () => {
+      if (!form.title.trim()) { toast.error('Judul galeri tidak boleh kosong'); return; }
+      setSaving(true);
+      try {
+        const imageUrls = await getImageUrls(selectedFiles);
 
-       if (crud.editingId) {
-         const existing = crud.items.find(i => i.id === crud.editingId);
-         const allImages = existing ? [...existing.images, ...imageUrls] : imageUrls;
-         await crud.updateItem(crud.editingId, { title: form.title, description: form.description, category: form.category, status: form.status, images: allImages });
-         toast.success('Galeri berhasil diperbarui');
-       } else {
-         await crud.addItem({ id: `gallery-${Date.now()}`, title: form.title, description: form.description, images: imageUrls, category: form.category, authorName: 'Admin Kecamatan', authorRole: 'Administrator', status: form.status, createdAt: Date.now() });
-         toast.success('Galeri berhasil ditambahkan');
-       }
-       crud.closeForm();
-       setSelectedFiles([]);
-       setUploadedUrls([]);
-     } catch (error) {
-       console.error('Error saving gallery:', error);
-     } finally {
-       setSaving(false);
-     }
-   }, [form, crud.editingId, crud.items, crud.updateItem, crud.addItem, crud.closeForm, selectedFiles, uploadedUrls, getImageUrls]);
+        if (crud.editingId) {
+          const existing = crud.items.find(i => i.id === crud.editingId);
+          const allImages = existing ? [...existing.images, ...imageUrls] : imageUrls;
+          await crud.updateItem(crud.editingId, { title: form.title, description: form.description, category: form.category, status: form.status, images: allImages });
+          toast.success('Galeri berhasil diperbarui');
+        } else {
+          await crud.addItem({ id: `gallery-${Date.now()}`, title: form.title, description: form.description, images: imageUrls, category: form.category, authorName: 'Admin Kecamatan', authorRole: 'Administrator', status: form.status, createdAt: Date.now() });
+          toast.success('Galeri berhasil ditambahkan');
+        }
+        crud.closeForm();
+        setSelectedFiles([]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      } catch (error) {
+        console.error('Error saving gallery:', error);
+      } finally {
+        setSaving(false);
+      }
+    }, [form, crud.editingId, crud.items, crud.updateItem, crud.addItem, crud.closeForm, selectedFiles, getImageUrls]);
 
    const handleApprove = useCallback(async (id: string) => {
      await crud.updateItem(id, { status: 'published' as GalleryStatus });
@@ -314,7 +284,6 @@ export function ManageGallery() {
         if (!open) {
           crud.closeForm();
           setSelectedFiles([]);
-          setUploadedUrls([]);
         }
       }}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
