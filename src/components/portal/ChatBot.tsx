@@ -24,12 +24,16 @@ const menuOptions: { label: string; value: string }[] = [
   { label: '💬 Chat dengan AI', value: 'chat-ai' },
 ];
 
-async function fetchAIResponse(messages: { role: string; text: string }[]): Promise<string> {
+async function fetchAIResponse(history: { role: string; text: string }[]): Promise<string> {
   try {
+    const lastMsg = history[history.length - 1] || { role: 'user', text: '' };
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({
+        message: lastMsg.text,
+        history: history.slice(0, -1).map(m => ({ role: m.role, content: m.text })),
+      }),
     });
     const data = await res.json();
     return data.reply || 'Maaf, saya tidak bisa menjawab saat ini.';

@@ -1,10 +1,10 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
 function getAI() {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
-  return new GoogleGenAI({ apiKey: key });
+  return new GoogleGenerativeAI(key);
 }
 
 type ChatMessage = {
@@ -137,52 +137,32 @@ export async function POST(req: Request) {
       );
     }
 
-    const formattedHistory = history
-      .slice(-10)
-      .map((msg) => {
-        return `
-${msg.role === "user" ? "Pengguna" : "AI"}:
-${msg.content}
-`;
-      })
-      .join("\n");
-
-    const finalPrompt = `
-${SYSTEM_PROMPT}
-
-Riwayat percakapan:
-${formattedHistory}
-
-Pesan pengguna:
-${message}
-`;
-
-    const ai = getAI();
-    if (!ai) {
+    const genAI = getAI();
+    if (!genAI) {
       return NextResponse.json({
         success: true,
-        reply: "AI sedang dalam mode fallback. Untuk menggunakan AI dengan kemampuan penuh, silakan konfigurasi GEMINI_API_KEY. 😊\n\nSaya tetap bisa membantu dengan pengetahuan dasar saya tentang pendidikan!",
+        reply: "AI sedang dalam mode fallback. Untuk menggunakan AI dengan kemampuan penuh, silakan konfigurasi GEMINI_API_KEY.\n\nSaya tetap bisa membantu dengan pengetahuan dasar saya tentang pendidikan!",
       });
     }
 
-    const response = await ai.models.generateContent({
+    const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash",
-      contents: finalPrompt,
-      config: {
-        temperature: 0.8,
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 4096,
-      },
+      systemInstruction: SYSTEM_PROMPT,
     });
 
-    const text =
-      response.text ||
-      "Maaf, saya belum bisa menjawab saat ini.";
+    const chat = model.startChat({
+      history: history.map((msg) => ({
+        role: msg.role,
+        parts: [{ text: msg.content }],
+      })),
+    });
+
+    const result = await chat.sendMessage(message);
+    const text = result.response.text();
 
     return NextResponse.json({
       success: true,
-      reply: text,
+      reply: text || "Maaf, saya belum bisa menjawab saat ini.",
     });
   } catch (error: any) {
     console.error("GEMINI ERROR:", error?.message || error);
