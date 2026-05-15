@@ -1,11 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
-
-function getAI() {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) return null;
-  return new GoogleGenerativeAI(key);
-}
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -115,50 +108,62 @@ export async function POST(req: Request) {
 
     if (!message.trim()) {
       return NextResponse.json(
-        {
-          success: false,
-          reply: "Pesan tidak boleh kosong.",
-        },
-        {
-          status: 400,
-        }
+        { success: false, reply: "Pesan tidak boleh kosong." },
+        { status: 400 }
       );
     }
 
     if (message.length > 5000) {
       return NextResponse.json(
-        {
-          success: false,
-          reply: "Pesan terlalu panjang.",
-        },
-        {
-          status: 400,
-        }
+        { success: false, reply: "Pesan terlalu panjang." },
+        { status: 400 }
       );
     }
 
-    const genAI = getAI();
-    if (!genAI) {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) {
       return NextResponse.json({
         success: true,
         reply: "AI sedang dalam mode fallback. Untuk menggunakan AI dengan kemampuan penuh, silakan konfigurasi GEMINI_API_KEY.\n\nSaya tetap bisa membantu dengan pengetahuan dasar saya tentang pendidikan!",
       });
     }
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
-      systemInstruction: SYSTEM_PROMPT,
-    });
-
-    const chat = model.startChat({
-      history: history.map((msg) => ({
-        role: msg.role,
+    const contents = [
+      ...history.map((msg) => ({
+        role: msg.role === "assistant" ? "model" : "user",
         parts: [{ text: msg.content }],
       })),
-    });
+      { role: "user", parts: [{ text: message }] },
+    ];
 
-    const result = await chat.sendMessage(message);
-    const text = result.response.text();
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: SYSTEM_PROMPT }],
+          },
+          contents,
+          generationConfig: {
+            temperature: 0.8,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 4096,
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("GEMINI HTTP ERROR:", response.status, errText);
+      throw new Error(`Gemini API returned ${response.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     return NextResponse.json({
       success: true,
@@ -166,17 +171,13 @@ export async function POST(req: Request) {
     });
   } catch (error: any) {
     console.error("GEMINI ERROR:", error?.message || error);
-    if (error?.stack) console.error("GEMINI STACK:", error.stack);
 
     return NextResponse.json(
       {
         success: false,
-        reply:
-          "Maaf, terjadi gangguan pada AI. Silakan coba lagi beberapa saat.",
+        reply: "Maaf, terjadi gangguan pada AI. Silakan coba lagi beberapa saat.",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }
