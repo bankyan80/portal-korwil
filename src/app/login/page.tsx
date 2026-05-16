@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useAppStore } from '@/store/app-store';
 import { getAdminDashboardRoute } from '@/lib/permissions';
 import type { UserRole, UserProfile } from '@/types';
@@ -16,34 +16,42 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Cek apakah user sudah login sebelumnya
   useEffect(() => {
-    if (!auth) {
+    if (!auth || !db) {
       setCheckingAuth(false);
       return;
     }
 
+    let timeoutId: NodeJS.Timeout;
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // User sudah login, cek data di Firestore
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          const profile = userDoc.data() as UserProfile;
-          setUser(profile);
-          if (profile.role !== 'publik') {
-            router.replace(getAdminDashboardRoute(profile.role));
-            return;
+      clearTimeout(timeoutId);
+      try {
+        if (firebaseUser) {
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const profile = userDoc.data() as UserProfile;
+            setUser(profile);
+            if (profile.role !== 'publik') {
+              router.replace(getAdminDashboardRoute(profile.role));
+              return;
+            }
           }
         }
+      } catch (err) {
+        console.error('Gagal memeriksa sesi:', err);
+      } finally {
+        setCheckingAuth(false);
       }
-      setCheckingAuth(false);
     });
 
-    return () => unsubscribe();
+    timeoutId = setTimeout(() => setCheckingAuth(false), 5000);
+    return () => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
   }, [router, setUser]);
 
-  // Redirect jika user sudah ter-set di store
   useEffect(() => {
     if (user && user.role !== 'publik') {
       router.replace(getAdminDashboardRoute(user.role));
@@ -95,7 +103,6 @@ export default function LoginPage() {
       }
 
       setUser(profile);
-      // Langsung redirect tanpa menunggu useEffect
       router.replace(getAdminDashboardRoute(profile.role));
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
