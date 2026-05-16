@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import {
   Shield, LogOut, Loader2, Plus, Trash2, CheckCircle, XCircle,
-  Clock, ExternalLink, BarChart3, ListTodo, Calendar,
+  Clock, ExternalLink, BarChart3, ListTodo, Calendar, Share2, Copy, MessageCircle, Send, X,
 } from 'lucide-react';
 
 interface TaskGroup {
@@ -40,6 +40,8 @@ export default function TugasPage() {
     dueDate: '',
     forJenjang: [] as string[],
   });
+  const [shareTarget, setShareTarget] = useState<TaskGroup | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -230,6 +232,10 @@ export default function TugasPage() {
                         </div>
                         <button onClick={() => setExpandedId(isExpanded ? null : g.id)}
                           className="text-xs text-blue-600 hover:underline shrink-0">Detail</button>
+                        <button onClick={() => setShareTarget(g)}
+                          className="text-emerald-500 hover:text-emerald-700 shrink-0" title="Share ke Grup Operator">
+                          <Share2 className="w-4 h-4" />
+                        </button>
                         <button onClick={() => handleDelete(g.id)}
                           className="text-red-400 hover:text-red-600 shrink-0"><Trash2 className="w-4 h-4" /></button>
                       </div>
@@ -259,6 +265,110 @@ export default function TugasPage() {
           </div>
         )}
       </main>
+
+      {/* Share Modal */}
+      {shareTarget && (() => {
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://portalkorwil.online';
+        const urlTugas = `${origin}${shareTarget.targetLink}`;
+        const deadline = shareTarget.dueDate
+          ? new Date(shareTarget.dueDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+          : 'Tidak ada deadline';
+        const jenjang = shareTarget.forJenjang.length > 0
+          ? shareTarget.forJenjang.join(', ')
+          : 'Semua Jenjang (SD, TK, KB)';
+
+        const teksPesan = [
+          '📢 INFORMASI TUGAS SEKOLAH',
+          '',
+          'Yth. Bapak/Ibu Operator Sekolah',
+          '',
+          'Mohon segera mengerjakan tugas berikut:',
+          '',
+          `Judul:\n${shareTarget.title}`,
+          '',
+          `Jenjang:\n${jenjang}`,
+          '',
+          `Deadline:\n${deadline}`,
+          '',
+          `Link Tugas:\n${urlTugas}`,
+          '',
+          'Setelah selesai, silakan kembali ke PortalKorwil dan klik:',
+          '"Sudah Dikerjakan"',
+          '',
+          'PortalKorwil',
+        ].join('\n');
+
+        const waUrl = `https://wa.me/?text=${encodeURIComponent(teksPesan)}`;
+        const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(urlTugas)}&text=${encodeURIComponent(teksPesan)}`;
+
+        async function handleCopy() {
+          try {
+            await navigator.clipboard.writeText(teksPesan);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          } catch {
+            alert('Gagal menyalin teks');
+          }
+        }
+
+        function handleWebShare() {
+          if (navigator.share) {
+            navigator.share({ title: shareTarget.title, text: teksPesan, url: urlTugas }).catch(() => {});
+          } else {
+            handleCopy();
+          }
+        }
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => { setShareTarget(null); setCopied(false); }}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <Share2 className="w-4 h-4 text-emerald-600" /> Share ke Grup Operator
+                </h3>
+                <button onClick={() => { setShareTarget(null); setCopied(false); }}
+                  className="p-1 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-400" /></button>
+              </div>
+
+              <div className="p-5 overflow-y-auto space-y-3 flex-1">
+                <p className="text-xs text-gray-500">
+                  Bagikan informasi tugas ini ke grup WhatsApp/Telegram operator sekolah.
+                </p>
+
+                <div className="bg-gray-50 border rounded-xl p-4 text-xs font-mono whitespace-pre-wrap break-words text-gray-700 leading-relaxed select-all">
+                  {teksPesan}
+                </div>
+              </div>
+
+              <div className="px-5 py-4 border-t flex flex-col gap-2 shrink-0">
+                {copied && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                    <CheckCircle className="w-4 h-4" /> Teks berhasil disalin!
+                  </div>
+                )}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button onClick={handleCopy}
+                    className="flex flex-col items-center gap-1 px-3 py-3 text-xs font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">
+                    <Copy className="w-5 h-5" /> Copy Pesan
+                  </button>
+                  <a href={waUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1 px-3 py-3 text-xs font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors text-center">
+                    <MessageCircle className="w-5 h-5" /> WhatsApp
+                  </a>
+                  <a href={tgUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1 px-3 py-3 text-xs font-medium text-white bg-sky-600 rounded-xl hover:bg-sky-700 transition-colors text-center">
+                    <Send className="w-5 h-5" /> Telegram
+                  </a>
+                  <button onClick={handleWebShare}
+                    className="flex flex-col items-center gap-1 px-3 py-3 text-xs font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
+                    <Share2 className="w-5 h-5" /> Share Lain
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
