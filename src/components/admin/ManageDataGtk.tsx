@@ -15,7 +15,7 @@ import {
   collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot,
 } from 'firebase/firestore';
 import {
-  School, Users, BookOpen, BadgeCheck, Search, Loader2, Plus, Pencil, Trash2, Save, GraduationCap,
+  School, Users, BookOpen, BadgeCheck, Search, Loader2, Plus, Pencil, Trash2, Save, GraduationCap, Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -349,6 +349,11 @@ export function ManageDataGtk() {
                     <td className="px-4 py-3 text-muted-foreground text-xs hidden lg:table-cell">{p.tugas_tambahan || '-'}</td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
+                        <a href={`/admin/super/guru/${encodeURIComponent(p.nik)}`}
+                          className="inline-flex items-center justify-center h-8 w-8 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Lihat Profil">
+                          <Eye className="w-3.5 h-3.5" />
+                        </a>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openEdit(p)}><Pencil className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => setDeleteId(p.id || '')}><Trash2 className="w-3.5 h-3.5" /></Button>
                       </div>
