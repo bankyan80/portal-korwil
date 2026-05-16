@@ -21,10 +21,11 @@ export async function GET(req: NextRequest) {
       const snapshot = await query.get();
       let all = snapshot.docs.map((doc) => ({ nik: doc.id, ...doc.data() }));
 
-      // If Firestore returns 0 results, fall back to static JSON
-      // This happens when Firebase quotas are exceeded or collection is empty
-      if (all.length === 0) {
-        throw new Error('Empty result from Firestore, fallback to static');
+      // If Firestore returns 0 results or data lacks sekolah field, fall back to static JSON
+      // This happens when Firebase quotas are exceeded, collection is empty,
+      // or sync-data.mjs saved students with schoolId instead of sekolah
+      if (all.length === 0 || (all.length > 0 && !all[0].sekolah)) {
+        throw new Error('Empty or incomplete Firestore data, fallback to static');
       }
 
       if (sekolah) {

@@ -128,19 +128,44 @@ export default function LaporBulananPage() {
         try {
           const snap = await getDoc(doc(db, 'sarpras', user.schoolId));
           if (snap.exists()) setSarpras(snap.data());
-        } catch (e) { console.error('Gagal memuat data sekolah:', e); }
-      }
-      setSekolah(schoolData);
-      await loadLaporanFromFirestore(schoolData);
-      await loadHistory();
-
-      if (db && user?.schoolId) {
-        try {
-          const snap = await getDoc(doc(db, 'sarpras', user.schoolId));
-          if (snap.exists()) setSarpras(snap.data());
         } catch (e) { console.error('Gagal memuat sarpras:', e); }
       }
-      setPerKelas(kelas);
+
+      let gtkSchools: any[] = [];
+      try {
+        const gtkRes = await fetch('/api/pegawai/gtk-summary');
+        if (gtkRes.ok) {
+          const gtkData = await gtkRes.json();
+          gtkSchools = gtkData.schools || [];
+        }
+      } catch (e) { console.error('Gagal memuat GTK:', e); }
+
+      let apiSiswa: any[] = [];
+      if (user?.schoolName) {
+        try {
+          const res = await fetch(`/api/siswa/list?sekolah=${encodeURIComponent(user.schoolName)}`);
+          if (res.ok) {
+            const data = await res.json();
+            apiSiswa = data.siswa || [];
+          }
+        } catch (e) { console.error('Gagal memuat siswa:', e); }
+      }
+
+      const kelasMap: Record<string, { l: number; p: number }> = {};
+      let totalL = 0;
+      let totalP = 0;
+      for (let i = 1; i <= 6; i++) {
+        const apiL = apiSiswa.filter((s: any) => String(s.kelas) === String(i) && s.jk === 'L').length;
+        const apiP = apiSiswa.filter((s: any) => String(s.kelas) === String(i) && s.jk === 'P').length;
+        const laporanL = getSiswaVal(`kelas${i}_l`);
+        const laporanP = getSiswaVal(`kelas${i}_p`);
+        const lVal = !isNaN(laporanL) ? laporanL : apiL;
+        const pVal = !isNaN(laporanP) ? laporanP : apiP;
+        kelasMap[`Kelas ${i}`] = { l: lVal, p: pVal };
+        totalL += lVal;
+        totalP += pVal;
+      }
+      setPerKelas(kelasMap);
       setSiswaL(totalL);
       setSiswaP(totalP);
 
