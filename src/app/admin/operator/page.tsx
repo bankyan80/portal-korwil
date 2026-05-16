@@ -65,7 +65,7 @@ export default function OperatorDashboard() {
   function handleLogout() {
     if (auth) auth.signOut();
     setUser(null);
-    router.push('/login');
+    router.push('/');
   }
 
   const menu = [

@@ -29,7 +29,7 @@ export default function OrganisasiDashboard() {
   function handleLogout() {
     if (auth) { auth.signOut(); }
     setUser(null);
-    router.push('/login');
+    router.push('/');
   }
 
   return (
