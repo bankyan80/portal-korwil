@@ -90,6 +90,7 @@ export default function SuperAdminDashboard() {
     { label: 'Galeri', icon: Image, desc: 'Dokumentasi kegiatan', href: '/admin/operator/galeri', color: 'bg-pink-100 text-pink-700' },
     { label: 'Organisasi', icon: Globe, desc: 'Kelola organisasi & agenda', href: '/admin/organisasi', color: 'bg-teal-100 text-teal-700' },
     { label: 'Kalender', icon: Calendar, desc: 'Kalender kegiatan', href: '/kalender', color: 'bg-red-100 text-red-700' },
+    { label: 'Validasi Data', icon: BarChart3, desc: 'Cek kelengkapan data per sekolah', href: '/admin/super/validator', color: 'bg-red-100 text-red-700' },
     { label: 'Settings', icon: Settings, desc: 'Pengaturan sistem', href: '#', color: 'bg-gray-100 text-gray-700' },
   ];
 
