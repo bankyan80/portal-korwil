@@ -102,6 +102,12 @@ export default function Gallery() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => <GallerySkeleton key={i} />)}
             </div>
+          ) : published.length === 0 ? (
+            <div className="p-8 text-center">
+              <Camera className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm text-gray-400">Belum ada galeri kegiatan</p>
+              <p className="text-xs text-gray-400 mt-1">Foto kegiatan akan muncul di sini</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {published.map((item) => (

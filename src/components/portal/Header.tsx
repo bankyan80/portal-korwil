@@ -7,14 +7,12 @@ import {
   Bell,
   Camera,
   Building2,
-  Phone,
   LogOut,
   LogIn,
   User,
   Shield,
   Menu,
   X,
-  WalletMinimal,
   MessageCircle,
   Info,
   GraduationCap,
@@ -42,17 +40,6 @@ const navItems = [
 
 const chatNavItem = { label: 'Obrolan Seru', icon: MessageCircle, view: 'chat' as const, isView: true };
 
-const scrollToSection = (sectionId: string | null) => {
-  if (!sectionId) {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return;
-  }
-  const el = document.getElementById(sectionId);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth' });
-  }
-};
-
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { setCurrentView } = useAppStore();
 
@@ -61,8 +48,13 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
       window.location.href = item.href;
     } else if (item.isView && item.view) {
       if (item.view) setCurrentView(item.view as AppView);
-    } else {
-      scrollToSection(item.sectionId);
+    } else if (item.sectionId) {
+      const el = document.getElementById(item.sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.location.href = `/#${item.sectionId}`;
+      }
     }
     onNavigate?.();
   }
@@ -172,8 +164,13 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
       window.location.href = item.href;
     } else if (item.isView && item.view) {
       if (item.view) setCurrentView(item.view as AppView);
-    } else {
-      scrollToSection(item.sectionId);
+    } else if (item.sectionId) {
+      const el = document.getElementById(item.sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.location.href = `/#${item.sectionId}`;
+      }
     }
     onClose();
   }

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
+import { Bell } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BlueBarHeader } from '@/components/shared/SectionTitle';
 import { truncate } from '@/lib/truncate';
@@ -40,6 +41,12 @@ export default function Announcements() {
           {!ready ? (
             <div className="p-2">
               {Array.from({ length: 3 }).map((_, i) => <AnnouncementSkeleton key={i} />)}
+            </div>
+          ) : displayed.length === 0 ? (
+            <div className="p-8 text-center">
+              <Bell className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm text-gray-400">Belum ada informasi</p>
+              <p className="text-xs text-gray-400 mt-1">Informasi terbaru akan muncul di sini</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
