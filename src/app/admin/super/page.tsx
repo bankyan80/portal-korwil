@@ -8,7 +8,7 @@ import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import {
   Users, School, BarChart3, FileText, Image, Megaphone,
   LogOut, Loader2, Building2, RefreshCw, Settings, Shield,
-  Calendar, BookOpen, Globe, Newspaper
+  Calendar, BookOpen, Globe, Newspaper, ListTodo
 } from 'lucide-react';
 
 export default function SuperAdminDashboard() {
@@ -91,6 +91,7 @@ export default function SuperAdminDashboard() {
     { label: 'Organisasi', icon: Globe, desc: 'Kelola organisasi & agenda', href: '/admin/organisasi', color: 'bg-teal-100 text-teal-700' },
     { label: 'Kalender', icon: Calendar, desc: 'Kalender kegiatan', href: '/kalender', color: 'bg-red-100 text-red-700' },
     { label: 'Validasi Data', icon: BarChart3, desc: 'Cek kelengkapan data per sekolah', href: '/admin/super/validator', color: 'bg-red-100 text-red-700' },
+    { label: 'Tugas', icon: ListTodo, desc: 'Buat & monitor tugas sekolah', href: '/admin/super/tugas', color: 'bg-indigo-100 text-indigo-700' },
     { label: 'Settings', icon: Settings, desc: 'Pengaturan sistem', href: '#', color: 'bg-gray-100 text-gray-700' },
   ];
 

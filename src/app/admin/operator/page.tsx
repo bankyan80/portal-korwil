@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { normalizeSchool } from '@/lib/normalize';
-import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw } from 'lucide-react';
+import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw, ListTodo, CheckCircle, ExternalLink } from 'lucide-react';
 
 export default function OperatorDashboard() {
   const { user, setUser } = useAppStore();
@@ -82,6 +82,46 @@ export default function OperatorDashboard() {
 
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState('');
+  const [tugasList, setTugasList] = useState<any[]>([]);
+  const [tugasLoading, setTugasLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?.schoolId && !user?.schoolName) return;
+    fetchTugas();
+  }, [user?.schoolId, user?.schoolName]);
+
+  async function fetchTugas() {
+    setTugasLoading(true);
+    try {
+      const res = await fetch('/api/tugas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'get-operator',
+          schoolId: user?.schoolId || '',
+          schoolName: user?.schoolName || '',
+        }),
+      });
+      const json = await res.json();
+      if (json.success) setTugasList(json.tasks);
+    } catch (e) { console.error(e); } finally { setTugasLoading(false); }
+  }
+
+  async function handleCompleteTask(taskId: string) {
+    try {
+      await fetch('/api/tugas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'complete',
+          taskId,
+          schoolId: user?.schoolId || '',
+          schoolName: user?.schoolName || '',
+        }),
+      });
+      await fetchTugas();
+    } catch (e) { console.error(e); }
+  }
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
@@ -165,6 +205,44 @@ export default function OperatorDashboard() {
             </a>
           ))}
         </div>
+
+        {/* Tugas dari Super Admin */}
+        {!tugasLoading && tugasList.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
+            <div className="px-5 py-3 border-b bg-blue-50 dark:bg-blue-900/20 flex items-center gap-2">
+              <ListTodo className="w-4 h-4 text-blue-700" />
+              <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-300">Tugas dari Admin</h3>
+            </div>
+            <div className="divide-y">
+              {tugasList.map((t: any) => (
+                <div key={t.id} className="px-5 py-3 flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{t.title}</p>
+                    {t.description && <p className="text-xs text-gray-500 mt-0.5">{t.description}</p>}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {t.completed ? (
+                      <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                        <CheckCircle className="w-3.5 h-3.5" /> Selesai
+                      </span>
+                    ) : (
+                      <>
+                        <a href={t.targetLink}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800">
+                          <ExternalLink className="w-3 h-3" /> {t.targetLabel || 'Buka'}
+                        </a>
+                        <button onClick={() => handleCompleteTask(t.id)}
+                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100">
+                          <CheckCircle className="w-3 h-3" /> Selesai
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6">
           <h2 className="font-semibold text-gray-900 dark:text-white mb-2">
