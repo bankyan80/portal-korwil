@@ -14,10 +14,39 @@ export default function LoginPage() {
   const { user, setUser } = useAppStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
+  // Cek apakah user sudah login sebelumnya
+  useEffect(() => {
+    if (!auth) {
+      setCheckingAuth(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // User sudah login, cek data di Firestore
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const profile = userDoc.data() as UserProfile;
+          setUser(profile);
+          if (profile.role !== 'publik') {
+            router.replace(getAdminDashboardRoute(profile.role));
+            return;
+          }
+        }
+      }
+      setCheckingAuth(false);
+    });
+
+    return () => unsubscribe();
+  }, [router, setUser]);
+
+  // Redirect jika user sudah ter-set di store
   useEffect(() => {
     if (user && user.role !== 'publik') {
-      router.push(getAdminDashboardRoute(user.role));
+      router.replace(getAdminDashboardRoute(user.role));
     }
   }, [user, router]);
 
@@ -66,7 +95,8 @@ export default function LoginPage() {
       }
 
       setUser(profile);
-      router.push(getAdminDashboardRoute(profile.role));
+      // Langsung redirect tanpa menunggu useEffect
+      router.replace(getAdminDashboardRoute(profile.role));
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Login dibatalkan');
@@ -76,6 +106,14 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Memeriksa sesi...</p>
+      </div>
+    );
   }
 
   return (
