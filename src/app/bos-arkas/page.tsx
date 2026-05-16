@@ -41,7 +41,10 @@ export default function BosArkasPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
+    if (!db) { 
+      setLoading(false); 
+      return; 
+    }
 
     const q = query(collection(db, 'bos_arkas'), orderBy('nama'));
     const unsub = onSnapshot(q, (snapshot) => {

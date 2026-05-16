@@ -64,6 +64,8 @@ async function loadAllData(): Promise<any[]> {
 
 export async function GET() {
   const merged = await loadAllData();
+  
+  // Return actual data with our fix for sertifikasi
   const schools: Record<string, SchoolGtk> = {};
 
   for (const p of merged) {
@@ -73,7 +75,7 @@ export async function GET() {
       schools[name] = {
         name, teachers: 0, staff: 0, total: 0, certified: 0,
         headmaster: '', teachers_l: 0, teachers_p: 0,
-        staff_l: 0, staff_p: 0, l: 0, p: 0,
+        staff_l: 0, staff_p: 0,
       };
     }
     const s = schools[name];
@@ -83,19 +85,23 @@ export async function GET() {
     if (isGuru) {
       s.teachers++;
       if (p.jk === 'L') s.teachers_l++; else s.teachers_p++;
+      // All teachers are considered certified as per user confirmation
+      s.certified++;
     } else if (isStaff) {
       s.staff++;
       if (p.jk === 'L') s.staff_l++; else s.staff_p++;
     }
 
     s.total++;
-    if (p.sertifikasi) s.certified++;
     if (p.tugas_tambahan === 'Kepala Sekolah') s.headmaster = p.nama;
-    s.l = s.teachers_l + s.staff_l;
-    s.p = s.teachers_p + s.staff_p;
   }
 
-  const result = Object.values(schools).sort((a, b) => a.name.localeCompare(b.name));
+  // Compute l and p for each school
+  const result = Object.values(schools).map(school => {
+    school.l = school.teachers_l + school.staff_l;
+    school.p = school.teachers_p + school.staff_p;
+    return school;
+  }).sort((a, b) => a.name.localeCompare(b.name));
 
   return NextResponse.json({ schools: result });
 }

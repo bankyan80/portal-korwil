@@ -122,7 +122,8 @@ export default function DataPDPage() {
         } else {
           setSekolahData(buildSekolahData());
         }
-      } catch {
+      } catch (e) {
+        console.error('Gagal memuat data PD:', e);
         setSekolahData(buildSekolahData());
       } finally {
         setLoading(false);

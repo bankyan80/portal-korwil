@@ -61,13 +61,13 @@ export default function DataRombelPage() {
     async function fetch() {
       try {
         const res = await fetch('/api/siswa/list');
-        if (!res.ok) return;
+        if (!res.ok) { console.error('Gagal fetch siswa:', res.status, res.statusText); return; }
         const json = await res.json();
         if (json.siswa && json.siswa.length > 0) {
           const aggregated = aggregateRombel(json.siswa);
           if (aggregated.length > 0) setData(aggregated);
         }
-      } catch {} finally { setLoading(false); }
+      } catch (e) { console.error('Gagal memuat data rombel:', e); } finally { setLoading(false); }
     }
     fetch();
   }, []);

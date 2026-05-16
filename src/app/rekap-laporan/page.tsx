@@ -4,7 +4,7 @@ import {
   ArrowLeft, BarChart3, FileSpreadsheet, FileText, Printer,
   Search, School, Building2, GraduationCap, Users, BookOpen,
   CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Info,
-  ChevronDown, ChevronUp, Filter, Eye, Edit, Trash2,
+  ChevronDown, ChevronUp, Filter, Eye, Edit, Trash2, SortAsc,
 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -288,10 +288,7 @@ export default function LaporanBulananPage() {
     else { setSortField(field); setSortDir('asc'); }
   }
 
-  function SortIcon({ field }: { field: string }) {
-    if (sortField !== field) return null;
-    return sortDir === 'asc' ? <ChevronUp className="w-3 h-3 inline" /> : <ChevronDown className="w-3 h-3 inline" />;
-  }
+
 
   function handleExportExcel() {
     alert('Export Excel - akan diimplementasikan');
@@ -484,12 +481,12 @@ export default function LaporanBulananPage() {
               <thead>
                 <tr className="bg-gray-50 dark:bg-slate-700/50 text-left sticky top-0">
                   <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 w-10">No</th>
-                  <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none" onClick={() => toggleSort('nama')}>
-                    Nama Sekolah <SortIcon field="nama" />
-                  </th>
-                  <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hidden sm:table-cell" onClick={() => toggleSort('jenjang')}>
-                    Jenjang <SortIcon field="jenjang" />
-                  </th>
+                   <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none" onClick={() => toggleSort('nama')}>
+                     Nama Sekolah <SortAsc field="nama" />
+                   </th>
+                   <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hidden sm:table-cell" onClick={() => toggleSort('jenjang')}>
+                     Jenjang <SortAsc field="jenjang" />
+                   </th>
                   <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hidden sm:table-cell" onClick={() => toggleSort('status')}>
                     Status <SortIcon field="status" />
                   </th>

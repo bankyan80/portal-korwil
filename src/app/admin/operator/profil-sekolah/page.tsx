@@ -31,7 +31,7 @@ export default function OperatorProfilSekolah() {
     if (!db || !user?.schoolId) return;
     const unsub = onSnapshot(doc(db, 'schools', user.schoolId), (snap) => {
       if (snap.exists()) setSchool(snap.data());
-    });
+    }, (err) => { console.error('Error listening to school:', err); toast.error('Gagal memuat data sekolah'); });
     return () => unsub();
   }, [user?.schoolId]);
 
@@ -51,7 +51,7 @@ export default function OperatorProfilSekolah() {
   }
 
   async function handleSave() {
-    if (!form.name.trim() || !db || !user?.schoolId) return;
+    if (!form.name.trim() || !db || !user?.schoolId) { toast.error('Nama sekolah harus diisi'); return; }
     setSaving(true);
     try {
       await setDoc(doc(db, 'schools', user.schoolId), {

@@ -105,14 +105,20 @@ export default function BupPage() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: '100' });
-    if (search.trim()) params.set('search', search.trim());
-    fetch(`/api/pegawai/all?${params}`)
-      .then((r) => r.json())
-      .then((j) => setData(j))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
+    (async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({ page: String(page), limit: '100' });
+        if (search.trim()) params.set('search', search.trim());
+        const r = await fetch(`/api/pegawai/all?${params}`);
+        const j = await r.json();
+        setData(j);
+      } catch {
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [page, search]);
 
   const summary = useMemo(() => {

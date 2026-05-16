@@ -222,7 +222,9 @@ export default function DataGTKPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {filteredData.map((item, i) => (
+                  {filteredData.length === 0 ? (
+                    <tr><td colSpan={9} className="px-5 py-12 text-center text-gray-400">Tidak ada data</td></tr>
+                  ) : filteredData.map((item, i) => (
                     <tr key={item.name} className="hover:bg-blue-50/50 transition-colors">
                       <td className="px-5 py-3 text-gray-500 text-center">{i + 1}</td>
                       <td className="px-5 py-3 font-medium text-[#0d3b66]">{item.name}</td>

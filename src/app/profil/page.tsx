@@ -15,7 +15,7 @@ export default function ProfilPage() {
       try {
         const data = await getDocById('settings', 'profile');
         if (data) setProfile(data);
-      } catch {} finally { setLoading(false); }
+      } catch (e) { console.error('Gagal memuat profil:', e); } finally { setLoading(false); }
     }
     fetchProfile();
   }, []);

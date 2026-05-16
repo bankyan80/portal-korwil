@@ -58,7 +58,7 @@ export default function DataPAUDPage() {
             }));
           if (filtered.length > 0) setSchools(filtered);
         }
-      } catch {} finally { setLoading(false); }
+      } catch (e) { console.error('Gagal memuat data PAUD:', e); } finally { setLoading(false); }
     }
     fetch();
   }, []);

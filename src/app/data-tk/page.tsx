@@ -49,7 +49,7 @@ export default function DataTKPage() {
             }));
           if (filtered.length > 0) setSchools(filtered);
         }
-      } catch {} finally { setLoading(false); }
+      } catch (e) { console.error('Gagal memuat data TK:', e); } finally { setLoading(false); }
     }
     fetch();
   }, []);

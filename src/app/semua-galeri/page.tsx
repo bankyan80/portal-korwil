@@ -82,6 +82,13 @@ export default function SemuaGaleriPage() {
           <p className="text-sm text-gray-500 mt-1">{published.length} kegiatan</p>
         </div>
 
+        {published.length === 0 ? (
+          <div className="bg-white rounded-xl border p-12 text-center">
+            <Camera className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Belum ada galeri kegiatan.</p>
+            <p className="text-xs text-gray-400 mt-1">Admin akan menambahkan dokumentasi kegiatan melalui panel admin.</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {published.map((item) => (
             <div
@@ -90,7 +97,7 @@ export default function SemuaGaleriPage() {
               onClick={() => setSelected(item)}
             >
               <div className="overflow-hidden">
-                <img src={item.images[0]} alt={item.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+                <img src={item.images?.[0] || ''} alt={item.title || 'Galeri'} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               </div>
               <div className="p-3">
                 <h3 className="text-sm font-semibold text-[#0d3b66] mb-1 line-clamp-2 leading-snug">{item.title}</h3>
@@ -102,6 +109,7 @@ export default function SemuaGaleriPage() {
             </div>
           ))}
         </div>
+        )}
       </main>
 
       {selected && <ImageViewer item={selected} onClose={() => setSelected(null)} />}

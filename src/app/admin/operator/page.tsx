@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
@@ -11,41 +11,54 @@ import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, 
 export default function OperatorDashboard() {
   const { user, setUser } = useAppStore();
   const router = useRouter();
-  const [students, setStudents] = useState(0);
-  const [teachers, setTeachers] = useState(0);
-  const [statsLoading, setStatsLoading] = useState(true);
 
   const { data: allStudents } = useCachedFirestore<Record<string, any>>({
-    collectionName: 'students', realtime: false,
+    collectionName: 'students',
+    realtime: false,
     enabled: !!user?.schoolName,
   });
   const { data: allEmployees } = useCachedFirestore<Record<string, any>>({
-    collectionName: 'employees', realtime: false,
+    collectionName: 'employees',
+    realtime: false,
     enabled: !!user?.schoolName,
   });
+
+  const calculateCounts = (
+    students: Record<string, any>[],
+    employees: Record<string, any>[],
+    schoolName: string | undefined,
+    schoolId: string | undefined
+  ) => {
+    if (!schoolName && !schoolId) return { sCount: 0, eCount: 0 };
+    const normalized = normalizeSchool(schoolName || '');
+    let sCount = 0;
+    let eCount = 0;
+    for (const d of students) {
+      if (d.schoolId === schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized) {
+        sCount++;
+      }
+    }
+    for (const d of employees) {
+      if (d.schoolId === schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized) {
+        eCount++;
+      }
+    }
+    return { sCount, eCount };
+  };
+
+  const calculatedCounts = useMemo(() => {
+    return calculateCounts(
+      allStudents,
+      allEmployees,
+      user?.schoolName,
+      user?.schoolId
+    );
+  }, [allStudents, allEmployees, user?.schoolName, user?.schoolId]);
 
   useEffect(() => {
     if (!user) return;
     if (user.role !== 'operator_sekolah') router.push('/login');
   }, [user, router]);
-
-  useEffect(() => {
-    if (allStudents.length > 0 || allEmployees.length > 0) setStatsLoading(false);
-  }, [allStudents, allEmployees]);
-
-  useEffect(() => {
-    if (!user?.schoolName && !user?.schoolId) return;
-    const normalized = normalizeSchool(user.schoolName || '');
-    let sCount = 0, eCount = 0;
-    for (const d of allStudents) {
-      if (d.schoolId === user?.schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized) sCount++;
-    }
-    for (const d of allEmployees) {
-      if (d.schoolId === user?.schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized) eCount++;
-    }
-    setStudents(sCount);
-    setTeachers(eCount);
-  }, [allStudents, allEmployees, user?.schoolName, user?.schoolId]);
 
   if (!user) return null;
 
@@ -57,15 +70,17 @@ export default function OperatorDashboard() {
 
   const menu = [
     { label: 'Profil Sekolah', icon: School, desc: 'Kelola data sekolah', count: null, href: '/admin/operator/profil-sekolah' },
-    { label: 'Data Guru', icon: Users, desc: 'Kelola data pendidik dan tenaga kependidikan', count: teachers, href: '/admin/operator/data-guru' },
-    { label: 'Data Siswa', icon: Users, desc: 'Kelola data peserta didik', count: students, href: '/admin/operator/data-siswa' },
+    { label: 'Data Guru', icon: Users, desc: 'Kelola data pendidik dan tenaga kependidikan', count: calculatedCounts.eCount, href: '/admin/operator/data-guru' },
+    { label: 'Data Siswa', icon: Users, desc: 'Kelola data peserta didik', count: calculatedCounts.sCount, href: '/admin/operator/data-siswa' },
     { label: 'Rekap Kelas', icon: BarChart3, desc: 'Rekapitulasi kelas otomatis', count: null, href: '/admin/operator/rekap-kelas' },
     { label: 'SPMB', icon: FileText, desc: 'Penerimaan peserta didik baru', count: null, href: '/admin/operator/spmb' },
     { label: 'Upload Berita', icon: Megaphone, desc: 'Kirim berita sekolah', count: null, href: '/admin/operator/berita' },
     { label: 'Upload Galeri', icon: Image, desc: 'Dokumentasi kegiatan sekolah', count: null, href: '/admin/operator/galeri' },
     { label: 'Sarpras', icon: Building2, desc: 'Data sarana dan prasarana sekolah', count: null, href: '/admin/operator/sarpras' },
-    { label: 'Cetak Laporan', icon: FileText, desc: 'Cetak laporan bulanan sekolah', count: null, href: '/admin/operator/cetak-laporan-bulanan' },
+    { label: 'Lapor Bulanan', icon: FileText, desc: 'Cetak & kirim laporan bulanan sekolah', count: null, href: '/admin/operator/laporan-bulanan' },
   ];
+
+  const isStatsLoading = !allStudents || !allEmployees;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -92,7 +107,7 @@ export default function OperatorDashboard() {
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{item.label}</p>
                   {item.count !== null && (
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {statsLoading ? <Loader2 className="w-5 h-5 animate-spin inline" /> : item.count}
+                      {isStatsLoading ? <Loader2 className="w-5 h-5 animate-spin inline" /> : item.count}
                     </p>
                   )}
                 </div>

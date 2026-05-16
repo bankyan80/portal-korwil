@@ -63,7 +63,7 @@ export default function DataSDPage() {
             }));
           if (filtered.length > 0) setSchools(filtered);
         }
-      } catch {} finally { setLoading(false); }
+      } catch (e) { console.error('Gagal memuat data SD:', e); } finally { setLoading(false); }
     }
     fetch();
   }, []);
@@ -167,7 +167,10 @@ export default function DataSDPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filtered.map((school, i) => (
+                {(() => {
+                  if (loading) return <tr><td colSpan={6} className="px-5 py-12 text-center text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline mr-2" />Memuat data...</td></tr>;
+                  if (filtered.length === 0) return <tr><td colSpan={6} className="px-5 py-12 text-center text-gray-400">Tidak ada data</td></tr>;
+                  return filtered.map((school, i) => (
                   <tr key={school.npsn} className="hover:bg-blue-50/50 transition-colors">
                     <td className="px-5 py-3 text-gray-500">{i + 1}</td>
                     <td className="px-5 py-3 font-medium text-[#0d3b66]">{school.name}</td>
@@ -188,8 +191,9 @@ export default function DataSDPage() {
                         {school.address}
                       </div>
                     </td>
-                  </tr>
-                ))}
+                    </tr>
+                  ));
+                })()}
               </tbody>
             </table>
           </div>

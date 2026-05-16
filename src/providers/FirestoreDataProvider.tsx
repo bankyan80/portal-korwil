@@ -32,11 +32,11 @@ export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) 
       !institutionLinksHook.loading;
 
     if (allLoaded) {
-      if (menusHook.items.length > 0) setMenus(menusHook.items);
-      if (announcementsHook.items.length > 0) setAnnouncements(announcementsHook.items);
-      if (galleryHook.items.length > 0) setGalleryItems(galleryHook.items);
-      if (organizationsHook.items.length > 0) setOrganizations(organizationsHook.items);
-      if (institutionLinksHook.items.length > 0) setInstitutionLinks(institutionLinksHook.items);
+      setMenus(menusHook.items);
+      setAnnouncements(announcementsHook.items);
+      setGalleryItems(galleryHook.items);
+      setOrganizations(organizationsHook.items);
+      setInstitutionLinks(institutionLinksHook.items);
       setReady(true);
     }
   }, [

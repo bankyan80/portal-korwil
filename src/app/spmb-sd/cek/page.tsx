@@ -31,18 +31,6 @@ export default function CekNikPage() {
   const [manualTgl, setManualTgl] = useState('');
   const [manualUsia, setManualUsia] = useState<{ tahun: number; bulan: number; memenuhi: boolean } | null>(null);
 
-  useEffect(() => {
-    if (nik.length === 16) {
-      cariData();
-    } else {
-      setData(null);
-      setNotFound(false);
-      setUsia(null);
-      setManualUsia(null);
-      setManualTgl('');
-    }
-  }, [nik]);
-
   async function cariData() {
     setLoading(true);
     setData(null);
@@ -67,6 +55,18 @@ export default function CekNikPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (nik.length === 16) {
+      cariData();
+    } else {
+      setData(null);
+      setNotFound(false);
+      setUsia(null);
+      setManualUsia(null);
+      setManualTgl('');
+    }
+  }, [nik]);
 
   function cekManualUsia() {
     setManualUsia(hitungUsia(manualTgl));
