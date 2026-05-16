@@ -79,10 +79,12 @@ export default function LoginPage() {
         profile = userDoc.data() as UserProfile;
         await setDoc(userDocRef, { lastLogin: Date.now() }, { merge: true });
       } else {
-        const email = firebaseUser.email || '';
-        const SUPER_ADMIN_EMAILS = ['yanuarhidayat80@gmail.com'];
-        const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
-        const role: UserRole = isSuperAdmin ? 'super_admin' : 'publik';
+       const email = firebaseUser.email || '';
+         const SUPER_ADMIN_EMAILS = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS
+           ? process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS.split(',').map(email => email.trim())
+           : [];
+         const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
+         const role: UserRole = isSuperAdmin ? 'super_admin' : 'publik';
 
         if (!isSuperAdmin) {
           setError('Email Anda tidak terdaftar. Hubungi administrator.');
