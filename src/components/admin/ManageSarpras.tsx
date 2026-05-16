@@ -120,9 +120,11 @@ export function ManageSarpras() {
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan
         </Button>
       </div>
-      <p className="text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2">
-        Data sarpras akan otomatis terisi di cetak laporan bulanan.
-      </p>
+      <div className="text-xs space-y-1">
+        <p className="text-blue-600 bg-blue-50 rounded-lg px-3 py-2">
+          Semua field SARPRAS akan otomatis terisi di cetak laporan bulanan (Daftar I). <strong>Wajib diisi</strong> — jika tidak ada, isi dengan angka <strong>0</strong> atau tanda <strong>strip (-)</strong>.
+        </p>
+      </div>
 
       {Object.entries(sectionKeys).map(([section, keys]) => (
         <div key={section} className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-5 space-y-4">
