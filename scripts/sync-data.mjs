@@ -130,6 +130,7 @@ const VARIASI_NAMA = {
   // SDN format
   'sdn 3 sigong': makeId('SD NEGERI 3 SIGONG'),
   'negeri 1 sigong': makeId('SD NEGERI 1 SIGONG'),
+  'negeri 1 sigong kecamatan lemahabang': makeId('SD NEGERI 1 SIGONG'),
   // TK
   'negeri lemahabang': makeId('TK NEGERI LEMAHABANG'),
   'aisyiyah lemahabang': makeId('TK AISYIYAH LEMAHABANG'),
