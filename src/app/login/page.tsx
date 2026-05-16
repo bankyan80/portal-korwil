@@ -26,46 +26,51 @@ export default function LoginPage() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       clearTimeout(timeoutId);
       try {
-        if (firebaseUser) {
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            const profile = userDoc.data() as UserProfile;
-            setUser(profile);
-          } else {
-            // New user - check if super admin via environment variable
-            const email = firebaseUser.email || '';
-            const SUPER_ADMIN_EMAILS = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS
-              ? process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS.split(',').map(email => email.trim())
-              : [];
-            const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
-            const role: UserRole = isSuperAdmin ? 'super_admin' : 'publik';
+         if (firebaseUser) {
+           const userDocRef = doc(db, 'users', firebaseUser.uid);
+           const userDoc = await getDoc(userDocRef);
+           let profile: UserProfile | null = null;
+           if (userDoc.exists()) {
+             profile = userDoc.data() as UserProfile;
+             setUser(profile);
+           } else {
+             // New user - check if super admin via environment variable
+             const email = firebaseUser.email || '';
+             const SUPER_ADMIN_EMAILS = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS
+               ? process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS.split(',').map(email => email.trim())
+               : [];
+             const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
+             const role: UserRole = isSuperAdmin ? 'super_admin' : 'publik';
 
-            if (!isSuperAdmin) {
-              setError('Email Anda tidak terdaftar. Hubungi administrator.');
-              setLoading(false);
-              return;
-            }
+             if (!isSuperAdmin) {
+               setError('Email Anda tidak terdaftar. Hubungi administrator.');
+               setLoading(false);
+               return;
+             }
 
-            const newProfile: UserProfile = {
-              uid: firebaseUser.uid,
-              email,
-              displayName: firebaseUser.displayName || '',
-              role,
-              isActive: true,
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-            };
-            await setDoc(userDocRef, newProfile);
-            setUser(newProfile);
-          }
-        }
-      } catch (err) {
-        console.error('Gagal memeriksa sesi:', err);
-        setError('Gagal memeriksa sesi. Silakan coba lagi.');
-      } finally {
-        setCheckingAuth(false);
-      }
+             profile = {
+               uid: firebaseUser.uid,
+               email,
+               displayName: firebaseUser.displayName || '',
+               role,
+               isActive: true,
+               createdAt: Date.now(),
+               updatedAt: Date.now(),
+             };
+             await setDoc(userDocRef, profile);
+             setUser(profile);
+           }
+           // After setting user, redirect to appropriate dashboard
+           if (profile) {
+             router.replace(getAdminDashboardRoute(profile.role));
+           }
+         }
+       } catch (err) {
+         console.error('Gagal memeriksa sesi:', err);
+         setError('Gagal memeriksa sesi. Silakan coba lagi.');
+       } finally {
+         setCheckingAuth(false);
+       }
     });
 
     timeoutId = setTimeout(() => setCheckingAuth(false), 5000);
