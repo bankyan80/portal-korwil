@@ -32,14 +32,37 @@ export default function LoginPage() {
           if (userDoc.exists()) {
             const profile = userDoc.data() as UserProfile;
             setUser(profile);
-            if (profile.role !== 'publik') {
-              router.replace(getAdminDashboardRoute(profile.role));
+          } else {
+            // New user - check if super admin via environment variable
+            const email = firebaseUser.email || '';
+            const SUPER_ADMIN_EMAILS = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS
+              ? process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS.split(',').map(email => email.trim())
+              : [];
+            const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
+            const role: UserRole = isSuperAdmin ? 'super_admin' : 'publik';
+
+            if (!isSuperAdmin) {
+              setError('Email Anda tidak terdaftar. Hubungi administrator.');
+              setLoading(false);
               return;
             }
+
+            const newProfile: UserProfile = {
+              uid: firebaseUser.uid,
+              email,
+              displayName: firebaseUser.displayName || '',
+              role,
+              isActive: true,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            };
+            await setDoc(userDocRef, newProfile);
+            setUser(newProfile);
           }
         }
       } catch (err) {
         console.error('Gagal memeriksa sesi:', err);
+        setError('Gagal memeriksa sesi. Silakan coba lagi.');
       } finally {
         setCheckingAuth(false);
       }
