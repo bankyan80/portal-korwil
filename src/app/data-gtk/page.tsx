@@ -25,11 +25,38 @@ export default function DataGTKPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    fetch('/api/pegawai/gtk-summary')
-      .then(r => r.json())
-      .then(json => setSchoolData(json.schools || []))
-      .catch(() => setSchoolData([]))
-      .finally(() => setLoading(false));
+    let isMounted = true;
+    
+    const fetchData = async () => {
+      if (!isMounted) return;
+      setLoading(true);
+      try {
+        const response = await fetch('/api/pegawai/gtk-summary');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const json = await response.json();
+        if (isMounted) {
+          setSchoolData(json.schools || []);
+          console.log('GTK data loaded:', json.schools?.length || 0, 'schools');
+        }
+      } catch (error) {
+        console.error('Error fetching GTK data:', error);
+        if (isMounted) {
+          setSchoolData([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const totalGTK = schoolData.reduce((a, s) => a + s.total, 0);
@@ -178,37 +205,29 @@ export default function DataGTKPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 text-left">
-                    <th className="px-5 py-3 font-semibold text-gray-600">No</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600">Sekolah / Unit</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">Guru</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">Tendik</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">Total</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">Guru L</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">Guru P</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">Tendik L</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">Tendik P</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">Sertifikasi</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600">Kepala Sekolah</th>
+                    <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600 w-10 text-center">No</th>
+                    <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600">Sekolah / Unit</th>
+                    <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Guru</th>
+                    <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Tendik</th>
+                    <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600">Kepala Sekolah</th>
+                  </tr>
+                  <tr className="bg-gray-50">
+                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">L</th>
+                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">P</th>
+                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">L</th>
+                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">P</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {filteredData.map((item, i) => (
                     <tr key={item.name} className="hover:bg-blue-50/50 transition-colors">
-                      <td className="px-5 py-3 text-gray-500">{i + 1}</td>
+                      <td className="px-5 py-3 text-gray-500 text-center">{i + 1}</td>
                       <td className="px-5 py-3 font-medium text-[#0d3b66]">{item.name}</td>
-                      <td className="px-5 py-3 text-center">{item.teachers}</td>
-                      <td className="px-5 py-3 text-center">{item.staff}</td>
-                      <td className="px-5 py-3 text-center font-semibold">{item.total}</td>
-                      <td className="px-5 py-3 text-center text-xs font-medium text-blue-700">{item.teachers_l}</td>
-                      <td className="px-5 py-3 text-center text-xs font-medium text-pink-700">{item.teachers_p}</td>
-                      <td className="px-5 py-3 text-center text-xs font-medium text-blue-700">{item.staff_l}</td>
-                      <td className="px-5 py-3 text-center text-xs font-medium text-pink-700">{item.staff_p}</td>
-                      <td className="px-5 py-3 text-center">
-                        <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
-                          {item.certified}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-gray-500 text-xs">{item.headmaster}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-blue-700">{item.teachers_l || 0}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-pink-700">{item.teachers_p || 0}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-blue-700">{item.staff_l || 0}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-pink-700">{item.staff_p || 0}</td>
+                      <td className="px-5 py-3 text-gray-500 text-xs">{item.headmaster || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
