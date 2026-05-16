@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { normalizeSchool } from '@/lib/normalize';
-import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2 } from 'lucide-react';
+import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw } from 'lucide-react';
 
 export default function OperatorDashboard() {
   const { user, setUser } = useAppStore();
@@ -80,6 +80,28 @@ export default function OperatorDashboard() {
     { label: 'Lapor Bulanan', icon: FileText, desc: 'Cetak & kirim laporan bulanan sekolah', count: null, href: '/admin/operator/laporan-bulanan' },
   ];
 
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState('');
+
+  const handleSync = useCallback(async () => {
+    setSyncing(true);
+    setSyncMsg('');
+    try {
+      const res = await fetch('/api/sync/all', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setSyncMsg(data.message);
+      } else {
+        setSyncMsg(data.error || 'Gagal sinkronisasi');
+      }
+    } catch {
+      setSyncMsg('Gagal terhubung ke server');
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncMsg(''), 5000);
+    }
+  }, []);
+
   const isStatsLoading = !allStudents || !allEmployees;
 
   return (
@@ -89,11 +111,25 @@ export default function OperatorDashboard() {
           <h1 className="text-lg font-bold text-white">Dashboard Operator Sekolah</h1>
           <p className="text-sm text-blue-200">{user.displayName} • {user.schoolName || 'Sekolah'}</p>
         </div>
-        <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-300 hover:text-red-200">
-          <LogOut className="w-4 h-4" /> Logout
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={handleSync} disabled={syncing}
+            className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-200 disabled:opacity-50">
+            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Menyinkronkan...' : 'Sinkronisasi Data'}
+          </button>
+          <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-300 hover:text-red-200">
+            <LogOut className="w-4 h-4" /> Logout
+          </button>
+        </div>
       </header>
 
+      {syncMsg && (
+        <div className="px-6 pt-4 max-w-7xl mx-auto">
+          <div className="px-4 py-2 rounded-lg text-sm bg-blue-50 border border-blue-200 text-blue-700">
+            {syncMsg}
+          </div>
+        </div>
+      )}
       <main className="p-6 max-w-7xl mx-auto space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {menu.slice(0, 4).map((item) => (
