@@ -209,9 +209,12 @@ export default function DataGTKPage() {
                     <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600">Sekolah / Unit</th>
                     <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Guru</th>
                     <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Tendik</th>
+                    <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Total</th>
                     <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600">Kepala Sekolah</th>
                   </tr>
                   <tr className="bg-gray-50">
+                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">L</th>
+                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">P</th>
                     <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">L</th>
                     <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">P</th>
                     <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">L</th>
@@ -223,10 +226,12 @@ export default function DataGTKPage() {
                     <tr key={item.name} className="hover:bg-blue-50/50 transition-colors">
                       <td className="px-5 py-3 text-gray-500 text-center">{i + 1}</td>
                       <td className="px-5 py-3 font-medium text-[#0d3b66]">{item.name}</td>
-                      <td className="px-5 py-3 text-center font-semibold text-blue-700">{item.teachers_l || 0}</td>
-                      <td className="px-5 py-3 text-center font-semibold text-pink-700">{item.teachers_p || 0}</td>
-                      <td className="px-5 py-3 text-center font-semibold text-blue-700">{item.staff_l || 0}</td>
-                      <td className="px-5 py-3 text-center font-semibold text-pink-700">{item.staff_p || 0}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-blue-700">{(item.teachers_l || 0)}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-pink-700">{(item.teachers_p || 0)}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-blue-700">{(item.staff_l || 0)}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-pink-700">{(item.staff_p || 0)}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-blue-700">{(item.teachers_l || 0) + (item.staff_l || 0)}</td>
+                      <td className="px-5 py-3 text-center font-semibold text-pink-700">{(item.teachers_p || 0) + (item.staff_p || 0)}</td>
                       <td className="px-5 py-3 text-gray-500 text-xs">{item.headmaster || '-'}</td>
                     </tr>
                   ))}
