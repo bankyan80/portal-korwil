@@ -17,6 +17,11 @@ const defaultForm = {
   bangku: '', meja_murid: '', kursi_murid: '', kursi_guru: '', meja_guru: '',
   lemari: '', papan_tulis: '', kursi_tamu: '', rak_buku: '',
   sumber_air: '',
+  menyewa_per_bulan: '', menumpang_di_sd: '',
+  bangunan_sekolah_p: '', bangunan_sekolah_sp: '', bangunan_sekolah_dr: '',
+  r_dinas_kepsek_p: '', r_dinas_kepsek_sp: '', r_dinas_kepsek_dr: '',
+  r_dinas_guru_p: '', r_dinas_guru_sp: '', r_dinas_guru_dr: '',
+  perpustakaan_p: '', perpustakaan_sp: '', perpustakaan_dr: '',
 };
 
 const labelMap: Record<string, string> = {
@@ -29,11 +34,26 @@ const labelMap: Record<string, string> = {
   kursi_guru: 'Kursi Guru', meja_guru: 'Meja Guru', lemari: 'Lemari',
   papan_tulis: 'Papan Tulis', kursi_tamu: 'Kursi Tamu', rak_buku: 'Rak Buku',
   sumber_air: 'Sumber Air',
+  menyewa_per_bulan: 'Menyewa per Bulan (Rp)', menumpang_di_sd: 'Menumpang di SD',
+  bangunan_sekolah_p: 'Bangunan Sekolah - Permanen',
+  bangunan_sekolah_sp: 'Bangunan Sekolah - Semi Permanen',
+  bangunan_sekolah_dr: 'Bangunan Sekolah - Darurat',
+  r_dinas_kepsek_p: 'R. Dinas Kepsek - Permanen',
+  r_dinas_kepsek_sp: 'R. Dinas Kepsek - Semi Permanen',
+  r_dinas_kepsek_dr: 'R. Dinas Kepsek - Darurat',
+  r_dinas_guru_p: 'R. Dinas Guru - Permanen',
+  r_dinas_guru_sp: 'R. Dinas Guru - Semi Permanen',
+  r_dinas_guru_dr: 'R. Dinas Guru - Darurat',
+  perpustakaan_p: 'Perpustakaan - Permanen',
+  perpustakaan_sp: 'Perpustakaan - Semi Permanen',
+  perpustakaan_dr: 'Perpustakaan - Darurat',
 };
 
 const sectionLabels: Record<string, string> = {
   tanah: 'A. TANAH',
   ruangan: 'B. RUANGAN',
+  menyewa: 'C. MENYEWA/MENUMPANG',
+  bangunan: 'D. JENIS/SIFAT BANGUNAN',
   perkakas: 'F. PERKAKAS',
   lain: 'LAINNYA',
 };
@@ -41,6 +61,8 @@ const sectionLabels: Record<string, string> = {
 const sectionKeys: Record<string, string[]> = {
   tanah: ['tanah_pemerintah', 'tanah_yayasan', 'tanah_perseorangan'],
   ruangan: ['ruang_kelas', 'perpustakaan', 'uks', 'toilet', 'mushola', 'gudang', 'ruang_guru', 'ruang_kepala_sekolah', 'rumah_dinas_kepsek'],
+  menyewa: ['menyewa_per_bulan', 'menumpang_di_sd'],
+  bangunan: ['bangunan_sekolah_p', 'bangunan_sekolah_sp', 'bangunan_sekolah_dr', 'r_dinas_kepsek_p', 'r_dinas_kepsek_sp', 'r_dinas_kepsek_dr', 'r_dinas_guru_p', 'r_dinas_guru_sp', 'r_dinas_guru_dr', 'perpustakaan_p', 'perpustakaan_sp', 'perpustakaan_dr'],
   perkakas: ['bangku', 'meja_murid', 'kursi_murid', 'kursi_guru', 'meja_guru', 'lemari', 'papan_tulis', 'kursi_tamu', 'rak_buku'],
   lain: ['sumber_air'],
 };

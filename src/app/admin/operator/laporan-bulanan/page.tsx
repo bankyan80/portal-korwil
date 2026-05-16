@@ -40,15 +40,24 @@ export default function LaporBulananPage() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [submitMsg, setSubmitMsg] = useState('');
   const [history, setHistory] = useState<any[]>([]);
+  const [absen, setAbsen] = useState({ sakit: 0, izin: 0, tanpa_keterangan: 0 });
 
   const sarprasRoomMap: Record<string, string> = {
     'Ruang Kelas': 'ruang_kelas', 'Perpustakaan': 'perpustakaan', 'UKS': 'uks',
     'WC/Toilet': 'toilet', 'Mushola': 'mushola', 'Gudang': 'gudang', 'Ruang Guru': 'ruang_guru',
+    'Ruang Kepala Sekolah': 'ruang_kepala_sekolah', 'Rumah Dinas Kepala Sekolah': 'rumah_dinas_kepsek',
   };
 
   function getSarprasCount(roomName: string): string {
     const key = sarprasRoomMap[roomName];
     if (!key) return '-';
+    const val = sarpras?.[key];
+    if (val !== undefined && val !== '' && val !== null) return String(val);
+    const lval = laporanData?.dataSarpras?.[key];
+    return lval !== undefined && lval !== '' && lval !== null ? String(lval) : '-';
+  }
+
+  function getSarprasVal(key: string): string {
     const val = sarpras?.[key];
     if (val !== undefined && val !== '' && val !== null) return String(val);
     const lval = laporanData?.dataSarpras?.[key];
@@ -80,7 +89,25 @@ export default function LaporBulananPage() {
         setLaporanData(null);
         setExistingDocId(null);
       }
-    } catch (e) { console.error('Gagal memuat laporan:', e); setLaporanData(null); setExistingDocId(null); }
+      if (snap.exists()) {
+        setLaporanData({ id: snap.id, ...snap.data() });
+        setExistingDocId(snap.id);
+        const d = snap.data();
+        if (d.dataAbsen) {
+          setAbsen({
+            sakit: Number(d.dataAbsen.sakit) || 0,
+            izin: Number(d.dataAbsen.izin) || 0,
+            tanpa_keterangan: Number(d.dataAbsen.tanpa_keterangan) || 0,
+          });
+        } else {
+          setAbsen({ sakit: 0, izin: 0, tanpa_keterangan: 0 });
+        }
+      } else {
+        setLaporanData(null);
+        setExistingDocId(null);
+        setAbsen({ sakit: 0, izin: 0, tanpa_keterangan: 0 });
+      }
+    } catch (e) { console.error('Gagal memuat laporan:', e); setLaporanData(null); setExistingDocId(null); setAbsen({ sakit: 0, izin: 0, tanpa_keterangan: 0 }); }
   }
 
   async function loadHistory() {
@@ -241,10 +268,31 @@ export default function LaporBulananPage() {
           mushola: sarpras?.mushola || '',
           gudang: sarpras?.gudang || '',
           ruang_guru: sarpras?.ruang_guru || '',
+          ruang_kepala_sekolah: sarpras?.ruang_kepala_sekolah || '',
+          rumah_dinas_kepsek: sarpras?.rumah_dinas_kepsek || '',
           tanah_pemerintah: sarpras?.tanah_pemerintah || '',
           tanah_yayasan: sarpras?.tanah_yayasan || '',
           tanah_perseorangan: sarpras?.tanah_perseorangan || '',
           sumber_air: sarpras?.sumber_air || '',
+          menyewa_per_bulan: sarpras?.menyewa_per_bulan || '',
+          menumpang_di_sd: sarpras?.menumpang_di_sd || '',
+          bangunan_sekolah_p: sarpras?.bangunan_sekolah_p || '',
+          bangunan_sekolah_sp: sarpras?.bangunan_sekolah_sp || '',
+          bangunan_sekolah_dr: sarpras?.bangunan_sekolah_dr || '',
+          r_dinas_kepsek_p: sarpras?.r_dinas_kepsek_p || '',
+          r_dinas_kepsek_sp: sarpras?.r_dinas_kepsek_sp || '',
+          r_dinas_kepsek_dr: sarpras?.r_dinas_kepsek_dr || '',
+          r_dinas_guru_p: sarpras?.r_dinas_guru_p || '',
+          r_dinas_guru_sp: sarpras?.r_dinas_guru_sp || '',
+          r_dinas_guru_dr: sarpras?.r_dinas_guru_dr || '',
+          perpustakaan_p: sarpras?.perpustakaan_p || '',
+          perpustakaan_sp: sarpras?.perpustakaan_sp || '',
+          perpustakaan_dr: sarpras?.perpustakaan_dr || '',
+        },
+        dataAbsen: {
+          sakit: absen.sakit,
+          izin: absen.izin,
+          tanpa_keterangan: absen.tanpa_keterangan,
         },
         status: 'sudah_dikirim',
         dikirimOleh: user.uid || '',
@@ -352,6 +400,31 @@ export default function LaporBulananPage() {
             <div className="bg-amber-50 rounded-lg p-3">
               <p className="text-xs text-gray-500">Bulan / Tahun</p>
               <p className="text-lg font-bold text-[#0d3b66]">{bulan} {tahun}</p>
+            </div>
+          </div>
+
+          {/* Absen Murid */}
+          <div className="border-t pt-4 mt-4">
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">G. Absen Murid (Bulan Ini)</h4>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs text-gray-500">Sakit</label>
+                <input type="number" min="0" value={absen.sakit}
+                  onChange={(e) => setAbsen(a => ({ ...a, sakit: parseInt(e.target.value) || 0 }))}
+                  className="w-full text-sm border rounded-lg px-3 py-2 bg-white" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Izin</label>
+                <input type="number" min="0" value={absen.izin}
+                  onChange={(e) => setAbsen(a => ({ ...a, izin: parseInt(e.target.value) || 0 }))}
+                  className="w-full text-sm border rounded-lg px-3 py-2 bg-white" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Tanpa Keterangan</label>
+                <input type="number" min="0" value={absen.tanpa_keterangan}
+                  onChange={(e) => setAbsen(a => ({ ...a, tanpa_keterangan: parseInt(e.target.value) || 0 }))}
+                  className="w-full text-sm border rounded-lg px-3 py-2 bg-white" />
+              </div>
             </div>
           </div>
 
@@ -560,8 +633,8 @@ export default function LaporBulananPage() {
           <table className="w-full border-collapse border border-black">
             <thead><tr><th colSpan={2} className="border border-black px-1 py-0.5 text-left text-[9px] bg-gray-100">C. MENYEWA/MENUMPANG</th></tr></thead>
             <tbody>
-              <tr><td className="border border-black px-1 py-0.5 text-[8px]">Menyewa per Bulan (Rp)</td><td className="border border-black px-1 py-0.5 text-center">-</td></tr>
-              <tr><td className="border border-black px-1 py-0.5 text-[8px]">Menumpang di SD</td><td className="border border-black px-1 py-0.5 text-center">-</td></tr>
+              <tr><td className="border border-black px-1 py-0.5 text-[8px]">Menyewa per Bulan (Rp)</td><td className="border border-black px-1 py-0.5 text-center">{getSarprasVal('menyewa_per_bulan')}</td></tr>
+              <tr><td className="border border-black px-1 py-0.5 text-[8px]">Menumpang di SD</td><td className="border border-black px-1 py-0.5 text-center">{getSarprasVal('menumpang_di_sd')}</td></tr>
             </tbody>
           </table>
           <table className="w-full border-collapse border border-black">
@@ -573,12 +646,12 @@ export default function LaporBulananPage() {
                 <td className="border border-black px-1 py-0.5 text-center text-[8px]">SP</td>
                 <td className="border border-black px-1 py-0.5 text-center text-[8px]">DR</td>
               </tr>
-              {['Bangunan Sekolah', 'R. Dinas Kepsek', 'R. Dinas Guru', 'Perpustakaan'].map((item) => (
-                <tr key={item}>
-                  <td className="border border-black px-1 py-0.5 text-[8px]">{item}</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
+              {[['Bangunan Sekolah', 'bangunan_sekolah'], ['R. Dinas Kepsek', 'r_dinas_kepsek'], ['R. Dinas Guru', 'r_dinas_guru'], ['Perpustakaan', 'perpustakaan']].map(([label, prefix]) => (
+                <tr key={label}>
+                  <td className="border border-black px-1 py-0.5 text-[8px]">{label}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{getSarprasVal(`${prefix}_p`)}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{getSarprasVal(`${prefix}_sp`)}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{getSarprasVal(`${prefix}_dr`)}</td>
                 </tr>
               ))}
             </tbody>
@@ -628,10 +701,10 @@ export default function LaporBulananPage() {
               <td className="border border-black px-1 py-0.5 text-[8px] font-semibold">Jumlah</td>
             </tr>
             <tr>
-              <td className="border border-black px-1 py-0.5 text-center">-</td>
-              <td className="border border-black px-1 py-0.5 text-center">-</td>
-              <td className="border border-black px-1 py-0.5 text-center">-</td>
-              <td className="border border-black px-1 py-0.5 text-center">-</td>
+              <td className="border border-black px-1 py-0.5 text-center">{absen.sakit}</td>
+              <td className="border border-black px-1 py-0.5 text-center">{absen.izin}</td>
+              <td className="border border-black px-1 py-0.5 text-center">{absen.tanpa_keterangan}</td>
+              <td className="border border-black px-1 py-0.5 text-center">{absen.sakit + absen.izin + absen.tanpa_keterangan}</td>
             </tr>
           </tbody>
         </table>
