@@ -226,6 +226,13 @@ export default function LaporBulananPage() {
       const gtkSchool = gtkSchools.find((g: any) =>
         normalizeSchool(g.name) === normalizeSchool(user?.schoolName || '')
       );
+
+      // Update kepala sekolah dari GTK/PLT jika sekolah tidak punya
+      if (gtkSchool?.headmaster && (!sekolah?.kepalaSekolah || sekolah.kepalaSekolah === '-')) {
+        setSekolah(prev => prev ? { ...prev, kepalaSekolah: gtkSchool.headmaster } : prev);
+        schoolData = { ...schoolData, kepalaSekolah: gtkSchool.headmaster };
+      }
+
       const guruL = getSiswaVal('guru_l');
       const guruP = getSiswaVal('guru_p');
       const tendikL = getSiswaVal('tendik_l');

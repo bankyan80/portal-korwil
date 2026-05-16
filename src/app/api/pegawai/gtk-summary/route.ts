@@ -4,6 +4,7 @@ import path from 'path';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
 
 let dataCache: any[] | null = null;
+let pltCache: any[] | null = null;
 
 function loadStaticData() {
   if (dataCache) return dataCache;
@@ -11,6 +12,18 @@ function loadStaticData() {
   const raw = fs.readFileSync(p, 'utf-8');
   dataCache = JSON.parse(raw);
   return dataCache;
+}
+
+function loadPltData() {
+  if (pltCache) return pltCache;
+  try {
+    const p = path.join(process.cwd(), 'src', 'data', 'data-plt.json');
+    const raw = fs.readFileSync(p, 'utf-8');
+    pltCache = JSON.parse(raw);
+  } catch {
+    pltCache = [];
+  }
+  return pltCache;
 }
 
 interface SchoolGtk {
@@ -93,7 +106,17 @@ export async function GET() {
     }
 
     s.total++;
-    if (p.tugas_tambahan === 'Kepala Sekolah') s.headmaster = p.nama;
+    if (p.jenis_ptk === 'Kepala Sekolah' || p.tugas_tambahan === 'Kepala Sekolah') {
+      s.headmaster = p.nama;
+    }
+  }
+
+  // Apply PLT for schools without headmaster
+  const pltList = loadPltData();
+  for (const plt of pltList) {
+    if (schools[plt.sekolah] && !schools[plt.sekolah].headmaster) {
+      schools[plt.sekolah].headmaster = `plt. ${plt.plt_nama}`;
+    }
   }
 
   // Compute l and p for each school
