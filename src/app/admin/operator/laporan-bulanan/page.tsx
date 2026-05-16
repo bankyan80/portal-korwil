@@ -336,6 +336,25 @@ export default function LaporBulananPage() {
       };
 
       await setDoc(docRef, payload, { merge: true });
+
+      // Also write to laporan_bulanan collection (for super admin & rekap view)
+      try {
+        const laporanBulananId = `${schoolId}_${tahun}_${blnIndex}`;
+        const laporanBulananRef = doc(db, 'laporan_bulanan', laporanBulananId);
+        await setDoc(laporanBulananRef, {
+          sekolahId: schoolId,
+          sekolah: user.schoolName || sekolah?.name || '',
+          jenjang: sekolah?.jenjang || 'SD',
+          bulan,
+          tahun: Number(tahun),
+          status: 'sudah_lapor',
+          tglLapor: Date.now(),
+          ...payload,
+        }, { merge: true });
+      } catch (e) {
+        console.error('Gagal sinkronisasi ke laporan_bulanan:', e);
+      }
+
       setExistingDocId(docRef.id);
       setLaporanData(payload);
       setSubmitStatus('success');
