@@ -6,7 +6,8 @@ import { useAppStore } from '@/store/app-store';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { normalizeSchool } from '@/lib/normalize';
-import { ArrowLeft, Printer, Loader2, Send, CheckCircle, Clock, AlertCircle, Eye } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, Printer, Loader2, Send, CheckCircle, Clock, AlertCircle, Eye, TriangleAlert } from 'lucide-react';
 
 const bulanList = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -41,6 +42,7 @@ export default function LaporBulananPage() {
   const [submitMsg, setSubmitMsg] = useState('');
   const [history, setHistory] = useState<any[]>([]);
   const [absen, setAbsen] = useState({ sakit: 0, izin: 0, tanpa_keterangan: 0 });
+  const [warnings, setWarnings] = useState<{ page: string; label: string; href: string; message: string }[]>([]);
 
   const sarprasRoomMap: Record<string, string> = {
     'Ruang Kelas': 'ruang_kelas', 'Perpustakaan': 'perpustakaan', 'UKS': 'uks',
@@ -74,6 +76,31 @@ export default function LaporBulananPage() {
     if (user.role !== 'operator_sekolah') { router.push('/login'); return; }
     loadData();
   }, [user, router]);
+
+  useEffect(() => {
+    if (dataLoading || loading || !sekolah) return;
+    const w: typeof warnings = [];
+
+    if (!sekolah?.npsn || sekolah.npsn === '-') {
+      w.push({ page: 'profil-sekolah', label: 'Profil Sekolah', href: '/admin/operator/profil-sekolah', message: 'Data profil sekolah (NPSN, NSS, alamat) belum lengkap. Identitas sekolah di cetakan akan kosong.' });
+    }
+
+    const sarprasKeys = ['ruang_kelas','perpustakaan','uks','toilet','mushola','gudang','ruang_guru','tanah_pemerintah','tanah_yayasan','tanah_perseorangan','bangku','meja_murid','kursi_murid','kursi_guru','meja_guru','lemari','papan_tulis','kursi_tamu','rak_buku','sumber_air'];
+    const semuaSarprasKosong = !sarpras || sarprasKeys.every(k => !sarpras[k] || sarpras[k] === '');
+    if (semuaSarprasKosong) {
+      w.push({ page: 'sarpras', label: 'Sarpras', href: '/admin/operator/sarpras', message: 'Data sarana & prasarana belum diisi. Tanah, ruangan, & perkakas di cetakan akan kosong.' });
+    }
+
+    if (siswaL + siswaP === 0 && !existingDocId) {
+      w.push({ page: 'data-siswa', label: 'Data Siswa', href: '/admin/operator/data-siswa', message: 'Belum ada data siswa. Jumlah siswa per-kelas di cetakan akan 0.' });
+    }
+
+    if (guru.total + tendik.total === 0 && !existingDocId) {
+      w.push({ page: 'data-guru', label: 'Data Guru & GTK', href: '/admin/operator/data-guru', message: 'Belum ada data GTK. Jumlah guru & tendik di cetakan akan 0.' });
+    }
+
+    setWarnings(w);
+  }, [dataLoading, loading, sekolah, sarpras, laporanData, existingDocId, siswaL, siswaP, guru, tendik]);
 
   async function loadLaporanFromFirestore(schoolData: any) {
     if (!db) { setLaporanData(null); return; }
@@ -373,6 +400,24 @@ export default function LaporBulananPage() {
             </p>
           </div>
         </div>
+
+        {/* Peringatan Data Kosong */}
+        {warnings.length > 0 && (
+          <div className="space-y-2">
+            {warnings.map((w) => (
+              <div key={w.page} className="flex items-start gap-3 px-4 py-3 rounded-lg border border-amber-200 bg-amber-50">
+                <TriangleAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-amber-800">{w.label}</p>
+                  <p className="text-xs text-amber-700">{w.message}</p>
+                  <Link href={w.href} className="text-xs text-blue-600 hover:underline mt-1 inline-block font-medium">
+                    Isi data {w.label} →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Kirim Laporan Bulanan */}
         <div className="bg-white rounded-xl border shadow-sm p-5">
