@@ -6,9 +6,9 @@ import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import {
-  Users, School, BarChart3, FileText, Image, Megaphone,
-  LogOut, Loader2, Building2, RefreshCw, Settings, Shield,
-  Calendar, BookOpen, Globe, Newspaper, ListTodo
+  Users, School, BarChart3, FileText,
+  LogOut, Loader2, Building2, RefreshCw, Shield,
+  Calendar, Globe, ListTodo, GraduationCap, CheckSquare
 } from 'lucide-react';
 
 export default function SuperAdminDashboard() {
@@ -79,21 +79,17 @@ export default function SuperAdminDashboard() {
   }
 
   const menu = [
-    { label: 'Semua Sekolah', icon: School, desc: 'Daftar & kelola profil sekolah', href: '/admin/operator/data-siswa', color: 'bg-blue-100 text-blue-700' },
-    { label: 'Data Guru', icon: Users, desc: 'Kelola PTK & tendik semua sekolah', count: allEmployees?.length, href: '/admin/operator/data-guru', color: 'bg-emerald-100 text-emerald-700' },
-    { label: 'Data Siswa', icon: Users, desc: 'Kelola peserta didik semua sekolah', count: allStudents?.length, href: '/admin/operator/data-siswa', color: 'bg-violet-100 text-violet-700' },
-    { label: 'Lapor Bulanan', icon: FileText, desc: 'Monitoring laporan bulanan sekolah', href: '/admin/operator/laporan-bulanan', color: 'bg-orange-100 text-orange-700' },
-    { label: 'Rekap Kelas', icon: BarChart3, desc: 'Rekapitulasi kelas otomatis', href: '/admin/operator/rekap-kelas', color: 'bg-cyan-100 text-cyan-700' },
-    { label: 'Sarpras', icon: Building2, desc: 'Data sarana & prasarana', href: '/admin/operator/sarpras', color: 'bg-amber-100 text-amber-700' },
-    { label: 'SPMB', icon: BookOpen, desc: 'Penerimaan peserta didik baru', href: '/admin/operator/spmb', color: 'bg-rose-100 text-rose-700' },
-    { label: 'Berita', icon: Newspaper, desc: 'Berita & pengumuman', href: '/admin/operator/berita', color: 'bg-indigo-100 text-indigo-700' },
-    { label: 'Galeri', icon: Image, desc: 'Dokumentasi kegiatan', href: '/admin/operator/galeri', color: 'bg-pink-100 text-pink-700' },
-    { label: 'Organisasi', icon: Globe, desc: 'Kelola organisasi & agenda', href: '/admin/organisasi', color: 'bg-teal-100 text-teal-700' },
-    { label: 'Kalender', icon: Calendar, desc: 'Kalender kegiatan', href: '/kalender', color: 'bg-red-100 text-red-700' },
-    { label: 'Validasi Data', icon: BarChart3, desc: 'Cek kelengkapan data per sekolah', href: '/admin/super/validator', color: 'bg-red-100 text-red-700' },
+    { label: 'Data GTK', icon: Users, desc: 'Seluruh data PTK & tendik', count: allEmployees?.length, href: '/admin/super/data-guru', color: 'bg-emerald-100 text-emerald-700' },
+    { label: 'Data Siswa', icon: Users, desc: 'Seluruh data peserta didik', count: allStudents?.length, href: '/admin/super/data-siswa', color: 'bg-violet-100 text-violet-700' },
+    { label: 'Data Sekolah', icon: GraduationCap, desc: 'Profil & informasi sekolah', href: '/admin/super/sekolah', color: 'bg-blue-100 text-blue-700' },
+    { label: 'Laporan Bulanan', icon: FileText, desc: 'Monitoring laporan bulanan sekolah', href: '/admin/super/laporan-bulanan', color: 'bg-orange-100 text-orange-700' },
+    { label: 'Validasi Data', icon: CheckSquare, desc: 'Cek kelengkapan data per sekolah', href: '/admin/super/validator', color: 'bg-red-100 text-red-700' },
     { label: 'Tugas', icon: ListTodo, desc: 'Buat & monitor tugas sekolah', href: '/admin/super/tugas', color: 'bg-indigo-100 text-indigo-700' },
     { label: 'Kelola User', icon: Shield, desc: 'Atur pengguna & role akses', href: '/admin/super/users', color: 'bg-purple-100 text-purple-700' },
-    { label: 'Settings', icon: Settings, desc: 'Pengaturan sistem', href: '#', color: 'bg-gray-100 text-gray-700' },
+    { label: 'Organisasi', icon: Globe, desc: 'Kelola organisasi & agenda', href: '/admin/organisasi', color: 'bg-teal-100 text-teal-700' },
+    { label: 'Kalender', icon: Calendar, desc: 'Kalender kegiatan', href: '/kalender', color: 'bg-red-100 text-red-700' },
+    { label: 'Rekap Kelas', icon: BarChart3, desc: 'Rekapitulasi kelas semua sekolah', href: '/admin/operator/rekap-kelas', color: 'bg-cyan-100 text-cyan-700' },
+    { label: 'Sarpras', icon: Building2, desc: 'Data sarana & prasarana sekolah', href: '/admin/operator/sarpras', color: 'bg-amber-100 text-amber-700' },
   ];
 
   const isStatsLoading = !allStudents || !allEmployees;

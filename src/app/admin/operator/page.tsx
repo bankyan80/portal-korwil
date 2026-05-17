@@ -55,6 +55,11 @@ export default function OperatorDashboard() {
     );
   }, [allStudents, allEmployees, user?.schoolName, user?.schoolId]);
 
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState('');
+  const [tugasList, setTugasList] = useState<any[]>([]);
+  const [tugasLoading, setTugasLoading] = useState(true);
+
   useEffect(() => {
     if (!user) return;
     if (user.role !== 'operator_sekolah') router.push('/login');
@@ -79,11 +84,6 @@ export default function OperatorDashboard() {
     { label: 'Sarpras', icon: Building2, desc: 'Data sarana dan prasarana sekolah', count: null, href: '/admin/operator/sarpras' },
     { label: 'Lapor Bulanan', icon: FileText, desc: 'Cetak & kirim laporan bulanan sekolah', count: null, href: '/admin/operator/laporan-bulanan' },
   ];
-
-  const [syncing, setSyncing] = useState(false);
-  const [syncMsg, setSyncMsg] = useState('');
-  const [tugasList, setTugasList] = useState<any[]>([]);
-  const [tugasLoading, setTugasLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.schoolId && !user?.schoolName) return;
