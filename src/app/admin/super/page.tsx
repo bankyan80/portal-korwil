@@ -90,8 +90,7 @@ export default function SuperAdminDashboard() {
     { label: 'Organisasi', icon: Globe, desc: 'Kelola data & kepengurusan organisasi', href: '/admin/super/organisasi', color: 'bg-teal-100 text-teal-700' },
     { label: 'Link Instansi', icon: Link2, desc: 'Atur tautan instansi terkait', href: '/admin/super/link-instansi', color: 'bg-amber-100 text-amber-700' },
     { label: 'Kalender', icon: Calendar, desc: 'Kalender kegiatan', href: '/kalender', color: 'bg-red-100 text-red-700' },
-    { label: 'Rekap Kelas', icon: BarChart3, desc: 'Rekapitulasi kelas semua sekolah', href: '/admin/operator/rekap-kelas', color: 'bg-cyan-100 text-cyan-700' },
-    { label: 'Sarpras', icon: Building2, desc: 'Data sarana & prasarana sekolah', href: '/admin/operator/sarpras', color: 'bg-amber-100 text-amber-700' },
+
   ];
 
   const isStatsLoading = !allStudents || !allEmployees;
