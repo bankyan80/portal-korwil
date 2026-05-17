@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Search, FileText, Download, Loader2, FolderOpen, AlertTriangle, DownloadCloud } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Search, FileText, Download, Loader2, FolderOpen, AlertTriangle, DownloadCloud, Upload as UploadIcon } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { useAppStore } from '@/store/app-store';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { DokumenBersama } from '@/types';
 
 function getIcon(type: string) {
@@ -22,6 +23,7 @@ function formatSize(bytes: number) {
 }
 
 export default function DokumenBersamaPage() {
+  const user = useAppStore((s) => s.user);
   const [nip, setNip] = useState('');
   const [pegawai, setPegawai] = useState<any | null>(null);
   const [documents, setDocuments] = useState<DokumenBersama[]>([]);
@@ -29,6 +31,10 @@ export default function DokumenBersamaPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [dbReady, setDbReady] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const isAdmin = user && (user.role === 'super_admin' || user.role === 'operator_sekolah');
 
   useEffect(() => {
     if (!db) {
@@ -70,6 +76,34 @@ export default function DokumenBersamaPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !pegawai || !db) return;
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result as string;
+        await addDoc(collection(db, 'dokumen'), {
+          nik: pegawai.nik || '',
+          nip: pegawai.nip || nip.replace(/\D/g, ''),
+          nama: pegawai.nama,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          dataUrl,
+          uploadedAt: serverTimestamp(),
+        });
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Upload gagal:', err);
+      setUploading(false);
+    }
+    if (fileRef.current) fileRef.current.value = '';
   }
 
   function downloadDoc(doc: DokumenBersama) {
@@ -152,10 +186,20 @@ export default function DokumenBersamaPage() {
             <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-700 font-bold text-sm">
               {pegawai.nama.charAt(0)}
             </div>
-            <div>
+            <div className="flex-1">
               <p className="font-semibold text-[#0d3b66]">{pegawai.nama}</p>
               <p className="text-xs text-gray-500">{pegawai.sekolah} • {pegawai.jenis_ptk}</p>
             </div>
+            {isAdmin && db && (
+              <div>
+                <input ref={fileRef} type="file" onChange={handleUpload} className="hidden" />
+                <button onClick={() => fileRef.current?.click()} disabled={uploading}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-800 rounded-lg hover:bg-blue-900 disabled:opacity-50">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadIcon className="w-4 h-4" />}
+                  Upload Dokumen
+                </button>
+              </div>
+            )}
           </div>
         )}
 

@@ -278,9 +278,7 @@ export default function LaporanBulananPage() {
   const paginated = sorted.slice((page - 1) * perPage, page * perPage);
   const totalPages = Math.ceil(sorted.length / perPage);
 
-  function getFinalStatus(): StatusLaporan {
-    return 'belum_lapor';
-  }
+
 
 
   function toggleSort(field: string) {
@@ -482,14 +480,14 @@ export default function LaporanBulananPage() {
                 <tr className="bg-gray-50 dark:bg-slate-700/50 text-left sticky top-0">
                   <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 w-10">No</th>
                    <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none" onClick={() => toggleSort('nama')}>
-                     Nama Sekolah <SortAsc field="nama" />
+                      Nama Sekolah {sortField === 'nama' ? (sortDir === 'asc' ? '\u25B2' : '\u25BC') : ''}
+                    </th>
+                    <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hidden sm:table-cell" onClick={() => toggleSort('jenjang')}>
+                      Jenjang {sortField === 'jenjang' ? (sortDir === 'asc' ? '\u25B2' : '\u25BC') : ''}
+                    </th>
+                   <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hidden sm:table-cell" onClick={() => toggleSort('status')}>
+                     Status {sortField === 'status' ? (sortDir === 'asc' ? '\u25B2' : '\u25BC') : ''}
                    </th>
-                   <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hidden sm:table-cell" onClick={() => toggleSort('jenjang')}>
-                     Jenjang <SortAsc field="jenjang" />
-                   </th>
-                  <th className="px-3 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hidden sm:table-cell" onClick={() => toggleSort('status')}>
-                    Status <SortIcon field="status" />
-                  </th>
                   {bulanList.map((b) => (
                     <th key={b} className="px-2 py-3 font-semibold text-gray-600 dark:text-gray-300 text-center text-[11px] min-w-[70px]">
                       {b.slice(0, 3)}

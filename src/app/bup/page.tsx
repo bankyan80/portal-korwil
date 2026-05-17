@@ -19,14 +19,6 @@ interface Pegawai {
   role: string;
 }
 
-interface PageData {
-  items: Pegawai[];
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
-
 const BUP_AGE = 60;
 
 function parseDate(iso: string): Date | null {
@@ -98,8 +90,10 @@ function getStatusBup(iso: string, status: string): 'hijau' | 'kuning' | 'merah'
   return 'hijau';
 }
 
+const PER_PAGE = 50;
+
 export default function BupPage() {
-  const [data, setData] = useState<PageData | null>(null);
+  const [allData, setAllData] = useState<Pegawai[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -108,30 +102,52 @@ export default function BupPage() {
     (async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({ page: String(page), limit: '100' });
-        if (search.trim()) params.set('search', search.trim());
-        const r = await fetch(`/api/pegawai/all?${params}`);
+        const r = await fetch('/api/pegawai/all?page=1&limit=1000');
         const j = await r.json();
-        setData(j);
+        setAllData(j.items || []);
       } catch {
-        setData(null);
+        setAllData([]);
       } finally {
         setLoading(false);
       }
     })();
-  }, [page, search]);
+  }, []);
+
+  const bupDate = (p: Pegawai): number => {
+    const d = getBupDate(p.tanggal_lahir);
+    return d ? d.getTime() : Infinity;
+  };
+
+  const filtered = useMemo(() => {
+    let items = [...allData];
+    if (search) {
+      const q = search.toLowerCase();
+      items = items.filter((p) =>
+        p.nama.toLowerCase().includes(q) ||
+        p.nik.includes(q) ||
+        p.nip.includes(q) ||
+        (p.sekolah || '').toLowerCase().includes(q)
+      );
+    }
+    // Sort by BUP ascending (closest to retirement first)
+    items.sort((a, b) => bupDate(a) - bupDate(b));
+    return items;
+  }, [allData, search]);
+
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  useEffect(() => { setPage(1); }, [search]);
 
   const summary = useMemo(() => {
-    if (!data) return { total: 0, pns: 0, pppk: 0, honor: 0, guru: 0 };
-    const items = data.items;
     return {
-      total: data.total,
-      pns: items.filter((p) => p.status_kepegawaian === 'PNS').length,
-      pppk: items.filter((p) => p.status_kepegawaian === 'PPPK').length,
-      honor: items.filter((p) => p.status_kepegawaian.includes('Honor')).length,
-      guru: items.filter((p) => p.jenis_ptk === 'Guru').length,
+      total: filtered.length,
+      pns: filtered.filter((p) => p.status_kepegawaian === 'PNS').length,
+      pppk: filtered.filter((p) => p.status_kepegawaian === 'PPPK').length,
+      honor: filtered.filter((p) => p.status_kepegawaian.includes('Honor')).length,
+      guru: filtered.filter((p) => p.jenis_ptk === 'Guru').length,
     };
-  }, [data]);
+  }, [filtered]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -164,7 +180,7 @@ export default function BupPage() {
                 <Users className="w-5 h-5 text-blue-700" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#0d3b66]">{data ? data.total : '-'}</p>
+                <p className="text-2xl font-bold text-[#0d3b66]">{loading ? '-' : summary.total}</p>
                 <p className="text-xs text-gray-500">Total Pegawai</p>
               </div>
             </div>
@@ -175,7 +191,7 @@ export default function BupPage() {
                 <BadgeCheck className="w-5 h-5 text-green-700" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#0d3b66]">{data ? summary.pns : '-'}</p>
+                <p className="text-2xl font-bold text-[#0d3b66]">{loading ? '-' : summary.pns}</p>
                 <p className="text-xs text-gray-500">PNS</p>
               </div>
             </div>
@@ -186,7 +202,7 @@ export default function BupPage() {
                 <UserCheck className="w-5 h-5 text-teal-700" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#0d3b66]">{data ? summary.pppk : '-'}</p>
+                <p className="text-2xl font-bold text-[#0d3b66]">{loading ? '-' : summary.pppk}</p>
                 <p className="text-xs text-gray-500">PPPK</p>
               </div>
             </div>
@@ -197,7 +213,7 @@ export default function BupPage() {
                 <Calendar className="w-5 h-5 text-orange-700" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#0d3b66]">{data ? summary.honor : '-'}</p>
+                <p className="text-2xl font-bold text-[#0d3b66]">{loading ? '-' : summary.honor}</p>
                 <p className="text-xs text-gray-500">Honor</p>
               </div>
             </div>
@@ -217,7 +233,7 @@ export default function BupPage() {
 
           {loading ? (
             <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
-          ) : !data || data.items.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="px-5 py-10 text-center text-gray-400 text-sm">Data tidak ditemukan</div>
           ) : (
             <>
@@ -237,13 +253,13 @@ export default function BupPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {data.items.map((p, i) => {
+                    {paginated.map((p, i) => {
                       const usia = calculateAge(p.tanggal_lahir);
                       const isPnsFlag = isPns(p.status_kepegawaian);
                       const statusBup = getStatusBup(p.tanggal_lahir, p.status_kepegawaian);
                       return (
                         <tr key={p.nik} className="hover:bg-blue-50/50 transition-colors">
-                          <td className="px-3 py-3 text-gray-500">{i + 1 + (page - 1) * data.limit}</td>
+                          <td className="px-3 py-3 text-gray-500">{(page - 1) * PER_PAGE + i + 1}</td>
                           <td className="px-3 py-3 font-mono text-xs text-gray-500">{p.nik}</td>
                           <td className="px-3 py-3 font-medium text-[#0d3b66] whitespace-nowrap">{p.nama}</td>
                           <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden sm:table-cell">{formatDateLocale(p.tanggal_lahir)}</td>
@@ -290,21 +306,21 @@ export default function BupPage() {
 
               <div className="flex items-center justify-between px-5 py-3 border-t bg-gray-50/50">
                 <p className="text-xs text-gray-500">
-                  Menampilkan {(page - 1) * data.limit + 1}-{Math.min(page * data.limit, data.total)} dari {data.total}
+                  Menampilkan {(page - 1) * PER_PAGE + 1}-{Math.min(page * PER_PAGE, filtered.length)} dari {filtered.length}
                 </p>
                 <div className="flex items-center gap-1">
                   <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}
                     className="p-1.5 rounded-lg hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  {data.totalPages > 1 && Array.from({ length: Math.min(data.totalPages, 5) }, (_, i) => {
+                  {totalPages > 1 && Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                     let p: number;
-                    if (data.totalPages <= 5) {
+                    if (totalPages <= 5) {
                       p = i + 1;
                     } else if (page <= 3) {
                       p = i + 1;
-                    } else if (page >= data.totalPages - 2) {
-                      p = data.totalPages - 4 + i;
+                    } else if (page >= totalPages - 2) {
+                      p = totalPages - 4 + i;
                     } else {
                       p = page - 2 + i;
                     }
@@ -315,7 +331,7 @@ export default function BupPage() {
                       </button>
                     );
                   })}
-                  <button onClick={() => setPage(Math.min(data.totalPages, page + 1))} disabled={page >= data.totalPages}
+                  <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}
                     className="p-1.5 rounded-lg hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed">
                     <ChevronRight className="w-4 h-4" />
                   </button>

@@ -3,66 +3,59 @@
 import { useState, useEffect, useMemo } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { ArrowLeft, WalletMinimal, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, WalletMinimal, Loader2, School } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 
-const PER_PAGE = 50;
-
-interface SiswaItem {
-  nik: string;
-  nama: string;
-  jk: string;
+interface SekolahSummary {
   sekolah: string;
-  desa: string;
+  total: number;
+  l: number;
+  p: number;
 }
 
 export default function KipSdPage() {
-  const [data, setData] = useState<SiswaItem[]>([]);
+  const [data, setData] = useState<SekolahSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sekolahFilter, setSekolahFilter] = useState('');
-  const [page, setPage] = useState(1);
 
   useEffect(() => {
     async function load() {
       try {
+        let siswa: any[] = [];
         if (db) {
           const snap = await getDocs(collection(db, 'kip_sd'));
           if (!snap.empty) {
-            const list: SiswaItem[] = snap.docs.map(d => {
-              const s = d.data();
-              return {
-                nik: s.nik || s.nisn || '',
-                nama: s.nama || '',
-                jk: s.jk || s.jenisKelamin || 'L',
-                sekolah: s.sekolah || s.schoolName || '',
-                desa: s.desa || '',
-              };
-            });
-            setData(list);
-            setLoading(false);
-            return;
+            siswa = snap.docs.map(d => d.data());
           }
         }
-      } catch {}
-      try {
-        const r = await fetch('/api/siswa/list?jenjang=SD&layak_pip=Ya');
-        const json = await r.json();
-        setData(json.siswa || []);
+        if (siswa.length === 0) {
+          const r = await fetch('/api/siswa/list?jenjang=SD&layak_pip=Ya');
+          const json = await r.json();
+          siswa = json.siswa || [];
+        }
+
+        const map = new Map<string, { l: number; p: number }>();
+        for (const s of siswa) {
+          const sklh = s.sekolah || s.schoolName || '-';
+          if (!map.has(sklh)) map.set(sklh, { l: 0, p: 0 });
+          const d = map.get(sklh)!;
+          if ((s.jk || s.jenisKelamin) === 'L') d.l++;
+          else d.p++;
+        }
+
+        const result: SekolahSummary[] = [];
+        for (const [sekolah, counts] of map) {
+          result.push({ sekolah, total: counts.l + counts.p, ...counts });
+        }
+        setData(result.sort((a, b) => b.total - a.total || a.sekolah.localeCompare(b.sekolah)));
       } catch { setData([]); }
       setLoading(false);
     }
     load();
   }, []);
 
-  const sekolahList = useMemo(() => [...new Set(data.map(s => s.sekolah))].sort(), [data]);
-  const filtered = useMemo(() => {
-    const f = sekolahFilter ? data.filter(s => s.sekolah === sekolahFilter) : data;
-    return [...f].sort((a, b) => a.sekolah.localeCompare(b.sekolah) || a.nama.localeCompare(b.nama));
-  }, [data, sekolahFilter]);
-  const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-
-  useEffect(() => { setPage(1); }, [sekolahFilter]);
+  const totalPenerima = data.reduce((a, s) => a + s.total, 0);
+  const totalL = data.reduce((a, s) => a + s.l, 0);
+  const totalP = data.reduce((a, s) => a + s.p, 0);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -82,32 +75,24 @@ export default function KipSdPage() {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-[#0d3b66]">Kartu Indonesia Pintar SD</h2>
           <p className="text-sm text-gray-500 mt-1">Kecamatan Lemahabang, Kabupaten Cirebon</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="bg-white rounded-xl border p-5 shadow-sm flex-1 min-w-[160px]">
-            <p className="text-2xl font-bold text-[#0d3b66]">{loading ? '-' : filtered.length}</p>
-            <p className="text-xs text-gray-500">Penerima PIP{sekolahFilter ? ` — ${sekolahFilter}` : ''}</p>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl border p-5 shadow-sm">
+            <p className="text-2xl font-bold text-[#0d3b66]">{loading ? '-' : totalPenerima}</p>
+            <p className="text-xs text-gray-500">Total Penerima PIP</p>
           </div>
-          <div className="bg-white rounded-xl border p-5 shadow-sm flex-1 min-w-[160px]">
-            <p className="text-2xl font-bold text-[#0d3b66]">{loading ? '-' : data.length}</p>
-            <p className="text-xs text-gray-500">Total seluruh sekolah</p>
+          <div className="bg-white rounded-xl border p-5 shadow-sm">
+            <p className="text-2xl font-bold text-[#0d3b66]">{loading ? '-' : totalL}</p>
+            <p className="text-xs text-gray-500">Laki-laki</p>
           </div>
-          <div className="w-full sm:w-auto sm:ml-auto">
-            <select
-              value={sekolahFilter}
-              onChange={e => setSekolahFilter(e.target.value)}
-              className="w-full sm:w-64 px-4 py-2.5 text-sm border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-gray-700"
-            >
-              <option value="">Semua Sekolah</option>
-              {sekolahList.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+          <div className="bg-white rounded-xl border p-5 shadow-sm">
+            <p className="text-2xl font-bold text-[#0d3b66]">{loading ? '-' : totalP}</p>
+            <p className="text-xs text-gray-500">Perempuan</p>
           </div>
         </div>
 
@@ -115,71 +100,39 @@ export default function KipSdPage() {
           <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
         ) : (
           <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-            <div className="px-5 py-3 border-b bg-gray-50">
-              <p className="text-sm font-semibold text-[#0d3b66]">Rekap Daftar Penerima PIP</p>
+            <div className="px-5 py-3 border-b bg-gray-50 flex items-center gap-2">
+              <School className="w-4 h-4 text-gray-500" />
+              <p className="text-sm font-semibold text-[#0d3b66]">Progres Penerima PIP per Sekolah</p>
+              <span className="ml-auto text-xs text-gray-500">{data.length} sekolah</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 text-left">
                     <th className="px-5 py-3 font-semibold text-gray-600 w-12">No</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600">NIK</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600">Nama</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600">L/P</th>
                     <th className="px-5 py-3 font-semibold text-gray-600">Sekolah</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 hidden md:table-cell">Desa</th>
+                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">L</th>
+                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">P</th>
+                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {paginated.length === 0 ? (
-                    <tr><td colSpan={6} className="px-5 py-10 text-center text-gray-400 text-sm">Tidak ada penerima PIP</td></tr>
+                  {data.length === 0 ? (
+                    <tr><td colSpan={5} className="px-5 py-10 text-center text-gray-400 text-sm">Tidak ada data penerima PIP</td></tr>
                   ) : (
-                    paginated.map((s, i) => (
-                      <tr key={s.nik + i} className="hover:bg-blue-50/50 transition-colors">
-                        <td className="px-5 py-3 text-gray-500">{(page - 1) * PER_PAGE + i + 1}</td>
-                        <td className="px-5 py-3 font-mono text-xs text-gray-500">{s.nik}</td>
-                        <td className="px-5 py-3 font-medium text-[#0d3b66] whitespace-nowrap">{s.nama}</td>
-                        <td className="px-5 py-3 text-gray-500">{s.jk}</td>
-                        <td className="px-5 py-3 text-gray-500 max-w-[220px] truncate">{s.sekolah}</td>
-                        <td className="px-5 py-3 text-gray-500 hidden md:table-cell">{s.desa}</td>
+                    data.map((s, i) => (
+                      <tr key={s.sekolah} className="hover:bg-blue-50/50 transition-colors">
+                        <td className="px-5 py-3 text-gray-500">{i + 1}</td>
+                        <td className="px-5 py-3 font-medium text-[#0d3b66]">{s.sekolah}</td>
+                        <td className="px-5 py-3 text-center text-blue-700 font-semibold">{s.l}</td>
+                        <td className="px-5 py-3 text-center text-pink-700 font-semibold">{s.p}</td>
+                        <td className="px-5 py-3 text-center text-[#0d3b66] font-bold">{s.total}</td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
             </div>
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-5 py-3 border-t bg-gray-50 text-sm">
-                <span className="text-gray-500">
-                  {filtered.length === 0 ? '0 data' : `Menampilkan ${(page - 1) * PER_PAGE + 1}-${Math.min(page * PER_PAGE, filtered.length)} dari ${filtered.length}`}
-                </span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" /> Prev
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p)}
-                      className={`w-8 h-8 text-xs font-medium rounded-lg ${p === page ? 'bg-blue-800 text-white' : 'bg-white text-gray-700 border hover:bg-gray-100'}`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Next <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </main>

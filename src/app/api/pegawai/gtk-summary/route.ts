@@ -10,7 +10,13 @@ function loadStaticData() {
   if (dataCache) return dataCache;
   const p = path.join(process.cwd(), 'src', 'data', 'data-pegawai.json');
   const raw = fs.readFileSync(p, 'utf-8');
-  dataCache = JSON.parse(raw);
+  let data = JSON.parse(raw);
+  const tkPath = path.join(process.cwd(), 'src', 'data', 'data-pegawai-tk.json');
+  if (fs.existsSync(tkPath)) {
+    const tkRaw = JSON.parse(fs.readFileSync(tkPath, 'utf-8'));
+    data = [...data, ...tkRaw];
+  }
+  dataCache = data;
   return dataCache;
 }
 

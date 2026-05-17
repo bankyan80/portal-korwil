@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import fs from 'fs';
+import path from 'path';
 
 export interface PerKelasSekolah {
   name: string;
@@ -9,13 +11,39 @@ export interface PerKelasSekolah {
   totalP: number;
 }
 
+function loadStaticSiswa() {
+  const p = path.join(process.cwd(), 'src', 'data', 'data-siswa.json');
+  return JSON.parse(fs.readFileSync(p, 'utf-8'));
+}
+
+function buildFromStatic(): PerKelasSekolah[] {
+  const siswa = loadStaticSiswa();
+  const map = new Map<string, PerKelasSekolah>();
+
+  for (const s of siswa) {
+    const name = s.sekolah;
+    const jenjang = s.jenjang || 'SD';
+    if (!name) continue;
+    const key = `${name}||${jenjang}`;
+    if (!map.has(key)) {
+      map.set(key, { name, jenjang, perKelas: {}, totalL: 0, totalP: 0 });
+    }
+    const entry = map.get(key)!;
+    const kelas = s.kelas ? String(s.kelas) : (s.rombel || '-');
+    if (!entry.perKelas[kelas]) entry.perKelas[kelas] = { l: 0, p: 0 };
+    if (s.jk === 'L') { entry.perKelas[kelas].l++; entry.totalL++; }
+    else { entry.perKelas[kelas].p++; entry.totalP++; }
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export async function GET() {
   if (!isFirebaseAdminConfigured || !adminDb) {
-    return NextResponse.json({ data: null, source: 'mock' });
+    return NextResponse.json({ data: buildFromStatic(), source: 'static' });
   }
 
   try {
-    // Helper to add student to sekolahMap
     function addToMap(sekolahMap: Map<string, PerKelasSekolah>, name: string, jenjang: string, kelas: string, jk: string) {
       const key = `${name}||${jenjang}`;
       if (!sekolahMap.has(key)) {
@@ -27,7 +55,6 @@ export async function GET() {
       else { entry.perKelas[kelas].p++; entry.totalP++; }
     }
 
-    // Infer SD grade from birth year (rough estimate for students without kelas data)
     function inferKelas(tanggalLahir: string | undefined): string {
       if (!tanggalLahir) return '1';
       const year = parseInt(tanggalLahir.substring(0, 4), 10);
@@ -41,7 +68,6 @@ export async function GET() {
 
     const sekolahMap = new Map<string, PerKelasSekolah>();
 
-    // 1) Try data_pd_siswa (admin-managed, has kelas field)
     const snapPd = await adminDb.collection('data_pd_siswa').where('status', '!=', 'lulus').get();
     for (const doc of snapPd.docs) {
       const s = doc.data();
@@ -52,7 +78,6 @@ export async function GET() {
       addToMap(sekolahMap, s.sekolah, jenjang, kelasKey, s.jk || 'L');
     }
 
-    // 2) For schools not yet in the map, try siswa collection (synced Dapodik, no kelas field)
     const snapSiswa = await adminDb.collection('siswa').get();
     for (const doc of snapSiswa.docs) {
       const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; tanggal_lahir?: string };
@@ -64,7 +89,6 @@ export async function GET() {
       addToMap(sekolahMap, s.sekolah, jenjang, kelas, s.jk || 'L');
     }
 
-    // 3) Also include students collection (admin-managed via ManageDataPd)
     const snapStudents = await adminDb.collection('students').get();
     for (const doc of snapStudents.docs) {
       const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; kelas?: number };
@@ -83,6 +107,6 @@ export async function GET() {
     return NextResponse.json({ data, source: 'firestore' });
   } catch (error) {
     console.error('Gagal mengambil data per-kelas:', error);
-    return NextResponse.json({ data: null, source: 'error' });
+    return NextResponse.json({ data: buildFromStatic(), source: 'static' });
   }
 }
