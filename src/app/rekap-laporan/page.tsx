@@ -111,7 +111,16 @@ export default function LaporanBulananPage() {
   const [showGuide, setShowGuide] = useState(false);
   const perPage = 10;
 
+  // Realtime listener for schools
   useEffect(() => {
+    let sekolahLoaded = false;
+    let laporanLoaded = false;
+    const finishLoading = () => {
+      if (sekolahLoaded && laporanLoaded) {
+        setLoading(false);
+      }
+    };
+
     if (db) {
       const sekolahUnsub = onSnapshot(
         collection(db, 'tabel_sekolah'),
@@ -123,8 +132,14 @@ export default function LaporanBulananPage() {
           if (sekolahData.length > 0) {
             setSekolahList(sekolahData);
           }
+          sekolahLoaded = true;
+          finishLoading();
         },
-        (err) => console.error('Error in tabel_sekolah listener:', err)
+        (err) => {
+          console.error('Error in tabel_sekolah listener:', err);
+          sekolahLoaded = true;
+          finishLoading();
+        }
       );
 
       const laporanUnsub = onSnapshot(
@@ -143,8 +158,14 @@ export default function LaporanBulananPage() {
             });
           });
           setLaporanList(laporanData);
+          laporanLoaded = true;
+          finishLoading();
         },
-        (err) => console.error('Error in laporan_bulanan listener:', err)
+        (err) => {
+          console.error('Error in laporan_bulanan listener:', err);
+          laporanLoaded = true;
+          finishLoading();
+        }
       );
 
       return () => {
@@ -152,7 +173,7 @@ export default function LaporanBulananPage() {
         laporanUnsub();
       };
     }
-    setLoading(false);
+    if (!db) setLoading(false);
   }, []);
 
   const stats = useMemo(() => {
