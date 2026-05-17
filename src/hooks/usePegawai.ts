@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 
-export function usePegawai(page = 1, search?: string) {
+export function usePegawai(page = 1, search?: string, allParam?: boolean) {
   const params = new URLSearchParams();
   params.set('page', page.toString());
   params.set('limit', '100');
   if (search) params.set('search', search);
+  if (allParam) params.set('all', 'true');
 
   return useQuery({
-    queryKey: ['pegawai', page, search],
+    queryKey: ['pegawai', page, search, allParam],
     queryFn: async () => {
       const res = await fetch('/api/pegawai/all?' + params.toString());
       if (!res.ok) throw new Error('Gagal fetch data pegawai');
