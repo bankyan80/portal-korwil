@@ -8,10 +8,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   allowedDevOrigins: ["*"],
   async rewrites() {
-    return [
-      { source: "/admin", destination: "/" },
-      { source: "/admin/:path*", destination: "/" },
-    ];
+    return [];
   },
   async headers() {
     return [

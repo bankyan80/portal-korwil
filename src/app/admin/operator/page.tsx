@@ -11,6 +11,7 @@ import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, 
 export default function OperatorDashboard() {
   const { user, setUser } = useAppStore();
   const router = useRouter();
+  const { isLoadingAuth } = useAppStore();
 
   const { data: allStudents } = useCachedFirestore<Record<string, any>>({
     collectionName: 'students',
@@ -61,11 +62,23 @@ export default function OperatorDashboard() {
   const [tugasLoading, setTugasLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
-    if (user.role !== 'operator_sekolah') router.push('/login');
+    if (!user || user.role === 'publik') {
+      router.push('/login');
+    }
   }, [user, router]);
 
-  if (!user) return null;
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex items-center gap-3 text-gray-500">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+          <span>Memuat...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || user.role === 'publik') return null;
 
   function handleLogout() {
     if (auth) auth.signOut();
