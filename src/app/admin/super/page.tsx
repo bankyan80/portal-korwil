@@ -26,19 +26,6 @@ export default function SuperAdminDashboard() {
     enabled: true,
   });
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role !== 'super_admin') router.push('/login');
-  }, [user, router]);
-
-  if (!user) return null;
-
-  function handleLogout() {
-    if (auth) auth.signOut();
-    setUser(null);
-    router.push('/');
-  }
-
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState('');
 
@@ -77,6 +64,19 @@ export default function SuperAdminDashboard() {
     }
     return Array.from(set).sort();
   }, [allStudents, allEmployees]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role !== 'super_admin') router.push('/login');
+  }, [user, router]);
+
+  if (!user) return null;
+
+  function handleLogout() {
+    if (auth) auth.signOut();
+    setUser(null);
+    router.push('/');
+  }
 
   const menu = [
     { label: 'Semua Sekolah', icon: School, desc: 'Daftar & kelola profil sekolah', href: '/admin/operator/data-siswa', color: 'bg-blue-100 text-blue-700' },
