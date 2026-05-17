@@ -15,3 +15,18 @@ export function usePegawai(page = 1, search?: string) {
     },
   });
 }
+
+export function usePegawaiAll(search?: string) {
+  const params = new URLSearchParams();
+  params.set('all', 'true');
+  if (search) params.set('search', search);
+
+  return useQuery({
+    queryKey: ['pegawai', 'all', search],
+    queryFn: async () => {
+      const res = await fetch('/api/pegawai/all?' + params.toString());
+      if (!res.ok) throw new Error('Gagal fetch semua data pegawai');
+      return res.json();
+    },
+  });
+}
