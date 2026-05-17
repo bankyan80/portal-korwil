@@ -1,22 +1,10 @@
 'use client';
 
-import { DataTable } from '@/components/features/DataTable';
-import { usePegawai, usePegawaiAll } from '@/hooks/usePegawai';
+import { usePegawaiAll } from '@/hooks/usePegawai';
 import { useState, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { Users, GraduationCap, BookOpen, ChevronDown, Search } from 'lucide-react';
-
-const columns = [
-  { header: 'Nama', accessor: 'nama' as const },
-  { header: 'NIP', accessor: 'nip' as const },
-  { header: 'NUPTK', accessor: 'nuptk' as const },
-  { header: 'Status', accessor: 'status_kepegawaian' as const },
-  { header: 'Sekolah', accessor: 'sekolah' as const },
-  { header: 'Tgl Lahir', accessor: 'tanggal_lahir' as const },
-];
+import { Users, GraduationCap, BookOpen, ChevronDown } from 'lucide-react';
 
 function groupBySchool(items: any[]): Record<string, any[]> {
   const groups: Record<string, any[]> = {};
@@ -38,20 +26,10 @@ function countByRole(records: any[]) {
 }
 
 export default function SuperDataGuru() {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const { data, isLoading, error } = usePegawai(page, search);
-
-  // Fetch ALL records (unpaginated) for per-school grouped view
-  const { data: allDataResult } = usePegawaiAll(search);
-
-  const handleSearch = () => {
-    setSearch(searchInput);
-    setPage(1);
-  };
-
   const [openSchools, setOpenSchools] = useState<Set<string>>(new Set());
+
+  const { data: allDataResult, isLoading } = usePegawaiAll();
+
   const toggleSchool = (school: string) => {
     setOpenSchools(prev => {
       const next = new Set(prev);
@@ -72,36 +50,19 @@ export default function SuperDataGuru() {
       <h1 className="text-2xl font-bold mb-1">Data GTK</h1>
       <p className="text-sm text-muted-foreground mb-4">Seluruh data pendidik dan tenaga kependidikan semua sekolah</p>
 
-      <div className="flex gap-2 mb-4">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Cari nama, NIP, NUPTK..."
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            className="pl-9"
-          />
-        </div>
-        <Button onClick={handleSearch}>Cari</Button>
-        {search && (
-          <Button variant="outline" onClick={() => { setSearch(''); setSearchInput(''); setPage(1); }}>
-            Reset
-          </Button>
-        )}
-      </div>
-
-      {/* Loading / Error */}
-      {(isLoading && !data) && (
+      {isLoading && !allDataResult && (
         <div className="flex items-center gap-2 text-muted-foreground py-4">
           <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" /> Memuat data...
         </div>
       )}
-      {error && <div className="text-red-500 py-2">Gagal memuat data</div>}
 
-      {/* ── Per-sekolah grouped view ── */}
-      {!search && groups.length > 0 && (
-        <div className="space-y-3 mb-6">
+      {!isLoading && groups.length === 0 && (
+        <div className="text-sm text-muted-foreground py-4">Belum ada data GTK</div>
+      )}
+
+      {/* Per-sekolah grouped view */}
+      {groups.length > 0 && (
+        <div className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Per Sekolah — klik untuk expand</h2>
           <div className="space-y-2">
             {groups.map(([school, records]) => {
@@ -138,7 +99,6 @@ export default function SuperDataGuru() {
 
                     <CollapsibleContent>
                       <div className="border-t">
-                        {/* ── Guru ── */}
                         {records.some(r => r.jenis_ptk === 'Guru') && (
                           <div className="px-5 py-2 bg-blue-50/50 dark:bg-blue-900/10">
                             <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide mb-1">
@@ -167,7 +127,6 @@ export default function SuperDataGuru() {
                           </div>
                         )}
 
-                        {/* ── Tendik ── */}
                         {records.some(r => r.jenis_ptk === 'Tenaga Kependidikan') && (
                           <div className="px-5 py-2 bg-purple-50/50 dark:bg-purple-900/10">
                             <p className="text-xs font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wide mb-1">
@@ -203,30 +162,6 @@ export default function SuperDataGuru() {
             })}
           </div>
         </div>
-      )}
-
-      {/* ── Flat paginated table ── */}
-      {data && (
-        <>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 mt-6">Daftar Semua GTK</h2>
-          {search ? (
-            <p className="text-xs text-muted-foreground mb-2">Hasil pencarian "{search}" — {data.total} record(s)</p>
-          ) : (
-            <p className="text-xs text-muted-foreground mb-2">
-              {data.total} GTK dari {groups.length} sekolah — klik nama sekolah di atas untuk lihat guru &amp; tendik per sekolah
-            </p>
-          )}
-          <DataTable data={data.items || []} columns={columns} keyField="nip" />
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-gray-500">
-              Halaman {data.page} dari {data.totalPages}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Sebelumnya</Button>
-              <Button variant="outline" disabled={page >= data.totalPages} onClick={() => setPage(p => p + 1)}>Berikutnya</Button>
-            </div>
-          </div>
-        </>
       )}
     </div>
   );
