@@ -6,6 +6,19 @@ import { ArrowLeft, FileText, Home, ShieldCheck, Truck, CheckCircle, AlertTriang
 import Footer from '@/components/portal/Footer';
 import { sekolahSD } from '@/data/sekolah';
 
+function hitungUsia(tanggalLahir: string): number {
+  if (!tanggalLahir) return 0;
+  const [tahun, bulan, hari] = tanggalLahir.split('-').map(Number);
+  const lahir = new Date(tahun, bulan - 1, hari);
+  const today = new Date();
+  let usia = today.getFullYear() - lahir.getFullYear();
+  const selisihBulan = today.getMonth() - lahir.getMonth();
+  if (selisihBulan < 0 || (selisihBulan === 0 && today.getDate() < lahir.getDate())) usia--;
+  return Math.max(0, usia);
+}
+
+const MIN_USIA = 6;
+
 const jalurList = [
   { value: 'Domisili', icon: Home, color: 'blue' },
   { value: 'Afirmasi', icon: ShieldCheck, color: 'green' },
@@ -83,6 +96,21 @@ function FormPendaftaranContent() {
               Data ditemukan, form terisi otomatis. Silakan periksa dan lengkapi data lainnya.
             </div>
           )}
+          {fromDb && tanggalLahir && (() => {
+            const u = hitungUsia(tanggalLahir);
+            const underAge = u < MIN_USIA;
+            return (
+              <div className={`mb-6 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium ${
+                underAge
+                  ? 'bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300'
+                  : 'bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300'
+              }`}>
+                {underAge ? <AlertTriangle className="w-4 h-4 shrink-0" /> : <CheckCircle className="w-4 h-4 shrink-0" />}
+                Usia calon siswa: <strong>{u} tahun</strong>
+                {underAge ? ` — belum memenuhi syarat minimal ${MIN_USIA} tahun, formulir tidak bisa dikirim` : ` — memenuhi syarat`}
+              </div>
+            );
+          })()}
           {!fromDb && nik && (
             <div className="mb-6 flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
               <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -244,7 +272,10 @@ function FormPendaftaranContent() {
             )}
           </div>
 
-          <button className="mt-8 w-full bg-blue-700 hover:bg-blue-800 text-white font-medium px-8 py-3 rounded-xl transition-colors text-sm">
+          <button
+            disabled={!!(fromDb && tanggalLahir && hitungUsia(tanggalLahir) < MIN_USIA)}
+            className="mt-8 w-full bg-blue-700 hover:bg-blue-800 text-white font-medium px-8 py-3 rounded-xl transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
             Submit Pendaftaran
           </button>
         </div>

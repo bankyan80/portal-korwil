@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
 import { useAppStore } from '@/store/app-store';
 import { AdminEmptyState } from '@/components/shared/AdminTable';
@@ -15,9 +16,8 @@ import {
 } from 'firebase/firestore';
 import {
   FileText, Users, CheckCircle, Clock, XCircle, Search,
-  Plus, Pencil, Trash2, Save,
+  Plus, Pencil, Trash2, Save, Loader2,
 } from 'lucide-react';
-import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface Pendaftar {
@@ -29,9 +29,24 @@ interface Pendaftar {
   status: string;
   tglDaftar: string;
   sekolah: string;
+  tanggal_lahir: string;
 }
 
 const statusOptions = ['Menunggu Verifikasi', 'Diverifikasi', 'Valid', 'Cadangan', 'Ditolak'];
+const MIN_USIA = 6;
+
+function hitungUsia(tanggalLahir: string): number {
+  if (!tanggalLahir) return 0;
+  const [tahun, bulan, hari] = tanggalLahir.split('-').map(Number);
+  const lahir = new Date(tahun, bulan - 1, hari);
+  const today = new Date();
+  let usia = today.getFullYear() - lahir.getFullYear();
+  const selisihBulan = today.getMonth() - lahir.getMonth();
+  if (selisihBulan < 0 || (selisihBulan === 0 && today.getDate() < lahir.getDate())) {
+    usia--;
+  }
+  return Math.max(0, usia);
+}
 
 const statusColor: Record<string, string> = {
   Diverifikasi: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
@@ -41,13 +56,13 @@ const statusColor: Record<string, string> = {
   Cadangan: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
 };
 
-const defaultForm = { nama: '', nik: '', jalur: 'Domisili', usia: 6, status: 'Menunggu Verifikasi' as string, tglDaftar: new Date().toISOString().split('T')[0], sekolah: '' };
+const defaultForm = { nama: '', nik: '', jalur: 'Domisili', usia: 6, status: 'Menunggu Verifikasi' as string, tglDaftar: new Date().toISOString().split('T')[0], sekolah: '', tanggal_lahir: '' };
 
 const defaultData: Pendaftar[] = [
-  { id: '1', nama: 'Ahmad Fauzan', nik: '3209071234567890', jalur: 'Domisili', usia: 7, status: 'Diverifikasi', tglDaftar: '2025-06-01', sekolah: 'SD NEGERI 1 LEMAHABANG' },
-  { id: '2', nama: 'Siti Nurhaliza', nik: '3209071234567891', jalur: 'Afirmasi', usia: 6, status: 'Menunggu Verifikasi', tglDaftar: '2025-06-02', sekolah: 'SD NEGERI 1 LEMAHABANG' },
-  { id: '3', nama: 'Rudi Hartono', nik: '3209071234567892', jalur: 'Mutasi', usia: 8, status: 'Valid', tglDaftar: '2025-06-03', sekolah: 'SD NEGERI 2 BELAWA' },
-  { id: '4', nama: 'Dewi Lestari', nik: '3209071234567893', jalur: 'Domisili', usia: 6, status: 'Ditolak', tglDaftar: '2025-06-04', sekolah: 'SD NEGERI 1 LEMAHABANG' },
+  { id: '1', nama: 'Ahmad Fauzan', nik: '3209071234567890', jalur: 'Domisili', usia: 7, status: 'Diverifikasi', tglDaftar: '2025-06-01', sekolah: 'SD NEGERI 1 LEMAHABANG', tanggal_lahir: '2018-03-15' },
+  { id: '2', nama: 'Siti Nurhaliza', nik: '3209071234567891', jalur: 'Afirmasi', usia: 6, status: 'Menunggu Verifikasi', tglDaftar: '2025-06-02', sekolah: 'SD NEGERI 1 LEMAHABANG', tanggal_lahir: '2019-08-20' },
+  { id: '3', nama: 'Rudi Hartono', nik: '3209071234567892', jalur: 'Mutasi', usia: 8, status: 'Valid', tglDaftar: '2025-06-03', sekolah: 'SD NEGERI 2 BELAWA', tanggal_lahir: '2017-01-10' },
+  { id: '4', nama: 'Dewi Lestari', nik: '3209071234567893', jalur: 'Domisili', usia: 6, status: 'Ditolak', tglDaftar: '2025-06-04', sekolah: 'SD NEGERI 1 LEMAHABANG', tanggal_lahir: '2019-12-01' },
 ];
 
 const acceptedStatuses = ['Diverifikasi', 'Valid'];
@@ -64,15 +79,10 @@ async function autoAddToDataPd(p: Pendaftar) {
     }
   });
 
-  // Wait up to 2s for realtime check; if not resolved, proceed to add (belt-and-suspenders)
   await new Promise<void>((resolve) => {
     const timer = setTimeout(() => {
-      if (!alreadyExists) {
-        alreadyExists = true;
-        resolve();
-      }
+      if (!alreadyExists) { alreadyExists = true; resolve(); }
     }, 2000);
-    // Resolve early if alreadyExists flips
     const iv = setInterval(() => {
       if (alreadyExists) { clearInterval(iv); resolve(); }
     }, 50);
@@ -97,6 +107,10 @@ export function ManageSpmbSd() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(defaultForm);
 
+  // NIK lookup state
+  const [nikLookupLoading, setNikLookupLoading] = useState(false);
+  const [nikLookupMsg, setNikLookupMsg] = useState('');
+
   const userSchool = user?.schoolName || '';
   const isOperator = user?.role === 'operator_sekolah';
 
@@ -113,30 +127,94 @@ export function ManageSpmbSd() {
     ditolak: filtered.filter(d => d.status === 'Ditolak').length,
   };
 
+  // ── NIK auto-fill from database ──
+  const lookupNIK = useCallback(async () => {
+    const nik = form.nik.trim();
+    if (nik.length < 16) {
+      setNikLookupMsg('NIK harus 16 digit');
+      return;
+    }
+    setNikLookupLoading(true);
+    setNikLookupMsg('');
+    try {
+      const res = await fetch(`/api/siswa/lookup?nik=${encodeURIComponent(nik)}`);
+      const json = await res.json();
+      if (json.found && json.siswa) {
+        const s = json.siswa;
+        const usia = hitungUsia(s.tanggal_lahir || '');
+        setForm(f => ({
+          ...f,
+          nama: s.nama || f.nama,
+          usia,
+          tanggal_lahir: s.tanggal_lahir || '',
+          sekolah: s.sekolah || f.sekolah || userSchool,
+          desa: s.desa || '',
+          nisn: s.nisn || '',
+        }));
+        setNikLookupMsg('Data siswa ditemukan — formulir diisi otomatis');
+        toast.success('Data siswa ditemukan');
+      } else {
+        setNikLookupMsg('NIK tidak ditemukan dalam database');
+        toast.info('NIK tidak ditemukan, silakan isi manual');
+      }
+    } catch {
+      setNikLookupMsg('Gagal mencari data');
+      toast.error('Gagal mencari data siswa');
+    } finally {
+      setNikLookupLoading(false);
+    }
+  }, [form.nik, userSchool]);
+
+  // Auto-lookup when NIK reaches 16 digits
+  const handleNikChange = (val: string) => {
+    const cleaned = val.replace(/\D/g, '').slice(0, 16);
+    setForm(f => ({ ...f, nik: cleaned }));
+    if (cleaned.length === 16) {
+      // debounce slightly to avoid duplicate calls
+      setTimeout(() => {
+        if (form.nik.length === 16) return; // already handled
+        lookupNIK();
+      }, 300);
+    }
+  };
+
+  // Trigger lookup on button click
+  const handleNIKSearch = async () => {
+    await lookupNIK();
+  };
+
   function openAdd() {
     setEditingId(null);
     setForm({ ...defaultForm, sekolah: userSchool || '' });
+    setNikLookupMsg('');
     setFormOpen(true);
   }
 
   function openEdit(item: Pendaftar) {
     setEditingId(item.id);
-    setForm({ nama: item.nama, nik: item.nik, jalur: item.jalur, usia: item.usia, status: item.status, tglDaftar: item.tglDaftar, sekolah: item.sekolah });
+    setForm({ nama: item.nama, nik: item.nik, jalur: item.jalur, usia: item.usia, status: item.status, tglDaftar: item.tglDaftar, sekolah: item.sekolah, tanggal_lahir: item.tanggal_lahir || '' });
+    setNikLookupMsg('');
     setFormOpen(true);
   }
 
   async function save() {
     if (!form.nama.trim() || !form.nik.trim()) return;
+    const usia = hitungUsia(form.tanggal_lahir || '');
+    if (usia < MIN_USIA) {
+      toast.error(`Usia calon siswa adalah ${usia} tahun — belum memenuhi syarat minimal ${MIN_USIA} tahun`);
+      return;
+    }
+    const payload = { ...form, usia };
     if (editingId) {
-      await updateItem(editingId, form);
+      await updateItem(editingId, payload);
       if (acceptedStatuses.includes(form.status)) {
         const original = items.find(i => i.id === editingId);
-        if (original) await autoAddToDataPd({ ...original, ...form });
+        if (original) await autoAddToDataPd({ ...original, ...payload });
       }
     } else {
-      await addItem(form);
+      await addItem(payload);
       if (acceptedStatuses.includes(form.status)) {
-        await autoAddToDataPd({ id: '', ...form });
+        await autoAddToDataPd({ id: '', ...payload });
       }
     }
     setFormOpen(false);
@@ -216,8 +294,52 @@ export function ManageSpmbSd() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editingId ? 'Edit Pendaftar' : 'Tambah Pendaftar'}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
+            {/* ── NIK + Cari (di atas) ── */}
+            <div className="space-y-2">
+              <Label>NIK</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={form.nik}
+                  onChange={(e) => handleNikChange(e.target.value)}
+                  placeholder="16 digit NIK — cari di database untuk auto-fill"
+                  maxLength={16}
+                  className="flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleNIKSearch}
+                  disabled={nikLookupLoading || form.nik.length < 16}
+                  title="Cari NIK di database"
+                  className="shrink-0 h-10 w-10"
+                >
+                  {nikLookupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                </Button>
+              </div>
+              {nikLookupMsg && (
+                <p className={`text-xs ${nikLookupMsg.includes('tidak ditemukan') || nikLookupMsg.includes('Gagal') ? 'text-amber-600' : 'text-blue-600'}`}>
+                  {nikLookupMsg}
+                </p>
+              )}
+            </div>
+
             <div className="space-y-2"><Label>Nama Lengkap</Label><Input value={form.nama} onChange={(e) => setForm(f => ({ ...f, nama: e.target.value }))} /></div>
-            <div className="space-y-2"><Label>NIK</Label><Input value={form.nik} onChange={(e) => setForm(f => ({ ...f, nik: e.target.value }))} maxLength={16} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Tanggal Lahir</Label>
+                <Input type="date" value={form.tanggal_lahir}
+                  onChange={(e) => setForm(f => ({ ...f, tanggal_lahir: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Usia</Label>
+                <div className="flex items-center h-10">
+                  <span className={`text-sm font-semibold ${hitungUsia(form.tanggal_lahir) < MIN_USIA ? 'text-red-600' : 'text-green-600'}`}>
+                    {hitungUsia(form.tanggal_lahir)} tahun
+                    {hitungUsia(form.tanggal_lahir) < MIN_USIA && ` — belum cukup ${MIN_USIA} tahun`}
+                  </span>
+                </div>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Jalur</Label>
@@ -227,7 +349,6 @@ export function ManageSpmbSd() {
                   <option value="Mutasi">Mutasi</option><option value="Prestasi">Prestasi</option>
                 </select>
               </div>
-              <div className="space-y-2"><Label>Usia</Label><Input type="number" min={5} max={12} value={form.usia} onChange={(e) => setForm(f => ({ ...f, usia: Number(e.target.value) }))} /></div>
             </div>
             <div className="space-y-2"><Label>Sekolah Tujuan</Label><Input value={form.sekolah} onChange={(e) => setForm(f => ({ ...f, sekolah: e.target.value }))} /></div>
             <div className="space-y-2">
