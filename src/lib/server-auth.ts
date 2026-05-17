@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { adminAuth, adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
 import type { UserRole } from '@/types';
 
-interface AuthResult {
+export interface AuthResult {
   uid: string;
   role: UserRole;
 }
@@ -22,7 +22,31 @@ export async function verifyAuth(request: Request): Promise<AuthResult | NextRes
 
   try {
     const decoded = await adminAuth.verifyIdToken(token);
+    const docSnap = await adminDb.collection('users').doc(decoded.uid).get();
+    let role: UserRole = 'publik';
 
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      role = (data?.role as UserRole) || 'publik';
+    }
+
+    return { uid: decoded.uid, role };
+  } catch {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 401 }) as NextResponse;
+  }
+}
+
+export async function verifyCookieAuth(token: string): Promise<AuthResult | NextResponse> {
+  if (!isFirebaseAdminConfigured || !adminAuth || !adminDb) {
+    return NextResponse.json({ error: 'Auth not configured' }, { status: 500 }) as NextResponse;
+  }
+
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) as NextResponse;
+  }
+
+  try {
+    const decoded = await adminAuth.verifyIdToken(token);
     const docSnap = await adminDb.collection('users').doc(decoded.uid).get();
     let role: UserRole = 'publik';
 

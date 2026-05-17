@@ -136,6 +136,7 @@ const VARIASI_NAMA = {
   'aisyiyah lemahabang': makeId('TK AISYIYAH LEMAHABANG'),
   'al irsyad al islamiyyah': makeId('TK AL-IRSYAD AL-ISLAMIYYAH'),
   'bpp kenanga': makeId('TK BPP KENANGA'),
+  'tk al aqso': makeId('TK AL-AQSO'),
   'gelatik': makeId('TK GELATIK'),
   'melati': makeId('TK MELATI'),
   'muslimat nu': makeId('TK MUSLIMAT NU'),

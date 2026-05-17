@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 import fs from 'fs';
 import path from 'path';
 
@@ -8,13 +9,19 @@ function loadData(): any[] {
   return JSON.parse(fs.readFileSync(p, 'utf-8'));
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   if (!isFirebaseAdminConfigured || !adminDb) {
     return NextResponse.json(
       { success: false, error: 'Firebase Admin tidak dikonfigurasi' },
       { status: 500 }
     );
   }
+
+  // Verify auth
+  const token = request.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  const forbidden = requireRole(auth, ['super_admin']);
+  if (forbidden) return forbidden;
 
   try {
     const allData = loadData();

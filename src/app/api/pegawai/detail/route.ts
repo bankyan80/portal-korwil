@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 function isPns(status: string): boolean {
   return status === 'PNS' || status === 'PPPK';
@@ -38,6 +39,11 @@ async function loadFromFirestore(): Promise<any[]> {
 }
 
 export async function GET(req: NextRequest) {
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+  if (forbidden) return forbidden;
+
   const nik = req.nextUrl.searchParams.get('nik');
   if (!nik) {
     return NextResponse.json({ found: false, error: 'Parameter NIK diperlukan' }, { status: 400 });

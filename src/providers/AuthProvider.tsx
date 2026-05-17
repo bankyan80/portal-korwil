@@ -1,7 +1,9 @@
+'use client';
+
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, getIdToken } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, query, limit, getDocs } from 'firebase/firestore';
 import type { Firestore } from 'firebase/firestore';
 import type { Auth } from 'firebase/auth';
@@ -26,6 +28,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
+          // Set auth-token cookie for API route protection
+          const token = await getIdToken(firebaseUser);
+          document.cookie = `auth-token=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
+
           const userDoc = await getDoc(doc(firestore, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             const existing = userDoc.data() as UserProfile;
@@ -67,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Error fetching user profile:', error);
         }
       } else {
+        document.cookie = 'auth-token=; path=/; max-age=0';
         setUser(null);
       }
       setLoadingAuth(false);

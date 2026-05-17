@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 import { parseCSVLine } from '@/lib/csv-parse';
 
 function normalizeSchool(name: string): string {
@@ -39,6 +40,12 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+
+  // Verify auth
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  const forbidden = requireRole(auth, ['super_admin']);
+  if (forbidden) return forbidden;
 
   let csvUrl: string;
   try {

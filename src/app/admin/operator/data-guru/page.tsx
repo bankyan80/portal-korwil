@@ -1,36 +1,91 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAppStore } from '@/store/app-store';
-import { ManageDataGtk } from '@/components/admin/ManageDataGtk';
-import { ArrowLeft } from 'lucide-react';
+import { DataTable } from '@/components/features/DataTable';
+import { usePegawai } from '@/hooks/usePegawai';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { QueryProvider } from '@/contexts/QueryProvider';
 
-export default function OperatorDataGuruPage() {
-  const { user } = useAppStore();
-  const router = useRouter();
+export const dynamic = 'force-dynamic';
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role !== 'operator_sekolah') router.push('/login');
-  }, [user, router]);
+const columns = [
+  { header: 'Nama', accessor: 'nama' as const },
+  { header: 'NIP', accessor: 'nip' as const },
+  { header: 'NUPTK', accessor: 'nuptk' as const },
+  { header: 'Status', accessor: 'status_kepegawaian' as const },
+  { header: 'Sekolah', accessor: 'sekolah' as const },
+  { header: 'Tgl Lahir', accessor: 'tanggal_lahir' as const },
+];
 
-  if (!user) return null;
+function GuruContent() {
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const { data, isLoading, error } = usePegawai(page, search);
+
+  const handleSearch = () => {
+    setSearch(searchInput);
+    setPage(1);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/admin/operator')} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-          </button>
-          <div>
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white">Data Guru & GTK</h1>
-            <p className="text-sm text-muted-foreground">{user.schoolName || 'Sekolah'}</p>
-          </div>
-        </div>
-        <ManageDataGtk />
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Data GTK (V2 - Guru & Tendik)</h1>
+      
+      <div className="flex gap-2 mb-4">
+        <Input
+          placeholder="Cari nama, NIP, NUPTK..."
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSearch()}
+          className="max-w-sm"
+        />
+        <Button onClick={handleSearch}>Cari</Button>
+        {search && (
+          <Button variant="outline" onClick={() => { setSearch(''); setSearchInput(''); setPage(1); }}>
+            Reset
+          </Button>
+        )}
       </div>
+
+      {isLoading && <div>Memuat data...</div>}
+      {error && <div className="text-red-500">Gagal memuat data</div>}
+      
+      {data && (
+        <>
+          <DataTable data={data.items || []} columns={columns} keyField="nip" />
+          <div className="flex justify-between items-center mt-4">
+            <div className="text-sm text-gray-500">
+              Halaman {data.page} dari {data.totalPages} (Total: {data.total})
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+              >
+                Sebelumnya
+              </Button>
+              <Button
+                variant="outline"
+                disabled={page >= data.totalPages}
+                onClick={() => setPage(p => p + 1)}
+              >
+                Berikutnya
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
+  );
+}
+
+export default function DataGuruV2Page() {
+  return (
+    <QueryProvider>
+      <GuruContent />
+    </QueryProvider>
   );
 }
