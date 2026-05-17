@@ -159,7 +159,6 @@ export function ManageUsers() {
         toast.success('User berhasil didaftarkan');
         setAddOpen(false);
         setAddForm({ email: '', role: 'operator_sekolah', schoolId: '', organizationId: '' });
-        fetchUsers();
       } else {
         toast.error(data.error || 'Gagal mendaftarkan user');
       }
@@ -202,7 +201,7 @@ export function ManageUsers() {
           <Button onClick={() => setAddOpen(true)} className="bg-blue-800 hover:bg-blue-900 text-white gap-2">
             <Plus className="w-4 h-4" /> Tambah User
           </Button>
-          <Button variant="outline" size="sm" onClick={fetchUsers} className="gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1.5">
             <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </Button>
         </div>
