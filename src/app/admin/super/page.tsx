@@ -9,7 +9,7 @@ import {
   Users, School, BarChart3, FileText,
   LogOut, Loader2, Building2, RefreshCw, Shield,
   Calendar, Globe, ListTodo, GraduationCap,
-  ArrowLeft
+  Image, Link2, ArrowLeft
 } from 'lucide-react';
 
 export default function SuperAdminDashboard() {
@@ -86,7 +86,9 @@ export default function SuperAdminDashboard() {
     { label: 'Laporan Bulanan', icon: FileText, desc: 'Monitoring laporan bulanan sekolah', href: '/admin/super/laporan-bulanan', color: 'bg-orange-100 text-orange-700' },
     { label: 'Tugas', icon: ListTodo, desc: 'Buat & monitor tugas sekolah', href: '/admin/super/tugas', color: 'bg-indigo-100 text-indigo-700' },
     { label: 'Kelola User', icon: Shield, desc: 'Atur pengguna & role akses', href: '/admin/super/users', color: 'bg-purple-100 text-purple-700' },
-    { label: 'Organisasi', icon: Globe, desc: 'Kelola organisasi & agenda', href: '/admin/organisasi', color: 'bg-teal-100 text-teal-700' },
+    { label: 'Galeri', icon: Image, desc: 'Atur galeri foto semua kategori', href: '/admin/super/galeri', color: 'bg-pink-100 text-pink-700' },
+    { label: 'Organisasi', icon: Globe, desc: 'Kelola data & kepengurusan organisasi', href: '/admin/super/organisasi', color: 'bg-teal-100 text-teal-700' },
+    { label: 'Link Instansi', icon: Link2, desc: 'Atur tautan instansi terkait', href: '/admin/super/link-instansi', color: 'bg-amber-100 text-amber-700' },
     { label: 'Kalender', icon: Calendar, desc: 'Kalender kegiatan', href: '/kalender', color: 'bg-red-100 text-red-700' },
     { label: 'Rekap Kelas', icon: BarChart3, desc: 'Rekapitulasi kelas semua sekolah', href: '/admin/operator/rekap-kelas', color: 'bg-cyan-100 text-cyan-700' },
     { label: 'Sarpras', icon: Building2, desc: 'Data sarana & prasarana sekolah', href: '/admin/operator/sarpras', color: 'bg-amber-100 text-amber-700' },
