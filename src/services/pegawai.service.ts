@@ -5,7 +5,17 @@ import path from 'path';
 function loadFromStatic() {
   const p = path.join(process.cwd(), 'src', 'data', 'data-pegawai.json');
   const raw = JSON.parse(fs.readFileSync(p, 'utf-8'));
-  return raw.map((d: any, i: number) => ({ id: d.nik || `pegawai_${i}`, ...d }));
+  let result = raw.map((d: any, i: number) => ({ id: d.nik || `pegawai_${i}`, ...d }));
+
+  // Merge TK/KB pegawai data if available
+  const tkPath = path.join(process.cwd(), 'src', 'data', 'data-pegawai-tk.json');
+  if (fs.existsSync(tkPath)) {
+    const tkRaw = JSON.parse(fs.readFileSync(tkPath, 'utf-8'));
+    const tkMapped = tkRaw.map((d: any, i: number) => ({ id: d.nik || `pegawai_tk_${i}`, ...d }));
+    result = [...result, ...tkMapped];
+  }
+
+  return result;
 }
 
 export async function getAllPegawai() {
