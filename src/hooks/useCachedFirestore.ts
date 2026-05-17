@@ -87,7 +87,12 @@ export function useCachedFirestore<T extends { id?: string }>(
 
   useEffect(() => {
     mountedRef.current = true;
-    loadFromCacheThenRefresh();
+
+    if (enabled) {
+      queueMicrotask(() => {
+        if (mountedRef.current) loadFromCacheThenRefresh();
+      });
+    }
 
     if (realtime && db) {
       try {

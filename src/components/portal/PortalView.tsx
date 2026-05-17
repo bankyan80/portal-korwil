@@ -8,11 +8,13 @@ import Gallery from '@/components/portal/Gallery';
 import Organizations from '@/components/portal/Organizations';
 import InstitutionLinks from '@/components/portal/InstitutionLinks';
 import Footer from '@/components/portal/Footer';
+import { FirebaseLED } from './FirebaseLED';
 
 export default function PortalView() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-gray-950">
       <Header />
+      <FirebaseLED />
       <main className="flex-1 w-full">
         <HeroSection />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">

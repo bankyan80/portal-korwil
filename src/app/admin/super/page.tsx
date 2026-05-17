@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
+import { FirebaseLED } from '@/components/portal/FirebaseLED';
 import {
   Users, School, BarChart3, FileText,
   LogOut, Loader2, Building2, RefreshCw, Shield,
@@ -119,6 +120,8 @@ export default function SuperAdminDashboard() {
           </button>
         </div>
       </header>
+
+      <FirebaseLED userLabel={user.email} />
 
       {syncMsg && (
         <div className="px-6 pt-4 max-w-7xl mx-auto">

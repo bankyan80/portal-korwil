@@ -7,6 +7,7 @@ import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { normalizeSchool } from '@/lib/normalize';
 import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw, ListTodo, CheckCircle, ExternalLink } from 'lucide-react';
+import { FirebaseLED } from '@/components/portal/FirebaseLED';
 
 export default function OperatorDashboard() {
   const { user, setUser } = useAppStore();
@@ -175,6 +176,8 @@ export default function OperatorDashboard() {
           </button>
         </div>
       </header>
+
+      <FirebaseLED userLabel={user.displayName} schoolLabel={user.schoolName} />
 
       {syncMsg && (
         <div className="px-6 pt-4 max-w-7xl mx-auto">

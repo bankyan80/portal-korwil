@@ -3,15 +3,9 @@ import { getAuth } from 'firebase/auth';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-const FALLBACK_CONFIG = {
-  apiKey: "AIzaSyBnILMRQYvxTneBoXPilKPrmz7qknNRl_4",
-  authDomain: "kedinasan-e5317.firebaseapp.com",
-  projectId: "kedinasan-e5317",
-  storageBucket: "kedinasan-e5317.firebasestorage.app",
-  messagingSenderId: "1028966349554",
-  appId: "1:1028966349554:web:391329f2c8da2ca1802e6b",
-};
-
+// Read from environment variables (server-provided in Vercel, .env.local locally).
+// The platform SDK requires these exact variable names — they are injected at build
+// time so `process.env.NEXT_PUBLIC_*` is available at runtime (never stripped).
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -21,23 +15,19 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const hasEnvConfig = Boolean(
-  firebaseConfig.apiKey && firebaseConfig.projectId &&
-  firebaseConfig.apiKey !== 'your_api_key' &&
-  firebaseConfig.projectId !== 'your_project_id'
-);
+const configReady =
+  !!firebaseConfig.apiKey &&
+  !!firebaseConfig.authDomain &&
+  !!firebaseConfig.projectId;
 
-const resolvedConfig = hasEnvConfig ? firebaseConfig : FALLBACK_CONFIG;
-
-const isFirebaseConfigured = true;
-
+let app: ReturnType<typeof initializeApp> | null = null;
+let authInstance: ReturnType<typeof getAuth> | null = null;
 let firestoreInstance: ReturnType<typeof initializeFirestore> | null = null;
+let storageInstance: ReturnType<typeof getStorage> | null = null;
 
-const app = getApps().length === 0
-  ? initializeApp(resolvedConfig)
-  : getApp();
-
-if (typeof window !== 'undefined') {
+if (configReady) {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  authInstance = getAuth(app);
   try {
     firestoreInstance = initializeFirestore(app, {
       localCache: persistentLocalCache({
@@ -47,10 +37,9 @@ if (typeof window !== 'undefined') {
   } catch {
     firestoreInstance = getFirestore(app);
   }
-} else {
-  firestoreInstance = getFirestore(app);
+  storageInstance = getStorage(app);
 }
 
-export const auth = getAuth(app);
+export const auth = authInstance;
 export const db = firestoreInstance;
-export const storage = getStorage(app);
+export const storage = storageInstance;
