@@ -10,7 +10,9 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import {
+  collection, addDoc, query, where, onSnapshot, doc, setDoc,
+} from 'firebase/firestore';
 import {
   FileText, Users, CheckCircle, Clock, XCircle, Search,
   Plus, Pencil, Trash2, Save,
@@ -53,8 +55,31 @@ const acceptedStatuses = ['Diverifikasi', 'Valid'];
 async function autoAddToDataPd(p: Pendaftar) {
   if (!db) return;
   const q = query(collection(db, 'students'), where('nik', '==', p.nik));
-  const snap = await getDocs(q);
-  if (!snap.empty) return;
+
+  let alreadyExists = false;
+  const checkSub = onSnapshot(q, (snap) => {
+    if (!snap.empty && !alreadyExists) {
+      alreadyExists = true;
+      checkSub();
+    }
+  });
+
+  // Wait up to 2s for realtime check; if not resolved, proceed to add (belt-and-suspenders)
+  await new Promise<void>((resolve) => {
+    const timer = setTimeout(() => {
+      if (!alreadyExists) {
+        alreadyExists = true;
+        resolve();
+      }
+    }, 2000);
+    // Resolve early if alreadyExists flips
+    const iv = setInterval(() => {
+      if (alreadyExists) { clearInterval(iv); resolve(); }
+    }, 50);
+  });
+  (checkSub as any)?.();
+  if (alreadyExists) return;
+
   await addDoc(collection(db, 'students'), {
     nik: p.nik, nama: p.nama, jk: '', nisn: '', tanggal_lahir: '',
     sekolah: p.sekolah, schoolId: '', jenjang: 'SD', kelas: 1, desa: '',

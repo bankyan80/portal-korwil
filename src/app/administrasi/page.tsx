@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { FileText, Download, Loader2, FolderOpen } from 'lucide-react';
 
 interface DocItem {
@@ -17,22 +17,33 @@ export default function AdministrasiPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchDocs() {
-      if (!db) { setLoading(false); return; }
-      try {
-        const snap = await getDocs(collection(db!, 'dokumen'));
-        if (!snap.empty) {
-          const fb: DocItem[] = snap.docs.map(d => ({
+    if (!db) { setLoading(false); return; }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'dokumen'),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const fb: DocItem[] = snapshot.docs.map(d => ({
             id: d.id,
             title: d.data().title || d.data().nama || 'Dokumen',
             type: d.data().type || d.data().jenis || 'PDF',
             url: d.data().url || d.data().fileUrl || '',
           }));
           setDocs(fb);
+        } else {
+          setDocs([]);
         }
-      } catch (e) { console.error('Error fetching documents:', e); } finally { setLoading(false); }
-    }
-    fetchDocs();
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error in dokumen realtime listener:', err);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -75,18 +75,32 @@ export function ManageSarpras() {
 
   useEffect(() => {
     if (!db || !user?.schoolId) { setLoading(false); return; }
-    getDoc(doc(db, 'sarpras', user.schoolId)).then((snap) => {
-      if (snap.exists()) {
-        const d = snap.data();
-        setForm(prev => {
-          const next = { ...prev };
-          for (const k of Object.keys(defaultForm)) {
-            if (d[k] !== undefined && d[k] !== '') next[k as keyof typeof defaultForm] = String(d[k]);
-          }
-          return next;
-        });
+
+    const docRef = doc(db, 'sarpras', user.schoolId);
+    const unsubscribe = onSnapshot(
+      docRef,
+      (snap) => {
+        if (snap.exists()) {
+          const d = snap.data();
+          setForm(prev => {
+            const next = { ...prev };
+            for (const k of Object.keys(defaultForm)) {
+              if (d[k] !== undefined && d[k] !== '') next[k as keyof typeof defaultForm] = String(d[k]);
+            }
+            return next;
+          });
+        }
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error in sarpras realtime listener:', err);
+        setLoading(false);
       }
-    }).finally(() => setLoading(false));
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, [user?.schoolId]);
 
   async function handleSave() {

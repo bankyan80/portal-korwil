@@ -18,7 +18,7 @@ import { Users, Mail, Shield, Search, RefreshCw, Building2, School, Pencil, Save
 import { toast } from 'sonner';
 import type { UserProfile, UserRole } from '@/types';
 import { auth, db } from '@/lib/firebase';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
 import { AdminEmptyState, AdminTableSkeleton } from '@/components/shared/AdminTable';
 
 const roleConfig: Record<string, { label: string; className: string }> = {
@@ -64,31 +64,40 @@ export function ManageUsers() {
 
   useEffect(() => {
     if (!db) return;
-    getDocs(collection(db, 'schools')).then(snap => {
+    const schoolsUnsub = onSnapshot(collection(db, 'schools'), (snap) => {
       setSchools(snap.docs.map(d => ({ id: d.id, name: d.data().name || '' })));
-    }).catch(() => {});
-    getDocs(collection(db, 'organizations')).then(snap => {
+    }, () => {});
+    const orgsUnsub = onSnapshot(collection(db, 'organizations'), (snap) => {
       setOrgs(snap.docs.map(d => ({ id: d.id, name: d.data().name || '' })));
-    }).catch(() => {});
-  }, []);
+    }, () => {});
 
-  const fetchUsers = useCallback(async () => {
-    if (!db) return;
-    setLoading(true);
-    try {
-      const snap = await getDocs(collection(db, 'users'));
-      const list = snap.docs.map(d => d.data() as UserProfile);
-      setUsers(list);
-    } catch {
-      toast.error('Gagal memuat data user');
-    } finally {
-      setLoading(false);
-    }
+    return () => {
+      schoolsUnsub();
+      orgsUnsub();
+    };
   }, []);
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (!db) return;
+    setLoading(true);
+    const unsubscribe = onSnapshot(
+      collection(db, 'users'),
+      (snap) => {
+        const list = snap.docs.map(d => d.data() as UserProfile);
+        setUsers(list);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error in users realtime listener:', err);
+        toast.error('Gagal memuat data user');
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const handleChangeRole = useCallback(async (uid: string, newRole: UserRole) => {
     if (!db) return;

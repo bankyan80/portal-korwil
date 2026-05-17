@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import SuperPageShell from '@/components/admin/SuperPageShell';
 
 export default function SuperSekolahPage() {
@@ -10,13 +10,26 @@ export default function SuperSekolahPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!db) return;
-    getDocs(collection(db, 'schools')).then((snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      setSchools(list.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    if (!db) { setLoading(false); return; }
+
+    setLoading(true);
+    const unsubscribe = onSnapshot(
+      collection(db, 'schools'),
+      (snap) => {
+        const list: any[] = [];
+        snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+        setSchools(list.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error in schools realtime listener:', err);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return (

@@ -12,7 +12,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  collection, addDoc, deleteDoc, doc, setDoc, getDocs, writeBatch,
+  collection, addDoc, deleteDoc, doc, setDoc, writeBatch, onSnapshot,
 } from 'firebase/firestore';
 import {
   School, Users, BarChart3, Search, Loader2, Plus, Pencil, Trash2, Save, ArrowUp, Upload,
@@ -112,7 +112,11 @@ export function ManageDataPd() {
   useEffect(() => {
     if (!isOperator) return;
 
+    let unsubscribe: (() => void) | null = null;
+    let loadingDone = false;
+
     async function load() {
+      // Load API data (one-shot)
       let dbSiswa: SiswaRecord[] = [];
       try {
         const res = await fetch('/api/siswa/list');
@@ -128,30 +132,62 @@ export function ManageDataPd() {
           }));
       } catch (e) { console.error('Error fetching siswa API:', e); }
 
-      let merged = dbSiswa;
+      // Load Firestore overlay (realtime)
+      const schoolFilter = normalizeSchool(userSchool);
+
+      const computeMerged = (fsSiswa: SiswaRecord[]) => {
+        const localNiks = new Set(fsSiswa.map(s => s.nik));
+        return [...fsSiswa, ...dbSiswa.filter(s => !localNiks.has(s.nik))];
+      };
 
       if (db) {
         try {
-          const snap = await getDocs(collection(db, 'students'));
-          const schoolFilter = normalizeSchool(userSchool);
-          const fsSiswa: SiswaRecord[] = [];
-          snap.forEach((d) => {
-            const s = d.data() as SiswaRecord;
-            const normSekolah = normalizeSchool(s.sekolah || '');
-            if (normSekolah === schoolFilter && s.status !== 'lulus') {
-              fsSiswa.push({ id: d.id, ...s });
+          unsubscribe = onSnapshot(
+            collection(db, 'students'),
+            (snap) => {
+              const fsSiswa: SiswaRecord[] = [];
+              snap.forEach((d) => {
+                const s = d.data() as SiswaRecord;
+                const normSekolah = normalizeSchool(s.sekolah || '');
+                if (normSekolah === schoolFilter && s.status !== 'lulus') {
+                  fsSiswa.push({ id: d.id, ...s });
+                }
+              });
+              if (!loadingDone) {
+                setAllSiswa(computeMerged(fsSiswa));
+                setLoading(false);
+                loadingDone = true;
+              } else {
+                setAllSiswa(computeMerged(fsSiswa));
+              }
+            },
+            (err) => {
+              console.error('Error in students realtime listener:', err);
+              if (!loadingDone) {
+                setAllSiswa(computeMerged([]));
+                setLoading(false);
+                loadingDone = true;
+              }
             }
-          });
-          const localNiks = new Set(fsSiswa.map(s => s.nik));
-          merged = [...fsSiswa, ...dbSiswa.filter(s => !localNiks.has(s.nik))];
-        } catch (e) { console.error('Error loading Firestore students:', e); }
+          );
+        } catch (e) {
+          console.error('Error loading Firestore students:', e);
+          setAllSiswa(dbSiswa);
+          setLoading(false);
+          loadingDone = true;
+        }
+      } else {
+        setAllSiswa(dbSiswa);
+        setLoading(false);
+        loadingDone = true;
       }
-
-      setAllSiswa(merged);
-      setLoading(false);
     }
 
     load();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [isOperator, userSchool]);
 
   const [page, setPage] = useState(1);

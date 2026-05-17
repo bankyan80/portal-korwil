@@ -5,7 +5,7 @@ import { Search, Upload, Trash2, FileText, Download, Loader2, CheckCircle, XCirc
 import { useAppStore } from '@/store/app-store';
 import { storage, db } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc, query, where, getDocs, deleteDoc, doc, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, query, where, deleteDoc, doc, orderBy, onSnapshot } from 'firebase/firestore';
 import type { DokumenBersama } from '@/types';
 
 function formatSize(bytes: number) {

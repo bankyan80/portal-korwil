@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
-import { getDocById } from '@/lib/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { mockHeroData } from '@/lib/mock-data';
 
 function GoldCurveTopRight() {
@@ -45,16 +45,27 @@ export default function HeroSection() {
 
   useEffect(() => {
     if (!db) return;
-    getDocById('settings', 'profile').then(data => {
-      if (data) {
-        setHero({
-          name: data.kepalaDinas || data.name || mockHeroData.name,
-          title: data.jabatan || data.title || mockHeroData.title,
-          greeting: data.sambutan || data.greeting || mockHeroData.greeting,
-          photoURL: data.fotoKepalaDinas || data.photoURL || mockHeroData.photoURL,
-        });
+    const unsubscribe = onSnapshot(
+      doc(db, 'settings', 'profile'),
+      (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          setHero({
+            name: data.kepalaDinas || data.name || mockHeroData.name,
+            title: data.jabatan || data.title || mockHeroData.title,
+            greeting: data.sambutan || data.greeting || mockHeroData.greeting,
+            photoURL: data.fotoKepalaDinas || data.photoURL || mockHeroData.photoURL,
+          });
+        }
+      },
+      (err) => {
+        console.error('Error in settings/profile realtime listener:', err);
       }
-    }).catch(() => {});
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return (

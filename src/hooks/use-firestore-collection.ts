@@ -10,6 +10,7 @@ import {
   writeBatch,
   query,
   orderBy,
+  onSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
@@ -89,8 +90,45 @@ export function useFirestoreCollection<T extends { id: string }>(
   }, [fetchItems]);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    if (!db) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+
+    const firestore = db;
+    let q;
+    if (orderField) {
+      q = query(collection(firestore, collectionPath), orderBy(orderField as string));
+    } else {
+      q = query(collection(firestore, collectionPath));
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const fetchedItems: T[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data() as Record<string, unknown>;
+          fetchedItems.push({ id: docSnap.id, ...data } as T);
+        });
+        setItems(fetchedItems);
+        setLoading(false);
+      },
+      (err) => {
+        console.error(`Error in realtime listener for ${collectionPath}:`, err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [collectionPath, orderField]);
 
   const seedData = useCallback(async (data: T[]) => {
     if (!db) return;

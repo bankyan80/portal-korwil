@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Mail, Phone } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { getDocById } from '@/lib/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { mockFooterData } from '@/lib/mock-data';
 
 const socialLinks = [
@@ -18,15 +18,27 @@ export default function Footer() {
 
   useEffect(() => {
     if (!db) return;
-    getDocById('settings', 'profile').then(data => {
-      if (data) {
-        setFooter({
-          address: data.alamat || data.address || mockFooterData.address,
-          email: data.email || mockFooterData.email,
-          phone: data.telepon || data.phone || mockFooterData.phone,
-        });
+
+    const unsubscribe = onSnapshot(
+      doc(db, 'settings', 'profile'),
+      (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          setFooter({
+            address: data.alamat || data.address || mockFooterData.address,
+            email: data.email || mockFooterData.email,
+            phone: data.telepon || data.phone || mockFooterData.phone,
+          });
+        }
+      },
+      (err) => {
+        console.error('Error in settings/profile realtime listener:', err);
       }
-    }).catch(() => {});
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return (

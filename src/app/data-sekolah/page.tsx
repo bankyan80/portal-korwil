@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { db } from '@/lib/firebase';
-import { getAllDocs } from '@/lib/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { sekolahSD, sekolahTK, sekolahKB } from '@/data/sekolah';
 import { Search, School, MapPin, BadgeCheck, Loader2 } from 'lucide-react';
 import type { School as SchoolType } from '@/types';
@@ -35,28 +35,36 @@ export default function DataSekolahPage() {
 
   useEffect(() => {
     if (!db) { setLoading(false); return; }
-    async function fetchSchools() {
-      try {
-        const data = await getAllDocs('schools');
-        if (data.length > 0) {
-          const fb: SchoolItem[] = data.map((d: any) => {
-            return {
-              id: d.id,
-              nama: d.name || d.nama || '',
-              npsn: d.npsn || '-',
-              jenjang: d.jenjang || 'SD',
-              alamat: d.alamat || '',
-              status: d.status || 'NEGERI',
-              desa: d.desa || '',
-              kontak: d.kontak || '',
-              kepalaSekolah: d.kepalaSekolah || '-',
-            };
-          });
+
+    setLoading(true);
+    const unsubscribe = onSnapshot(
+      collection(db, 'schools'),
+      (snap) => {
+        if (snap.size > 0) {
+          const fb: SchoolItem[] = snap.docs.map((d: any) => ({
+            id: d.id,
+            nama: d.name || d.nama || '',
+            npsn: d.npsn || '-',
+            jenjang: d.jenjang || 'SD',
+            alamat: d.alamat || '',
+            status: d.status || 'NEGERI',
+            desa: d.desa || '',
+            kontak: d.kontak || '',
+            kepalaSekolah: d.kepalaSekolah || '-',
+          }));
           setSchools(fb);
         }
-      } catch (e) { console.error('Error fetching schools:', e); } finally { setLoading(false); }
-    }
-    fetchSchools();
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error in schools realtime listener:', err);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const filtered = useMemo(() => {

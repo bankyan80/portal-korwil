@@ -11,7 +11,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { normalizeSchool } from '@/lib/normalize';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { allSekolah as sharedSekolah } from '@/data/sekolah';
 
 const bulanList = [
@@ -112,41 +112,26 @@ export default function LaporanBulananPage() {
   const perPage = 10;
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        let sekolahData: Sekolah[] = [];
-        if (db) {
-          const snap = await getDocs(collection(db, 'tabel_sekolah'));
-          snap.forEach((doc) => {
+    if (db) {
+      const sekolahUnsub = onSnapshot(
+        collection(db, 'tabel_sekolah'),
+        (snapshot) => {
+          const sekolahData: Sekolah[] = [];
+          snapshot.forEach((doc) => {
             sekolahData.push({ id: doc.id, ...doc.data() } as Sekolah);
           });
-        }
-        if (sekolahData.length === 0) {
-          sekolahData = sharedSekolah.map((s, i) => ({
-            id: `shared-${i}`,
-            nama: s.nama,
-            npsn: s.npsn,
-            nss: '',
-            jenjang: s.jenjang,
-            status: s.status,
-            kecamatan: 'Lemahabang',
-            desa: s.desa,
-            alamat: s.address,
-            kepalaSekolah: '',
-            operator: '',
-            noHp: '',
-            email: '',
-            akreditasi: s.akreditasi,
-            tahunBerdiri: 0,
-            statusOperasional: 'Aktif',
-          }));
-        }
-        setSekolahList(sekolahData);
+          if (sekolahData.length > 0) {
+            setSekolahList(sekolahData);
+          }
+        },
+        (err) => console.error('Error in tabel_sekolah listener:', err)
+      );
 
-        if (db) {
-          const laporanSnap = await getDocs(collection(db, 'laporan_bulanan'));
+      const laporanUnsub = onSnapshot(
+        collection(db, 'laporan_bulanan'),
+        (snapshot) => {
           const laporanData: LaporanRecord[] = [];
-          laporanSnap.forEach((doc) => {
+          snapshot.forEach((doc) => {
             const d = doc.data();
             laporanData.push({
               id: doc.id,
@@ -158,34 +143,16 @@ export default function LaporanBulananPage() {
             });
           });
           setLaporanList(laporanData);
-        }
-      } catch (err) {
-        console.error('Gagal mengambil data:', err);
-        if (sekolahList.length === 0) {
-          setSekolahList(sharedSekolah.map((s, i) => ({
-            id: `shared-${i}`,
-            nama: s.nama,
-            npsn: s.npsn,
-            nss: '',
-            jenjang: s.jenjang,
-            status: s.status,
-            kecamatan: 'Lemahabang',
-            desa: s.desa,
-            alamat: s.address,
-            kepalaSekolah: '',
-            operator: '',
-            noHp: '',
-            email: '',
-            akreditasi: s.akreditasi,
-            tahunBerdiri: 0,
-            statusOperasional: 'Aktif',
-          })));
-        }
-      } finally {
-        setLoading(false);
-      }
+        },
+        (err) => console.error('Error in laporan_bulanan listener:', err)
+      );
+
+      return () => {
+        sekolahUnsub();
+        laporanUnsub();
+      };
     }
-    fetchData();
+    setLoading(false);
   }, []);
 
   const stats = useMemo(() => {

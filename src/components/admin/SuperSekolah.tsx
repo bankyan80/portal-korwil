@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { db } from '@/lib/firebase';
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { ArrowLeft, School, Plus, Pencil, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,16 +40,20 @@ export function SuperSekolah() {
   const [form, setForm] = useState<SekolahForm>(defaultForm);
   const [saving, setSaving] = useState(false);
 
-  async function loadSchools() {
-    if (!db) { setLoading(false); return; }
-    try {
-      const snap = await getDocs(collection(db!, 'schools'));
-      setSchools(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch {} finally { setLoading(false); }
-  }
-
   useEffect(() => {
-    loadSchools();
+    if (!db) { setLoading(false); return; }
+    const unsubscribe = onSnapshot(
+      collection(db, 'schools'),
+      (snap) => {
+        setSchools(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error in schools realtime listener:', err);
+        setLoading(false);
+      }
+    );
+    return () => { unsubscribe(); };
   }, []);
 
   function openAdd() {
@@ -74,10 +78,9 @@ export function SuperSekolah() {
     setSaving(true);
     try {
       const id = editingId || `school-${Date.now()}`;
-      await setDoc(doc(db!, 'schools', id), { ...form, updatedAt: Date.now() }, { merge: true });
+      await setDoc(doc(db, 'schools', id), { ...form, updatedAt: Date.now() }, { merge: true });
       toast.success(editingId ? 'Sekolah berhasil diperbarui' : 'Sekolah berhasil ditambahkan');
       setFormOpen(false);
-      await loadSchools();
     } catch {
       toast.error('Gagal menyimpan');
     } finally { setSaving(false); }

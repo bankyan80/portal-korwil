@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { ArrowLeft, WalletMinimal, Loader2, School } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 
@@ -18,40 +18,63 @@ export default function KipSdPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
-      try {
-        let siswa: any[] = [];
-        if (db) {
-          const snap = await getDocs(collection(db, 'kip_sd'));
-          if (!snap.empty) {
-            siswa = snap.docs.map(d => d.data());
-          }
-        }
-        if (siswa.length === 0) {
-          const r = await fetch('/api/siswa/list?jenjang=SD&layak_pip=Ya');
-          const json = await r.json();
-          siswa = json.siswa || [];
-        }
-
-        const map = new Map<string, { l: number; p: number }>();
-        for (const s of siswa) {
-          const sklh = s.sekolah || s.schoolName || '-';
-          if (!map.has(sklh)) map.set(sklh, { l: 0, p: 0 });
-          const d = map.get(sklh)!;
-          if ((s.jk || s.jenisKelamin) === 'L') d.l++;
-          else d.p++;
-        }
-
-        const result: SekolahSummary[] = [];
-        for (const [sekolah, counts] of map) {
-          result.push({ sekolah, total: counts.l + counts.p, ...counts });
-        }
-        setData(result.sort((a, b) => b.total - a.total || a.sekolah.localeCompare(b.sekolah)));
-      } catch { setData([]); }
+    if (!db) {
       setLoading(false);
+      return;
     }
-    load();
+
+    const q = collection(db, 'kip_sd');
+    setLoading(true);
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        let siswa: any[] = [];
+        if (!snapshot.empty) {
+          siswa = snapshot.docs.map(d => d.data());
+        }
+
+        if (siswa.length === 0) {
+          fetch('/api/siswa/list?jenjang=SD&layak_pip=Ya')
+            .then(r => r.json())
+            .then(json => {
+              siswa = json.siswa || [];
+              processSiswa(siswa);
+            })
+            .catch(() => { setData([]); setLoading(false); });
+          return;
+        }
+
+        processSiswa(siswa);
+      },
+      (err) => {
+        console.error('Error in kip_sd realtime listener:', err);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
+
+  const processSiswa = (siswa: any[]) => {
+    const map = new Map<string, { l: number; p: number }>();
+    for (const s of siswa) {
+      const sklh = s.sekolah || s.schoolName || '-';
+      if (!map.has(sklh)) map.set(sklh, { l: 0, p: 0 });
+      const d = map.get(sklh)!;
+      if ((s.jk || s.jenisKelamin) === 'L') d.l++;
+      else d.p++;
+    }
+
+    const result: SekolahSummary[] = [];
+    for (const [sekolah, counts] of map) {
+      result.push({ sekolah, total: counts.l + counts.p, ...counts });
+    }
+    setData(result.sort((a, b) => b.total - a.total || a.sekolah.localeCompare(b.sekolah)));
+    setLoading(false);
+  };
 
   const totalPenerima = data.reduce((a, s) => a + s.total, 0);
   const totalL = data.reduce((a, s) => a + s.l, 0);

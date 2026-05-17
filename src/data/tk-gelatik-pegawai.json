@@ -10,7 +10,8 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
-    "sekolah": "TK GELATIK"
+    "sekolah": "TK GELATIK",
+    "role": "guru"
   },
   {
     "nik": "3209074609010004",
@@ -23,7 +24,8 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
-    "sekolah": "TK GELATIK"
+    "sekolah": "TK GELATIK",
+    "role": "guru"
   },
   {
     "nik": "3209076112840007",
@@ -36,7 +38,8 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
-    "sekolah": "TK GELATIK"
+    "sekolah": "TK GELATIK",
+    "role": "guru"
   },
   {
     "nik": "3209105403990024",
@@ -49,7 +52,8 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
-    "sekolah": "TK GELATIK"
+    "sekolah": "TK GELATIK",
+    "role": "guru"
   },
   {
     "nik": "3209087007880004",
@@ -62,7 +66,8 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
-    "sekolah": "TK GELATIK"
+    "sekolah": "TK GELATIK",
+    "role": "guru"
   },
   {
     "nik": "3209075607800013",
@@ -75,7 +80,8 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
-    "sekolah": "TK GELATIK"
+    "sekolah": "TK GELATIK",
+    "role": "kepsek"
   },
   {
     "nik": "3209077004710002",
@@ -88,6 +94,7 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
-    "sekolah": "TK GELATIK"
+    "sekolah": "TK GELATIK",
+    "role": "tendik"
   }
 ]
