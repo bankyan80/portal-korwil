@@ -45,10 +45,13 @@ function getAffiliation(user: UserProfile) {
   return user.schoolName || user.organization || '-';
 }
 
+const PAGE_SIZE = 20;
+
 export function ManageUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [updating, setUpdating] = useState<string | null>(null);
   const [editUser, setEditUser] = useState<UserProfile | null>(null);
   const [editSchool, setEditSchool] = useState('');
@@ -169,6 +172,12 @@ export function ManageUsers() {
     );
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Reset page when search changes
+  useEffect(() => { setPage(1); }, [search]);
+
   if (loading) return <AdminTableSkeleton />;
 
   return (
@@ -190,6 +199,11 @@ export function ManageUsers() {
         </div>
       </div>
 
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>{filtered.length} total user{search ? ` (filter: "${search}")` : ''}</span>
+        {totalPages > 1 && <span>Halaman {page} dari {totalPages}</span>}
+      </div>
+
       {filtered.length === 0 ? (
         <AdminEmptyState icon={Users} title="Belum ada data user" description="User akan muncul setelah login menggunakan Google" />
       ) : (
@@ -206,11 +220,12 @@ export function ManageUsers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((user, idx) => {
+              {paginated.map((user, idx) => {
+                const realIdx = (page - 1) * PAGE_SIZE + idx + 1;
                 const rc = roleConfig[user.role] || roleConfig.publik;
                 return (
                   <TableRow key={user.uid}>
-                    <TableCell className="text-center text-muted-foreground">{idx + 1}</TableCell>
+                    <TableCell className="text-center text-muted-foreground">{realIdx}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
                         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-semibold shrink-0">
@@ -374,6 +389,22 @@ export function ManageUsers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-2">
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+            Sebelumnya
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+            <Button key={p} variant={p === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(p)}>
+              {p}
+            </Button>
+          ))}
+          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+            Berikutnya
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

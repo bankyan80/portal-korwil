@@ -8,7 +8,8 @@ import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import {
   Users, School, BarChart3, FileText,
   LogOut, Loader2, Building2, RefreshCw, Shield,
-  Calendar, Globe, ListTodo, GraduationCap, CheckSquare
+  Calendar, Globe, ListTodo, GraduationCap,
+  ArrowLeft
 } from 'lucide-react';
 
 export default function SuperAdminDashboard() {
@@ -83,7 +84,6 @@ export default function SuperAdminDashboard() {
     { label: 'Data Siswa', icon: Users, desc: 'Seluruh data peserta didik', count: allStudents?.length, href: '/admin/super/data-siswa', color: 'bg-violet-100 text-violet-700' },
     { label: 'Data Sekolah', icon: GraduationCap, desc: 'Profil & informasi sekolah', href: '/admin/super/sekolah', color: 'bg-blue-100 text-blue-700' },
     { label: 'Laporan Bulanan', icon: FileText, desc: 'Monitoring laporan bulanan sekolah', href: '/admin/super/laporan-bulanan', color: 'bg-orange-100 text-orange-700' },
-    { label: 'Validasi Data', icon: CheckSquare, desc: 'Cek kelengkapan data per sekolah', href: '/admin/super/validator', color: 'bg-red-100 text-red-700' },
     { label: 'Tugas', icon: ListTodo, desc: 'Buat & monitor tugas sekolah', href: '/admin/super/tugas', color: 'bg-indigo-100 text-indigo-700' },
     { label: 'Kelola User', icon: Shield, desc: 'Atur pengguna & role akses', href: '/admin/super/users', color: 'bg-purple-100 text-purple-700' },
     { label: 'Organisasi', icon: Globe, desc: 'Kelola organisasi & agenda', href: '/admin/organisasi', color: 'bg-teal-100 text-teal-700' },
@@ -108,6 +108,10 @@ export default function SuperAdminDashboard() {
             className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-200 disabled:opacity-50">
             <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? 'Menyinkronkan...' : 'Sinkronisasi Data'}
+          </button>
+          <button onClick={() => router.push('/')}
+            className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-200">
+            <ArrowLeft className="w-4 h-4" /> Portal
           </button>
           <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-300 hover:text-red-200">
             <LogOut className="w-4 h-4" /> Logout

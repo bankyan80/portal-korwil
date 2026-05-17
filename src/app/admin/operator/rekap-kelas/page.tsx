@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { normalizeSchool } from '@/lib/normalize';
 import { ArrowLeft, BarChart3, Loader2 } from 'lucide-react';
 
@@ -19,30 +18,35 @@ const kelasList = ['KB A', 'KB B', 'TK A', 'TK B', '1', '2', '3', '4', '5', '6']
 export default function RekapKelasPage() {
   const { user } = useAppStore();
   const router = useRouter();
+  const [allStudents, setAllStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     if (user.role !== 'operator_sekolah') router.push('/login');
   }, [user, router]);
 
-  const { data: allStudents, loading } = useCachedFirestore<Record<string, any>>({
-    collectionName: 'students',
-    enabled: !!user?.schoolName,
-  });
+  useEffect(() => {
+    if (!user?.schoolName && !user?.schoolId) { setLoading(false); return; }
+    fetch('/api/siswa/list')
+      .then(r => r.json())
+      .then(json => {
+        const students = json.siswa || [];
+        const normalized = normalizeSchool(user?.schoolName || '');
+        setAllStudents(students.filter((s: any) => {
+          if (s.schoolId && s.schoolId === user?.schoolId) return true;
+          return normalizeSchool(s.sekolah || s.schoolName || '') === normalized;
+        }).filter((s: any) => s.status !== 'lulus'));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [user?.schoolName, user?.schoolId]);
 
   const recap = useMemo<KelasRecap[]>(() => {
-    if (!user?.schoolName && !user?.schoolId) return [];
-    const normalized = normalizeSchool(user?.schoolName || '');
-
-    const filtered = allStudents.filter(s => {
-      if (s.schoolId && s.schoolId === user?.schoolId) return true;
-      return normalizeSchool(s.sekolah || s.schoolName || '') === normalized;
-    }).filter(s => s.status !== 'lulus');
-
     const map = new Map<string, { l: number; p: number }>();
     kelasList.forEach(k => map.set(k, { l: 0, p: 0 }));
 
-    for (const s of filtered) {
+    for (const s of allStudents) {
       const k = s.kelas ? String(s.kelas) : '-';
       const kelasStr = s.jenjang === 'SD' ? k : `${s.jenjang || 'KB'} ${k}`;
       const entry = map.get(kelasStr) || map.get('-') || { l: 0, p: 0 };
@@ -53,7 +57,7 @@ export default function RekapKelasPage() {
     return Array.from(map.entries()).map(([kelas, v]) => ({
       kelas, l: v.l, p: v.p, total: v.l + v.p,
     }));
-  }, [allStudents, user?.schoolName, user?.schoolId]);
+  }, [allStudents]);
 
   const totals = useMemo(() =>
     recap.reduce((a, r) => ({ l: a.l + r.l, p: a.p + r.p, total: a.total + r.total }), { l: 0, p: 0, total: 0 }),

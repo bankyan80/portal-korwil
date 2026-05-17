@@ -36,7 +36,7 @@ async function syncCollection(data: any[], collectionName: string, idField: stri
 export async function POST(request: NextRequest) {
   if (!isFirebaseAdminConfigured || !adminDb) {
     return NextResponse.json(
-      { success: false, error: 'Firebase Admin tidak dikonfigurasi' },
+      { success: false, error: 'Firebase Admin tidak dikonfigurasi. Set FIREBASE_SERVICE_ACCOUNT_KEY di environment variables Vercel.' },
       { status: 500 }
     );
   }

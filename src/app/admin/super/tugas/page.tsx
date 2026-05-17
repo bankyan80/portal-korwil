@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import {
   Shield, LogOut, Loader2, Plus, Trash2, CheckCircle, XCircle,
-  Clock, ExternalLink, BarChart3, ListTodo, Calendar, Share2, Copy, MessageCircle, Send, X,
+  Clock, ExternalLink, ArrowLeft, ListTodo, Calendar, Share2, Copy, MessageCircle, Send, X,
 } from 'lucide-react';
 
 interface TaskGroup {
@@ -109,8 +109,8 @@ export default function TugasPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/admin/super')} className="text-white/80 hover:text-white">
-            <BarChart3 className="w-5 h-5" />
+          <button onClick={() => router.push('/admin/super')} className="text-blue-300 hover:text-blue-200">
+            <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <h1 className="text-lg font-bold text-white flex items-center gap-2">

@@ -11,8 +11,12 @@ function loadServiceAccount(): ServiceAccount | null {
     try {
       return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY) as ServiceAccount;
     } catch {
-      return null;
+      // not a JSON string, maybe base64
     }
+    try {
+      const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('utf-8');
+      return JSON.parse(decoded) as ServiceAccount;
+    } catch {}
   }
 
   const localPath = path.join(process.cwd(), 'service-account');
