@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Users, GraduationCap, BookOpen, Search, MapPin, School as SchoolIcon,
-  Trash2, Pencil, Save, Loader2,
+  Save, Loader2,
 } from 'lucide-react';
 import { allSekolah } from '@/data/sekolah';
 import { toast } from 'sonner';
@@ -25,7 +25,6 @@ export default function SuperDataGuru() {
   const { data: allDataResult, isLoading } = usePegawaiAll();
   const [searchSekolah, setSearchSekolah] = useState('');
   const [jenjangFilter, setJenjangFilter] = useState<JenjangFilter>('ALL');
-  const [deletingNik, setDeletingNik] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Record<string, any> | null>(null);
   const [form, setForm] = useState({
@@ -47,8 +46,6 @@ export default function SuperDataGuru() {
     }
     return false;
   };
-
-  const canDelete = userRole === 'super_admin';
 
   function openEdit(record: Record<string, any>) {
     setEditingRecord(record);
@@ -104,7 +101,6 @@ export default function SuperDataGuru() {
   // Build per-sekolah aggregation from pegawai data
   const sekolahAgg = useMemo(() => {
     const items = allDataResult?.items || [];
-    // Build pegawai-provided stats per school name
     const aggMap: Record<string, { guru: number; tendik: number; total: number }> = {};
     for (const r of items) {
       const nama = r.sekolah || '-';
@@ -118,30 +114,26 @@ export default function SuperDataGuru() {
 
   // All sekolah from master + their pegawai stats (jenjang always from master)
   const sekolahWithMeta = useMemo(() => {
-    // Build pegawai map by school name
     const pegawaiMap = new Map<string, { guru: number; tendik: number; total: number }>();
     for (const [nama, agg] of Object.entries(sekolahAgg)) {
       pegawaiMap.set(nama, agg);
     }
 
-    // Start from master list (jenjang is authoritative)
     const result = allSekolah.map(s => {
       const peg = pegawaiMap.get(s.nama);
       const hasPegawai = peg && peg.total > 0;
       return {
         nama: s.nama,
-        jenjang: s.jenjang,      // always from master sekolah data
+        jenjang: s.jenjang,
         guru: hasPegawai ? peg.guru : 0,
         tendik: hasPegawai ? peg.tendik : 0,
         total: hasPegawai ? peg.total : 0,
       };
     });
 
-    // Add any pegawai schools not in master list
     for (const [nama, peg] of Object.entries(sekolahAgg)) {
-      if (!pegawaiMap.has(nama)) continue; // already handled above legitimately
+      if (!pegawaiMap.has(nama)) continue;
       if (result.find(s => s.nama === nama)) continue;
-      // Infer jenjang from name of unknown school
       const lower = nama.toLowerCase();
       let inferred: JenjangFilter = 'SD';
       if (lower.includes('tk ') || lower.startsWith('tk ')) inferred = 'TK';
@@ -171,31 +163,11 @@ export default function SuperDataGuru() {
   const jalurLabel = (j: string) => JENJANG_LABEL[j] || j;
   const jalurColor = (j: string) => JENJANG_COLOR[j] || 'bg-gray-100 text-gray-700';
 
-  async function handleDelete(nik: string, nama: string) {
-    if (!nik) return;
-    if (!window.confirm(`Hapus data pegawai "${nama}" (NIK: ${nik})? Tindakan ini tidak dapat dibatalkan.`)) return;
-    setDeletingNik(nik);
-    try {
-      const res = await fetch(`/api/pegawai/${encodeURIComponent(nik)}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Data pegawai berhasil dihapus');
-        // Refresh data by invalidating TanStack query
-        window.location.reload();
-      } else {
-        toast.error(data.error || 'Gagal menghapus data pegawai');
-      }
-    } catch {
-      toast.error('Gagal menghapus data pegawai');
-    } finally {
-      setDeletingNik(null);
-    }
-  }
-
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-1">Data GTK</h1>
       <p className="text-sm text-muted-foreground mb-4">Seluruh data pendidik dan tenaga kependidikan semua sekolah</p>
+      <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">Data ini sesuai dengan data Dapodik, jika ada perubahan silahkan hubungi Admin.</p>
 
       {isLoading && !allDataResult && (
         <div className="flex items-center gap-2 text-muted-foreground py-4">
@@ -295,7 +267,6 @@ export default function SuperDataGuru() {
                               <th className="text-left font-medium px-5 py-2">NIP</th>
                               <th className="text-left font-medium px-5 py-2 hidden sm:table-cell">NUPTK</th>
                               <th className="text-left font-medium px-5 py-2">Status</th>
-                              <th className="text-right font-medium px-5 py-2 w-16">Aksi</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -311,29 +282,6 @@ export default function SuperDataGuru() {
                                 <td className="px-5 py-2 text-[13px] font-mono text-gray-500">{r.nip || <span className="text-gray-400">-</span>}</td>
                                 <td className="px-5 py-2 text-[13px] hidden sm:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
                                 <td className="px-5 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
-                                <td className="px-5 py-2 text-right">
-                                  <div className="flex items-center justify-end gap-1">
-                                    {canEditRecord(r) && (
-                                      <button
-                                        onClick={() => openEdit(r)}
-                                        className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
-                                        title="Edit"
-                                      >
-                                        <Pencil className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                    {canDelete && (
-                                      <button
-                                        onClick={() => handleDelete(r.nik || r.nip || '', r.nama)}
-                                        disabled={deletingNik === (r.nik || r.nip)}
-                                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                        title="Hapus"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                  </div>
-                                </td>
                               </tr>
                             ))}
                           </tbody>
@@ -354,7 +302,6 @@ export default function SuperDataGuru() {
                               <th className="text-left font-medium px-5 py-2">NIP</th>
                               <th className="text-left font-medium px-5 py-2 hidden sm:table-cell">NUPTK</th>
                               <th className="text-left font-medium px-5 py-2">Status</th>
-                              <th className="text-right font-medium px-5 py-2 w-16">Aksi</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -370,29 +317,6 @@ export default function SuperDataGuru() {
                                 <td className="px-5 py-2 text-[13px] font-mono text-gray-500">{r.nip || <span className="text-gray-400">-</span>}</td>
                                 <td className="px-5 py-2 text-[13px] hidden sm:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
                                 <td className="px-5 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
-                                <td className="px-5 py-2 text-right">
-                                  <div className="flex items-center justify-end gap-1">
-                                    {canEditRecord(r) && (
-                                      <button
-                                        onClick={() => openEdit(r)}
-                                        className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
-                                        title="Edit"
-                                      >
-                                        <Pencil className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                    {canDelete && (
-                                      <button
-                                        onClick={() => handleDelete(r.nik || r.nip || '', r.nama)}
-                                        disabled={deletingNik === (r.nik || r.nip)}
-                                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                        title="Hapus"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                  </div>
-                                </td>
                               </tr>
                             ))}
                           </tbody>
