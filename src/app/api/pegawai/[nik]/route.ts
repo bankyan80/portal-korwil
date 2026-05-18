@@ -13,8 +13,14 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized — tidak ada token' }, { status: 401 });
     }
 
+    const { isFirebaseAdminConfigured, adminAuth, adminDb } = await import('@/lib/firebase-admin');
+    console.log('[PUT /api/pegawai] isFirebaseAdminConfigured:', isFirebaseAdminConfigured, 'adminAuth:', !!adminAuth, 'adminDb:', !!adminDb);
+
     const authResult = await verifyCookieAuth(cookieToken);
-    if (authResult instanceof NextResponse) return authResult;
+    if (authResult instanceof NextResponse) {
+      console.log('[PUT /api/pegawai] verifyCookieAuth failed:', authResult.status);
+      return authResult;
+    }
 
     const forbidden = requireRole(authResult as any, ['super_admin', 'operator_sekolah']);
     if (forbidden) return forbidden;
@@ -84,7 +90,8 @@ export async function PUT(
     return NextResponse.json({ success: true, message: 'Data pegawai berhasil diperbarui' });
   } catch (error) {
     console.error('Update pegawai error:', error);
-    return NextResponse.json({ error: 'Gagal memperbarui data pegawai' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: 'Gagal memperbarui data pegawai', detail: errorMessage }, { status: 500 });
   }
 }
 
