@@ -299,9 +299,9 @@ function aggregate(
       }
     }
 
-    // jumlah = sum of sub-columns
+    // jumlah = realPtk (total guru aktif di kategori ini)
     for (const cat of [pai, penjas, kelas, tendik]) {
-      cat.jumlah = cat.pns + cat.pppk + cat.pppkParuhWaktu + cat.nonAsnSerdik + cat.nonAsnMurni + cat.nonAsnNonDapodik;
+      cat.jumlah = cat.realPtk;
     }
 
     // Rombel & Siswa from static rombelData
@@ -363,7 +363,7 @@ function computeTotals(rows: SchoolRow[]): SchoolRow {
     const nonAsnSerdik = sumCat('nonAsnSerdik', cat);
     const nonAsnMurni = sumCat('nonAsnMurni', cat);
     const nonAsnNonDapodik = sumCat('nonAsnNonDapodik', cat);
-    const jumlah = pns + pppk + pppkParuhWaktu + nonAsnSerdik + nonAsnMurni + nonAsnNonDapodik;
+    const jumlah = realPtk;
     const kebutuhan = sumCat('kebutuhan', cat);
     const kurangLebih = jumlah - kebutuhan;
     return { realPtk, pns, pppk, pppkParuhWaktu, nonAsnSerdik, nonAsnMurni, nonAsnNonDapodik, jumlah, kebutuhan, kurangLebih };
