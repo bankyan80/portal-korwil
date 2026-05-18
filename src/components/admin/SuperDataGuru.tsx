@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { usePegawaiAll } from '@/hooks/usePegawai';
+import { useAppStore } from '@/store/app-store';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,8 @@ import {
 } from 'lucide-react';
 import { allSekolah } from '@/data/sekolah';
 import { toast } from 'sonner';
+import { normalizeSchool } from '@/lib/normalize';
+import type { UserRole } from '@/types';
 
 type JenjangFilter = 'ALL' | 'SD' | 'TK' | 'KB';
 
@@ -31,6 +34,21 @@ export default function SuperDataGuru() {
     sertifikasi: '', sekolah: '',
   });
   const [saving, setSaving] = useState(false);
+
+  const currentUser = useAppStore(s => s.user);
+  const userRole = currentUser?.role;
+  const userSchoolName = currentUser?.schoolName || '';
+
+  const canEditRecord = (record: Record<string, any>) => {
+    if (userRole === 'super_admin') return true;
+    if (userRole === 'operator_sekolah') {
+      const recordSchool = record.sekolah || '';
+      return normalizeSchool(recordSchool) === normalizeSchool(userSchoolName);
+    }
+    return false;
+  };
+
+  const canDelete = userRole === 'super_admin';
 
   function openEdit(record: Record<string, any>) {
     setEditingRecord(record);
@@ -125,7 +143,7 @@ export default function SuperDataGuru() {
       if (result.find(s => s.nama === nama)) continue;
       // Infer jenjang from name of unknown school
       const lower = nama.toLowerCase();
-      let inferred = 'SD';
+      let inferred: JenjangFilter = 'SD';
       if (lower.includes('tk ') || lower.startsWith('tk ')) inferred = 'TK';
       else if (lower.includes('kb ') || lower.startsWith('kb ') || lower.includes('paud')) inferred = 'KB';
       result.push({ nama, jenjang: inferred, guru: peg.guru, tendik: peg.tendik, total: peg.total });
@@ -284,28 +302,36 @@ export default function SuperDataGuru() {
                             {guruRecords.map((r, i) => (
                               <tr key={r.nik || r.nip || i} className="border-t hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors">
                                 <td className="px-5 py-2 text-[13px] font-medium">
-                                  <button onClick={() => openEdit(r)} className="text-blue-700 hover:underline dark:text-blue-300">{r.nama}</button>
+                                  {canEditRecord(r) ? (
+                                    <button onClick={() => openEdit(r)} className="text-blue-700 hover:underline dark:text-blue-300">{r.nama}</button>
+                                  ) : (
+                                    <span>{r.nama}</span>
+                                  )}
                                 </td>
                                 <td className="px-5 py-2 text-[13px] font-mono text-gray-500">{r.nip || <span className="text-gray-400">-</span>}</td>
                                 <td className="px-5 py-2 text-[13px] hidden sm:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
                                 <td className="px-5 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
                                 <td className="px-5 py-2 text-right">
                                   <div className="flex items-center justify-end gap-1">
-                                    <button
-                                      onClick={() => openEdit(r)}
-                                      className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
-                                      title="Edit"
-                                    >
-                                      <Pencil className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDelete(r.nik || r.nip || '', r.nama)}
-                                      disabled={deletingNik === (r.nik || r.nip)}
-                                      className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                      title="Hapus"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
+                                    {canEditRecord(r) && (
+                                      <button
+                                        onClick={() => openEdit(r)}
+                                        className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                                        title="Edit"
+                                      >
+                                        <Pencil className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                    {canDelete && (
+                                      <button
+                                        onClick={() => handleDelete(r.nik || r.nip || '', r.nama)}
+                                        disabled={deletingNik === (r.nik || r.nip)}
+                                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                        title="Hapus"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -335,28 +361,36 @@ export default function SuperDataGuru() {
                             {tendikRecords.map((r, i) => (
                               <tr key={r.nik || r.nip || i} className="border-t hover:bg-purple-50/40 dark:hover:bg-purple-900/10 transition-colors">
                                 <td className="px-5 py-2 text-[13px] font-medium">
-                                  <button onClick={() => openEdit(r)} className="text-blue-700 hover:underline dark:text-blue-300">{r.nama}</button>
+                                  {canEditRecord(r) ? (
+                                    <button onClick={() => openEdit(r)} className="text-blue-700 hover:underline dark:text-blue-300">{r.nama}</button>
+                                  ) : (
+                                    <span>{r.nama}</span>
+                                  )}
                                 </td>
                                 <td className="px-5 py-2 text-[13px] font-mono text-gray-500">{r.nip || <span className="text-gray-400">-</span>}</td>
                                 <td className="px-5 py-2 text-[13px] hidden sm:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
                                 <td className="px-5 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
                                 <td className="px-5 py-2 text-right">
                                   <div className="flex items-center justify-end gap-1">
-                                    <button
-                                      onClick={() => openEdit(r)}
-                                      className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
-                                      title="Edit"
-                                    >
-                                      <Pencil className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDelete(r.nik || r.nip || '', r.nama)}
-                                      disabled={deletingNik === (r.nik || r.nip)}
-                                      className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                      title="Hapus"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
+                                    {canEditRecord(r) && (
+                                      <button
+                                        onClick={() => openEdit(r)}
+                                        className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                                        title="Edit"
+                                      >
+                                        <Pencil className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                    {canDelete && (
+                                      <button
+                                        onClick={() => handleDelete(r.nik || r.nip || '', r.nama)}
+                                        disabled={deletingNik === (r.nik || r.nip)}
+                                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                        title="Hapus"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
