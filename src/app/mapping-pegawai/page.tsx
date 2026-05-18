@@ -128,12 +128,12 @@ function categorisePegawai(p: Record<string, any>): PegawaiCategory | null {
     return 'tendik';
   }
 
-  // Kepala Sekolah -> count as tendik
+  // Kepala Sekolah -> tidak masuk kategori apapun, hanya dihitung di kolom kepala sekolah
   if (
     jenisPtk.includes('kepala sekolah') ||
     jabatan.includes('kepala sekolah')
   ) {
-    return 'tendik';
+    return null;
   }
 
   // Check explicit kategori first
@@ -749,6 +749,7 @@ export default function MappingPegawaiPage() {
             Data diambil dari sistem internal dan Dapodik. Jika ada kekeliruan data, silakan hubungi Admin.
             Kebutuhan ideal: Guru PAI 1 orang, Guru Penjaskes 1 orang, Tenaga Kependidikan 1 orang per sekolah.
             Kebutuhan Guru Kelas mengikuti jumlah rombel.
+            Kepala Sekolah tidak termasuk dalam kategori Tenaga Kependidikan.
           </p>
         </div>
       </main>
