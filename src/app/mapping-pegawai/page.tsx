@@ -136,18 +136,21 @@ function categorisePegawai(p: Record<string, any>): PegawaiCategory | null {
     return null;
   }
 
-  // Check explicit kategori first
-  if (kategoriGuru.includes('pai') || kategoriGuru.includes('pendidikan agama')) return 'pai';
-  if (kategoriGuru.includes('penjas') || kategoriGuru.includes('pjok') || kategoriGuru.includes('olahraga')) return 'penjas';
-  if (kategoriGuru.includes('guru kelas')) return 'kelas';
+  // Guru PAI detection (check ALL fields: kategori, mapel, sertifikasi, jabatan, jenis_ptk)
+  const paiKeywords = ['pai', 'pendidikan agama', 'pendidikan agama islam', 'pend. agama', 'guru pai', 'pendidikan agama islam dan bhs arab', 'pai dan bhs arab', 'pendidikan agama islam dan bahasa arab'];
+  const isPAI = paiKeywords.some(kw =>
+    kategoriGuru.includes(kw) ||
+    mapel.includes(kw) ||
+    sertifikasi.includes(kw) ||
+    jabatan.includes(kw) ||
+    jenisPtk.includes(kw)
+  );
+  if (isPAI) return 'pai';
 
-  // Guru PAI detection
+  // Also check for "agama" keyword in mapel/jabatan (but not "pendidikan agama" which is already caught)
   if (
-    mapel.includes('pendidikan agama islam') ||
-    mapel.includes('pai') ||
-    mapel.includes('pendidikan agama') ||
-    sertifikasi.includes('pai') ||
-    sertifikasi.includes('pendidikan agama')
+    mapel.includes('agama') ||
+    jabatan.includes('agama')
   ) {
     return 'pai';
   }
@@ -161,10 +164,20 @@ function categorisePegawai(p: Record<string, any>): PegawaiCategory | null {
     sertifikasi.includes('penjas') ||
     sertifikasi.includes('penjaskes') ||
     sertifikasi.includes('pjok') ||
-    sertifikasi.includes('olahraga')
+    sertifikasi.includes('olahraga') ||
+    kategoriGuru.includes('penjas') ||
+    kategoriGuru.includes('pjok') ||
+    kategoriGuru.includes('olahraga') ||
+    jabatan.includes('penjas') ||
+    jabatan.includes('pjok') ||
+    jabatan.includes('pendidikan jasmani') ||
+    jabatan.includes('olahraga')
   ) {
     return 'penjas';
   }
+
+  // Check explicit kategori for guru kelas
+  if (kategoriGuru.includes('guru kelas')) return 'kelas';
 
   // Default: Guru Kelas (if jenis_ptk indicates Guru)
   if (jenisPtk.includes('guru')) {
