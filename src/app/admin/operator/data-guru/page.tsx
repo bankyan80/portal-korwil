@@ -18,7 +18,7 @@ import { QueryProvider } from '@/contexts/QueryProvider';
 export const dynamic = 'force-dynamic';
 
 const PTK_OPTIONS = ['Guru', 'Tenaga Kependidikan', 'Kepala Sekolah', 'Pengawas', 'Lainnya'];
-const STATUS_OPTIONS = ['PNS', 'PPPK', 'Honor Daerah TK.II Kab/Kota', 'Guru Honor Sekolah', 'Tenaga Honor Sekolah', 'PPPK Paruh Waktu'];
+const STATUS_OPTIONS = ['PNS', 'PPPK', 'Honor Daerah TK.II Kab/Kota', 'Guru Honor Sekolah', 'Tenaga Honor Sekolah', 'PPPK Paruh Waktu', 'GTY/PTY', 'Non ASN', 'CPNS'];
 const TUGAS_TAMBAHAN_OPTIONS = [
   '', 'Kepala Sekolah', 'Bendahara BOS/BOP', 'Kepala Laboratorium',
   'Pembina Pramuka Putra', 'Kepala Perpustakaan', 'Pelaksana PBJ', 'Pembina Pramuka Putri',

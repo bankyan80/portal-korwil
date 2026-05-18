@@ -73,12 +73,12 @@ function getSisa(iso: string): string {
   return parts.join(' ') || '< 1 bln';
 }
 
-function isPns(status: string): boolean {
+function isPensionEligible(status: string): boolean {
   return status === 'PNS' || status === 'PPPK';
 }
 
 function getStatusBup(iso: string, status: string): 'hijau' | 'kuning' | 'merah' | 'none' {
-  if (!isPns(status)) return 'none';
+  if (!isPensionEligible(status)) return 'none';
   const bup = getBupDate(iso);
   if (!bup) return 'none';
   const now = new Date();
@@ -142,7 +142,7 @@ export default function BupPage() {
       total: filtered.length,
       pns: filtered.filter((p) => p.status_kepegawaian === 'PNS').length,
       pppk: filtered.filter((p) => p.status_kepegawaian === 'PPPK').length,
-      honor: filtered.filter((p) => p.status_kepegawaian.includes('Honor')).length,
+      honor: filtered.filter((p) => p.status_kepegawaian.includes('Honor') || p.status_kepegawaian === 'GTY/PTY' || p.status_kepegawaian === 'Non ASN').length,
       guru: filtered.filter((p) => p.jenis_ptk === 'Guru').length,
     };
   }, [filtered]);
@@ -253,7 +253,7 @@ export default function BupPage() {
                   <tbody className="divide-y">
                     {paginated.map((p, i) => {
                       const usia = calculateAge(p.tanggal_lahir);
-                      const isPnsFlag = isPns(p.status_kepegawaian);
+                      const isPensionEligibleFlag = isPensionEligible(p.status_kepegawaian);
                       const statusBup = getStatusBup(p.tanggal_lahir, p.status_kepegawaian);
                       return (
                         <tr key={p.nik} className="hover:bg-blue-50/50 transition-colors">
@@ -279,10 +279,10 @@ export default function BupPage() {
                           </td>
                           <td className="px-3 py-3 text-gray-500 text-xs hidden md:table-cell max-w-[180px] truncate">{p.sekolah}</td>
                           <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden md:table-cell">
-                            {isPnsFlag ? formatBupDate(p.tanggal_lahir) : '-'}
+                            {isPensionEligibleFlag ? formatBupDate(p.tanggal_lahir) : '-'}
                           </td>
                           <td className="px-3 py-3 whitespace-nowrap">
-                            {isPnsFlag ? (
+                            {isPensionEligibleFlag ? (
                               <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${
                                 statusBup === 'merah' ? 'bg-red-100 text-red-700' :
                                 statusBup === 'kuning' ? 'bg-yellow-100 text-yellow-700' :

@@ -193,6 +193,7 @@ function toStatusKepegawaian(p: Record<string, any>): string {
   if (raw.includes('pns')) return 'pns';
   if (raw.includes('pppk') && (raw.includes('paruh') || raw.includes('waktu'))) return 'pppkParuhWaktu';
   if (raw.includes('pppk')) return 'pppk';
+  if (raw.includes('gty') || raw.includes('pty')) return 'nonAsn';
   if (raw.includes('non asn') || raw.includes('honorer') || raw.includes('honor')) return 'nonAsn';
   return '';
 }

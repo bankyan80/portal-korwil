@@ -195,7 +195,7 @@ export interface Report {
   tahun: number;
   jenis: string;
   data: unknown;
-  status: 'draft' | 'submitted' | 'diverifikasi' | 'revisi';
+  status: 'belum_lapor' | 'draft' | 'sudah_lapor' | 'diverifikasi' | 'revisi';
   createdAt: number;
   updatedAt: number;
 }
