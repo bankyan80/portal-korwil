@@ -19,6 +19,27 @@ import { toast } from 'sonner';
 import { normalizeSchool } from '@/lib/normalize';
 import type { UserRole } from '@/types';
 
+// Build a lookup: normalized firestore-style name → canonical name from master data
+const schoolDisplayLookup = new Map<string, string>();
+for (const s of allSekolah) {
+  const nk = normalizeSchool(s.nama);
+  if (nk && !schoolDisplayLookup.has(nk)) schoolDisplayLookup.set(nk, s.nama);
+  // also index by raw name (case-normalized) so exact matches work too
+  if (s.nama && !schoolDisplayLookup.has(s.nama.toUpperCase())) schoolDisplayLookup.set(s.nama.toUpperCase(), s.nama);
+}
+
+/** Return the canonical (short) school name from the master list, or the original name if no match found. */
+function displaySchoolName(rawName: string): string {
+  if (!rawName) return '-';
+  // Try normalized lookup
+  const norm = normalizeSchool(rawName);
+  if (norm && schoolDisplayLookup.has(norm)) return schoolDisplayLookup.get(norm)!;
+  // Try uppercase exact match on master names
+  const up = rawName.toUpperCase();
+  if (schoolDisplayLookup.has(up)) return schoolDisplayLookup.get(up)!;
+  return rawName;
+}
+
 type JenjangFilter = 'ALL' | 'SD' | 'TK' | 'KB';
 
 export default function SuperDataGuru() {
@@ -41,8 +62,8 @@ export default function SuperDataGuru() {
   const canEditRecord = (record: Record<string, any>) => {
     if (userRole === 'super_admin') return true;
     if (userRole === 'operator_sekolah') {
-      const recordSchool = record.sekolah || '';
-      return normalizeSchool(recordSchool) === normalizeSchool(userSchoolName);
+      const recordSchool = displaySchoolName(record.sekolah || '');
+      return recordSchool === userSchoolName;
     }
     return false;
   };
@@ -103,7 +124,8 @@ export default function SuperDataGuru() {
     const items = allDataResult?.items || [];
     const aggMap: Record<string, { guru: number; tendik: number; total: number }> = {};
     for (const r of items) {
-      const nama = r.sekolah || '-';
+      const keyName = (r.sekolah || '').trim() || '-';
+      const nama = displaySchoolName(keyName);
       if (!aggMap[nama]) aggMap[nama] = { guru: 0, tendik: 0, total: 0 };
       if (r.jenis_ptk === 'Guru') aggMap[nama].guru++;
       else if (r.jenis_ptk === 'Tenaga Kependidikan') aggMap[nama].tendik++;
@@ -116,29 +138,19 @@ export default function SuperDataGuru() {
   const sekolahWithMeta = useMemo(() => {
     const pegawaiMap = new Map<string, { guru: number; tendik: number; total: number }>();
     for (const [nama, agg] of Object.entries(sekolahAgg)) {
-      pegawaiMap.set(nama, agg);
+      pegawaiMap.set(displaySchoolName(nama), agg);
     }
 
-    const result = allSekolah.map(s => {
-      const peg = pegawaiMap.get(s.nama);
-      const hasPegawai = peg && peg.total > 0;
-      return {
-        nama: s.nama,
-        jenjang: s.jenjang,
-        guru: hasPegawai ? peg.guru : 0,
-        tendik: hasPegawai ? peg.tendik : 0,
-        total: hasPegawai ? peg.total : 0,
-      };
-    });
+    const result = allSekolah.map(s => ({
+      ...s,
+      guru: 0, tendik: 0, total: 0,
+    }));
 
-    for (const [nama, peg] of Object.entries(sekolahAgg)) {
-      if (!pegawaiMap.has(nama)) continue;
-      if (result.find(s => s.nama === nama)) continue;
-      const lower = nama.toLowerCase();
-      let inferred: JenjangFilter = 'SD';
-      if (lower.includes('tk ') || lower.startsWith('tk ')) inferred = 'TK';
-      else if (lower.includes('kb ') || lower.startsWith('kb ') || lower.includes('paud')) inferred = 'KB';
-      result.push({ nama, jenjang: inferred, guru: peg.guru, tendik: peg.tendik, total: peg.total });
+    // Merge pegawai counts into the master school list by canonical name
+    for (const [nama, agg] of pegawaiMap.entries()) {
+      const idx = result.findIndex(r => r.nama === nama);
+      if (idx >= 0) { result[idx].guru = agg.guru; result[idx].tendik = agg.tendik; result[idx].total = agg.total; }
+      else { result.push({ nama, jenjang: 'SD' as any, guru: agg.guru, tendik: agg.tendik, total: agg.total }); }
     }
 
     return result;
@@ -217,8 +229,9 @@ export default function SuperDataGuru() {
         <div className="space-y-3">
           {filteredData.map(school => {
             const items = allDataResult?.items || [];
-            const guruRecords = items.filter(r => r.sekolah === school.nama && r.jenis_ptk === 'Guru');
-            const tendikRecords = items.filter(r => r.sekolah === school.nama && r.jenis_ptk === 'Tenaga Kependidikan');
+            const schoolDisplay = displaySchoolName(school.nama);
+            const guruRecords = items.filter(r => displaySchoolName(r.sekolah) === schoolDisplay && r.jenis_ptk === 'Guru');
+            const tendikRecords = items.filter(r => displaySchoolName(r.sekolah) === schoolDisplay && r.jenis_ptk === 'Tenaga Kependidikan');
 
             return (
               <div key={school.nama} className="rounded-xl border bg-card overflow-hidden shadow-sm">
