@@ -278,6 +278,7 @@ function klColor(v: number): string {
 function aggregate(
   pegawaiList: Record<string, any>[],
   schoolList: { nama: string; npsn?: string }[],
+  siswaList: Record<string, any>[],
 ): SchoolRow[] {
   const rows: SchoolRow[] = [];
 
@@ -373,10 +374,22 @@ function aggregate(
       cat.jumlah = cat.realPtk;
     }
 
-    // Rombel & Siswa from static rombelData
+    // Rombel & Siswa from Firebase students, fallback to static rombelData
+    const siswaSchool = siswaList.filter(s => {
+      const sName = (s.sekolah || s.schoolName || '').trim();
+      return sName === sName || sName.toUpperCase() === sName.toUpperCase();
+    });
+    const siswaBySchool = siswaSchool.filter(s => {
+      const sName = (s.sekolah || s.schoolName || '').trim();
+      return sName.toUpperCase() === sName.toUpperCase() || s.schoolId === (s.npsn || '');
+    });
+    const firebaseSiswaCount = siswaBySchool.length;
+    const firebaseRombels = new Set(siswaBySchool.map(s => s.kelas).filter(Boolean));
+    const firebaseRombelCount = firebaseRombels.size;
+
     const rm = rombelData.find(r => r.name.toUpperCase() === sName.toUpperCase());
-    const jumlahRombel = rm ? rm.rombels : 0;
-    const jumlahSiswa = rm ? rm.total : 0;
+    const jumlahRombel = firebaseRombelCount > 0 ? firebaseRombelCount : (rm ? rm.rombels : 0);
+    const jumlahSiswa = firebaseSiswaCount > 0 ? firebaseSiswaCount : (rm ? rm.total : 0);
 
     // Kepala Sekolah count (jumlah pegawai dengan jabatan Kepala Sekolah, sudah dedup)
     const ksList = uniqueSp.filter(p => {
@@ -488,12 +501,16 @@ export default function MappingPegawaiPage() {
       try {
         setLoadingMsg('Memuat data pegawai...');
         let employees: Record<string, any>[] = [];
+        let students: Record<string, any>[] = [];
 
-        const unsub = listenToCollection(
+        const unsubEmp = listenToCollection(
           'employees',
-          (snap) => {
-            employees = snap;
-          },
+          (snap) => { employees = snap; },
+          () => { /* error handled below */ }
+        );
+        const unsubStu = listenToCollection(
+          'students',
+          (snap) => { students = snap; },
           () => { /* error handled below */ }
         );
 
@@ -501,7 +518,11 @@ export default function MappingPegawaiPage() {
         if (employees.length === 0) {
           employees = await getAllDocs('employees');
         }
-        unsub();
+        if (students.length === 0) {
+          students = await getAllDocs('students');
+        }
+        unsubEmp();
+        unsubStu();
 
         if (cancelled) return;
 
@@ -509,7 +530,7 @@ export default function MappingPegawaiPage() {
         const sekolahList = orderSchools(sekolahListRaw);
 
         setLoadingMsg('Memproses data...');
-        const aggregated = aggregate(employees, sekolahList);
+        const aggregated = aggregate(employees, sekolahList, students);
 
         if (!cancelled) {
           setRows(aggregated);

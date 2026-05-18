@@ -108,7 +108,8 @@ export default function LaporBulananPage() {
 
     const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
     const blnIndex = String(bulanList.indexOf(bulan) + 1).padStart(2, '0');
-    const docRef = doc(db, 'laporanBulanan', tahun, blnIndex, schoolId);
+    const docId = `${schoolId}_${tahun}_${blnIndex}`;
+    const docRef = doc(db, 'laporan_bulanan', docId);
 
     const unsubscribe = onSnapshot(
       docRef,
@@ -270,8 +271,8 @@ export default function LaporBulananPage() {
     try {
       const blnIndex = String(bulanList.indexOf(bulan) + 1).padStart(2, '0');
       const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
-      const docPath = `laporanBulanan/${tahun}/${blnIndex}/${schoolId}`;
-      const docRef = doc(db, docPath);
+      const docId = `${schoolId}_${tahun}_${blnIndex}`;
+      const docRef = doc(db, 'laporan_bulanan', docId);
 
       const kelasData: Record<string, number> = {};
       for (let i = 1; i <= 6; i++) {
@@ -349,24 +350,6 @@ export default function LaporBulananPage() {
       };
 
       await setDoc(docRef, payload, { merge: true });
-
-      // Also write to laporan_bulanan collection (for super admin & rekap view)
-      try {
-        const laporanBulananId = `${schoolId}_${tahun}_${blnIndex}`;
-        const laporanBulananRef = doc(db, 'laporan_bulanan', laporanBulananId);
-        await setDoc(laporanBulananRef, {
-          ...payload,
-          sekolahId: schoolId,
-          sekolah: user.schoolName || sekolah?.name || '',
-          jenjang: sekolah?.jenjang || 'SD',
-          bulan,
-          tahun: Number(tahun),
-          status: 'sudah_lapor',
-          tglLapor: Date.now(),
-        }, { merge: true });
-      } catch (e) {
-        console.error('Gagal sinkronisasi ke laporan_bulanan:', e);
-      }
 
       setExistingDocId(docRef.id);
       setLaporanData(payload);

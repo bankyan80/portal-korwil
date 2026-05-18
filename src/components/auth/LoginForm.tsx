@@ -51,6 +51,7 @@ async function getOrCreateUserProfile(uid: string, email: string, displayName: s
     };
   }
 
+  const userRef = doc(db, 'users', uid);
   const userSnap = await getDoc(userRef);
 
   if (userSnap.exists()) {
@@ -62,6 +63,7 @@ async function getOrCreateUserProfile(uid: string, email: string, displayName: s
     email,
     displayName: displayName || email.split('@')[0],
     role: 'publik',
+    isActive: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

@@ -211,7 +211,9 @@ export async function POST(req: NextRequest) {
         jumlah_saudara: parseIntSafe(cols[64]?.trim() || ''),
         jarak_rumah_km: parseFloatSafe(cols[65]?.trim() || ''),
         sekolah: sekolahName,
+        schoolId: normalizeSchool(sekolahName).replace(/\s+/g, '-'),
         jenjang,
+        status: 'aktif',
       };
 
       await collection.doc(nik).set({

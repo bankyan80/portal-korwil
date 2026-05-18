@@ -1,0 +1,8 @@
+{
+  "name": "sync-pppk",
+  "type": "module",
+  "main": "sync-pppk-to-firestore.js",
+  "scripts": {
+    "run": "node scripts/sync-pppk-to-firestore.ts"
+  }
+}

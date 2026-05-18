@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, GraduationCap, Building2, MapPin, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
-import { getAllDocs } from '@/lib/firestore';
+import { getAllDocs, listenToCollection } from '@/lib/firestore';
 
 interface SchoolItem {
   name: string;
@@ -41,11 +41,12 @@ export default function DataPAUDPage() {
 
   useEffect(() => {
     if (!db) return;
-    async function fetch() {
+    let unsub: (() => void) | null = null;
+    async function setupRealtime() {
       try {
-        const data = await getAllDocs('schools');
-        if (data.length > 0) {
-          const filtered: SchoolItem[] = data
+        const initial = await getAllDocs('schools');
+        if (initial.length > 0) {
+          const filtered: SchoolItem[] = initial
             .filter((s: any) => s.jenjang === 'KB' || s.jenjang === 'PAUD' || s.jenjang === 'SPS')
             .map((s: any) => ({
               name: s.name || s.nama || '',
@@ -58,9 +59,25 @@ export default function DataPAUDPage() {
             }));
           if (filtered.length > 0) setSchools(filtered);
         }
-      } catch (e) { console.error('Gagal memuat data PAUD:', e); } finally { setLoading(false); }
+        unsub = listenToCollection('schools', (data) => {
+          const filtered: SchoolItem[] = data
+            .filter((s: any) => s.jenjang === 'KB' || s.jenjang === 'PAUD' || s.jenjang === 'SPS')
+            .map((s: any) => ({
+              name: s.name || s.nama || '',
+              npsn: s.npsn || '-',
+              status: s.status || 'SWASTA',
+              akreditasi: s.akreditasi || '-',
+              jenis: s.jenjang || 'KB',
+              address: s.alamat || '',
+              desa: s.desa || '',
+            }));
+          if (filtered.length > 0) setSchools(filtered);
+          setLoading(false);
+        });
+      } catch (e) { console.error('Gagal memuat data PAUD:', e); } finally { if (!unsub) setLoading(false); }
     }
-    fetch();
+    setupRealtime();
+    return () => { if (unsub) unsub(); };
   }, []);
 
   const filtered = schools.filter(s =>

@@ -123,6 +123,19 @@ export function invalidate(type: string, scopeId: string): void {
   } catch { /* noop */ }
 }
 
+/**
+ * Invalidate ALL entries for a given type across ALL users.
+ * Usage after admin write: invalidateAll('students')
+ */
+export function invalidateAll(type: 'students' | 'employees' | 'dashboard' | 'siswa_db' | 'perkelas'): void {
+  const p = `${PREFIX}${type}:`;
+  try {
+    Object.keys(localStorage).forEach((fullKey) => {
+      if (fullKey.startsWith(p)) localStorage.removeItem(fullKey);
+    });
+  } catch { /* noop */ }
+}
+
 /** Purge the entire portal cache (logout / full refresh). */
 export function purgeAll(): void {
   try {

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, LogOut } from 'lucide-react';
 import { auth } from '@/lib/firebase';
@@ -13,14 +14,23 @@ interface SuperPageShellProps {
 }
 
 export default function SuperPageShell({ title, subtitle, children, maxWidth = 'max-w-7xl' }: SuperPageShellProps) {
-  const { setUser } = useAppStore();
+  const { user, setUser } = useAppStore();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role !== 'super_admin') {
+      router.push('/login');
+    }
+  }, [user, router]);
 
   function handleLogout() {
     if (auth) auth.signOut();
     setUser(null);
     router.push('/');
   }
+
+  if (!user || user.role !== 'super_admin') return null;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
