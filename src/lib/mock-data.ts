@@ -186,6 +186,15 @@ export const mockMenus: MenuItem[] = [
     order: 18,
     category: 'Informasi',
   },
+  {
+    id: 'menu-19',
+    title: 'Mapping Pegawai',
+    icon: 'Users',
+    url: '/mapping-pegawai',
+    active: true,
+    order: 19,
+    category: 'Kepegawaian',
+  },
 ];
 
 // ---------------------------------------------------------------------------
