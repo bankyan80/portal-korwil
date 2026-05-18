@@ -8,7 +8,7 @@ export async function fetchCollection<T extends { id: string }>(
   orderField?: string
 ): Promise<T[]> {
   if (!db) return [];
-  let q = orderField
+  const q = orderField
     ? query(collection(db, collectionPath), orderBy(orderField))
     : query(collection(db, collectionPath));
   const snap = await getDocs(q);
@@ -20,12 +20,11 @@ export async function addItemToCollection<T extends { id: string }>(
   item: Omit<T, 'id'> & { id?: string },
   generateId?: () => string
 ): Promise<T> {
+  if (!db) throw new Error('Firestore not initialized');
   const newId = item.id || (generateId ? generateId() : `${collectionPath}-${Date.now()}`);
-  if (db) {
-    const docRef = doc(db, collectionPath, newId);
-    const { id: _, ...data } = item as any;
-    await setDoc(docRef, { ...data, createdAt: Date.now(), updatedAt: Date.now() });
-  }
+  const docRef = doc(db, collectionPath, newId);
+  const { id: _, ...data } = item as any;
+  await setDoc(docRef, { ...data, createdAt: Date.now(), updatedAt: Date.now() });
   return { ...item, id: newId } as T;
 }
 

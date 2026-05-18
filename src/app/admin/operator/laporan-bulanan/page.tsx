@@ -355,6 +355,7 @@ export default function LaporBulananPage() {
         const laporanBulananId = `${schoolId}_${tahun}_${blnIndex}`;
         const laporanBulananRef = doc(db, 'laporan_bulanan', laporanBulananId);
         await setDoc(laporanBulananRef, {
+          ...payload,
           sekolahId: schoolId,
           sekolah: user.schoolName || sekolah?.name || '',
           jenjang: sekolah?.jenjang || 'SD',
@@ -362,7 +363,6 @@ export default function LaporBulananPage() {
           tahun: Number(tahun),
           status: 'sudah_lapor',
           tglLapor: Date.now(),
-          ...payload,
         }, { merge: true });
       } catch (e) {
         console.error('Gagal sinkronisasi ke laporan_bulanan:', e);

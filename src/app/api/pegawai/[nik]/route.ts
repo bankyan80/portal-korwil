@@ -3,7 +3,10 @@ import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 import { normalizeSchool } from '@/lib/normalize';
 import type { UserRole } from '@/types';
 
-export async function PUT(req: NextRequest, { params }: { params: { nik: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ nik: string }> }
+) {
   try {
     const cookieToken = req.cookies.get('auth-token')?.value;
     if (!cookieToken) {
@@ -16,7 +19,7 @@ export async function PUT(req: NextRequest, { params }: { params: { nik: string 
     const forbidden = requireRole(authResult as any, ['super_admin', 'operator_sekolah']);
     if (forbidden) return forbidden;
 
-    const { nik } = params;
+    const { nik } = await params;
     if (!nik) {
       return NextResponse.json({ error: 'NIK wajib diisi' }, { status: 400 });
     }
@@ -85,7 +88,10 @@ export async function PUT(req: NextRequest, { params }: { params: { nik: string 
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { nik: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ nik: string }> }
+) {
   try {
     const cookieToken = req.cookies.get('auth-token')?.value;
     if (!cookieToken) {
@@ -98,7 +104,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { nik: stri
     const forbidden = requireRole(authResult as any, ['super_admin']);
     if (forbidden) return forbidden;
 
-    const { nik } = params;
+    const { nik } = await params;
     if (!nik) {
       return NextResponse.json({ error: 'NIK wajib diisi' }, { status: 400 });
     }

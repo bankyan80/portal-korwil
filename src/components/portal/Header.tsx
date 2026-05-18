@@ -95,7 +95,7 @@ function AuthSection({ onNavigate }: { onNavigate?: () => void }) {
   const isAdmin = canAccessAdmin(user?.role);
 
   function getDashboardUrl(): string {
-    return getRedirectPath(user?.role);
+    return getRedirectPath(user?.role ?? 'publik');
   }
 
   if (!user) {
@@ -177,7 +177,7 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
   }
 
   function getDashboardUrlMobile(): string {
-    return getRedirectPath(user?.role);
+    return getRedirectPath(user?.role ?? 'publik');
   }
 
   return (

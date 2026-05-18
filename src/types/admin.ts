@@ -11,6 +11,7 @@ export interface DokumenBersama {
   fileSize: number;
   storagePath?: string;
   dataUrl?: string;
+  downloadUrl?: string;
   uploadedAt: number;
 }
 

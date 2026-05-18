@@ -33,7 +33,7 @@ export default function Home() {
 
   if (currentView === 'login') return <LoginForm />;
   if (currentView === 'chat') return <ChatPage />;
-  if (currentView === 'kip-sd') return <KipSdPage />;
+  if (currentView === 'admin-manage-kip-sd') return <KipSdPage />;
   if (ADMIN_VIEW_PREFIXES.some(p => currentView.startsWith(p))) return <AdminView />;
   return <PortalView />;
 }

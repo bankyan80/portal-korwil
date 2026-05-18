@@ -61,6 +61,15 @@ export function ManageDataGtk() {
   const [schoolSummary, setSchoolSummary] = useState<SchoolGtkSummary[]>([]);
   const [allPegawai, setAllPegawai] = useState<PegawaiRecord[]>([]);
   const [loading, setLoading] = useState(db ? true : false);
+  const [search, setSearch] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(defaultForm);
+  const [saving, setSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const userSchool = user?.schoolName || '';
+  const isOperator = user?.role === 'operator_sekolah';
 
   useEffect(() => {
     if (!db) return;

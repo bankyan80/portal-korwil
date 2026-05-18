@@ -21,18 +21,18 @@ export function SuperSettings() {
   useEffect(() => {
     if (!db) return;
     getDocById('settings', 'profile').then(d => {
-      if (d) {
+      if (d && typeof d === 'object') {
         setForm({
-          tentang: d.tentang || '',
-          visi: d.visi || '',
-          misi: Array.isArray(d.misi) ? d.misi.join('\n') : '',
-          alamat: d.alamat || '',
-          email: d.email || '',
-          telepon: d.telepon || '',
-          kepalaDinas: d.kepalaDinas || '',
-          jabatan: d.jabatan || '',
-          sambutan: d.sambutan || '',
-          fotoKepalaDinas: d.fotoKepalaDinas || '',
+          tentang: (d as any).tentang || '',
+          visi: (d as any).visi || '',
+          misi: Array.isArray((d as any).misi) ? (d as any).misi.join('\n') : '',
+          alamat: (d as any).alamat || '',
+          email: (d as any).email || '',
+          telepon: (d as any).telepon || '',
+          kepalaDinas: (d as any).kepalaDinas || '',
+          jabatan: (d as any).jabatan || '',
+          sambutan: (d as any).sambutan || '',
+          fotoKepalaDinas: (d as any).fotoKepalaDinas || '',
         });
       }
     }).catch((e) => { console.error('Error loading settings:', e); }).finally(() => setLoading(false));

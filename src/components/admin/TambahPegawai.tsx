@@ -31,6 +31,14 @@ const PTK_OPTIONS = ['Guru', 'Tenaga Kependidikan', 'Kepala Sekolah', 'Pengawas'
 export default function TambahPegawai() {
   const [data, setData] = useState<PegawaiTambahan[]>([]);
   const [loading, setLoading] = useState(db ? true : false);
+  const [nik, setNik] = useState('');
+  const [nama, setNama] = useState('');
+  const [tanggalLahir, setTanggalLahir] = useState('');
+  const [status, setStatus] = useState('PNS');
+  const [jenisPtk, setJenisPtk] = useState('Guru');
+  const [sekolah, setSekolah] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ ok: boolean; msg: string } | null>(null);
 
   useEffect(() => {
     if (!db) return;

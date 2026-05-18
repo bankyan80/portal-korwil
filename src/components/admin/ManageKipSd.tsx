@@ -27,6 +27,13 @@ export function ManageKipSd() {
   const { user } = useAppStore();
   const [data, setData] = useState<KipSdData[]>([]);
   const [loading, setLoading] = useState(db ? true : false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [searchResults, setSearchResults] = useState<SiswaItem[]>([]);
+  const [userSchool, setUserSchool] = useState(user?.schoolName || '');
+  const [addStatus, setAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [adding, setAdding] = useState<string | null>(null);
 
   useEffect(() => {
     if (!db) return;

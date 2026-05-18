@@ -3,8 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
 
-let dataCache: any[] | null = null;
-let pltCache: any[] | null = null;
+let dataCache: any[] = [];
+let pltCache: any[] = [];
 
 function loadStaticData() {
   if (dataCache) return dataCache;
@@ -94,7 +94,7 @@ export async function GET() {
       schools[name] = {
         name, teachers: 0, staff: 0, total: 0, certified: 0,
         headmaster: '', teachers_l: 0, teachers_p: 0,
-        staff_l: 0, staff_p: 0,
+        staff_l: 0, staff_p: 0, l: 0, p: 0,
       };
     }
     const s = schools[name];

@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               uid: firebaseUser.uid,
               email,
               displayName: firebaseUser.displayName || email.split('@')[0],
-              role: isSuperAdminEmail ? 'super_admin' : (isOffline ? 'publik' : 'viewer'),
+              role: isSuperAdminEmail ? 'super_admin' : (isOffline ? 'publik' : 'publik'),
               isActive: true,
               createdAt: Date.now(),
               updatedAt: Date.now(),
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (userProfile?.role !== 'super_admin' && allUsersSnapshot.empty) {
                   userProfile = { ...userProfile, role: 'super_admin' as const };
                 }
-                await setDoc(doc(firestore, 'users', firebaseUser.uid), userProfile);
+                await setDoc(doc(firestore, 'users', firebaseUser.uid), userProfile as UserProfile);
               } catch {}
             }
           }

@@ -31,6 +31,8 @@ export default function DokumenBersamaPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [dbReady, setDbReady] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = user && (user.role === 'super_admin' || user.role === 'operator_sekolah');
 
@@ -81,7 +83,7 @@ export default function DokumenBersamaPage() {
       const reader = new FileReader();
       reader.onload = async (ev) => {
         const dataUrl = ev.target?.result as string;
-        await addDoc(collection(db, 'dokumen'), {
+        await addDoc(collection(db!, 'dokumen'), {
           nik: pegawai.nik || '',
           nip: pegawai.nip || nip.replace(/\D/g, ''),
           nama: pegawai.nama,

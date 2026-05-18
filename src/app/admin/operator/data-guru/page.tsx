@@ -114,15 +114,15 @@ function GuruContent() {
   }
 
   const columns = [
-    { header: 'No', accessor: (_row: any, i: number) => i + 1 as any },
+    { header: 'No', accessor: ((_row: any, i: number) => i + 1) as any },
     { header: 'NIK', accessor: 'nik' as const },
     {
       header: 'Nama',
-      accessor: (row: any) => (
+      accessor: ((row: any) => (
         <button onClick={() => openEdit(row)} className="text-blue-700 hover:underline dark:text-blue-300">
           {row.nama}
         </button>
-      ),
+      )) as any,
     },
     { header: 'NIP', accessor: 'nip' as const },
     { header: 'NUPTK', accessor: 'nuptk' as const },
