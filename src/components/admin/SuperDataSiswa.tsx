@@ -4,6 +4,8 @@ import { DataTable } from '@/components/features/DataTable';
 import { useSiswa } from '@/hooks/useSiswa';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 100;
 
@@ -103,6 +105,8 @@ function SiswaTable({ title, data, isLoading, error, columns, sortFn }: {
 }
 
 export default function SuperDataSiswa() {
+  type JenjangFilter = 'ALL' | 'SD' | 'TK' | 'KB';
+  const [jenjangFilter, setJenjangFilter] = useState<JenjangFilter>('ALL');
   const { data: sdData, isLoading: sdLoading, error: sdError } = useSiswa('SD');
   const { data: tkData, isLoading: tkLoading, error: tkError } = useSiswa('TK');
   const { data: kbData, isLoading: kbLoading, error: kbError } = useSiswa('KB');
@@ -111,14 +115,51 @@ export default function SuperDataSiswa() {
   const tkMapped = useMemo(() => withRombelLabel(tkData || []), [tkData]);
   const kbMapped = useMemo(() => withRombelLabel(kbData || []), [kbData]);
 
+  const jenjangList: JenjangFilter[] = ['ALL', 'SD', 'TK', 'KB'];
+
+  const JENJANG_LABEL: Record<string, string> = { SD: 'SD', TK: 'TK', KB: 'KB/PAUD' };
+
+  const activeLoading = (jenjangFilter === 'SD' || jenjangFilter === 'ALL') ? sdLoading
+    : (jenjangFilter === 'TK' ? tkLoading
+    : (jenjangFilter === 'KB' ? kbLoading : false));
+
+  const activeError = (jenjangFilter === 'SD' || jenjangFilter === 'ALL') ? sdError
+    : (jenjangFilter === 'TK' ? tkError
+    : (jenjangFilter === 'KB' ? kbError : null));
+
+  const activeData = jenjangFilter === 'ALL'
+    ? [...sdMapped, ...tkMapped, ...kbMapped]
+    : (jenjangFilter === 'SD' ? sdMapped
+    : (jenjangFilter === 'TK' ? tkMapped
+    : kbMapped));
+
+  const activeColumns = jenjangFilter === 'SD' ? sdColumns : (jenjangFilter === 'TK' ? tkColumns : kbColumns);
+  const activeSortFn = jenjangFilter === 'SD' ? sortSD : (jenjangFilter === 'TK' ? sortTK : sortKB);
+  const activeTitle = jenjangFilter === 'ALL' ? 'Semua Jenjang' : (jenjangFilter === 'SD' ? 'SD' : (jenjangFilter === 'TK' ? 'TK' : 'KB/PAUD'));
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Data Siswa</h1>
-      <p className="text-sm text-muted-foreground mb-6">Seluruh data peserta didik semua sekolah</p>
+      <h1 className="text-2xl font-bold mb-1">Data Siswa</h1>
+      <p className="text-sm text-muted-foreground mb-4">Seluruh data peserta didik semua sekolah</p>
+      <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">Data ini sesuai dengan data Dapodik, jika ada perubahan silahkan hubungi Admin.</p>
 
-      <SiswaTable title="SD" data={sdMapped} isLoading={sdLoading} error={sdError} columns={sdColumns} sortFn={sortSD} />
-      <SiswaTable title="TK" data={tkMapped} isLoading={tkLoading} error={tkError} columns={tkColumns} sortFn={sortTK} />
-      <SiswaTable title="KB" data={kbMapped} isLoading={kbLoading} error={kbError} columns={kbColumns} sortFn={sortKB} />
+      {/* Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted-foreground whitespace-nowrap">Jenjang:</label>
+          <select
+            value={jenjangFilter}
+            onChange={e => setJenjangFilter(e.target.value as JenjangFilter)}
+            className="h-9 px-3 text-xs font-semibold rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0d3b66] cursor-pointer dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
+          >
+            {jenjangList.map(j => (
+              <option key={j} value={j}>{j === 'ALL' ? 'Semua' : JENJANG_LABEL[j]}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <SiswaTable title={activeTitle} data={activeData} isLoading={activeLoading} error={activeError} columns={activeColumns} sortFn={activeSortFn} />
     </div>
   );
 }
