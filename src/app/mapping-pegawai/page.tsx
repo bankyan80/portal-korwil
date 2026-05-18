@@ -321,7 +321,7 @@ function aggregate(
     const kebutuhanPai = 1;
     const kebutuhanPenjas = 1;
     const kebutuhanKelas = jumlahRombel;
-    const kebutuhanTendik = 1;
+    const kebutuhanTendik = 2;
 
     pai.kebutuhan = kebutuhanPai;
     penjas.kebutuhan = kebutuhanPenjas;
@@ -747,7 +747,7 @@ export default function MappingPegawaiPage() {
           <p>
             Data ini merupakan pemetaan pendidik dan tenaga kependidikan SD Negeri Kecamatan Lemahabang.
             Data diambil dari sistem internal dan Dapodik. Jika ada kekeliruan data, silakan hubungi Admin.
-            Kebutuhan ideal: Guru PAI 1 orang, Guru Penjaskes 1 orang, Tenaga Kependidikan 1 orang per sekolah.
+            Kebutuhan ideal: Guru PAI 1 orang, Guru Penjaskes 1 orang, Tenaga Kependidikan maksimal 2 orang per sekolah.
             Kebutuhan Guru Kelas mengikuti jumlah rombel.
             Kepala Sekolah tidak termasuk dalam kategori Tenaga Kependidikan.
           </p>
