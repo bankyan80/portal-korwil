@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 export async function GET(req: NextRequest) {
+  // Verify auth - only authenticated users can lookup students
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+  if (forbidden) return forbidden;
   if (!isFirebaseAdminConfigured || !adminDb) {
     return NextResponse.json(
       { found: false, message: 'Firebase Admin tidak dikonfigurasi' },

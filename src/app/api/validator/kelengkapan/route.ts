@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 import fs from 'fs';
 import path from 'path';
 
@@ -71,7 +72,13 @@ function loadSchools(): BaseSekolah[] {
   }));
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Verify auth - only authenticated users can access validator
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+  if (forbidden) return forbidden;
+
   if (!isFirebaseAdminConfigured || !adminDb) {
     return NextResponse.json({ success: false, error: 'Firebase Admin tidak dikonfigurasi' }, { status: 500 });
   }

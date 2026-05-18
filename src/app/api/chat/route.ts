@@ -5,6 +5,32 @@ type ChatMessage = {
   content: string;
 };
 
+// Simple in-memory rate limiter (IP-based, 20 requests per minute)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const limit = rateLimitMap.get(ip);
+  
+  if (!limit || now > limit.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  
+  if (limit.count >= 20) {
+    return false;
+  }
+  
+  limit.count++;
+  return true;
+}
+
+function getIp(req: Request): string {
+  return req.headers.get('x-forwarded-for') || 
+         req.headers.get('x-real-ip') || 
+         'unknown';
+}
+
 const SYSTEM_PROMPT = `
 Kamu adalah AI Assistant Portal Pendidikan Kabupaten Cirebon Tim Kerja Kecamatan Lemahabang.
 
@@ -101,6 +127,15 @@ Jangan terlalu kaku seperti robot.
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting
+    const ip = getIp(req);
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { success: false, reply: "Terlalu banyak permintaan. Silakan tunggu sebentar." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
 
     const message: string = body.message || "";

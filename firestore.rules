@@ -1,0 +1,174 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin';
+    }
+    
+    function isOperator() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'operator_sekolah';
+    }
+    
+    function isKetuaOrganisasi() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ketua_organisasi';
+    }
+    
+    function getOperatorSchoolId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId;
+    }
+    
+    function getOperatorOrganizationId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Anyone can read their own profile
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Super admin can read all users
+      allow read: if isSuperAdmin();
+      // Only super admin can create/update/delete users
+      allow write: if isSuperAdmin();
+    }
+    
+    // Employees collection
+    match /employees/{employeeId} {
+      // Public can read (for dashboards)
+      allow read: if true;
+      // Operators can only manage their own school's employees
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+    }
+    
+    // Students collection
+    match /students/{studentId} {
+      // Public can read (for dashboards)
+      allow read: if true;
+      // Operators can only manage their own school's students
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+    }
+    
+    // Schools collection
+    match /schools/{schoolId} {
+      // Public can read
+      allow read: if true;
+      // Only super admin can write
+      allow write: if isSuperAdmin();
+    }
+    
+    // Monthly reports (laporan_bulanan)
+    match /laporan_bulanan/{reportId} {
+      // Public can read
+      allow read: if true;
+      // Operators can only manage their own school's reports
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.schoolId == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.schoolId == getOperatorSchoolId());
+    }
+    
+    // News (berita)
+    match /berita/{beritaId} {
+      // Public can read
+      allow read: if true;
+      // Operators can only manage their own school's news
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+    }
+    
+    // Gallery
+    match /galeri/{galeriId} {
+      // Public can read
+      allow read: if true;
+      // Operators can only manage their own school's gallery
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+    }
+    
+    // Documents
+    match /dokumen/{dokumenId} {
+      // Public can read
+      allow read: if true;
+      // Operators can only manage their own school's documents
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+    }
+    
+    // SPMB (student registration)
+    match /spmb/{spmbId} {
+      // Operators and super admin can read
+      allow read: if isSuperAdmin() || isOperator();
+      // Operators can only manage their own school's registrations
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+    }
+    
+    // Sarpras (facilities)
+    match /sarpras/{sarprasId} {
+      // Public can read
+      allow read: if true;
+      // Operators can only manage their own school's facilities
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+    }
+    
+    // Settings
+    match /settings/{settingId} {
+      // Public can read
+      allow read: if true;
+      // Only super admin can write
+      allow write: if isSuperAdmin();
+    }
+    
+    // KIP SD
+    match /kip_sd/{kipId} {
+      // Public can read
+      allow read: if true;
+      // Operators can only manage their own school's KIP data
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+    }
+    
+    // Yatim Piatu
+    match /yatim_piatu/{yatimId} {
+      // Public can read
+      allow read: if true;
+      // Operators can only manage their own school's data
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+    }
+    
+    // BOS Arkas
+    match /bos_arkas/{bosId} {
+      // Public can read
+      allow read: if true;
+      // Operators can only manage their own school's data
+      allow write: if isSuperAdmin() || 
+                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
+                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+    }
+    
+    // Tabel Sekolah
+    match /tabel_sekolah/{tabelId} {
+      // Public can read
+      allow read: if true;
+      // Only super admin can write
+      allow write: if isSuperAdmin();
+    }
+  }
+}
