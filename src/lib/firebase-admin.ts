@@ -9,15 +9,25 @@ import * as fs from 'fs';
 function findServiceAccountFile(): string | null {
   // 1) Env var (raw JSON string or base64)
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+    const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    console.info(`[firebase-admin] FIREBASE_SERVICE_ACCOUNT_KEY found, length: ${envVal.length}`);
     try {
-      JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      JSON.parse(envVal!);
+      console.info(`[firebase-admin] FIREBASE_SERVICE_ACCOUNT_KEY parsed as JSON successfully`);
       return '__env__';
-    } catch {
+    } catch (e1) {
+      console.warn(`[firebase-admin] FIREBASE_SERVICE_ACCOUNT_KEY JSON parse failed:`, (e1 as Error).message);
       try {
-        Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('utf-8');
+        const decoded = Buffer.from(envVal!, 'base64').toString('utf-8');
+        JSON.parse(decoded);
+        console.info(`[firebase-admin] FIREBASE_SERVICE_ACCOUNT_KEY parsed as base64 successfully`);
         return '__env_b64__';
-      } catch {}
+      } catch (e2) {
+        console.warn(`[firebase-admin] FIREBASE_SERVICE_ACCOUNT_KEY base64 decode also failed:`, (e2 as Error).message);
+      }
     }
+  } else {
+    console.warn(`[firebase-admin] FIREBASE_SERVICE_ACCOUNT_KEY env var is not set`);
   }
 
   // 2) Known relative paths from cwd (dev: repo root, prod: standalone dir)
