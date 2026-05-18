@@ -25,7 +25,7 @@ const kategoriColors: Record<YatimCategory, string> = {
 export function ManageYatimPiatu() {
   const { user } = useAppStore();
   const [data, setData] = useState<YatimPiatuData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
   const [nikInput, setNikInput] = useState('');
   const [kategori, setKategori] = useState<YatimCategory>('yatim_piatu');
   const [addStatus, setAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -34,11 +34,7 @@ export function ManageYatimPiatu() {
   const userSchool = user?.schoolName || '';
 
   useEffect(() => {
-    if (!db) {
-      setData([]);
-      setLoading(false);
-      return;
-    }
+    if (!db) return;
     const q = query(collection(db, 'yatim_piatu'), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
       const list: YatimPiatuData[] = [];

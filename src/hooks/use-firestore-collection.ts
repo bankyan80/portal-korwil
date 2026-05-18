@@ -89,13 +89,9 @@ export function useFirestoreCollection<T extends { id: string }>(
     }
   }, [fetchItems]);
 
+  // Realtime listener: use onSnapshot directly (no setState in effect guards)
   useEffect(() => {
-    if (!db) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
-
+    if (!db) return;
     const firestore = db;
     let q;
     if (orderField) {
@@ -103,11 +99,7 @@ export function useFirestoreCollection<T extends { id: string }>(
     } else {
       q = query(collection(firestore, collectionPath));
     }
-
-    setLoading(true);
-    setError(null);
-
-    const unsubscribe = onSnapshot(
+    const unsub = onSnapshot(
       q,
       (snapshot) => {
         const fetchedItems: T[] = [];
@@ -124,10 +116,7 @@ export function useFirestoreCollection<T extends { id: string }>(
         setLoading(false);
       }
     );
-
-    return () => {
-      unsubscribe();
-    };
+    return () => { unsub(); };
   }, [collectionPath, orderField]);
 
   const seedData = useCallback(async (data: T[]) => {

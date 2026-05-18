@@ -73,8 +73,8 @@ export async function GET() {
       const s = doc.data();
       if (!s.sekolah) continue;
       const jenjang = s.jenjang || 'SD';
-      const kelas = jenjang === 'TK' ? (s.kelas ? String(s.kelas) : 'A') : (s.kelas ? String(s.kelas) : '-');
-      const kelasKey = jenjang === 'TK' && !['A', 'B'].includes(kelas) ? 'A' : kelas;
+      const kelas = jenjang === 'TK' ? (s.kelas ? String(s.kelas) : 'A') : (jenjang === 'KB' ? (s.rombel || s.kelas ? String(s.kelas) : 'A') : (s.kelas ? String(s.kelas) : '-'));
+      const kelasKey = jenjang === 'TK' && !['A', 'B'].includes(kelas) ? 'A' : (jenjang === 'KB' && !['A', 'B'].includes(kelas) ? 'A' : kelas);
       addToMap(sekolahMap, s.sekolah, jenjang, kelasKey, s.jk || 'L');
     }
 

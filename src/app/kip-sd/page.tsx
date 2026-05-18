@@ -15,16 +15,30 @@ interface SekolahSummary {
 
 export default function KipSdPage() {
   const [data, setData] = useState<SekolahSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
 
-  useEffect(() => {
-    if (!db) {
-      setLoading(false);
-      return;
+  const processSiswa = (siswa: any[]) => {
+    const map = new Map<string, { l: number; p: number }>();
+    for (const s of siswa) {
+      const sklh = s.sekolah || s.schoolName || '-';
+      if (!map.has(sklh)) map.set(sklh, { l: 0, p: 0 });
+      const d = map.get(sklh)!;
+      if ((s.jk || s.jenisKelamin) === 'L') d.l++;
+      else d.p++;
     }
 
+    const result: SekolahSummary[] = [];
+    for (const [sekolah, counts] of map) {
+      result.push({ sekolah, total: counts.l + counts.p, ...counts });
+    }
+    setData(result.sort((a, b) => b.total - a.total || a.sekolah.localeCompare(b.sekolah)));
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (!db) return;
+
     const q = collection(db, 'kip_sd');
-    setLoading(true);
 
     const unsubscribe = onSnapshot(
       q,
@@ -57,24 +71,6 @@ export default function KipSdPage() {
       unsubscribe();
     };
   }, []);
-
-  const processSiswa = (siswa: any[]) => {
-    const map = new Map<string, { l: number; p: number }>();
-    for (const s of siswa) {
-      const sklh = s.sekolah || s.schoolName || '-';
-      if (!map.has(sklh)) map.set(sklh, { l: 0, p: 0 });
-      const d = map.get(sklh)!;
-      if ((s.jk || s.jenisKelamin) === 'L') d.l++;
-      else d.p++;
-    }
-
-    const result: SekolahSummary[] = [];
-    for (const [sekolah, counts] of map) {
-      result.push({ sekolah, total: counts.l + counts.p, ...counts });
-    }
-    setData(result.sort((a, b) => b.total - a.total || a.sekolah.localeCompare(b.sekolah)));
-    setLoading(false);
-  };
 
   const totalPenerima = data.reduce((a, s) => a + s.total, 0);
   const totalL = data.reduce((a, s) => a + s.l, 0);

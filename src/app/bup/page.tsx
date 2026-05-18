@@ -94,7 +94,7 @@ const PER_PAGE = 50;
 
 export default function BupPage() {
   const [allData, setAllData] = useState<Pegawai[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
@@ -132,12 +132,10 @@ export default function BupPage() {
     // Sort by BUP ascending (closest to retirement first)
     items.sort((a, b) => bupDate(a) - bupDate(b));
     return items;
-  }, [allData, search]);
+     }, [allData, search]);
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-
-  useEffect(() => { setPage(1); }, [search]);
 
   const summary = useMemo(() => {
     return {

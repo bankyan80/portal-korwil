@@ -14,10 +14,10 @@ interface DocItem {
 
 export default function AdministrasiPage() {
   const [docs, setDocs] = useState<DocItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
+    if (!db) return;
 
     const unsubscribe = onSnapshot(
       collection(db, 'dokumen'),

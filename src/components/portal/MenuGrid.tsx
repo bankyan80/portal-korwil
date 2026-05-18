@@ -66,8 +66,7 @@ export default function MenuGrid() {
   return (
     <section className="w-full" aria-label="Menu Layanan Pendidikan">
       <div
-        className="rounded-t-lg px-4 sm:px-6 py-3"
-        className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66]"
+        className="rounded-t-lg px-4 sm:px-6 py-3 bg-gradient-to-b from-[#1a5276] to-[#0d3b66]"
       >
         <h2 className="text-base sm:text-lg font-bold text-white uppercase tracking-wide">
           Menu Layanan
@@ -92,7 +91,7 @@ export default function MenuGrid() {
                     if (url.startsWith('http')) {
                       window.open(url, '_blank', 'noopener,noreferrer');
                     } else {
-                      window.location.href = url;
+                      window.location.assign(url);
                     }
                   }}
                   className="w-full flex flex-col items-center gap-2.5 p-4 sm:p-5 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-200 cursor-pointer group text-center"

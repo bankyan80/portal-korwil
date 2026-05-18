@@ -7,12 +7,11 @@ import SuperPageShell from '@/components/admin/SuperPageShell';
 
 export default function SuperSekolahPage() {
   const [schools, setSchools] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
+    if (!db) return;
 
-    setLoading(true);
     const unsubscribe = onSnapshot(
       collection(db, 'schools'),
       (snap) => {

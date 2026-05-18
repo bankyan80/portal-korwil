@@ -50,20 +50,22 @@ function FormPendaftaranContent() {
   const selectedSekolah = sekolahSD.find((s) => s.npsn === sekolahId);
 
   useEffect(() => {
+    if (!searchParams.has('nik')) return;
     const nikParam = searchParams.get('nik') || '';
     const namaParam = searchParams.get('nama') || '';
     const nisnParam = searchParams.get('nisn') || '';
     const tglParam = searchParams.get('tgl') || '';
-    const jkParam = searchParams.get('jk') || '';
+    const jkParam = searchParams.get('jk');
     const desaParam = searchParams.get('desa') || '';
-
-    setNik(nikParam);
-    setNisn(nisnParam);
-    setNama(namaParam);
-    setTanggalLahir(tglParam);
-    setDesa(desaParam);
-    if (jkParam) setJenisKelamin(jkParam === 'L' ? 'Laki-laki' : 'Perempuan');
-    if (namaParam) setFromDb(true);
+    queueMicrotask(() => {
+      setNik(nikParam);
+      setNisn(nisnParam);
+      setNama(namaParam);
+      setTanggalLahir(tglParam);
+      setDesa(desaParam);
+      if (jkParam) setJenisKelamin(jkParam === 'L' ? 'Laki-laki' : 'Perempuan');
+      if (namaParam) setFromDb(true);
+    });
   }, [searchParams]);
 
   const selectedJalur = jalurList.find((j) => j.value === jalur);

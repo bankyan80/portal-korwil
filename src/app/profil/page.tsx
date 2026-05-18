@@ -7,10 +7,10 @@ import { ArrowLeft, Loader2, MapPin, Mail, Phone } from 'lucide-react';
 
 export default function ProfilPage() {
   const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
+    if (!db) return;
     async function fetchProfile() {
       try {
         const data = await getDocById('settings', 'profile');

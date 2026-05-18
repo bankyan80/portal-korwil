@@ -31,23 +31,18 @@ export default function DokumenBersamaPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [dbReady, setDbReady] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = user && (user.role === 'super_admin' || user.role === 'operator_sekolah');
 
   useEffect(() => {
-    if (!db) {
-      setDbReady(true);
-      return;
-    }
+    if (!db) { queueMicrotask(() => setDbReady(true)); return; }
     const q = query(collection(db, 'dokumen'), orderBy('uploadedAt', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
       const list: DokumenBersama[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...d.data() } as DokumenBersama));
       setAllDocs(list);
       setDbReady(true);
-    }, () => setDbReady(true));
+    }, () => {});
     return () => unsub();
   }, []);
 

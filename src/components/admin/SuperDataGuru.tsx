@@ -1,49 +1,178 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { usePegawaiAll } from '@/hooks/usePegawai';
-import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { Users, GraduationCap, BookOpen, ChevronDown } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Users, GraduationCap, BookOpen, Search, MapPin, School as SchoolIcon,
+  Trash2, Pencil, Save, Loader2,
+} from 'lucide-react';
+import { allSekolah } from '@/data/sekolah';
+import { toast } from 'sonner';
 
-function groupBySchool(items: any[]): Record<string, any[]> {
-  const groups: Record<string, any[]> = {};
-  for (const item of items) {
-    const key = item.sekolah || '-';
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
-  }
-  return groups;
-}
-
-function countByRole(records: any[]) {
-  let guru = 0, tendik = 0;
-  for (const r of records) {
-    if (r.jenis_ptk === 'Guru') guru++;
-    else if (r.jenis_ptk === 'Tenaga Kependidikan') tendik++;
-  }
-  return { guru, tendik };
-}
+type JenjangFilter = 'ALL' | 'SD' | 'TK' | 'KB';
 
 export default function SuperDataGuru() {
-  const [openSchools, setOpenSchools] = useState<Set<string>>(new Set());
-
   const { data: allDataResult, isLoading } = usePegawaiAll();
+  const [searchSekolah, setSearchSekolah] = useState('');
+  const [jenjangFilter, setJenjangFilter] = useState<JenjangFilter>('ALL');
+  const [deletingNik, setDeletingNik] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<Record<string, any> | null>(null);
+  const [form, setForm] = useState({
+    nik: '', nama: '', jk: 'L', nuptk: '', nip: '', tanggal_lahir: '',
+    status_kepegawaian: 'PPPK', jenis_ptk: 'Guru', tugas_tambahan: '',
+    sertifikasi: '', sekolah: '',
+  });
+  const [saving, setSaving] = useState(false);
 
-  const toggleSchool = (school: string) => {
-    setOpenSchools(prev => {
-      const next = new Set(prev);
-      if (next.has(school)) next.delete(school);
-      else next.add(school);
-      return next;
+  function openEdit(record: Record<string, any>) {
+    setEditingRecord(record);
+    setForm({
+      nik: record.nik || '',
+      nama: record.nama || '',
+      jk: record.jk || 'L',
+      nuptk: record.nuptk || '',
+      nip: record.nip || '',
+      tanggal_lahir: record.tanggal_lahir || '',
+      status_kepegawaian: record.status_kepegawaian || 'PPPK',
+      jenis_ptk: record.jenis_ptk || 'Guru',
+      tugas_tambahan: record.tugas_tambahan || '',
+      sertifikasi: record.sertifikasi || '',
+      sekolah: record.sekolah || '',
     });
-  };
+    setFormOpen(true);
+  }
 
-  const allItems = allDataResult?.items || [];
-  const groups = useMemo(() => {
-    const g = groupBySchool(allItems);
-    return Object.entries(g).sort(([a], [b]) => a.localeCompare(b));
-  }, [allItems]);
+  const PTK_OPTIONS = ['Guru', 'Tenaga Kependidikan', 'Kepala Sekolah', 'Pengawas', 'Lainnya'];
+  const STATUS_OPTIONS = ['PNS', 'PPPK', 'Honor Daerah TK.II Kab/Kota', 'Guru Honor Sekolah', 'Tenaga Honor Sekolah', 'PPPK Paruh Waktu'];
+  const TUGAS_TAMBAHAN_OPTIONS = [
+    '', 'Kepala Sekolah', 'Bendahara BOS/BOP', 'Kepala Laboratorium',
+    'Pembina Pramuka Putra', 'Kepala Perpustakaan', 'Pelaksana PBJ', 'Pembina Pramuka Putri',
+  ];
+
+  async function handleSave() {
+    if (!editingRecord) return;
+    if (!form.nama.trim()) { toast.error('Nama harus diisi'); return; }
+    const nikToUpdate = editingRecord.nik || editingRecord.nip || '';
+    if (!nikToUpdate) { toast.error('NIK/NIP wajib diisi'); return; }
+    setSaving(true);
+    try {
+      const body = { ...form, nama: form.nama.trim() };
+      const res = await fetch(`/api/pegawai/${encodeURIComponent(nikToUpdate)}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Data pegawai berhasil diperbarui');
+        setFormOpen(false);
+        window.location.reload();
+      } else {
+        toast.error(data.error || 'Gagal menyimpan data');
+      }
+    } catch {
+      toast.error('Gagal menyimpan data');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Build per-sekolah aggregation from pegawai data
+  const sekolahAgg = useMemo(() => {
+    const items = allDataResult?.items || [];
+    // Build pegawai-provided stats per school name
+    const aggMap: Record<string, { guru: number; tendik: number; total: number }> = {};
+    for (const r of items) {
+      const nama = r.sekolah || '-';
+      if (!aggMap[nama]) aggMap[nama] = { guru: 0, tendik: 0, total: 0 };
+      if (r.jenis_ptk === 'Guru') aggMap[nama].guru++;
+      else if (r.jenis_ptk === 'Tenaga Kependidikan') aggMap[nama].tendik++;
+      aggMap[nama].total++;
+    }
+    return aggMap;
+  }, [allDataResult]);
+
+  // All sekolah from master + their pegawai stats (jenjang always from master)
+  const sekolahWithMeta = useMemo(() => {
+    // Build pegawai map by school name
+    const pegawaiMap = new Map<string, { guru: number; tendik: number; total: number }>();
+    for (const [nama, agg] of Object.entries(sekolahAgg)) {
+      pegawaiMap.set(nama, agg);
+    }
+
+    // Start from master list (jenjang is authoritative)
+    const result = allSekolah.map(s => {
+      const peg = pegawaiMap.get(s.nama);
+      const hasPegawai = peg && peg.total > 0;
+      return {
+        nama: s.nama,
+        jenjang: s.jenjang,      // always from master sekolah data
+        guru: hasPegawai ? peg.guru : 0,
+        tendik: hasPegawai ? peg.tendik : 0,
+        total: hasPegawai ? peg.total : 0,
+      };
+    });
+
+    // Add any pegawai schools not in master list
+    for (const [nama, peg] of Object.entries(sekolahAgg)) {
+      if (!pegawaiMap.has(nama)) continue; // already handled above legitimately
+      if (result.find(s => s.nama === nama)) continue;
+      // Infer jenjang from name of unknown school
+      const lower = nama.toLowerCase();
+      let inferred = 'SD';
+      if (lower.includes('tk ') || lower.startsWith('tk ')) inferred = 'TK';
+      else if (lower.includes('kb ') || lower.startsWith('kb ') || lower.includes('paud')) inferred = 'KB';
+      result.push({ nama, jenjang: inferred, guru: peg.guru, tendik: peg.tendik, total: peg.total });
+    }
+
+    return result;
+  }, [sekolahAgg]);
+
+  const jenjangList: JenjangFilter[] = ['ALL', 'SD', 'TK', 'KB'];
+
+  const filteredData = useMemo(() => {
+    return sekolahWithMeta.filter(s => {
+      const matchesSearch = !searchSekolah || s.nama.toLowerCase().includes(searchSekolah.toLowerCase());
+      const matchesJenjang = jenjangFilter === 'ALL' || s.jenjang === jenjangFilter;
+      return matchesSearch && matchesJenjang;
+    });
+  }, [sekolahWithMeta, searchSekolah, jenjangFilter]);
+
+  const JENJANG_LABEL: Record<string, string> = { SD: 'SD', TK: 'TK', KB: 'KB/PAUD' };
+  const JENJANG_COLOR: Record<string, string> = {
+    SD: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+    TK: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+    KB: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
+  };
+  const jalurLabel = (j: string) => JENJANG_LABEL[j] || j;
+  const jalurColor = (j: string) => JENJANG_COLOR[j] || 'bg-gray-100 text-gray-700';
+
+  async function handleDelete(nik: string, nama: string) {
+    if (!nik) return;
+    if (!window.confirm(`Hapus data pegawai "${nama}" (NIK: ${nik})? Tindakan ini tidak dapat dibatalkan.`)) return;
+    setDeletingNik(nik);
+    try {
+      const res = await fetch(`/api/pegawai/${encodeURIComponent(nik)}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Data pegawai berhasil dihapus');
+        // Refresh data by invalidating TanStack query
+        window.location.reload();
+      } else {
+        toast.error(data.error || 'Gagal menghapus data pegawai');
+      }
+    } catch {
+      toast.error('Gagal menghapus data pegawai');
+    } finally {
+      setDeletingNik(null);
+    }
+  }
 
   return (
     <div className="p-6">
@@ -56,113 +185,282 @@ export default function SuperDataGuru() {
         </div>
       )}
 
-      {!isLoading && groups.length === 0 && (
-        <div className="text-sm text-muted-foreground py-4">Belum ada data GTK</div>
-      )}
-
-      {/* Per-sekolah grouped view */}
-      {groups.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Per Sekolah — klik untuk expand</h2>
-          <div className="space-y-2">
-            {groups.map(([school, records]) => {
-              const { guru, tendik } = countByRole(records);
-              const isOpen = openSchools.has(school);
-
-              return (
-                <Collapsible
-                  key={school}
-                  open={isOpen}
-                  onOpenChange={() => toggleSchool(school)}
-                >
-                  <div className="rounded-xl border bg-card overflow-hidden">
-                    <CollapsibleTrigger className="w-full text-left">
-                      <div className="flex items-center justify-between px-5 py-3 hover:bg-accent/50 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <Users className="w-5 h-5 text-blue-600 shrink-0" />
-                          <span className="font-semibold text-[#0d3b66] truncate">{school}</span>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                              <GraduationCap className="w-3 h-3" /> {guru} Guru
-                            </span>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                              <BookOpen className="w-3 h-3" /> {tendik} Tendik
-                            </span>
-                            <span className="text-gray-500">{records.length} total</span>
-                          </div>
-                          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                        </div>
-                      </div>
-                    </CollapsibleTrigger>
-
-                    <CollapsibleContent>
-                      <div className="border-t">
-                        {records.some(r => r.jenis_ptk === 'Guru') && (
-                          <div className="px-5 py-2 bg-blue-50/50 dark:bg-blue-900/10">
-                            <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide mb-1">
-                              Guru ({records.filter(r => r.jenis_ptk === 'Guru').length})
-                            </p>
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="text-muted-foreground">
-                                  <th className="text-left py-1 pr-3">Nama</th>
-                                  <th className="text-left py-1 pr-3">NIP</th>
-                                  <th className="text-left py-1 pr-3">NUPTK</th>
-                                  <th className="text-left py-1">Status</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {records.filter(r => r.jenis_ptk === 'Guru').map((r, i) => (
-                                  <tr key={r.nip || r.nik || i} className="border-t">
-                                    <td className="py-1.5 pr-3 font-medium">{r.nama}</td>
-                                    <td className="py-1.5 pr-3 font-mono">{r.nip || '-'}</td>
-                                    <td className="py-1.5 pr-3">{r.nuptk || '-'}</td>
-                                    <td className="py-1.5"><Badge variant="outline" className="text-[10px]">{r.status_kepegawaian}</Badge></td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-
-                        {records.some(r => r.jenis_ptk === 'Tenaga Kependidikan') && (
-                          <div className="px-5 py-2 bg-purple-50/50 dark:bg-purple-900/10">
-                            <p className="text-xs font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wide mb-1">
-                              Tenaga Kependidikan ({records.filter(r => r.jenis_ptk === 'Tenaga Kependidikan').length})
-                            </p>
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="text-muted-foreground">
-                                  <th className="text-left py-1 pr-3">Nama</th>
-                                  <th className="text-left py-1 pr-3">NIP</th>
-                                  <th className="text-left py-1 pr-3">NUPTK</th>
-                                  <th className="text-left py-1">Status</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {records.filter(r => r.jenis_ptk === 'Tenaga Kependidikan').map((r, i) => (
-                                  <tr key={r.nip || r.nik || i} className="border-t">
-                                    <td className="py-1.5 pr-3 font-medium">{r.nama}</td>
-                                    <td className="py-1.5 pr-3 font-mono">{r.nip || '-'}</td>
-                                    <td className="py-1.5 pr-3">{r.nuptk || '-'}</td>
-                                    <td className="py-1.5"><Badge variant="outline" className="text-[10px]">{r.status_kepegawaian}</Badge></td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
-              );
-            })}
+      {/* Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Cari nama sekolah..."
+              value={searchSekolah}
+              onChange={e => setSearchSekolah(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-muted-foreground whitespace-nowrap">Jenjang:</label>
+            <select
+              value={jenjangFilter}
+              onChange={e => setJenjangFilter(e.target.value as JenjangFilter)}
+              className="h-9 px-3 text-xs font-semibold rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0d3b66] cursor-pointer dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
+            >
+              {jenjangList.map(j => (
+                <option key={j} value={j}>{j === 'ALL' ? 'Semua' : jalurLabel(j)}</option>
+              ))}
+            </select>
           </div>
         </div>
+      </div>
+
+      {/* Stats Summary */}
+      {!isLoading && (
+        <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5 text-sm">
+          <span className="text-muted-foreground">Total sekolah: <strong className="text-gray-900 dark:text-gray-100">{filteredData.length}</strong></span>
+          <span className="text-muted-foreground">Dengan pegawai: <strong className="text-emerald-600 dark:text-emerald-400">{filteredData.filter(s => s.total > 0).length}</strong></span>
+          <span className="text-muted-foreground">Belum ada pegawai: <strong className="text-amber-600 dark:text-amber-400">{filteredData.filter(s => !s.total).length}</strong></span>
+        </div>
       )}
+
+      {/* School Cards */}
+      {filteredData.length > 0 && (
+        <div className="space-y-3">
+          {filteredData.map(school => {
+            const items = allDataResult?.items || [];
+            const guruRecords = items.filter(r => r.sekolah === school.nama && r.jenis_ptk === 'Guru');
+            const tendikRecords = items.filter(r => r.sekolah === school.nama && r.jenis_ptk === 'Tenaga Kependidikan');
+
+            return (
+              <div key={school.nama} className="rounded-xl border bg-card overflow-hidden shadow-sm">
+                {/* School Header */}
+                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b bg-slate-50 dark:bg-slate-800/60">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <SchoolIcon className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+                    <span className="font-semibold text-[#0d3b66] dark:text-blue-300 truncate text-sm">{school.nama}</span>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${jalurColor(school.jenjang)}`}>
+                      {jalurLabel(school.jenjang)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {school.total > 0 ? (
+                      <>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[11px]">
+                          <GraduationCap className="w-3 h-3" /> {guruRecords.length} Guru
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-[11px]">
+                          <BookOpen className="w-3 h-3" /> {tendikRecords.length} Tendik
+                        </span>
+                        <span className="text-gray-500 text-[11px]">{guruRecords.length + tendikRecords.length} total</span>
+                      </>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[11px]">
+                        <MapPin className="w-3 h-3" /> Belum ada pegawai
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tables */}
+                {school.total > 0 ? (
+                  <div className="divide-y">
+                    {guruRecords.length > 0 && (
+                      <div>
+                        <div className="px-5 pt-2.5 pb-1.5">
+                          <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+                              Guru — {guruRecords.length}
+                          </span>
+                        </div>
+                        <table className="w-full">
+                          <thead>
+                            <tr className="text-[11px] text-muted-foreground border-t">
+                              <th className="text-left font-medium px-5 py-2">Nama</th>
+                              <th className="text-left font-medium px-5 py-2">NIP</th>
+                              <th className="text-left font-medium px-5 py-2 hidden sm:table-cell">NUPTK</th>
+                              <th className="text-left font-medium px-5 py-2">Status</th>
+                              <th className="text-right font-medium px-5 py-2 w-16">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {guruRecords.map((r, i) => (
+                              <tr key={r.nik || r.nip || i} className="border-t hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors">
+                                <td className="px-5 py-2 text-[13px] font-medium">
+                                  <button onClick={() => openEdit(r)} className="text-blue-700 hover:underline dark:text-blue-300">{r.nama}</button>
+                                </td>
+                                <td className="px-5 py-2 text-[13px] font-mono text-gray-500">{r.nip || <span className="text-gray-400">-</span>}</td>
+                                <td className="px-5 py-2 text-[13px] hidden sm:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
+                                <td className="px-5 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
+                                <td className="px-5 py-2 text-right">
+                                  <div className="flex items-center justify-end gap-1">
+                                    <button
+                                      onClick={() => openEdit(r)}
+                                      className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                                      title="Edit"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDelete(r.nik || r.nip || '', r.nama)}
+                                      disabled={deletingNik === (r.nik || r.nip)}
+                                      className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                      title="Hapus"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                    {tendikRecords.length > 0 && (
+                      <div>
+                        <div className="px-5 pt-2.5 pb-1.5">
+                          <span className="text-[10px] font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide">
+                            Tenaga Kependidikan &mdash; {tendikRecords.length}
+                          </span>
+                        </div>
+                        <table className="w-full">
+                          <thead>
+                            <tr className="text-[11px] text-muted-foreground border-t">
+                              <th className="text-left font-medium px-5 py-2">Nama</th>
+                              <th className="text-left font-medium px-5 py-2">NIP</th>
+                              <th className="text-left font-medium px-5 py-2 hidden sm:table-cell">NUPTK</th>
+                              <th className="text-left font-medium px-5 py-2">Status</th>
+                              <th className="text-right font-medium px-5 py-2 w-16">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {tendikRecords.map((r, i) => (
+                              <tr key={r.nik || r.nip || i} className="border-t hover:bg-purple-50/40 dark:hover:bg-purple-900/10 transition-colors">
+                                <td className="px-5 py-2 text-[13px] font-medium">
+                                  <button onClick={() => openEdit(r)} className="text-blue-700 hover:underline dark:text-blue-300">{r.nama}</button>
+                                </td>
+                                <td className="px-5 py-2 text-[13px] font-mono text-gray-500">{r.nip || <span className="text-gray-400">-</span>}</td>
+                                <td className="px-5 py-2 text-[13px] hidden sm:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
+                                <td className="px-5 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
+                                <td className="px-5 py-2 text-right">
+                                  <div className="flex items-center justify-end gap-1">
+                                    <button
+                                      onClick={() => openEdit(r)}
+                                      className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                                      title="Edit"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDelete(r.nik || r.nip || '', r.nama)}
+                                      disabled={deletingNik === (r.nik || r.nip)}
+                                      className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                      title="Hapus"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="px-5 py-4 text-xs text-muted-foreground text-center italic">
+                    Belum ada data pegawai untuk sekolah ini
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {!isLoading && filteredData.length === 0 && (
+        <div className="text-sm text-muted-foreground py-8 text-center">Tidak ada sekolah yang sesuai dengan filter</div>
+      )}
+
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Data Pegawai — {editingRecord?.sekolah || ''}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>NIK *</Label>
+                <Input value={form.nik} disabled className="bg-gray-50 dark:bg-gray-800" />
+              </div>
+              <div className="space-y-2">
+                <Label>JK</Label>
+                <select value={form.jk} onChange={e => setForm(f => ({ ...f, jk: e.target.value }))}
+                  className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground">
+                  <option value="L">L</option>
+                  <option value="P">P</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>NUPTK</Label>
+                <Input value={form.nuptk} onChange={e => setForm(f => ({ ...f, nuptk: e.target.value }))} placeholder="Nomor unik PTK" />
+              </div>
+              <div className="space-y-2">
+                <Label>NIP</Label>
+                <Input value={form.nip} onChange={e => setForm(f => ({ ...f, nip: e.target.value }))} placeholder="Nomor induk pegawai" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Nama Lengkap *</Label>
+              <Input value={form.nama} onChange={e => setForm(f => ({ ...f, nama: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Jenis PTK</Label>
+                <select value={form.jenis_ptk} onChange={e => setForm(f => ({ ...f, jenis_ptk: e.target.value }))}
+                  className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground">
+                  {PTK_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status Kepegawaian</Label>
+                <select value={form.status_kepegawaian} onChange={e => setForm(f => ({ ...f, status_kepegawaian: e.target.value }))}
+                  className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground">
+                  {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tugas Tambahan</Label>
+                <select value={form.tugas_tambahan} onChange={e => setForm(f => ({ ...f, tugas_tambahan: e.target.value }))}
+                  className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground">
+                  {TUGAS_TAMBAHAN_OPTIONS.map(opt => <option key={opt} value={opt}>{opt || 'Tidak ada'}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Tgl Lahir</Label>
+                <Input type="date" value={form.tanggal_lahir} onChange={e => setForm(f => ({ ...f, tanggal_lahir: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Sertifikasi</Label>
+              <Input value={form.sertifikasi} onChange={e => setForm(f => ({ ...f, sertifikasi: e.target.value }))} placeholder="Mapel sertifikasi" />
+            </div>
+            <div className="space-y-2">
+              <Label>Sekolah</Label>
+              <Input value={form.sekolah} onChange={e => setForm(f => ({ ...f, sekolah: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFormOpen(false)}>Batal</Button>
+            <Button onClick={handleSave} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white gap-2">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

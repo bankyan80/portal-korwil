@@ -4,7 +4,10 @@ import { useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, getIdToken } from 'firebase/auth';
-import { doc, getDoc, setDoc, collection, query, limit, getDocs } from 'firebase/firestore';
+import {
+  doc, getDoc, setDoc, collection, query, limit, getDocs,
+  getCountFromServer,
+} from 'firebase/firestore';
 import type { Firestore } from 'firebase/firestore';
 import type { Auth } from 'firebase/auth';
 import type { UserProfile, UserRole } from '@/types';
@@ -32,45 +35,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const token = await getIdToken(firebaseUser);
           document.cookie = `auth-token=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
 
-          const userDoc = await getDoc(doc(firestore, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            const existing = userDoc.data() as UserProfile;
-            const email = firebaseUser.email || '';
-            if (SUPER_ADMIN_EMAILS.includes(email) && existing.role !== 'super_admin') {
-              const updated = { ...existing, role: 'super_admin' as const, updatedAt: Date.now() };
-              await setDoc(doc(firestore, 'users', firebaseUser.uid), updated);
-              setUser(updated);
-            } else {
-              setUser(existing);
+          let userProfile: UserProfile | null = null;
+          let isOffline = false;
+
+          // Try read from Firestore users collection
+          try {
+            const userDoc = await getDoc(doc(firestore, 'users', firebaseUser.uid));
+            if (userDoc.exists()) {
+              userProfile = userDoc.data() as UserProfile;
+              const email = firebaseUser.email || '';
+              if (SUPER_ADMIN_EMAILS.includes(email) && userProfile.role !== 'super_admin') {
+                const updated = { ...userProfile, role: 'super_admin' as const, updatedAt: Date.now() };
+                try { await setDoc(doc(firestore, 'users', firebaseUser.uid), updated); } catch {}
+                userProfile = updated;
+              }
             }
-          } else {
+          } catch (err: any) {
+            const msg = (err?.message || '').toLowerCase();
+            if (msg.includes('offline') || msg.includes('network') || err?.code === 'unavailable') {
+              isOffline = true;
+            }
+          }
+
+          if (!userProfile) {
+            // Firestore unreachable or user doc doesn't exist — build from email
             const email = firebaseUser.email || '';
             const isSuperAdminEmail = SUPER_ADMIN_EMAILS.includes(email);
-
-            let role: UserRole = 'publik';
-            if (isSuperAdminEmail) {
-              role = 'super_admin';
-            } else {
-              const q = query(collection(firestore, 'users'), limit(1));
-              const allUsersSnapshot = await getDocs(q);
-              const isFirstUser = allUsersSnapshot.empty;
-              role = isFirstUser ? 'super_admin' : 'publik';
-            }
-
-            const newProfile: UserProfile = {
+            userProfile = {
               uid: firebaseUser.uid,
               email,
-              displayName: firebaseUser.displayName || '',
-              role,
+              displayName: firebaseUser.displayName || email.split('@')[0],
+              role: isSuperAdminEmail ? 'super_admin' : (isOffline ? 'publik' : 'viewer'),
               isActive: true,
               createdAt: Date.now(),
               updatedAt: Date.now(),
             };
-            await setDoc(doc(firestore, 'users', firebaseUser.uid), newProfile);
-            setUser(newProfile);
+
+            // Try to write back to Firestore only when NOT offline
+            if (!isOffline) {
+              try {
+                const q = query(collection(firestore, 'users'), limit(1));
+                const allUsersSnapshot = await getDocs(q);
+                if (userProfile?.role !== 'super_admin' && allUsersSnapshot.empty) {
+                  userProfile = { ...userProfile, role: 'super_admin' as const };
+                }
+                await setDoc(doc(firestore, 'users', firebaseUser.uid), userProfile);
+              } catch {}
+            }
           }
+
+          setUser(userProfile);
         } catch (error) {
-          console.error('Error fetching user profile:', error);
+          console.error('Error in AuthProvider:', error);
+          // Final fallback: still set user so the app doesn't hang forever
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            displayName: firebaseUser.displayName || '',
+            role: 'publik',
+            isActive: true,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          });
         }
       } else {
         document.cookie = 'auth-token=; path=/; max-age=0';

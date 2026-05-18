@@ -28,43 +28,43 @@ export default function CekNikPage() {
   const [data, setData] = useState<any>(null);
   const [notFound, setNotFound] = useState(false);
   const [usia, setUsia] = useState<{ tahun: number; bulan: number; memenuhi: boolean } | null>(null);
-  const [manualTgl, setManualTgl] = useState('');
+   const [manualTgl, setManualTgl] = useState('');
   const [manualUsia, setManualUsia] = useState<{ tahun: number; bulan: number; memenuhi: boolean } | null>(null);
-
-  async function cariData() {
-    setLoading(true);
-    setData(null);
-    setNotFound(false);
-    setUsia(null);
-    setManualUsia(null);
-    setManualTgl('');
-    try {
-      const res = await fetch(`/api/siswa/lookup?nik=${nik}`);
-      const json = await res.json();
-      if (json.found) {
-        setData(json.siswa);
-        const u = hitungUsia(json.siswa.tanggal_lahir);
-        setUsia(u);
-      } else {
-        setNotFound(true);
-      }
-    } catch (e) {
-      console.error('Error looking up NIK:', e);
-      setNotFound(true);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   useEffect(() => {
     if (nik.length === 16) {
-      cariData();
+      (async () => {
+        setLoading(true);
+        setData(null);
+        setNotFound(false);
+        setUsia(null);
+        setManualUsia(null);
+        setManualTgl('');
+        try {
+          const res = await fetch(`/api/siswa/lookup?nik=${nik}`);
+          const json = await res.json();
+          if (json.found) {
+            setData(json.siswa);
+            const u = hitungUsia(json.siswa.tanggal_lahir);
+            setUsia(u);
+          } else {
+            setNotFound(true);
+          }
+        } catch (e) {
+          console.error('Error looking up NIK:', e);
+          setNotFound(true);
+        } finally {
+          setLoading(false);
+        }
+      })();
     } else {
-      setData(null);
-      setNotFound(false);
-      setUsia(null);
-      setManualUsia(null);
-      setManualTgl('');
+      queueMicrotask(() => {
+        setData(null);
+        setNotFound(false);
+        setUsia(null);
+        setManualUsia(null);
+        setManualTgl('');
+      });
     }
   }, [nik]);
 

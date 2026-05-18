@@ -21,12 +21,6 @@ export default function GuruDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role !== 'super_admin' && user.role !== 'operator_sekolah') { router.push('/login'); return; }
-    if (nik) fetchDetail();
-  }, [user, router, nik]);
-
   async function fetchDetail() {
     setLoading(true);
     try {
@@ -43,6 +37,12 @@ export default function GuruDetailPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role !== 'super_admin' && user.role !== 'operator_sekolah') { router.push('/login'); return; }
+    if (nik) queueMicrotask(() => { fetchDetail(); });
+  }, [user, router, nik]);
 
   function handleLogout() {
     if (auth) auth.signOut();

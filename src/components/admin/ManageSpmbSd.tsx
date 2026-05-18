@@ -30,6 +30,7 @@ interface Pendaftar {
   tglDaftar: string;
   sekolah: string;
   tanggal_lahir: string;
+  alasan?: string;
 }
 
 const statusOptions = ['Menunggu Verifikasi', 'Diverifikasi', 'Valid', 'Cadangan', 'Ditolak'];
@@ -56,7 +57,7 @@ const statusColor: Record<string, string> = {
   Cadangan: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
 };
 
-const defaultForm = { nama: '', nik: '', jalur: 'Domisili', usia: 6, status: 'Menunggu Verifikasi' as string, tglDaftar: new Date().toISOString().split('T')[0], sekolah: '', tanggal_lahir: '' };
+const defaultForm = { nama: '', nik: '', jalur: 'Domisili', usia: 6, status: 'Menunggu Verifikasi' as string, tglDaftar: new Date().toISOString().split('T')[0], sekolah: '', tanggal_lahir: '', alasan: '' };
 
 const defaultData: Pendaftar[] = [
   { id: '1', nama: 'Ahmad Fauzan', nik: '3209071234567890', jalur: 'Domisili', usia: 7, status: 'Diverifikasi', tglDaftar: '2025-06-01', sekolah: 'SD NEGERI 1 LEMAHABANG', tanggal_lahir: '2018-03-15' },
@@ -192,7 +193,7 @@ export function ManageSpmbSd() {
 
   function openEdit(item: Pendaftar) {
     setEditingId(item.id);
-    setForm({ nama: item.nama, nik: item.nik, jalur: item.jalur, usia: item.usia, status: item.status, tglDaftar: item.tglDaftar, sekolah: item.sekolah, tanggal_lahir: item.tanggal_lahir || '' });
+    setForm({ nama: item.nama, nik: item.nik, jalur: item.jalur, usia: item.usia, status: item.status, tglDaftar: item.tglDaftar, sekolah: item.sekolah, tanggal_lahir: item.tanggal_lahir || '', alasan: item.alasan || '' });
     setNikLookupMsg('');
     setFormOpen(true);
   }

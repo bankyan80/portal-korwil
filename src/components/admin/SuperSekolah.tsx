@@ -34,14 +34,14 @@ const defaultForm: SekolahForm = {
 export function SuperSekolah() {
   const { user, setCurrentView } = useAppStore();
   const [schools, setSchools] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SekolahForm>(defaultForm);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
+    if (!db) return;
     const unsubscribe = onSnapshot(
       collection(db, 'schools'),
       (snap) => {

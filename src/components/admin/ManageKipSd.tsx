@@ -26,21 +26,10 @@ interface SiswaItem {
 export function ManageKipSd() {
   const { user } = useAppStore();
   const [data, setData] = useState<KipSdData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SiswaItem[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [searched, setSearched] = useState(false);
-  const [addStatus, setAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
-  const [adding, setAdding] = useState<string | null>(null);
-
-  const userSchool = user?.schoolName || '';
+  const [loading, setLoading] = useState(db ? true : false);
 
   useEffect(() => {
-    if (!db) {
-      setLoading(false);
-      return;
-    }
+    if (!db) return;
     const q = query(collection(db, 'kip_sd'), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
       const list: KipSdData[] = [];

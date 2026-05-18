@@ -100,7 +100,7 @@ export default function ChatPage() {
   };
 
   useEffect(() => {
-    checkAIHealth();
+    queueMicrotask(() => { checkAIHealth(); });
   }, []);
 
   useEffect(() => {

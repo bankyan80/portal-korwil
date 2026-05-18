@@ -84,14 +84,10 @@ export default function InputDokumenPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(db ? false : true);
 
   useEffect(() => {
-    if (!db) {
-      setDocuments([]);
-      setDataLoaded(true);
-      return;
-    }
+    if (!db) return;
     const q = query(collection(db, 'dokumen'), orderBy('uploadedAt', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
       const list: DokumenBersama[] = [];

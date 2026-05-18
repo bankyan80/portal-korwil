@@ -42,11 +42,11 @@ const fallbackSD: SchoolItem[] = [
 
 export default function DataSDPage() {
   const [schools, setSchools] = useState<SchoolItem[]>(fallbackSD);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
+    if (!db) return;
     async function fetch() {
       try {
         const data = await getAllDocs('schools');

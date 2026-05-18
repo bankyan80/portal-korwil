@@ -41,6 +41,44 @@ const defaultForm: SiswaForm = {
   sekolah: '', jenjang: 'SD', kelas: 1, desa: '', alasan: '',
 };
 
+// TK rombel groups: A1 < A2 < A3 < B1 < B2 < B3 < B4 < B5
+const TK_ROMBEL_ORDER: Record<string, number> = {
+  A1: 1, A2: 2, A3: 3,
+  B1: 4, B2: 5, B3: 6, B4: 7, B5: 8,
+};
+
+function getTkRombelRank(rombel: string | undefined): number {
+  if (!rombel) return 0;
+  const r = rombel.trim().toUpperCase();
+  // e.g. "Kelompok B2" → "B2"; "A1" → "A1"
+  const match = r.match(/(A|B)\s*\d+/);
+  if (match) return TK_ROMBEL_ORDER[match[0].replace(/\s/g, '')] || 0;
+  return 0;
+}
+
+function getSortScore(s: any): number {
+  // SD: kelas 6→1 (score 1→6)
+  if (s.jenjang === 'SD' && typeof s.kelas === 'number' && s.kelas > 0) {
+    return s.kelas; // 1..6
+  }
+  // TK with rombel group: A1→1, ..., B5→8
+  if (s.jenjang === 'TK' && s.rombel) {
+    return 10 + getTkRombelRank(s.rombel); // 11..18
+  }
+  // TK with klas > 0 but no rombel: class order within TK (6-klas, so 7→1 becomes 4..)
+  if (s.jenjang === 'TK' && typeof s.kelas === 'number' && s.kelas > 0) {
+    return 19 + (7 - s.kelas);
+  }
+  // TK with klas = 0 or undefined (no class assignment)
+  if (s.jenjang === 'TK') return 25;
+  // KB: by class (if available), then at bottom
+  if (s.jenjang === 'KB' && typeof s.kelas === 'number' && s.kelas > 0) {
+    return 30 + s.kelas;
+  }
+  // KB senza kelas or other: at very bottom
+  return 99;
+}
+
 function DataSiswaContent() {
   const { user } = useAppStore();
   const [jenjang, setJenjang] = useState<string | undefined>(undefined);
@@ -107,12 +145,12 @@ function DataSiswaContent() {
     return q ? mergedSiswa.filter((s) => s.nama?.toLowerCase().includes(q) || s.nik?.includes(q)) : mergedSiswa;
   }, [mergedSiswa, search]);
 
-  // Sort: Kelas 6 at top, then 5,4,3,2,1; non-SD at bottom
+  // Sort: SD kelas 6→5→4→3→2→1, then TK by rombel group (A1..B5), then TK kelas (desc), then KB
   const sortedSiswa = useMemo(() => {
     return [...filteredSiswa].sort((a, b) => {
-      const kelasA = a.jenjang === 'SD' && a.kelas ? (7 - a.kelas) : -1;
-      const kelasB = b.jenjang === 'SD' && b.kelas ? (7 - b.kelas) : -1;
-      return kelasB - kelasA;
+      const scoreA = getSortScore(a);
+      const scoreB = getSortScore(b);
+      return scoreA - scoreB;
     });
   }, [filteredSiswa]);
 

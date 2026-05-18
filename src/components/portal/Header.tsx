@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { getRedirectPath, getRoleLabel } from '@/lib/auth';
 import {
   Home,
@@ -45,7 +46,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
   function handleNav(item: typeof navItems[0]) {
     if (item.href && item.href.startsWith('/') && !item.href.startsWith('#')) {
-      window.location.href = item.href;
+      window.location.assign(item.href);
     } else if (item.isView && item.view) {
       if (item.view) setCurrentView(item.view as AppView);
     } else if (item.sectionId) {
@@ -53,7 +54,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
       if (el) {
         el.scrollIntoView({ behavior: 'smooth' });
       } else {
-        window.location.href = `/#${item.sectionId}`;
+        window.location.assign(`/#${item.sectionId}`);
       }
     }
     onNavigate?.();
@@ -101,7 +102,7 @@ function AuthSection({ onNavigate }: { onNavigate?: () => void }) {
     return (
       <Button
         onClick={() => {
-          window.location.href = '/login';
+          window.location.assign('/login');
           onNavigate?.();
         }}
         size="sm"
@@ -128,7 +129,7 @@ function AuthSection({ onNavigate }: { onNavigate?: () => void }) {
       {isAdmin && (
         <Button
           onClick={() => {
-            window.location.href = getDashboardUrl();
+            window.location.assign(getDashboardUrl());
             onNavigate?.();
           }}
           size="sm"
@@ -161,7 +162,7 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
 
   function handleNav(item: typeof navItems[0]) {
     if (item.href && item.href.startsWith('/') && !item.href.startsWith('#')) {
-      window.location.href = item.href;
+      window.location.assign(item.href);
     } else if (item.isView && item.view) {
       if (item.view) setCurrentView(item.view as AppView);
     } else if (item.sectionId) {
@@ -169,7 +170,7 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
       if (el) {
         el.scrollIntoView({ behavior: 'smooth' });
       } else {
-        window.location.href = `/#${item.sectionId}`;
+        window.location.assign(`/#${item.sectionId}`);
       }
     }
     onClose();
@@ -211,7 +212,7 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
           {!user ? (
             <Button
               onClick={() => {
-                window.location.href = '/login';
+                window.location.assign('/login');
                 onClose();
               }}
               className="w-full bg-yellow-500 hover:bg-yellow-400 text-[#0d3b66] font-semibold border-0 mt-1"
@@ -239,7 +240,7 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
                 {isAdmin && (
                   <Button
                     onClick={() => {
-                      window.location.href = getDashboardUrlMobile();
+                      window.location.assign(getDashboardUrlMobile());
                       onClose();
                     }}
                     variant="outline"

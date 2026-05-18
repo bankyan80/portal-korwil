@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useState } from 'react';
 import { BlueBarHeader } from '@/components/shared/SectionTitle';
 import { ExternalLink } from 'lucide-react';
 import { useDataStore } from '@/store/data-store';
@@ -9,6 +9,7 @@ const LINK_COLORS = [
   '#2563eb', '#059669', '#dc2626', '#ea580c',
   '#7c3aed', '#0d9488', '#1d4ed8', '#475569',
 ];
+const imgErrors = new Set<string>();
 
 function getInitials(name: string) {
   return name.split(' ').filter((w) => w.length > 2).map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
@@ -16,7 +17,7 @@ function getInitials(name: string) {
 
 export default function InstitutionLinks() {
   const links = useDataStore((s) => s.institutionLinks);
-  const imgErrors = useRef(new Set<string>());
+  const [, setTick] = useState(0);
 
   return (
     <section>
@@ -35,12 +36,12 @@ export default function InstitutionLinks() {
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center bg-white shadow-md border hover:scale-110 transition-transform duration-200 relative overflow-hidden"
                 >
-                  {link.logo && !imgErrors.current.has(link.id) ? (
+                  {link.logo && !imgErrors.has(link.id) ? (
                     <img
                       src={link.logo}
                       alt={link.name}
                       className="w-8 h-8 object-contain"
-                      onError={() => imgErrors.current.add(link.id)}
+                      onError={() => { imgErrors.add(link.id); setTick((t) => t + 1); }}
                     />
                   ) : (
                     <span

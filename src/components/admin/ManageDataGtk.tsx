@@ -60,19 +60,10 @@ export function ManageDataGtk() {
   const { user } = useAppStore();
   const [schoolSummary, setSchoolSummary] = useState<SchoolGtkSummary[]>([]);
   const [allPegawai, setAllPegawai] = useState<PegawaiRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(defaultForm);
-  const [saving, setSaving] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-
-  const userSchool = user?.schoolName || '';
-  const isOperator = user?.role === 'operator_sekolah';
+  const [loading, setLoading] = useState(db ? true : false);
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
+    if (!db) return;
 
     if (!isOperator) {
       fetch('/api/pegawai/gtk-summary')

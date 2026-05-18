@@ -47,7 +47,7 @@ interface LaporanRecord {
 export function ManageLaporanBulanan() {
   const { user } = useAppStore();
   const [data, setData] = useState<LaporanRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
   const [search, setSearch] = useState('');
   const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
   const [filterBulan, setFilterBulan] = useState<string>('');
@@ -57,10 +57,7 @@ export function ManageLaporanBulanan() {
   const isOperator = user?.role === 'operator_sekolah';
 
   useEffect(() => {
-    if (!db) {
-      setLoading(false);
-      return;
-    }
+    if (!db) return;
     const q = query(collection(db, 'laporan_bulanan'), orderBy('tglLapor', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
       const list: LaporanRecord[] = [];

@@ -70,11 +70,11 @@ const sectionKeys: Record<string, string[]> = {
 export function ManageSarpras() {
   const { user } = useAppStore();
   const [form, setForm] = useState(defaultForm);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!db || !user?.schoolId) { setLoading(false); return; }
+    if (!db || !user?.schoolId) return;
 
     const docRef = doc(db, 'sarpras', user.schoolId);
     const unsubscribe = onSnapshot(

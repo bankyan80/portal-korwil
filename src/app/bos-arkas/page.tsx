@@ -38,13 +38,10 @@ export default function BosArkasPage() {
   const [filterJenjang, setFilterJenjang] = useState<string>('semua');
   const [showFilters, setShowFilters] = useState(false);
   const [data, setData] = useState<BosSchoolData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
 
   useEffect(() => {
-    if (!db) { 
-      setLoading(false); 
-      return; 
-    }
+    if (!db) return;
 
     const q = query(collection(db, 'bos_arkas'), orderBy('nama'));
     const unsub = onSnapshot(q, (snapshot) => {

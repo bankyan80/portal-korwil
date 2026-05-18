@@ -209,8 +209,6 @@ export function ManageDataPd() {
   const totalPages = Math.ceil(sortedSiswa.length / itemsPerPage);
   const paginatedSiswa = sortedSiswa.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-  useEffect(() => { setPage(1); }, [search]);
-
   const totalSiswa = allSiswa.length;
   const totalL = allSiswa.filter(s => s.jk === 'L').length;
   const totalP = allSiswa.filter(s => s.jk === 'P').length;
@@ -477,7 +475,13 @@ export function ManageDataPd() {
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{s.nik}</td>
                     <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{s.nama}</td>
                     <td className="px-4 py-3 text-center text-muted-foreground">{s.jk}</td>
-                    <td className="px-4 py-3 text-center font-semibold">{s.jenjang === 'SD' ? (s.kelas ? `Kelas ${s.kelas}` : '-') : '-'}</td>
+                    <td className="px-4 py-3 text-center font-semibold">
+                      {s.jenjang === 'SD' ? (
+                        typeof s.kelas === 'number' && s.kelas > 0
+                          ? `Kelas ${s.kelas}`
+                          : 'Tidak Ada Kelas'
+                      ) : '-'}
+                    </td>
                     <td className="px-4 py-3 text-center"><span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${jenjangColors[s.jenjang]}`}>{s.jenjang}</span></td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{s.desa}</td>
                     <td className="px-4 py-3 text-center">

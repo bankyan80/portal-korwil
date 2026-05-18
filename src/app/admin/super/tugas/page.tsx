@@ -4,9 +4,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
+import SuperPageShell from '@/components/admin/SuperPageShell';
 import {
   Shield, LogOut, Loader2, Plus, Trash2, CheckCircle, XCircle,
-  Clock, ExternalLink, ArrowLeft, ListTodo, Calendar, Share2, Copy, MessageCircle, Send, X,
+  Clock, ExternalLink, ListTodo, Calendar, Share2, Copy, MessageCircle, Send, X,
 } from 'lucide-react';
 
 interface TaskGroup {
@@ -58,7 +59,15 @@ export default function TugasPage() {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   }
 
-  const handleSubmit = useCallback(async () => {
+   const toggleJenjang = (jenjang: string) =>
+     setForm(f => ({
+       ...f,
+       forJenjang: f.forJenjang.includes(jenjang)
+         ? f.forJenjang.filter(j => j !== jenjang)
+         : [...f.forJenjang, jenjang],
+     }));
+
+   const handleSubmit = useCallback(async () => {
     if (!form.title || !form.targetLink) return;
     setSaving(true);
     try {
@@ -89,45 +98,11 @@ export default function TugasPage() {
       await fetchData();
     } catch (e) { console.error(e); }
   }
-
-  function handleLogout() {
-    if (auth) auth.signOut();
-    setUser(null);
-    router.push('/');
-  }
-
   if (!user) return null;
 
-  const toggleJenjang = (j: string) => {
-    setForm(f => ({
-      ...f,
-      forJenjang: f.forJenjang.includes(j) ? f.forJenjang.filter(x => x !== j) : [...f.forJenjang, j],
-    }));
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/admin/super')} className="text-blue-300 hover:text-blue-200">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-lg font-bold text-white flex items-center gap-2">
-              <ListTodo className="w-5 h-5" /> Manajemen Tugas
-            </h1>
-            <p className="text-sm text-blue-200">{user.displayName}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/admin/super')} className="text-sm text-blue-300 hover:text-blue-200">Dashboard</button>
-          <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-300 hover:text-red-200">
-            <LogOut className="w-4 h-4" /> Logout
-          </button>
-        </div>
-      </header>
-
-      <main className="p-6 max-w-5xl mx-auto space-y-6">
+    <SuperPageShell title="Manajemen Tugas" subtitle={user.displayName} maxWidth="max-w-5xl">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900">Daftar Tugas</h2>
           <button onClick={() => setShowForm(true)}
@@ -264,9 +239,8 @@ export default function TugasPage() {
             })}
           </div>
         )}
-      </main>
+      </div>
 
-      {/* Share Modal */}
       {shareTarget && (() => {
         const origin = typeof window !== 'undefined' ? window.location.origin : 'https://portalkorwil.online';
         const urlTugas = `${origin}${shareTarget.targetLink}`;
@@ -369,6 +343,6 @@ export default function TugasPage() {
           </div>
         );
       })()}
-    </div>
+      </SuperPageShell>
   );
 }

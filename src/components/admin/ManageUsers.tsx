@@ -49,7 +49,7 @@ const PAGE_SIZE = 20;
 
 export function ManageUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -79,7 +79,6 @@ export function ManageUsers() {
 
   useEffect(() => {
     if (!db) return;
-    setLoading(true);
     const unsubscribe = onSnapshot(
       collection(db, 'users'),
       (snap) => {
@@ -182,9 +181,6 @@ export function ManageUsers() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  // Reset page when search changes
-  useEffect(() => { setPage(1); }, [search]);
 
   if (loading) return <AdminTableSkeleton />;
 

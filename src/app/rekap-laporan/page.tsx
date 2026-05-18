@@ -173,7 +173,6 @@ export default function LaporanBulananPage() {
         laporanUnsub();
       };
     }
-    if (!db) setLoading(false);
   }, []);
 
   const stats = useMemo(() => {

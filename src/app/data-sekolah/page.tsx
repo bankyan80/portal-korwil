@@ -29,14 +29,12 @@ const staticSchools: SchoolItem[] = [
 
 export default function DataSekolahPage() {
   const [schools, setSchools] = useState<SchoolItem[]>(staticSchools);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [jenjang, setJenjang] = useState<'SD' | 'TK' | 'KB' | 'PAUD' | 'all'>('all');
   const [search, setSearch] = useState('');
-  const [jenjang, setJenjang] = useState<Jenjang | 'all'>('all');
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
-
-    setLoading(true);
+    if (!db) return;
     const unsubscribe = onSnapshot(
       collection(db, 'schools'),
       (snap) => {

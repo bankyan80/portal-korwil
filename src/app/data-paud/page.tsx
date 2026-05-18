@@ -36,11 +36,11 @@ const fallbackPAUD: SchoolItem[] = [
 
 export default function DataPAUDPage() {
   const [schools, setSchools] = useState<SchoolItem[]>(fallbackPAUD);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
+    if (!db) return;
     async function fetch() {
       try {
         const data = await getAllDocs('schools');

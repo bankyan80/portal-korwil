@@ -13,14 +13,12 @@ export default function LoginPage() {
   const router = useRouter();
   const { user, setUser } = useAppStore();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [error, setError] = useState(auth && db ? '' : 'Firebase tidak dikonfigurasi. Hubungi administrator.');
+  const [checkingAuth, setCheckingAuth] = useState(!auth || !db);
+  const firebaseReady = !!(auth && db);
 
   useEffect(() => {
-    if (!auth || !db) {
-      setCheckingAuth(false);
-      return;
-    }
+    if (!firebaseReady) return;
 
     let timeoutId: NodeJS.Timeout;
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -71,7 +69,7 @@ export default function LoginPage() {
        } finally {
          setCheckingAuth(false);
        }
-    });
+     });
 
     timeoutId = setTimeout(() => setCheckingAuth(false), 5000);
     return () => {

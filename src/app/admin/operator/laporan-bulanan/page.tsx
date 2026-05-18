@@ -99,7 +99,7 @@ export default function LaporBulananPage() {
       w.push({ page: 'data-guru', label: 'Data Guru & GTK', href: '/admin/operator/data-guru', message: 'Belum ada data GTK. Jumlah guru & tendik di cetakan akan 0.' });
     }
 
-    setWarnings(w);
+    queueMicrotask(() => { setWarnings(w); });
   }, [dataLoading, loading, sekolah, sarpras, laporanData, existingDocId, siswaL, siswaP, guru, tendik]);
 
   // Realtime listener for laporan bulanan

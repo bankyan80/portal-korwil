@@ -15,11 +15,11 @@ import { toast } from 'sonner';
 export function SuperSettings() {
   const { setCurrentView } = useAppStore();
   const [form, setForm] = useState({ tentang: '', visi: '', misi: '', alamat: '', email: '', telepon: '', kepalaDinas: '', jabatan: '', sambutan: '', fotoKepalaDinas: '' });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(db ? true : false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
+    if (!db) return;
     getDocById('settings', 'profile').then(d => {
       if (d) {
         setForm({
