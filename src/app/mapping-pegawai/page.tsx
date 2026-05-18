@@ -11,7 +11,7 @@ import { sekolahSD } from '@/data/sekolah';
 // ---------------------------------------------------------------------------
 // CACHE
 // ---------------------------------------------------------------------------
-const CACHE_KEY = 'mapping-pegawai-cache-v2';
+const CACHE_KEY = 'mapping-pegawai-cache-v3';
 const CACHE_TTL = 15 * 60 * 1000;
 
 function loadCache(): SchoolRow[] | null {

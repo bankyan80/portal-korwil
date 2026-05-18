@@ -22,6 +22,11 @@ export const rombelData: RombelEntry[] = [
     { name: 'V A', total: 27, l: 12, p: 15 }, { name: 'V B', total: 26, l: 16, p: 10 }, { name: 'V C', total: 25, l: 16, p: 9 },
     { name: 'VI A', total: 31, l: 22, p: 9 }, { name: 'VI B', total: 26, l: 16, p: 10 }, { name: 'VI C', total: 27, l: 18, p: 9 },
   ]},
+  { name: 'SD NEGERI 1 ASEM', jenjang: 'SD', total: 197, rombels: 6, details: [
+    { name: '1', total: 35, l: 16, p: 19 }, { name: '2', total: 38, l: 24, p: 14 },
+    { name: '3', total: 37, l: 16, p: 21 }, { name: '4', total: 29, l: 14, p: 15 },
+    { name: '5', total: 31, l: 13, p: 18 }, { name: '6', total: 27, l: 8, p: 19 },
+  ]},
   { name: 'SD NEGERI 1 BELAWA', jenjang: 'SD', total: 323, rombels: 10, details: [
     { name: '1A', total: 32, l: 19, p: 13 }, { name: '1B', total: 31, l: 20, p: 11 }, { name: '2', total: 48, l: 25, p: 23 },
     { name: '3A', total: 30, l: 16, p: 14 }, { name: '3B', total: 31, l: 13, p: 18 },
@@ -70,6 +75,14 @@ export const rombelData: RombelEntry[] = [
     { name: '2', total: 29, l: 17, p: 12 }, { name: '3', total: 12, l: 7, p: 5 },
     { name: '4', total: 25, l: 17, p: 8 }, { name: '5', total: 26, l: 14, p: 12 },
     { name: '6', total: 27, l: 17, p: 10 },
+  ]},
+  { name: 'SD NEGERI 1 SIGONG', jenjang: 'SD', total: 313, rombels: 12, details: [
+    { name: '1A', total: 26, l: 11, p: 15 }, { name: '1B', total: 25, l: 11, p: 14 },
+    { name: '2A', total: 27, l: 14, p: 13 }, { name: '2B', total: 25, l: 12, p: 13 },
+    { name: '3A', total: 32, l: 17, p: 15 }, { name: '3B', total: 33, l: 15, p: 18 },
+    { name: '4A', total: 23, l: 10, p: 13 }, { name: '4B', total: 26, l: 11, p: 15 },
+    { name: '5A', total: 24, l: 10, p: 14 }, { name: '5B', total: 28, l: 16, p: 12 },
+    { name: '6A', total: 21, l: 6, p: 15 }, { name: '6B', total: 23, l: 10, p: 13 },
   ]},
   { name: 'SD NEGERI 1 SINDANGLAUT', jenjang: 'SD', total: 411, rombels: 12, details: [
     { name: '1A', total: 38, l: 22, p: 16 }, { name: '1B', total: 39, l: 24, p: 15 },
