@@ -287,12 +287,52 @@ function aggregate(
       return sekolahName === sName || sekolahName.toUpperCase() === sName.toUpperCase();
     });
 
+    // Dedup pegawai by name to avoid double-counting same person
+    // Handles cases like "SUKIRAH, S.Pd.SD" vs "Sukirah" (same person, different NIK)
+    const normalizeName = (n: string) => n.replace(/[.,\s]+/g, '').toUpperCase().trim();
+    const seen = new Map<string, Record<string, any>>();
+    for (const p of sp) {
+      const namaNorm = normalizeName(p.nama || '');
+      if (!namaNorm) {
+        seen.set(`_anon_${Math.random()}`, p);
+        continue;
+      }
+
+      // Check if this name is a substring match with existing
+      let matchedKey: string | null = null;
+      for (const [key] of seen) {
+        if (key.startsWith('_anon_')) continue;
+        if (key.includes(namaNorm) || namaNorm.includes(key)) {
+          matchedKey = key;
+          break;
+        }
+      }
+
+      if (!matchedKey) {
+        seen.set(namaNorm, p);
+      } else {
+        // Keep the record with more complete data
+        const existing = seen.get(matchedKey)!;
+        const existingNik = (existing.nik || '').trim();
+        const currentNik = (p.nik || '').trim();
+        // Prefer 16-digit NIK (valid KTP format) over shorter ones
+        if (existingNik.length === 16 && currentNik.length !== 16) {
+          // Keep existing
+        } else if (currentNik.length === 16 && existingNik.length !== 16) {
+          seen.set(matchedKey, p);
+        } else if (!existingNik && currentNik) {
+          seen.set(matchedKey, p);
+        }
+      }
+    }
+    const uniqueSp = Array.from(seen.values());
+
     const pai = buildBreakdown();
     const penjas = buildBreakdown();
     const kelas = buildBreakdown();
     const tendik = buildBreakdown();
 
-    for (const p of sp) {
+    for (const p of uniqueSp) {
       if (!isActivePegawai(p)) continue;
       const kategori = categorisePegawai(p);
       if (!kategori) continue;
@@ -322,13 +362,14 @@ function aggregate(
     const jumlahRombel = rm ? rm.rombels : 0;
     const jumlahSiswa = rm ? rm.total : 0;
 
-    // Kepala Sekolah count (jumlah pegawai dengan jabatan Kepala Sekolah)
-    const kepalaSekolahCount = sp.filter(p => {
+    // Kepala Sekolah count (jumlah pegawai dengan jabatan Kepala Sekolah, sudah dedup)
+    const ksList = uniqueSp.filter(p => {
       if (!isActivePegawai(p)) return false;
       const jenisPtk = (p.jenis_ptk || '').toLowerCase();
       const jabatan = (p.jabatan || '').toLowerCase();
       return jenisPtk.includes('kepala sekolah') || jabatan.includes('kepala sekolah');
-    }).length;
+    });
+    const kepalaSekolahCount = ksList.length;
 
     // Kebutuhan ideal
     const kebutuhanPai = 1;
