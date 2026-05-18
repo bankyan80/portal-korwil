@@ -52,7 +52,6 @@ export async function PUT(
 
     // operator_sekolah: only allow updating their own school's records
     if (authResult.role === 'operator_sekolah') {
-      const { adminDb } = await import('@/lib/firebase-admin');
       const docRef = adminDb.collection('employees').doc(nik);
       const docSnap = await docRef.get();
       if (!docSnap.exists) {
@@ -67,7 +66,6 @@ export async function PUT(
       }
     }
 
-    const { adminDb } = await import('@/lib/firebase-admin');
     const docRef = adminDb.collection('employees').doc(nik);
     const exists = (await docRef.get()).exists;
     if (!exists) {
