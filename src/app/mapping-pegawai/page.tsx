@@ -289,7 +289,13 @@ function aggregate(
 
     // Dedup pegawai by name to avoid double-counting same person
     // Handles cases like "SUKIRAH, S.Pd.SD" vs "Sukirah" (same person, different NIK)
+    // Also merges fields: prefers records with kategoriGuru/mapel set (from Google Sheets)
     const normalizeName = (n: string) => n.replace(/[.,\s]+/g, '').toUpperCase().trim();
+    const hasCategoryInfo = (p: Record<string, any>) => {
+      const kg = (p.kategoriGuru || p.kategori_guru || '').trim();
+      const mp = (p.mapel || '').trim();
+      return !!(kg || mp);
+    };
     const seen = new Map<string, Record<string, any>>();
     for (const p of sp) {
       const namaNorm = normalizeName(p.nama || '');
@@ -311,17 +317,26 @@ function aggregate(
       if (!matchedKey) {
         seen.set(namaNorm, p);
       } else {
-        // Keep the record with more complete data
         const existing = seen.get(matchedKey)!;
-        const existingNik = (existing.nik || '').trim();
-        const currentNik = (p.nik || '').trim();
-        // Prefer 16-digit NIK (valid KTP format) over shorter ones
-        if (existingNik.length === 16 && currentNik.length !== 16) {
-          // Keep existing
-        } else if (currentNik.length === 16 && existingNik.length !== 16) {
+        const existingHasCat = hasCategoryInfo(existing);
+        const currentHasCat = hasCategoryInfo(p);
+
+        // Always prefer record with category info (from Google Sheets)
+        if (currentHasCat && !existingHasCat) {
           seen.set(matchedKey, p);
-        } else if (!existingNik && currentNik) {
-          seen.set(matchedKey, p);
+        } else if (!currentHasCat && existingHasCat) {
+          // Keep existing (has category)
+        } else {
+          // Both have or both don't have category info, use NIK preference
+          const existingNik = (existing.nik || '').trim();
+          const currentNik = (p.nik || '').trim();
+          if (existingNik.length === 16 && currentNik.length !== 16) {
+            // Keep existing
+          } else if (currentNik.length === 16 && existingNik.length !== 16) {
+            seen.set(matchedKey, p);
+          } else if (!existingNik && currentNik) {
+            seen.set(matchedKey, p);
+          }
         }
       }
     }
