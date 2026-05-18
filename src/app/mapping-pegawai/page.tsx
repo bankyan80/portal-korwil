@@ -49,7 +49,7 @@ interface SchoolRow {
   no: number;
   sekolahId: string;
   sekolahNama: string;
-  kepalaSekolah: string;
+  kepalaSekolah: number;
   jumlahSiswa: number;
   jumlahRombel: number;
   pai: CatBreakdown;
@@ -309,13 +309,13 @@ function aggregate(
     const jumlahRombel = rm ? rm.rombels : 0;
     const jumlahSiswa = rm ? rm.total : 0;
 
-    // Kepala Sekolah
-    const kS = sp.find(p => {
+    // Kepala Sekolah count (jumlah pegawai dengan jabatan Kepala Sekolah)
+    const kepalaSekolahCount = sp.filter(p => {
+      if (!isActivePegawai(p)) return false;
       const jenisPtk = (p.jenis_ptk || '').toLowerCase();
       const jabatan = (p.jabatan || '').toLowerCase();
       return jenisPtk.includes('kepala sekolah') || jabatan.includes('kepala sekolah');
-    });
-    const kepalaSekolah = kS ? kS.nama : '-';
+    }).length;
 
     // Kebutuhan ideal
     const kebutuhanPai = 1;
@@ -337,7 +337,7 @@ function aggregate(
       no: 0,
       sekolahId: s.npsn || sName,
       sekolahNama: sName,
-      kepalaSekolah,
+      kepalaSekolah: kepalaSekolahCount,
       jumlahSiswa,
       jumlahRombel,
       pai, penjas, kelas, tendik,
@@ -373,7 +373,7 @@ function computeTotals(rows: SchoolRow[]): SchoolRow {
     no: 0,
     sekolahId: '',
     sekolahNama: 'TOTAL PEGAWAI',
-    kepalaSekolah: '',
+    kepalaSekolah: rows.reduce((a, r) => a + (r.kepalaSekolah || 0), 0),
     jumlahSiswa: siswaTot,
     jumlahRombel: rombelTot,
     pai: makeTotal('pai'),
@@ -435,7 +435,7 @@ export default function MappingPegawaiPage() {
 
         if (cancelled) return;
 
-        const sekolahListRaw = sekolahSD.map(s => ({ nama: s.nama, npsn: s.npsn }));
+        const sekolahListRaw = sekolahSD.filter(s => s.status === 'NEGERI').map(s => ({ nama: s.nama, npsn: s.npsn }));
         const sekolahList = orderSchools(sekolahListRaw);
 
         setLoadingMsg('Memproses data...');
@@ -499,7 +499,7 @@ export default function MappingPegawaiPage() {
       const row = [
         r.no ? String(r.no) : 'TOTAL',
         r.sekolahNama,
-        r.kepalaSekolah,
+        String(r.kepalaSekolah),
         String(r.jumlahSiswa),
         String(r.jumlahRombel),
         String(r.pai.realPtk),       String(r.pai.pns),       String(r.pai.pppk),       String(r.pai.pppkParuhWaktu),       String(r.pai.nonAsnSerdik),       String(r.pai.nonAsnMurni),       String(r.pai.nonAsnNonDapodik),       String(r.pai.jumlah),       fmtKL(r.pai.kurangLebih),
@@ -727,7 +727,7 @@ export default function MappingPegawaiPage() {
                   <tr className="bg-blue-50/70 font-semibold border-t-2 border-blue-200">
                     <td className="px-2 py-1.5 border text-center text-gray-500 font-medium sticky left-0 z-10 bg-blue-50/70"></td>
                     <td className="px-2 py-1.5 border text-left text-[#0d3b66] font-bold text-[10.5px] sticky left-[40px] z-10 bg-blue-50/70">{totals.sekolahNama}</td>
-                    <td className="px-2 py-1.5 border text-center text-[10.5px]">{totals.kepalaSekolah || '-'}</td>
+                    <td className="px-2 py-1.5 border text-center text-[10.5px] font-semibold">{totals.kepalaSekolah}</td>
                     <td className="px-2 py-1.5 border text-center text-[10.5px] font-semibold">{totals.jumlahSiswa}</td>
                     <td className="px-2 py-1.5 border text-center text-[10.5px] font-semibold">{totals.jumlahRombel}</td>
                     {renderBreakdownCells(totals.pai)}
