@@ -6,29 +6,64 @@ import { getStorage } from 'firebase-admin/storage';
 import * as path from 'path';
 import * as fs from 'fs';
 
-function loadServiceAccount(): ServiceAccount | null {
+function findServiceAccountFile(): string | null {
+  // 1) Env var (raw JSON string or base64)
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     try {
-      return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY) as ServiceAccount;
+      JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      return '__env__';
     } catch {
-      // not a JSON string, maybe base64
+      try {
+        Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('utf-8');
+        return '__env_b64__';
+      } catch {}
     }
-    try {
-      const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('utf-8');
-      return JSON.parse(decoded) as ServiceAccount;
-    } catch {}
   }
 
-  const localPath = path.join(process.cwd(), 'service-account');
-  if (!fs.existsSync(localPath)) return null;
+  // 2) Known relative paths from cwd (dev: repo root, prod: standalone dir)
+  const candidates = [
+    path.join(process.cwd(), 'service-account'),
+    path.join(process.cwd(), '.', 'service-account'),
+    // next up from cwd
+    ...(['', '..', '../..', '../../..'].map(p =>
+      path.resolve(process.cwd(), p, 'service-account')
+    )),
+    // alongside the compiled module file
+    path.join(__dirname, 'service-account'),
+    path.join(path.dirname(__dirname), 'service-account'),
+  ];
 
-  const files = fs.readdirSync(localPath).filter((f) => f.endsWith('.json'));
-  if (files.length === 0) return null;
+  for (const dir of candidates) {
+    if (!fs.existsSync(dir)) continue;
+    const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
+    if (files.length > 0) {
+      console.info(`[firebase-admin] Using service-account from: ${path.join(dir, files[0])}`);
+      return path.join(dir, files[0]);
+    }
+  }
+
+  return null;
+}
+
+function loadServiceAccount(): ServiceAccount | null {
+  const matched = findServiceAccountFile();
+  if (!matched) {
+    console.warn('[firebase-admin] No service-account file found. FIREBASE_SERVICE_ACCOUNT_KEY env var may also be unset.');
+    return null;
+  }
 
   try {
-    const content = fs.readFileSync(path.join(localPath, files[0]), 'utf-8');
+    if (matched === '__env__') {
+      return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!) as ServiceAccount;
+    }
+    if (matched === '__env_b64__') {
+      const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!, 'base64').toString('utf-8');
+      return JSON.parse(decoded) as ServiceAccount;
+    }
+    const content = fs.readFileSync(matched, 'utf-8');
     return JSON.parse(content) as ServiceAccount;
-  } catch {
+  } catch (err) {
+    console.error(`[firebase-admin] Failed to load service-account from ${matched}:`, err);
     return null;
   }
 }
@@ -36,7 +71,7 @@ function loadServiceAccount(): ServiceAccount | null {
 const serviceAccount = loadServiceAccount();
 
 export const isFirebaseAdminConfigured = Boolean(
-  serviceAccount?.projectId || serviceAccount?.project_id
+  serviceAccount?.projectId
 );
 
 const app = isFirebaseAdminConfigured && !getApps().length && serviceAccount
