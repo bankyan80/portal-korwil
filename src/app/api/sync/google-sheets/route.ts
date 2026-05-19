@@ -1,8 +1,35 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { adminDb, isFirebaseAdminConfigured, getServiceAccount } from '@/lib/firebase-admin';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import type { ServiceAccount } from 'firebase-admin';
 
 const SPREADSHEET_ID = '14v0ykMflGpnb-m-FbhG-GvNieMTFs_t_u3v4KOMxijQ';
+
+function getServiceAccount(): ServiceAccount | null {
+  const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  console.log('[sheets-sync] ENV length:', envVal?.length);
+  if (!envVal) return null;
+  try {
+    return JSON.parse(envVal) as ServiceAccount;
+  } catch {
+    try {
+      const decoded = Buffer.from(envVal, 'base64').toString('utf-8');
+      return JSON.parse(decoded) as ServiceAccount;
+    } catch {
+      return null;
+    }
+  }
+}
+
+function getAdminDb() {
+  const sa = getServiceAccount();
+  if (!sa) return null;
+  if (!getApps().length) {
+    initializeApp({ credential: cert(sa) });
+  }
+  return getFirestore();
+}
 
 function getSheetsClient() {
   const sa = getServiceAccount();
@@ -30,17 +57,17 @@ function fmtDate(ts: any) {
 }
 
 export async function POST() {
-  console.log('[sheets-sync] Checking Firebase admin config...');
-  console.log('[sheets-sync] isFirebaseAdminConfigured:', isFirebaseAdminConfigured);
-  console.log('[sheets-sync] adminDb:', !!adminDb);
-  console.log('[sheets-sync] getServiceAccount():', !!getServiceAccount());
+  console.log('[sheets-sync] Starting sync...');
+  const db = getAdminDb();
+  const sheets = getSheetsClient();
   
-  if (!isFirebaseAdminConfigured || !adminDb) {
+  console.log('[sheets-sync] DB ready:', !!db);
+  console.log('[sheets-sync] Sheets ready:', !!sheets);
+
+  if (!db) {
     console.error('[sheets-sync] Firebase admin not configured');
     return NextResponse.json({ error: 'Firebase admin not configured' }, { status: 500 });
   }
-
-  const sheets = getSheetsClient();
   if (!sheets) {
     console.error('[sheets-sync] Google Sheets auth failed');
     return NextResponse.json({ error: 'Google Sheets auth failed' }, { status: 500 });
@@ -51,7 +78,7 @@ export async function POST() {
   try {
     // 1. Siswa
     console.log('[sheets-sync] Fetching students...');
-    const studentsSnap = await adminDb.collection('students').get();
+    const studentsSnap = await db.collection('students').get();
     const studentRows: any[][] = [];
     studentsSnap.forEach(doc => {
       const d = doc.data();
@@ -69,7 +96,7 @@ export async function POST() {
 
     // 2. Pegawai
     console.log('[sheets-sync] Fetching employees...');
-    const empSnap = await adminDb.collection('employees').get();
+    const empSnap = await db.collection('employees').get();
     const empRows: any[][] = [];
     empSnap.forEach(doc => {
       const d = doc.data();
@@ -87,7 +114,7 @@ export async function POST() {
 
     // 3. Pegawai Tambahan
     console.log('[sheets-sync] Fetching pegawai_tambahan...');
-    const empTambahanSnap = await adminDb.collection('pegawai_tambahan').get();
+    const empTambahanSnap = await db.collection('pegawai_tambahan').get();
     const empTambahanRows: any[][] = [];
     empTambahanSnap.forEach(doc => {
       const d = doc.data();
@@ -105,7 +132,7 @@ export async function POST() {
 
     // 4. Sekolah
     console.log('[sheets-sync] Fetching schools...');
-    const schoolsSnap = await adminDb.collection('schools').get();
+    const schoolsSnap = await db.collection('schools').get();
     const schoolRows: any[][] = [];
     schoolsSnap.forEach(doc => {
       const d = doc.data();
@@ -123,7 +150,7 @@ export async function POST() {
 
     // 5. Sarpras
     console.log('[sheets-sync] Fetching sarpras...');
-    const sarprasSnap = await adminDb.collection('sarpras').get();
+    const sarprasSnap = await db.collection('sarpras').get();
     const sarprasRows: any[][] = [];
     sarprasSnap.forEach(doc => {
       const d = doc.data();
@@ -142,7 +169,7 @@ export async function POST() {
 
     // 6. Laporan Bulanan
     console.log('[sheets-sync] Fetching laporan_bulanan...');
-    const laporanSnap = await adminDb.collection('laporan_bulanan').get();
+    const laporanSnap = await db.collection('laporan_bulanan').get();
     const laporanRows: any[][] = [];
     laporanSnap.forEach(doc => {
       const d = doc.data();
@@ -159,7 +186,7 @@ export async function POST() {
 
     // 7. Berita
     console.log('[sheets-sync] Fetching berita...');
-    const beritaSnap = await adminDb.collection('berita').get();
+    const beritaSnap = await db.collection('berita').get();
     const beritaRows: any[][] = [];
     beritaSnap.forEach(doc => {
       const d = doc.data();
@@ -176,7 +203,7 @@ export async function POST() {
 
     // 8. Galeri
     console.log('[sheets-sync] Fetching galeri...');
-    const galeriSnap = await adminDb.collection('galeri').get();
+    const galeriSnap = await db.collection('galeri').get();
     const galeriRows: any[][] = [];
     galeriSnap.forEach(doc => {
       const d = doc.data();
@@ -193,7 +220,7 @@ export async function POST() {
 
     // 9. KIP SD
     console.log('[sheets-sync] Fetching kip_sd...');
-    const kipSnap = await adminDb.collection('kip_sd').get();
+    const kipSnap = await db.collection('kip_sd').get();
     const kipRows: any[][] = [];
     kipSnap.forEach(doc => {
       const d = doc.data();
@@ -210,7 +237,7 @@ export async function POST() {
 
     // 10. Yatim Piatu
     console.log('[sheets-sync] Fetching yatim_piatu...');
-    const yatimSnap = await adminDb.collection('yatim_piatu').get();
+    const yatimSnap = await db.collection('yatim_piatu').get();
     const yatimRows: any[][] = [];
     yatimSnap.forEach(doc => {
       const d = doc.data();
@@ -227,7 +254,7 @@ export async function POST() {
 
     // 11. SPMB SD
     console.log('[sheets-sync] Fetching spmb_sd...');
-    const spmbSnap = await adminDb.collection('spmb_sd').get();
+    const spmbSnap = await db.collection('spmb_sd').get();
     const spmbRows: any[][] = [];
     spmbSnap.forEach(doc => {
       const d = doc.data();
@@ -244,7 +271,7 @@ export async function POST() {
 
     // 12. Tugas
     console.log('[sheets-sync] Fetching tugas...');
-    const tugasSnap = await adminDb.collection('tugas').get();
+    const tugasSnap = await db.collection('tugas').get();
     const tugasRows: any[][] = [];
     tugasSnap.forEach(doc => {
       const d = doc.data();
