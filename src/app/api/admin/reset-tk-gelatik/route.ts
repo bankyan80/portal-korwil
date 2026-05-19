@@ -1,5 +1,35 @@
 import { NextResponse } from 'next/server';
-import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import type { ServiceAccount } from 'firebase-admin';
+
+const SEKOLAH = 'TK GELATIK';
+const GURU_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTtIJapNJgcZ2Z0GR83o916wOHGwt-W0KiQtaC0-mtvL8KpUVBOKWJCaD1TK8DMAA/pub?gid=1187748548&single=true&output=csv';
+const TENDIK_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTjHBZ44HfzBKjyVdoUN_GsGGpCMKZqh7xygrVX8xal2AsCBrlQ02VH52PUfoRobA/pub?gid=1625950301&single=true&output=csv';
+
+function getServiceAccount(): ServiceAccount | null {
+  const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (!envVal) return null;
+  try {
+    return JSON.parse(envVal) as ServiceAccount;
+  } catch {
+    try {
+      const decoded = Buffer.from(envVal, 'base64').toString('utf-8');
+      return JSON.parse(decoded) as ServiceAccount;
+    } catch {
+      return null;
+    }
+  }
+}
+
+function getAdminDb() {
+  const sa = getServiceAccount();
+  if (!sa) return null;
+  if (!getApps().length) {
+    initializeApp({ credential: cert(sa) });
+  }
+  return getFirestore();
+}
 
 const SEKOLAH = 'TK GELATIK';
 const GURU_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTtIJapNJgcZ2Z0GR83o916wOHGwt-W0KiQtaC0-mtvL8KpUVBOKWJCaD1TK8DMAA/pub?gid=1187748548&single=true&output=csv';
@@ -108,7 +138,7 @@ async function importCSV(url: string, label: string) {
       if (cols.length < 5) continue;
       const record = mapRow(cols, SEKOLAH);
       if (!record) { errors.push('NIK kosong'); continue; }
-      await adminDb!.collection('employees').doc(record.nik).set(record, { merge: true });
+      await db.collection('employees').doc(record.nik).set(record, { merge: true });
       success++;
     } catch (e: any) {
       errors.push(e.message);
@@ -118,18 +148,16 @@ async function importCSV(url: string, label: string) {
 }
 
 export async function POST() {
-  console.log('[reset-tk-gelatik] FIREBASE_SERVICE_ACCOUNT_KEY length:', process.env.FIREBASE_SERVICE_ACCOUNT_KEY?.length);
-  console.log('[reset-tk-gelatik] isFirebaseAdminConfigured:', isFirebaseAdminConfigured);
-  
-  if (!isFirebaseAdminConfigured || !adminDb) {
+  const db = getAdminDb();
+  if (!db) {
     return NextResponse.json({ error: 'Firebase admin not configured' }, { status: 500 });
   }
 
   try {
     // Step 1: Delete all existing TK GELATIK records
-    const snap = await adminDb.collection('employees').where('sekolah', '==', SEKOLAH).get();
+    const snap = await db.collection('employees').where('sekolah', '==', SEKOLAH).get();
     let deleted = 0;
-    const batch = adminDb.batch();
+    const batch = db.batch();
     snap.forEach(docSnap => {
       batch.delete(docSnap.ref);
       deleted++;
