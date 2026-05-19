@@ -30,6 +30,11 @@ function fmtDate(ts: any) {
 }
 
 export async function POST() {
+  console.log('[sheets-sync] Checking Firebase admin config...');
+  console.log('[sheets-sync] isFirebaseAdminConfigured:', isFirebaseAdminConfigured);
+  console.log('[sheets-sync] adminDb:', !!adminDb);
+  console.log('[sheets-sync] getServiceAccount():', !!getServiceAccount());
+  
   if (!isFirebaseAdminConfigured || !adminDb) {
     console.error('[sheets-sync] Firebase admin not configured');
     return NextResponse.json({ error: 'Firebase admin not configured' }, { status: 500 });
