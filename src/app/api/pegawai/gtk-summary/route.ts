@@ -140,16 +140,5 @@ export async function GET() {
     return school;
   }).sort((a, b) => a.name.localeCompare(b.name));
 
-  // Debug: log TK Gelatik details
-  const tkGelatik = result.find(s => s.name === 'TK GELATIK');
-  if (tkGelatik) {
-    console.log('DEBUG TK GELATIK:', JSON.stringify(tkGelatik, null, 2));
-    const tkGelatikRecords = merged.filter(p => p.sekolah === 'TK GELATIK');
-    console.log('DEBUG TK GELATIK records count:', tkGelatikRecords.length);
-    tkGelatikRecords.forEach((r, i) => {
-      console.log(`  ${i + 1}. NIK: ${r.nik}, Nama: ${r.nama}, Jenis: ${r.jenis_ptk}, Source: ${r._source}`);
-    });
-  }
-
   return NextResponse.json({ schools: result });
 }
