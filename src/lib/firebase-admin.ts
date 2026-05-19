@@ -78,7 +78,11 @@ function loadServiceAccount(): ServiceAccount | null {
   }
 }
 
-const serviceAccount = loadServiceAccount();
+export const serviceAccount = loadServiceAccount();
+
+export function getServiceAccount(): ServiceAccount | null {
+  return serviceAccount;
+}
 
 export const isFirebaseAdminConfigured = Boolean(
   serviceAccount?.projectId

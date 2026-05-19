@@ -34,6 +34,8 @@ export default function SuperAdminDashboard() {
 
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState('');
+  const [sheetsSyncing, setSheetsSyncing] = useState(false);
+  const [sheetsSyncMsg, setSheetsSyncMsg] = useState('');
   const [laporanData, setLaporanData] = useState<any[]>([]);
 
   const currentYear = new Date().getFullYear();
@@ -67,6 +69,25 @@ export default function SuperAdminDashboard() {
     } finally {
       setSyncing(false);
       setTimeout(() => setSyncMsg(''), 5000);
+    }
+  }, []);
+
+  const handleSheetsSync = useCallback(async () => {
+    setSheetsSyncing(true);
+    setSheetsSyncMsg('');
+    try {
+      const res = await fetch('/api/sync/google-sheets', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setSheetsSyncMsg(`Berhasil! Siswa: ${data.students}, Pegawai: ${data.employees}`);
+      } else {
+        setSheetsSyncMsg(data.error || 'Gagal sync ke Google Sheets');
+      }
+    } catch {
+      setSheetsSyncMsg('Gagal terhubung ke server');
+    } finally {
+      setSheetsSyncing(false);
+      setTimeout(() => setSheetsSyncMsg(''), 5000);
     }
   }, []);
 
@@ -166,6 +187,11 @@ export default function SuperAdminDashboard() {
             <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? 'Menyinkronkan...' : 'Sinkronisasi Data'}
           </button>
+          <button onClick={handleSheetsSync} disabled={sheetsSyncing}
+            className="flex items-center gap-2 text-sm text-green-300 hover:text-green-200 disabled:opacity-50">
+            <RefreshCw className={`w-4 h-4 ${sheetsSyncing ? 'animate-spin' : ''}`} />
+            {sheetsSyncing ? 'Sync Sheets...' : 'Sync ke Sheets'}
+          </button>
           <button onClick={() => router.push('/')}
             className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-200">
             <ArrowLeft className="w-4 h-4" /> Portal
@@ -182,6 +208,13 @@ export default function SuperAdminDashboard() {
         <div className="px-6 pt-4 max-w-7xl mx-auto">
           <div className="px-4 py-2 rounded-lg text-sm bg-blue-50 border border-blue-200 text-blue-700">
             {syncMsg}
+          </div>
+        </div>
+      )}
+      {sheetsSyncMsg && (
+        <div className="px-6 pt-4 max-w-7xl mx-auto">
+          <div className="px-4 py-2 rounded-lg text-sm bg-green-50 border border-green-200 text-green-700">
+            {sheetsSyncMsg}
           </div>
         </div>
       )}
