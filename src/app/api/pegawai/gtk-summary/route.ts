@@ -1,25 +1,103 @@
 import { NextResponse } from 'next/server';
-import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
 import dataPegawai from '@/data/data-pegawai.json';
 import dataPegawaiTk from '@/data/data-pegawai-tk.json';
 import tkGelatikPegawai from '@/data/tk-gelatik-pegawai.json';
-
-let dataCache: any[] = [];
-let pltCache: any[] = [];
-
-function loadStaticData() {
-  if (dataCache.length > 0) return dataCache;
-  const data = [...dataPegawai, ...dataPegawaiTk, ...tkGelatikPegawai];
-  dataCache = data;
-  return dataCache;
-}
-
 import pltData from '@/data/data-plt.json';
 
-function loadPltData() {
-  if (pltCache.length > 0) return pltCache;
-  pltCache = pltData;
-  return pltCache;
+const SHEETS = [
+  { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR4PhpkeqQjr9cbHrEoGwgQW9CvqVBA1D0--o1ZhXv_OaBqNPddwAHs_PZCsgXP-g/pub?gid=296347908&single=true&output=csv', sekolah: 'SD NEGERI 1 ASEM' },
+  { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vThPc1fGt2M1KTJmm6X2eJvSEMQIIgNn8QBCtcwLQN9zGjc0TLZDJTwREBOYzX0qQ/pub?gid=430985553&single=true&output=csv', sekolah: 'SD NEGERI 1 ASEM' },
+  { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTtIJapNJgcZ2Z0GR83o916wOHGwt-W0KiQtaC0-mtvL8KpUVBOKWJCaD1TK8DMAA/pub?gid=1187748548&single=true&output=csv', sekolah: 'TK GELATIK' },
+  { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTjHBZ44HfzBKjyVdoUN_GsGGpCMKZqh7xygrVX8xal2AsCBrlQ02VH52PUfoRobA/pub?gid=1625950301&single=true&output=csv', sekolah: 'TK GELATIK' },
+];
+
+let dataCache: any[] = [];
+let cacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000;
+
+function parseCSVLine(line: string) {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') { current += '"'; i++; }
+      else { inQuotes = !inQuotes; }
+    } else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+    else { current += ch; }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function mapRow(cols: string[], sekolah: string) {
+  const nik = (cols[44] || '').trim();
+  if (!nik) return null;
+  return {
+    nik,
+    nama: (cols[1] || '').trim(),
+    nuptk: (cols[2] || '').trim(),
+    jk: (cols[3] || '').trim(),
+    status_kepegawaian: (cols[7] || '').trim(),
+    jenis_ptk: (cols[8] || '').trim(),
+    tugas_tambahan: (cols[20] || '').trim(),
+    sekolah,
+  };
+}
+
+async function fetchSheet(url: string, sekolah: string) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const text = await res.text();
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 5) return [];
+    const records: any[] = [];
+    for (const row of lines.slice(5)) {
+      const cols = parseCSVLine(row);
+      if (cols.length < 5) continue;
+      const record = mapRow(cols, sekolah);
+      if (record) records.push(record);
+    }
+    return records;
+  } catch {
+    return [];
+  }
+}
+
+async function loadFromSheets() {
+  const now = Date.now();
+  if (dataCache.length > 0 && now - cacheTime < CACHE_TTL) return dataCache;
+
+  const all: any[] = [];
+  for (const sheet of SHEETS) {
+    const records = await fetchSheet(sheet.url, sheet.sekolah);
+    all.push(...records);
+  }
+  dataCache = all;
+  cacheTime = now;
+  return all;
+}
+
+function loadStaticData() {
+  return [...dataPegawai, ...dataPegawaiTk, ...tkGelatikPegawai];
+}
+
+function unionAll(sheetRecords: any[], staticRecords: any[]): any[] {
+  const map = new Map<string, any>();
+  for (const r of staticRecords) {
+    map.set(r.nik || r.id, { ...r, _source: 'static' });
+  }
+  for (const r of sheetRecords) {
+    const key = r.nik || r.id;
+    if (map.has(key)) {
+      map.set(key, { ...map.get(key), ...r, _source: 'merged' });
+    } else {
+      map.set(key, { ...r, _source: 'sheet' });
+    }
+  }
+  return [...map.values()];
 }
 
 interface SchoolGtk {
@@ -37,64 +115,12 @@ interface SchoolGtk {
   p: number;
 }
 
-async function loadFromFirestore(): Promise<any[]> {
-  if (!isFirebaseAdminConfigured || !adminDb) return [];
-  try {
-    const snap = await adminDb.collection('employees').get();
-    const items: any[] = [];
-    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-    return items;
-  } catch {
-    return [];
-  }
-}
-
-async function loadTambahan(): Promise<any[]> {
-  if (!isFirebaseAdminConfigured || !adminDb) return [];
-  try {
-    const snap = await adminDb.collection('pegawai_tambahan').get();
-    const items: any[] = [];
-    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-    return items;
-  } catch {
-    return [];
-  }
-}
-
-function unionAll(firestoreRecords: any[], staticRecords: any[]): any[] {
-  const map = new Map<string, any>();
-  for (const r of staticRecords) {
-    map.set(r.nik || r.id, { ...r, _source: 'static' });
-  }
-  for (const r of firestoreRecords) {
-    const key = r.nik || r.id;
-    if (map.has(key)) {
-      map.set(key, { ...map.get(key), ...r, _source: 'merged' });
-    } else {
-      map.set(key, { ...r, _source: 'firestore' });
-    }
-  }
-  return [...map.values()];
-}
-
-async function loadAllData(): Promise<any[]> {
-  const firestoreData = await loadFromFirestore();
-  const staticData = loadStaticData();
-  const tambahanData = await loadTambahan();
-
-  if (firestoreData.length > 0) {
-    const merged = unionAll(firestoreData, staticData);
-    return [...merged, ...tambahanData];
-  }
-  return [...staticData, ...tambahanData];
-}
-
 export async function GET() {
-  const merged = await loadAllData();
-  
-  // Return actual data with our fix for sertifikasi
-  const schools: Record<string, SchoolGtk> = {};
+  const sheetData = await loadFromSheets();
+  const staticData = loadStaticData();
+  const merged = unionAll(sheetData, staticData);
 
+  const schools: Record<string, SchoolGtk> = {};
   for (const p of merged) {
     if (!p.sekolah) continue;
     const name = p.sekolah;
@@ -108,32 +134,26 @@ export async function GET() {
     const s = schools[name];
     const isGuru = p.jenis_ptk === 'Guru';
     const isStaff = p.jenis_ptk === 'Tenaga Kependidikan' || p.jenis_ptk === 'Kepala Sekolah';
-
     if (isGuru) {
       s.teachers++;
       if (p.jk === 'L') s.teachers_l++; else s.teachers_p++;
-      // All teachers are considered certified as per user confirmation
       s.certified++;
     } else if (isStaff) {
       s.staff++;
       if (p.jk === 'L') s.staff_l++; else s.staff_p++;
     }
-
     s.total++;
     if (p.jenis_ptk === 'Kepala Sekolah' || p.tugas_tambahan === 'Kepala Sekolah') {
       s.headmaster = p.nama;
     }
   }
 
-  // Apply PLT for schools without headmaster
-  const pltList = loadPltData();
-  for (const plt of pltList) {
+  for (const plt of pltData) {
     if (schools[plt.sekolah] && !schools[plt.sekolah].headmaster) {
       schools[plt.sekolah].headmaster = `plt. ${plt.plt_nama}`;
     }
   }
 
-  // Compute l and p for each school
   const result = Object.values(schools).map(school => {
     school.l = school.teachers_l + school.staff_l;
     school.p = school.teachers_p + school.staff_p;
