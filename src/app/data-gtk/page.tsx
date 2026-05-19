@@ -3,9 +3,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Users, BookOpen, BadgeCheck, Download, GraduationCap, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
-import { db } from '@/lib/firebase';
-import { getAllDocs, listenToCollection } from '@/lib/firestore';
-import pltData from '@/data/data-plt.json';
 
 interface SchoolGtk {
   name: string;
@@ -22,80 +19,26 @@ interface SchoolGtk {
   p: number;
 }
 
-function computeGtkSummary(employees: Record<string, any>[]): SchoolGtk[] {
-  const schools: Record<string, SchoolGtk> = {};
-
-  for (const p of employees) {
-    if (!p.sekolah) continue;
-    const name = p.sekolah;
-    if (!schools[name]) {
-      schools[name] = {
-        name, teachers: 0, staff: 0, total: 0, certified: 0,
-        headmaster: '', teachers_l: 0, teachers_p: 0,
-        staff_l: 0, staff_p: 0, l: 0, p: 0,
-      };
-    }
-    const s = schools[name];
-    const jenisPtk = (p.jenis_ptk || '').toLowerCase();
-    const tugasTambahan = (p.tugas_tambahan || '').toLowerCase();
-    const isGuru = jenisPtk === 'guru';
-    const isStaff = jenisPtk === 'tenaga kependidikan' || jenisPtk === 'kepala sekolah';
-
-    if (isGuru) {
-      s.teachers++;
-      if (p.jk === 'L') s.teachers_l++; else s.teachers_p++;
-      s.certified++;
-    } else if (isStaff) {
-      s.staff++;
-      if (p.jk === 'L') s.staff_l++; else s.staff_p++;
-    }
-
-    s.total++;
-    if (jenisPtk === 'kepala sekolah' || tugasTambahan === 'kepala sekolah') {
-      s.headmaster = p.nama;
-    }
-  }
-
-  // Apply PLT for schools without headmaster
-  for (const plt of pltData) {
-    if (schools[plt.sekolah] && !schools[plt.sekolah].headmaster) {
-      schools[plt.sekolah].headmaster = `plt. ${plt.plt_nama}`;
-    }
-  }
-
-  return Object.values(schools).map(school => {
-    school.l = school.teachers_l + school.staff_l;
-    school.p = school.teachers_p + school.staff_p;
-    return school;
-  }).sort((a, b) => a.name.localeCompare(b.name));
-}
-
 export default function DataGTKPage() {
   const [schoolData, setSchoolData] = useState<SchoolGtk[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
-    let unsub: (() => void) | null = null;
-    let employees: Record<string, any>[] = [];
-
-    async function setupRealtime() {
+    async function loadGtkSummary() {
       try {
-        const initial = await getAllDocs('employees');
-        if (initial.length > 0) {
-          employees = initial;
-          setSchoolData(computeGtkSummary(employees));
+        const res = await fetch('/api/pegawai/gtk-summary');
+        if (res.ok) {
+          const data = await res.json();
+          setSchoolData(data.schools || []);
         }
-        unsub = listenToCollection('employees', (data) => {
-          employees = data;
-          setSchoolData(computeGtkSummary(data));
-          setLoading(false);
-        });
-      } catch (e) { console.error('Gagal memuat data GTK:', e); } finally { if (!unsub) setLoading(false); }
+      } catch (e) {
+        console.error('Gagal memuat data GTK:', e);
+      } finally {
+        setLoading(false);
+      }
     }
-    setupRealtime();
-    return () => { if (unsub) unsub(); };
+    loadGtkSummary();
   }, []);
 
   const totalGTK = schoolData.reduce((a, s) => a + s.total, 0);
