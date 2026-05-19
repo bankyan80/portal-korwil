@@ -31,10 +31,6 @@ function getAdminDb() {
   return getFirestore();
 }
 
-const SEKOLAH = 'TK GELATIK';
-const GURU_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTtIJapNJgcZ2Z0GR83o916wOHGwt-W0KiQtaC0-mtvL8KpUVBOKWJCaD1TK8DMAA/pub?gid=1187748548&single=true&output=csv';
-const TENDIK_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTjHBZ44HfzBKjyVdoUN_GsGGpCMKZqh7xygrVX8xal2AsCBrlQ02VH52PUfoRobA/pub?gid=1625950301&single=true&output=csv';
-
 function parseCSVLine(line: string) {
   const result: string[] = [];
   let current = '';
@@ -125,7 +121,7 @@ function mapRow(cols: string[], sekolah: string) {
   };
 }
 
-async function importCSV(url: string, label: string) {
+async function importCSV(url: string, label: string, db: ReturnType<typeof getFirestore>) {
   const csvText = await downloadCSV(url);
   const lines = csvText.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 5) return { success: 0, errors: [] };
@@ -154,7 +150,6 @@ export async function POST() {
   }
 
   try {
-    // Step 1: Delete all existing TK GELATIK records
     const snap = await db.collection('employees').where('sekolah', '==', SEKOLAH).get();
     let deleted = 0;
     const batch = db.batch();
@@ -164,9 +159,8 @@ export async function POST() {
     });
     if (deleted > 0) await batch.commit();
 
-    // Step 2: Import new data
-    const guruResult = await importCSV(GURU_URL, 'Guru');
-    const tendikResult = await importCSV(TENDIK_URL, 'Tenaga Kependidikan');
+    const guruResult = await importCSV(GURU_URL, 'Guru', db);
+    const tendikResult = await importCSV(TENDIK_URL, 'Tenaga Kependidikan', db);
 
     return NextResponse.json({
       success: true,
