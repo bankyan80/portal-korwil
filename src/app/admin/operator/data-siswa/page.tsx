@@ -16,8 +16,9 @@ import {
   collection, addDoc, deleteDoc, doc, onSnapshot, setDoc,
 } from 'firebase/firestore';
 import {
-  Search, Loader2, Plus, Pencil, Trash2, Save, School, BarChart3,
+  Search, Loader2, Plus, Pencil, Trash2, Save, School, BarChart3, ArrowLeft,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { QueryProvider } from '@/contexts/QueryProvider';
 
@@ -81,7 +82,9 @@ function getSortScore(s: any): number {
 
 function DataSiswaContent() {
   const { user } = useAppStore();
+  const router = useRouter();
   const [jenjang, setJenjang] = useState<string | undefined>(undefined);
+  const [filterKelas, setFilterKelas] = useState<number | undefined>(undefined);
   const { data: apiData, isLoading: apiLoading, error } = useSiswa(jenjang);
 
   // Local state (Firestore overlay for operator edits)
@@ -141,9 +144,13 @@ function DataSiswaContent() {
 
   // Search filter
   const filteredSiswa = useMemo(() => {
+    let items = mergedSiswa;
+    if (filterKelas !== undefined) {
+      items = items.filter((s) => s.kelas === filterKelas);
+    }
     const q = search.toLowerCase();
-    return q ? mergedSiswa.filter((s) => s.nama?.toLowerCase().includes(q) || s.nik?.includes(q)) : mergedSiswa;
-  }, [mergedSiswa, search]);
+    return q ? items.filter((s) => s.nama?.toLowerCase().includes(q) || s.nik?.includes(q)) : items;
+  }, [mergedSiswa, search, filterKelas]);
 
   // Sort: SD kelas 6→5→4→3→2→1, then TK by rombel group (A1..B5), then TK kelas (desc), then KB
   const sortedSiswa = useMemo(() => {
@@ -240,11 +247,16 @@ function DataSiswaContent() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Data Siswa</h1>
+      <div className="flex items-center gap-3 mb-4">
+        <button onClick={() => router.push('/admin/operator')} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <h1 className="text-2xl font-bold">Data Siswa</h1>
+      </div>
 
       {/* Jenjang filter */}
       <div className="flex gap-2 mb-4">
-        <Button variant={!jenjang ? 'default' : 'outline'} onClick={() => setJenjang(undefined)}>Semua</Button>
+        <Button variant={!jenjang ? 'default' : 'outline'} onClick={() => { setJenjang(undefined); setFilterKelas(undefined); }}>Semua</Button>
         <Button variant={jenjang === 'SD' ? 'default' : 'outline'} onClick={() => setJenjang('SD')}>SD</Button>
         <Button variant={jenjang === 'TK' ? 'default' : 'outline'} onClick={() => setJenjang('TK')}>TK</Button>
         <Button variant={jenjang === 'KB' ? 'default' : 'outline'} onClick={() => setJenjang('KB')}>KB</Button>
@@ -282,16 +294,30 @@ function DataSiswaContent() {
         Mengelola data siswa: <strong>{userSchool}</strong>
       </p>
 
-      {/* Search + Tambah */}
+      {/* Search + Tambah + Filter Kelas */}
       <div className="flex items-center gap-2 justify-between mb-4 flex-wrap">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Cari nama atau NISN..."
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Cari nama atau NISN..."
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          {jenjang === 'SD' && (
+            <select
+              value={filterKelas ?? ''}
+              onChange={(e) => { setFilterKelas(e.target.value ? Number(e.target.value) : undefined); setPage(1); }}
+              className="text-sm border rounded-lg px-3 py-2 bg-background text-foreground"
+            >
+              <option value="">Semua Kelas</option>
+              {[1, 2, 3, 4, 5, 6].map((k) => (
+                <option key={k} value={k}>Kelas {k}</option>
+              ))}
+            </select>
+          )}
         </div>
         <Button onClick={openAdd} className="bg-blue-800 hover:bg-blue-900 text-white gap-2">
           <Plus className="w-4 h-4" /> Tambah
