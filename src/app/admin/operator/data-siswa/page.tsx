@@ -359,7 +359,7 @@ function DataSiswaContent() {
               <tbody className="divide-y">
                 {paginatedSiswa.map((s, i) => (
                   <tr key={s.id || s.nik} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-4 py-3 text-muted-foreground">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{(page - 1) * pageSize + i + 1}</td>
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{s.nik}</td>
                     <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{s.nama}</td>
                     <td className="px-4 py-3 text-center text-muted-foreground">{s.jk}</td>
