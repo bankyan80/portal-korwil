@@ -34,7 +34,7 @@ export function registerSync<T>(
     timer: null,
   };
 
-  syncRegistry.set(key, entry);
+  syncRegistry.set(key, entry as SyncEntry<unknown>);
 
   entry.timer = setInterval(async () => {
     try {

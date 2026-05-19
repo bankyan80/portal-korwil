@@ -69,7 +69,7 @@ export default function AgendaKegiatanPage() {
       tanggal: item.tanggal || '',
       waktu: item.waktu || '',
       lokasi: item.lokasi || '',
-      type: item.type || 'academic',
+      type: (item.type as any) || 'academic',
     });
     setEditId(item.id || null);
     setShowForm(true);

@@ -53,6 +53,7 @@ export function ManageLaporanBulanan() {
   const [loading, setLoading] = useState(db ? true : false);
   const [search, setSearch] = useState('');
   const [filterBulan, setFilterBulan] = useState<string>('');
+  const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
   const [tahun] = useState(new Date().getFullYear());
   const [selectedSchool, setSelectedSchool] = useState<typeof allSekolah[0] | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);

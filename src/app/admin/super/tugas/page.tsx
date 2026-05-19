@@ -286,7 +286,7 @@ export default function TugasPage() {
         }
 
         function handleWebShare() {
-          if (navigator.share) {
+          if (navigator.share && shareTarget) {
             navigator.share({ title: shareTarget.title, text: teksPesan, url: urlTugas }).catch(() => {});
           } else {
             handleCopy();

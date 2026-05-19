@@ -28,7 +28,7 @@ const targets = [
 function norm(s) { return (s || '').toUpperCase().replace(/\s+/g, ' ').trim(); }
 
 let updated = 0;
-let notFound = [];
+let notFound: string[] = [];
 
 for (const tg of targets) {
   const rec = allPegawai.find((r: any) => norm(r.nama) === norm(tg));

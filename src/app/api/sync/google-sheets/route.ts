@@ -35,7 +35,7 @@ function getSheetsClient() {
   const sa = getServiceAccount();
   if (!sa) return null;
   const auth = new google.auth.GoogleAuth({
-    credentials: sa,
+    credentials: sa as any,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
   return google.sheets({ version: 'v4', auth });

@@ -52,7 +52,7 @@ export function ManageOrganizations() {
   const [newBoardNama, setNewBoardNama] = useState('');
 
   const userOrg = user?.organization || '';
-  const isOrganisasi = user?.role === 'organisasi';
+  const isOrganisasi = user?.role === 'ketua_organisasi';
 
   const openAdd = useCallback(() => { crud.openAdd(); setForm(defaultForm); }, [crud.openAdd]);
   const openEdit = useCallback((item: Organization) => {

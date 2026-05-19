@@ -150,7 +150,7 @@ export default function SuperDataGuru() {
     for (const [nama, agg] of pegawaiMap.entries()) {
       const idx = result.findIndex(r => r.nama === nama);
       if (idx >= 0) { result[idx].guru = agg.guru; result[idx].tendik = agg.tendik; result[idx].total = agg.total; }
-      else { result.push({ nama, jenjang: 'SD' as any, guru: agg.guru, tendik: agg.tendik, total: agg.total }); }
+      else { result.push({ nama, jenjang: 'SD', guru: agg.guru, tendik: agg.tendik, total: agg.total } as any); }
     }
 
     return result;

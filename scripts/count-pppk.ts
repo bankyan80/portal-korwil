@@ -2,10 +2,10 @@ import fs from 'fs';
 import path from 'path';
 
 const pegawai = JSON.parse(
-  fs.readFileSync(path.join(process.cwd(), 'src', 'data', 'data-pegawai.json'))
+  fs.readFileSync(path.join(process.cwd(), 'src', 'data', 'data-pegawai.json'), 'utf-8')
 );
 let tk = [];
-try { tk = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src', 'data', 'data-pegawai-tk.json'))); } catch (_) {}
+try { tk = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src', 'data', 'data-pegawai-tk.json'), 'utf-8')); } catch (_) {}
 
 const pppkPW_sd = pegawai.filter((r: any) => r.status_kepegawaian === 'PPPK Paruh Waktu');
 const pppkPW_tk = tk.filter((r: any) => r.status_kepegawaian === 'PPPK Paruh Waktu');

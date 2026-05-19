@@ -47,7 +47,7 @@ export interface DokumenBersama {
 }
 
 export interface KipSdData {
-  id?: string;
+  id: string;
   nik: string;
   nama: string;
   sekolah: string;
@@ -57,7 +57,7 @@ export interface KipSdData {
 }
 
 export interface YatimPiatuData {
-  id?: string;
+  id: string;
   nik: string;
   nama: string;
   sekolah: string;
@@ -67,7 +67,7 @@ export interface YatimPiatuData {
 }
 
 export interface AgendaKegiatan {
-  id?: string;
+  id: string;
   judul: string;
   deskripsi: string;
   tanggal: string;
@@ -79,7 +79,7 @@ export interface AgendaKegiatan {
 }
 
 export interface BosSchoolData {
-  id?: string;
+  id: string;
   nama: string;
   npsn: string;
   status: 'NEGERI' | 'SWASTA';
@@ -233,7 +233,7 @@ export interface Report {
 }
 
 export interface CalendarEvent {
-  id?: string;
+  id: string;
   title: string;
   description: string;
   tanggal: string;
@@ -262,7 +262,7 @@ export interface Setting {
 }
 
 export interface News {
-  id?: string;
+  id: string;
   title: string;
   slug: string;
   content: string;

@@ -91,7 +91,7 @@ export async function GET() {
 
     const snapStudents = await adminDb.collection('students').get();
     for (const doc of snapStudents.docs) {
-      const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; kelas?: number };
+      const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; kelas?: number; status?: string };
       if (!s.sekolah || s.status === 'lulus') continue;
       const jenjang = s.jenjang || 'SD';
       const key = `${s.sekolah}||${jenjang}`;

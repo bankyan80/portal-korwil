@@ -29,7 +29,7 @@ async function loadAllFromFirestore(): Promise<any[]> {
 async function loadAllData(): Promise<any[]> {
   const employees = await loadAllFromFirestore();
   if (employees.length > 0) return employees;
-  return loadStaticData();
+  return loadStaticData() || [];
 }
 
 export async function GET(req: NextRequest) {

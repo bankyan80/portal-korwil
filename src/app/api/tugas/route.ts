@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const groups = groupsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const progressList = progressSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const progressList = progressSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
     const progressByTask: Record<string, any[]> = {};
     for (const p of progressList) {
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
       }
       const progressId = `${taskId}_${schoolId}`;
       const existing = await adminDb.collection('task_progress').doc(progressId).get();
-      if (existing.exists()) {
+      if (existing.exists) {
         await adminDb.collection('task_progress').doc(progressId).update({
           status: 'completed',
           completedAt: Date.now(),
@@ -130,16 +130,16 @@ export async function POST(req: NextRequest) {
       ]);
 
       const groups = groupsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const allProgress = progressSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const schoolProgress = allProgress.filter(p =>
+      const allProgress = progressSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+      const schoolProgress = allProgress.filter((p: any) =>
         p.schoolId === schoolId || p.schoolName === schoolName
       );
-      const completedIds = new Set(schoolProgress.filter(p => p.status === 'completed').map(p => p.taskGroupId));
+      const completedIds = new Set(schoolProgress.filter((p: any) => p.status === 'completed').map((p: any) => p.taskGroupId));
 
       const tasks = groups.map(g => ({
         ...g,
         completed: completedIds.has(g.id),
-        completedAt: schoolProgress.find(p => p.taskGroupId === g.id)?.completedAt || null,
+        completedAt: (schoolProgress as any[]).find((p: any) => p.taskGroupId === g.id)?.completedAt || null,
       }));
 
       return NextResponse.json({ success: true, tasks });

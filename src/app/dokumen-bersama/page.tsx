@@ -174,10 +174,12 @@ export default function DokumenBersamaPage() {
   }
 
   function downloadDoc(doc: DokumenBersama) {
-    if (doc.file?.fileUrl) {
-      window.open(doc.file.fileUrl, '_blank');
-    } else if (doc.file?.webViewLink) {
-      window.open(doc.file.webViewLink, '_blank');
+    const f = doc.file;
+    if (!f) return;
+    if ('fileUrl' in f && f.fileUrl) {
+      window.open(f.fileUrl, '_blank');
+    } else if ('webViewLink' in f && f.webViewLink) {
+      window.open(f.webViewLink, '_blank');
     } else if (doc.downloadUrl) {
       window.open(doc.downloadUrl, '_blank');
     } else if (doc.dataUrl) {
@@ -328,7 +330,7 @@ export default function DokumenBersamaPage() {
                     <p className="text-xs text-gray-400 mb-3">{formatSize(doc.fileSize)}</p>
                     {doc.file && (
                       <p className="text-[10px] text-green-600 mb-2 flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3" /> {doc.file.provider === 'supabase' ? 'Supabase Storage' : 'Google Drive'}
+                        <CheckCircle className="w-3 h-3" /> {'provider' in doc.file && doc.file.provider === 'supabase' ? 'Supabase Storage' : 'Google Drive'}
                       </p>
                     )}
                     <div className="mt-auto">

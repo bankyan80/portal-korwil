@@ -94,7 +94,7 @@ export function ManageGallery() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
    const openAdd = useCallback(() => { crud.openAdd(); setForm(defaultForm); }, [crud.openAdd]);
-   const openEdit = useCallback((item: GalleryItem) => { crud.openEdit(item); setForm({ title: item.title, description: item.description, category: item.category, status: item.status }); }, [crud.openEdit]);
+   const openEdit = useCallback((item: GalleryItem) => { crud.openEdit(item.id); setForm({ title: item.title, description: item.description, category: item.category, status: item.status }); }, [crud.openEdit]);
 
     const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files) return;

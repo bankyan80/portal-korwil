@@ -46,6 +46,7 @@ async function getOrCreateUserProfile(uid: string, email: string, displayName: s
       email,
       displayName: displayName || email.split('@')[0],
       role: 'publik',
+      isActive: true,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };

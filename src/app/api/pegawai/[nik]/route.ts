@@ -29,6 +29,9 @@ export async function PUT(
     if (!nik) {
       return NextResponse.json({ error: 'NIK wajib diisi' }, { status: 400 });
     }
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
+    }
 
     const body = await req.json();
     const allowedKeys = [

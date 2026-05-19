@@ -63,7 +63,7 @@ const COLLECTIONS = [
   'schools',
 ] as const;
 
-const SEED_DATA: Record<string, { id: string }[]> = {
+const SEED_DATA: Record<string, any[]> = {
   menus: mockMenus,
   announcements: mockAnnouncements,
   gallery: mockGalleryItems,

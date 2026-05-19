@@ -25,7 +25,7 @@ export default function LoginPage() {
     }
 
     let timeoutId: NodeJS.Timeout;
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth!, async (firebaseUser) => {
       clearTimeout(timeoutId);
       try {
         if (firebaseUser && db) {

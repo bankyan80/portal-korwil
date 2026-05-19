@@ -52,10 +52,10 @@ export async function replaceAllInCollection<T extends { id: string }>(
   if (!db) return;
   const existing = await fetchCollection<T>(collectionPath);
   const batch = writeBatch(db);
-  existing.forEach(item => batch.delete(doc(db, collectionPath, item.id)));
+  existing.forEach(item => batch.delete(doc(db!, collectionPath, item.id)));
   data.forEach(item => {
     const { id, ...rest } = item;
-    batch.set(doc(db, collectionPath, id), rest);
+    batch.set(doc(db!, collectionPath, id), rest);
   });
   await batch.commit();
 }

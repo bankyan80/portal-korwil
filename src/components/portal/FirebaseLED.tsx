@@ -147,7 +147,7 @@ export function FirebaseLED({
         if (diff < 3600) return `${Math.floor(diff / 60)} menit yang lalu`;
         return `${Math.floor(diff / 3600)} jam yang lalu`;
       })()
-    : () => '—';
+    : '—';
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-1">

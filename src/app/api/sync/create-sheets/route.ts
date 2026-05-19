@@ -34,7 +34,7 @@ function getAuthClient() {
   const sa = getServiceAccount();
   if (!sa) return null;
   return new google.auth.GoogleAuth({
-    credentials: sa,
+    credentials: sa as any,
     scopes: [
       'https://www.googleapis.com/auth/spreadsheets',
       'https://www.googleapis.com/auth/drive',
@@ -54,7 +54,7 @@ export async function POST() {
   }
 
   try {
-    const sheets = google.sheets({ version: 'v4', auth });
+    const sheets = google.sheets({ version: 'v4', auth }) as any;
     const drive = google.drive({ version: 'v3', auth });
 
     // Create spreadsheet in Drive folder

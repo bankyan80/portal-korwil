@@ -35,7 +35,7 @@ function getAuthClient() {
   const sa = getServiceAccount();
   if (!sa) return null;
   return new google.auth.GoogleAuth({
-    credentials: sa,
+    credentials: sa as any,
     scopes: [
       'https://www.googleapis.com/auth/spreadsheets',
       'https://www.googleapis.com/auth/drive',

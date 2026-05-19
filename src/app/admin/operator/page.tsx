@@ -82,37 +82,6 @@ export default function OperatorDashboard() {
     }
   }, [user, router]);
 
-  if (isLoadingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex items-center gap-3 text-gray-500">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          <span>Memuat...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || user.role === 'publik') return null;
-
-  function handleLogout() {
-    if (auth) auth.signOut();
-    setUser(null);
-    router.push('/');
-  }
-
-  const menu = [
-    { label: 'Profil Sekolah', icon: School, desc: 'Kelola data sekolah', count: null, href: '/admin/operator/profil-sekolah' },
-    { label: 'Data Guru', icon: Users, desc: 'Kelola data pendidik dan tenaga kependidikan', count: calculatedCounts.eCount, href: '/admin/operator/data-guru' },
-    { label: 'Data Siswa', icon: Users, desc: 'Kelola data peserta didik', count: calculatedCounts.sCount, href: '/admin/operator/data-siswa' },
-    { label: 'Tambah Siswa', icon: School, desc: 'Daftarkan siswa baru', count: null, href: '/admin/operator/tambah-siswa' },
-    { label: 'SPMB', icon: FileText, desc: 'Penerimaan peserta didik baru', count: null, href: '/admin/operator/spmb' },
-    { label: 'Upload Berita', icon: Megaphone, desc: 'Kirim berita sekolah', count: null, href: '/admin/operator/berita' },
-    { label: 'Upload Galeri', icon: Image, desc: 'Dokumentasi kegiatan sekolah', count: null, href: '/admin/operator/galeri' },
-    { label: 'Sarpras', icon: Building2, desc: 'Data sarana dan prasarana sekolah', count: null, href: '/admin/operator/sarpras' },
-    { label: 'Lapor Bulanan', icon: FileText, desc: 'Cetak & kirim laporan bulanan sekolah', count: null, href: '/admin/operator/laporan-bulanan' },
-  ];
-
   useEffect(() => {
     if (!user?.schoolId && !user?.schoolName) return;
     fetchTugas();
@@ -185,6 +154,37 @@ export default function OperatorDashboard() {
   }, []);
 
   const isStatsLoading = !allStudents || !allEmployees;
+
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex items-center gap-3 text-gray-500">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+          <span>Memuat...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || user.role === 'publik') return null;
+
+  function handleLogout() {
+    if (auth) auth.signOut();
+    setUser(null);
+    router.push('/');
+  }
+
+  const menu = [
+    { label: 'Profil Sekolah', icon: School, desc: 'Kelola data sekolah', count: null, href: '/admin/operator/profil-sekolah' },
+    { label: 'Data Guru', icon: Users, desc: 'Kelola data pendidik dan tenaga kependidikan', count: calculatedCounts.eCount, href: '/admin/operator/data-guru' },
+    { label: 'Data Siswa', icon: Users, desc: 'Kelola data peserta didik', count: calculatedCounts.sCount, href: '/admin/operator/data-siswa' },
+    { label: 'Tambah Siswa', icon: School, desc: 'Daftarkan siswa baru', count: null, href: '/admin/operator/tambah-siswa' },
+    { label: 'SPMB', icon: FileText, desc: 'Penerimaan peserta didik baru', count: null, href: '/admin/operator/spmb' },
+    { label: 'Upload Berita', icon: Megaphone, desc: 'Kirim berita sekolah', count: null, href: '/admin/operator/berita' },
+    { label: 'Upload Galeri', icon: Image, desc: 'Dokumentasi kegiatan sekolah', count: null, href: '/admin/operator/galeri' },
+    { label: 'Sarpras', icon: Building2, desc: 'Data sarana dan prasarana sekolah', count: null, href: '/admin/operator/sarpras' },
+    { label: 'Lapor Bulanan', icon: FileText, desc: 'Cetak & kirim laporan bulanan sekolah', count: null, href: '/admin/operator/laporan-bulanan' },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

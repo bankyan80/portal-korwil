@@ -144,7 +144,7 @@ export async function uploadFileToDrive(
     mimeType: response.data.mimeType || mimeType,
     size: parseInt(response.data.size || '0', 10),
     webViewLink: response.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`,
-    webContentLink: response.data.webContentLink,
+    webContentLink: response.data.webContentLink || undefined,
     uploadedAt: new Date().toISOString(),
   };
 }
@@ -172,7 +172,7 @@ export async function getFileLinks(fileId: string): Promise<{ webViewLink: strin
 
   return {
     webViewLink: response.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`,
-    webContentLink: response.data.webContentLink,
+    webContentLink: response.data.webContentLink || undefined,
   };
 }
 

@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     if (layak_pip) query = query.where('layak_pip', '==', layak_pip);
 
     const snapshot = await query.get();
-    let all = snapshot.docs.map((doc) => ({ nik: doc.id, ...doc.data() }));
+    let all = snapshot.docs.map((doc) => ({ nik: doc.id, ...doc.data() })) as any[];
 
     if (all.length === 0 || (all.length > 0 && !all[0].sekolah)) {
       throw new Error('Empty or incomplete Firestore data, fallback to static');

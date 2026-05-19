@@ -99,6 +99,22 @@ export default function SuperAdminDashboard() {
     }
   }, []);
 
+  const fetchAutoSyncStatus = useCallback(async () => {
+    try {
+      const { getFirestore, collection, query, doc, getDoc } = await import('firebase/firestore');
+      if (!db) return;
+      const configRef = doc(db, 'system_config', 'google_sheets_config');
+      const configSnap = await getDoc(configRef);
+      if (configSnap.exists()) {
+        setAutoSyncStatus(configSnap.data());
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => { fetchAutoSyncStatus(); }, [fetchAutoSyncStatus]);
+
   const handleCreateSheets = useCallback(async () => {
     setCreateSheetsLoading(true);
     setCreateSheetsMsg('');
@@ -119,23 +135,7 @@ export default function SuperAdminDashboard() {
       setCreateSheetsLoading(false);
       setTimeout(() => setCreateSheetsMsg(''), 10000);
     }
-  }, []);
-
-  const fetchAutoSyncStatus = useCallback(async () => {
-    try {
-      const { getFirestore, collection, query, doc, getDoc } = await import('firebase/firestore');
-      if (!db) return;
-      const configRef = doc(db, 'system_config', 'google_sheets_config');
-      const configSnap = await getDoc(configRef);
-      if (configSnap.exists()) {
-        setAutoSyncStatus(configSnap.data());
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => { fetchAutoSyncStatus(); }, [fetchAutoSyncStatus]);
+  }, [fetchAutoSyncStatus]);
 
   useEffect(() => {
     const triggerAutoSync = async () => {

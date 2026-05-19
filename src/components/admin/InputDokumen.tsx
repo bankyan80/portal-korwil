@@ -138,7 +138,7 @@ export default function InputDokumenPage() {
          const isImage = file.type.startsWith('image/');
          const maxSize = isImage ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
 
-         let fileToUpload = file;
+         let fileToUpload: File | Blob = file;
          if (isImage && file.size > 2 * 1024 * 1024) {
            fileToUpload = (await compressImage(file, 1920, 0.8)).blob;
          }
@@ -243,10 +243,12 @@ export default function InputDokumenPage() {
   }
 
   function handleDownload(doc: DokumenBersama) {
-    if (doc.file?.fileUrl) {
-      window.open(doc.file.fileUrl, '_blank');
-    } else if (doc.file?.webViewLink) {
-      window.open(doc.file.webViewLink, '_blank');
+    const f = doc.file;
+    if (!f) return;
+    if ('fileUrl' in f && f.fileUrl) {
+      window.open(f.fileUrl, '_blank');
+    } else if ('webViewLink' in f && f.webViewLink) {
+      window.open(f.webViewLink, '_blank');
     } else if (doc.downloadUrl) {
       window.open(doc.downloadUrl, '_blank');
     } else if (doc.dataUrl) {
@@ -410,7 +412,7 @@ export default function InputDokumenPage() {
                       <p className="text-xs text-gray-400">{formatSize(doc.fileSize)}</p>
                       {doc.file && (
                         <p className="text-[10px] text-green-600 flex items-center gap-1 mt-0.5">
-                          <CheckCircle className="w-3 h-3" /> {doc.file.provider === 'supabase' ? 'Supabase Storage' : 'Google Drive'}
+                          <CheckCircle className="w-3 h-3" /> {'provider' in doc.file && doc.file.provider === 'supabase' ? 'Supabase Storage' : 'Google Drive'}
                         </p>
                       )}
                     </div>

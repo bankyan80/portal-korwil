@@ -15,7 +15,8 @@
     "supabase:login": "supabase login",
     "supabase:init": "supabase init",
     "migrate:files:dry": "tsx scripts/migrate-firestore-files-to-supabase.ts --dry-run",
-    "migrate:files:execute": "tsx scripts/migrate-firestore-files-to-supabase.ts --execute"
+    "migrate:files:execute": "tsx scripts/migrate-firestore-files-to-supabase.ts --execute",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

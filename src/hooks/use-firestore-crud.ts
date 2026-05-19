@@ -161,7 +161,7 @@ export function useInstitutionLinksCrud(): FirestoreCrudHook<InstitutionLink> {
 type UserDoc = UserProfile & { id: string };
 
 export function useUsersCrud(): FirestoreCrudHook<UserDoc> {
-  const items = useDataStore((s) => s.users);
+  const items = useDataStore((s) => s.users as UserDoc[]);
   const setItems = useDataStore((s) => s.setUsers);
   const ready = useDataStore((s) => s.ready);
   return useFirestoreCrudInternal<UserDoc>({ path: 'users', items, loading: !ready, setItems });

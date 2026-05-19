@@ -14,7 +14,7 @@ interface BaseSekolah {
 
 interface CompletenessItem {
   ada: boolean;
-  total: number;
+  total?: number;
   fieldsFilled?: number;
   totalFields?: number;
   message: string;

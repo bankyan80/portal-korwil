@@ -58,10 +58,10 @@ export default function DataRombelPage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    async function fetch() {
+    async function loadData() {
       try {
         const res = await fetch('/api/siswa/list');
-        if (!res.ok) { console.error('Gagal fetch siswa:', res.status, res.statusText); return; }
+        if (!res.ok) { console.error('Gagal fetch siswa:', res.status, res.statusText); setLoading(false); return; }
         const json = await res.json();
         if (json.siswa && json.siswa.length > 0) {
           const aggregated = aggregateRombel(json.siswa);
@@ -69,7 +69,7 @@ export default function DataRombelPage() {
         }
       } catch (e) { console.error('Gagal memuat data rombel:', e); } finally { setLoading(false); }
     }
-    fetch();
+    loadData();
   }, []);
 
   const filtered = data.filter((item) => {
