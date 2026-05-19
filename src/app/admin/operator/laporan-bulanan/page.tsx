@@ -211,15 +211,19 @@ export default function LaporBulananPage() {
     setDataLoading(true);
     try {
       // sekolah and sarpras are already loaded via onSnapshot listeners
-      // Compute student counts, GTK summary here from fallback sources
-      let gtkSchools: any[] = [];
+
+      // Fetch all pegawai and filter by operator's school (same as data-guru page)
+      let allPegawai: any[] = [];
       try {
-        const gtkRes = await fetch('/api/pegawai/gtk-summary');
-        if (gtkRes.ok) {
-          const gtkData = await gtkRes.json();
-          gtkSchools = gtkData.schools || [];
+        const res = await fetch('/api/pegawai/all?all=true');
+        if (res.ok) {
+          const data = await res.json();
+          const normalizedSchool = normalizeSchool(user?.schoolName || '');
+          allPegawai = (data.items || []).filter((p: any) =>
+            normalizeSchool(p.sekolah || '') === normalizedSchool
+          );
         }
-      } catch (e) { console.error('Gagal memuat GTK:', e); }
+      } catch (e) { console.error('Gagal memuat pegawai:', e); }
 
       let apiSiswa: any[] = [];
       if (user?.schoolName) {
@@ -250,20 +254,31 @@ export default function LaporBulananPage() {
       setSiswaL(totalL);
       setSiswaP(totalP);
 
-      const gtkSchool = gtkSchools.find((g: any) =>
-        normalizeSchool(g.name) === normalizeSchool(user?.schoolName || '')
-      );
+      // Count GTK directly from filtered pegawai data
+      const guruL = allPegawai.filter((p: any) => p.jenis_ptk === 'Guru' && p.jk === 'L').length;
+      const guruP = allPegawai.filter((p: any) => p.jenis_ptk === 'Guru' && p.jk === 'P').length;
+      const tendikL = allPegawai.filter((p: any) =>
+        (p.jenis_ptk === 'Tenaga Kependidikan' || p.jenis_ptk === 'Kepala Sekolah') && p.jk === 'L'
+      ).length;
+      const tendikP = allPegawai.filter((p: any) =>
+        (p.jenis_ptk === 'Tenaga Kependidikan' || p.jenis_ptk === 'Kepala Sekolah') && p.jk === 'P'
+      ).length;
 
-      const guruL = getSiswaVal('guru_l');
-      const guruP = getSiswaVal('guru_p');
-      const tendikL = getSiswaVal('tendik_l');
-      const tendikP = getSiswaVal('tendik_p');
-      const guruLVal = !isNaN(guruL) ? guruL : (gtkSchool?.teachers_l || 0);
-      const guruPVal = !isNaN(guruP) ? guruP : (gtkSchool?.teachers_p || 0);
-      const tendikLVal = !isNaN(tendikL) ? tendikL : (gtkSchool?.staff_l || 0);
-      const tendikPVal = !isNaN(tendikP) ? tendikP : (gtkSchool?.staff_p || 0);
-      setGuru({ l: guruLVal, p: guruPVal, total: guruLVal + guruPVal });
-      setTendik({ l: tendikLVal, p: tendikPVal, total: tendikLVal + tendikPVal });
+      const savedGuruL = getSiswaVal('guru_l');
+      const savedGuruP = getSiswaVal('guru_p');
+      const savedTendikL = getSiswaVal('tendik_l');
+      const savedTendikP = getSiswaVal('tendik_p');
+
+      setGuru({
+        l: !isNaN(savedGuruL) ? savedGuruL : guruL,
+        p: !isNaN(savedGuruP) ? savedGuruP : guruP,
+        total: (!isNaN(savedGuruL) ? savedGuruL : guruL) + (!isNaN(savedGuruP) ? savedGuruP : guruP),
+      });
+      setTendik({
+        l: !isNaN(savedTendikL) ? savedTendikL : tendikL,
+        p: !isNaN(savedTendikP) ? savedTendikP : tendikP,
+        total: (!isNaN(savedTendikL) ? savedTendikL : tendikL) + (!isNaN(savedTendikP) ? savedTendikP : tendikP),
+      });
     } catch (e) { console.error('Error:', e); } finally { setLoading(false); setDataLoading(false); }
   }
 
