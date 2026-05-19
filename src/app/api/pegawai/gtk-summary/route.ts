@@ -1,39 +1,24 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import dataPegawai from '@/data/data-pegawai.json';
+import dataPegawaiTk from '@/data/data-pegawai-tk.json';
+import tkGelatikPegawai from '@/data/tk-gelatik-pegawai.json';
 
 let dataCache: any[] = [];
 let pltCache: any[] = [];
 
 function loadStaticData() {
-  if (dataCache) return dataCache;
-  const p = path.join(process.cwd(), 'src', 'data', 'data-pegawai.json');
-  const raw = fs.readFileSync(p, 'utf-8');
-  let data = JSON.parse(raw);
-  const tkPath = path.join(process.cwd(), 'src', 'data', 'data-pegawai-tk.json');
-  if (fs.existsSync(tkPath)) {
-    const tkRaw = JSON.parse(fs.readFileSync(tkPath, 'utf-8'));
-    data = [...data, ...tkRaw];
-  }
-  const tkGelatikPath = path.join(process.cwd(), 'src', 'data', 'tk-gelatik-pegawai.json');
-  if (fs.existsSync(tkGelatikPath)) {
-    const tkGelatikRaw = JSON.parse(fs.readFileSync(tkGelatikPath, 'utf-8'));
-    data = [...data, ...tkGelatikRaw];
-  }
+  if (dataCache.length > 0) return dataCache;
+  const data = [...dataPegawai, ...dataPegawaiTk, ...tkGelatikPegawai];
   dataCache = data;
   return dataCache;
 }
 
+import pltData from '@/data/data-plt.json';
+
 function loadPltData() {
-  if (pltCache) return pltCache;
-  try {
-    const p = path.join(process.cwd(), 'src', 'data', 'data-plt.json');
-    const raw = fs.readFileSync(p, 'utf-8');
-    pltCache = JSON.parse(raw);
-  } catch {
-    pltCache = [];
-  }
+  if (pltCache.length > 0) return pltCache;
+  pltCache = pltData;
   return pltCache;
 }
 
