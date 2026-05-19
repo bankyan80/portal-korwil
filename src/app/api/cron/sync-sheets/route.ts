@@ -140,8 +140,11 @@ async function syncSheetData(sheets: any, spreadsheetId: string, sheetTitle: str
 }
 
 export async function POST(req: Request) {
+  const isVercelCron = req.headers.get('x-vercel-signature') !== null;
   const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const hasSecret = process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`;
+
+  if (!isVercelCron && !hasSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

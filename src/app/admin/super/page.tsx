@@ -104,10 +104,7 @@ export default function SuperAdminDashboard() {
     setCreateSheetsMsg('');
     setCreateSheetsUrl('');
     try {
-      const res = await fetch('/api/cron/sync-sheets', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || ''}` },
-      });
+      const res = await fetch('/api/cron/sync-sheets', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         setCreateSheetsUrl(data.spreadsheetUrl);
