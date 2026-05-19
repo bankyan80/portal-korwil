@@ -39,6 +39,7 @@ export default function SuperAdminDashboard() {
   const [createSheetsLoading, setCreateSheetsLoading] = useState(false);
   const [createSheetsMsg, setCreateSheetsMsg] = useState('');
   const [createSheetsUrl, setCreateSheetsUrl] = useState('');
+  const [autoSyncStatus, setAutoSyncStatus] = useState<{ lastSynced?: string; url?: string; counts?: Record<string, number> } | null>(null);
   const [laporanData, setLaporanData] = useState<any[]>([]);
 
   const currentYear = new Date().getFullYear();
@@ -103,13 +104,17 @@ export default function SuperAdminDashboard() {
     setCreateSheetsMsg('');
     setCreateSheetsUrl('');
     try {
-      const res = await fetch('/api/sync/create-sheets', { method: 'POST' });
+      const res = await fetch('/api/cron/sync-sheets', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || ''}` },
+      });
       const data = await res.json();
       if (data.success) {
         setCreateSheetsUrl(data.spreadsheetUrl);
-        setCreateSheetsMsg(`Berhasil! ${data.studentCount} siswa, ${data.employeeCount} pegawai`);
+        setCreateSheetsMsg(`Auto-sync berhasil! ${Object.entries(data.counts || {}).map(([k, v]) => `${k}: ${v}`).join(', ')}`);
+        fetchAutoSyncStatus();
       } else {
-        setCreateSheetsMsg(data.error || 'Gagal membuat spreadsheet');
+        setCreateSheetsMsg(data.error || 'Gagal trigger auto-sync');
       }
     } catch {
       setCreateSheetsMsg('Gagal terhubung ke server');
@@ -118,6 +123,22 @@ export default function SuperAdminDashboard() {
       setTimeout(() => setCreateSheetsMsg(''), 10000);
     }
   }, []);
+
+  const fetchAutoSyncStatus = useCallback(async () => {
+    try {
+      const { getFirestore, collection, query, doc, getDoc } = await import('firebase/firestore');
+      if (!db) return;
+      const configRef = doc(db, 'system_config', 'google_sheets_config');
+      const configSnap = await getDoc(configRef);
+      if (configSnap.exists()) {
+        setAutoSyncStatus(configSnap.data());
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => { fetchAutoSyncStatus(); }, [fetchAutoSyncStatus]);
 
   const schools = useMemo(() => {
     const set = new Set<string>();
@@ -222,8 +243,8 @@ export default function SuperAdminDashboard() {
           </button>
           <button onClick={handleCreateSheets} disabled={createSheetsLoading}
             className="flex items-center gap-2 text-sm text-yellow-300 hover:text-yellow-200 disabled:opacity-50">
-            <FileText className={`w-4 h-4 ${createSheetsLoading ? 'animate-spin' : ''}`} />
-            {createSheetsLoading ? 'Membuat...' : 'Buat Sheet Siswa & Pegawai'}
+            <RefreshCw className={`w-4 h-4 ${createSheetsLoading ? 'animate-spin' : ''}`} />
+            {createSheetsLoading ? 'Syncing...' : 'Trigger Auto Sync'}
           </button>
           <button onClick={() => router.push('/')}
             className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-200">
@@ -317,6 +338,31 @@ export default function SuperAdminDashboard() {
             </div>
           </div>
         </div>
+
+        {autoSyncStatus?.url && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Auto Sync Google Sheets</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  Jadwal: Setiap hari pukul 02:00 WIB •
+                  Terakhir sync: {autoSyncStatus.lastSynced ? new Date(autoSyncStatus.lastSynced).toLocaleString('id-ID') : 'Belum pernah'}
+                </p>
+                {autoSyncStatus.counts && (
+                  <div className="flex gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    {Object.entries(autoSyncStatus.counts).map(([k, v]) => (
+                      <span key={k}>{k}: {v}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <a href={autoSyncStatus.url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors">
+                <FileText className="w-4 h-4" /> Buka Spreadsheet
+              </a>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {menu.map((item) => (
