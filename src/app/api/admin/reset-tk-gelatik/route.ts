@@ -118,6 +118,9 @@ async function importCSV(url: string, label: string) {
 }
 
 export async function POST() {
+  console.log('[reset-tk-gelatik] FIREBASE_SERVICE_ACCOUNT_KEY length:', process.env.FIREBASE_SERVICE_ACCOUNT_KEY?.length);
+  console.log('[reset-tk-gelatik] isFirebaseAdminConfigured:', isFirebaseAdminConfigured);
+  
   if (!isFirebaseAdminConfigured || !adminDb) {
     return NextResponse.json({ error: 'Firebase admin not configured' }, { status: 500 });
   }
