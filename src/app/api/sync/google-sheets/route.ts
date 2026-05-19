@@ -31,11 +31,13 @@ function fmtDate(ts: any) {
 
 export async function POST() {
   if (!isFirebaseAdminConfigured || !adminDb) {
+    console.error('[sheets-sync] Firebase admin not configured');
     return NextResponse.json({ error: 'Firebase admin not configured' }, { status: 500 });
   }
 
   const sheets = getSheetsClient();
   if (!sheets) {
+    console.error('[sheets-sync] Google Sheets auth failed');
     return NextResponse.json({ error: 'Google Sheets auth failed' }, { status: 500 });
   }
 
@@ -43,6 +45,7 @@ export async function POST() {
 
   try {
     // 1. Siswa
+    console.log('[sheets-sync] Fetching students...');
     const studentsSnap = await adminDb.collection('students').get();
     const studentRows: any[][] = [];
     studentsSnap.forEach(doc => {
@@ -53,12 +56,14 @@ export async function POST() {
         d.status || 'aktif', d.alasan || '', d.tanggal_lahir || ''
       ]);
     });
+    console.log(`[sheets-sync] Students: ${studentRows.length} rows`);
     await syncSheet(sheets, 'Siswa!A:K', [
       'NIK', 'Nama', 'JK', 'NISN', 'Sekolah', 'Jenjang', 'Kelas', 'Desa', 'Status', 'Alasan', 'Tgl Lahir'
     ], studentRows);
     results.siswa = studentRows.length;
 
     // 2. Pegawai
+    console.log('[sheets-sync] Fetching employees...');
     const empSnap = await adminDb.collection('employees').get();
     const empRows: any[][] = [];
     empSnap.forEach(doc => {
@@ -69,12 +74,14 @@ export async function POST() {
         d.status_kepegawaian || '', d.tanggal_lahir || ''
       ]);
     });
+    console.log(`[sheets-sync] Employees: ${empRows.length} rows`);
     await syncSheet(sheets, 'Pegawai!A:J', [
       'NIK', 'Nama', 'JK', 'NUPTK', 'NIP', 'Sekolah', 'Jenis PTK', 'Tugas Tambahan', 'Status Kepegawaian', 'Tgl Lahir'
     ], empRows);
     results.pegawai = empRows.length;
 
     // 3. Pegawai Tambahan
+    console.log('[sheets-sync] Fetching pegawai_tambahan...');
     const empTambahanSnap = await adminDb.collection('pegawai_tambahan').get();
     const empTambahanRows: any[][] = [];
     empTambahanSnap.forEach(doc => {
@@ -85,12 +92,14 @@ export async function POST() {
         d.status_kepegawaian || '', d.tanggal_lahir || ''
       ]);
     });
+    console.log(`[sheets-sync] Pegawai Tambahan: ${empTambahanRows.length} rows`);
     await syncSheet(sheets, 'Pegawai Tambahan!A:J', [
       'NIK', 'Nama', 'JK', 'NUPTK', 'NIP', 'Sekolah', 'Jenis PTK', 'Tugas Tambahan', 'Status Kepegawaian', 'Tgl Lahir'
     ], empTambahanRows);
     results.pegawaiTambahan = empTambahanRows.length;
 
     // 4. Sekolah
+    console.log('[sheets-sync] Fetching schools...');
     const schoolsSnap = await adminDb.collection('schools').get();
     const schoolRows: any[][] = [];
     schoolsSnap.forEach(doc => {
@@ -101,12 +110,14 @@ export async function POST() {
         d.kepalaSekolah || '', d.kontak || '', d.akreditasi || ''
       ]);
     });
+    console.log(`[sheets-sync] Schools: ${schoolRows.length} rows`);
     await syncSheet(sheets, 'Sekolah!A:J', [
       'ID', 'Nama', 'NPSN', 'Jenjang', 'Status', 'Alamat', 'Desa', 'Kepala Sekolah', 'Kontak', 'Akreditasi'
     ], schoolRows);
     results.sekolah = schoolRows.length;
 
     // 5. Sarpras
+    console.log('[sheets-sync] Fetching sarpras...');
     const sarprasSnap = await adminDb.collection('sarpras').get();
     const sarprasRows: any[][] = [];
     sarprasSnap.forEach(doc => {
@@ -118,12 +129,14 @@ export async function POST() {
         d.tanah_pemerintah || '', d.tanah_yayasan || '', d.tanah_perseorangan || ''
       ]);
     });
+    console.log(`[sheets-sync] Sarpras: ${sarprasRows.length} rows`);
     await syncSheet(sheets, 'Sarpras!A:M', [
       'School ID', 'Ruang Kelas', 'Perpustakaan', 'UKS', 'Toilet', 'Mushola', 'Gudang', 'Ruang Guru', 'Ruang Kepsek', 'Rumah Dinas Kepsek', 'Tanah Pemerintah', 'Tanah Yayasan', 'Tanah Perseorangan'
     ], sarprasRows);
     results.sarpras = sarprasRows.length;
 
     // 6. Laporan Bulanan
+    console.log('[sheets-sync] Fetching laporan_bulanan...');
     const laporanSnap = await adminDb.collection('laporan_bulanan').get();
     const laporanRows: any[][] = [];
     laporanSnap.forEach(doc => {
@@ -133,12 +146,14 @@ export async function POST() {
         d.status || '', fmtDate(d.dikirimPada) || '', d.dikirimNama || ''
       ]);
     });
+    console.log(`[sheets-sync] Laporan Bulanan: ${laporanRows.length} rows`);
     await syncSheet(sheets, 'Laporan Bulanan!A:G', [
       'ID', 'Sekolah', 'Bulan', 'Tahun', 'Status', 'Tanggal Kirim', 'Dikirim Oleh'
     ], laporanRows);
     results.laporanBulanan = laporanRows.length;
 
     // 7. Berita
+    console.log('[sheets-sync] Fetching berita...');
     const beritaSnap = await adminDb.collection('berita').get();
     const beritaRows: any[][] = [];
     beritaSnap.forEach(doc => {
@@ -148,12 +163,14 @@ export async function POST() {
         fmtDate(d.tanggal) || '', d.penulis || '', d.status || ''
       ]);
     });
+    console.log(`[sheets-sync] Berita: ${beritaRows.length} rows`);
     await syncSheet(sheets, 'Berita!A:G', [
       'ID', 'Judul', 'Sekolah', 'Kategori', 'Tanggal', 'Penulis', 'Status'
     ], beritaRows);
     results.berita = beritaRows.length;
 
     // 8. Galeri
+    console.log('[sheets-sync] Fetching galeri...');
     const galeriSnap = await adminDb.collection('galeri').get();
     const galeriRows: any[][] = [];
     galeriSnap.forEach(doc => {
@@ -163,12 +180,14 @@ export async function POST() {
         d.url || '', fmtDate(d.createdAt) || ''
       ]);
     });
+    console.log(`[sheets-sync] Galeri: ${galeriRows.length} rows`);
     await syncSheet(sheets, 'Galeri!A:F', [
       'ID', 'Judul', 'Kategori', 'Sekolah', 'URL', 'Tanggal Upload'
     ], galeriRows);
     results.galeri = galeriRows.length;
 
     // 9. KIP SD
+    console.log('[sheets-sync] Fetching kip_sd...');
     const kipSnap = await adminDb.collection('kip_sd').get();
     const kipRows: any[][] = [];
     kipSnap.forEach(doc => {
@@ -178,12 +197,14 @@ export async function POST() {
         d.layak_pip || ''
       ]);
     });
+    console.log(`[sheets-sync] KIP SD: ${kipRows.length} rows`);
     await syncSheet(sheets, 'KIP SD!A:E', [
       'NIK', 'Nama', 'Sekolah', 'Desa', 'Layak PIP'
     ], kipRows);
     results.kipSd = kipRows.length;
 
     // 10. Yatim Piatu
+    console.log('[sheets-sync] Fetching yatim_piatu...');
     const yatimSnap = await adminDb.collection('yatim_piatu').get();
     const yatimRows: any[][] = [];
     yatimSnap.forEach(doc => {
@@ -193,12 +214,14 @@ export async function POST() {
         d.kategori || ''
       ]);
     });
+    console.log(`[sheets-sync] Yatim Piatu: ${yatimRows.length} rows`);
     await syncSheet(sheets, 'Yatim Piatu!A:E', [
       'NIK', 'Nama', 'Sekolah', 'Desa', 'Kategori'
     ], yatimRows);
     results.yatimPiatu = yatimRows.length;
 
     // 11. SPMB SD
+    console.log('[sheets-sync] Fetching spmb_sd...');
     const spmbSnap = await adminDb.collection('spmb_sd').get();
     const spmbRows: any[][] = [];
     spmbSnap.forEach(doc => {
@@ -208,12 +231,14 @@ export async function POST() {
         d.desa || '', d.status || '', fmtDate(d.createdAt) || ''
       ]);
     });
+    console.log(`[sheets-sync] SPMB SD: ${spmbRows.length} rows`);
     await syncSheet(sheets, 'SPMB SD!A:G', [
       'ID', 'Nama', 'NIK', 'Sekolah', 'Desa', 'Status', 'Tanggal Daftar'
     ], spmbRows);
     results.spmbSd = spmbRows.length;
 
     // 12. Tugas
+    console.log('[sheets-sync] Fetching tugas...');
     const tugasSnap = await adminDb.collection('tugas').get();
     const tugasRows: any[][] = [];
     tugasSnap.forEach(doc => {
@@ -223,14 +248,16 @@ export async function POST() {
         d.schoolName || '', d.completed ? 'Ya' : 'Tidak', d.targetLink || ''
       ]);
     });
+    console.log(`[sheets-sync] Tugas: ${tugasRows.length} rows`);
     await syncSheet(sheets, 'Tugas!A:G', [
       'ID', 'Judul', 'Deskripsi', 'School ID', 'Nama Sekolah', 'Selesai', 'Target Link'
     ], tugasRows);
     results.tugas = tugasRows.length;
 
+    console.log('[sheets-sync] All done:', results);
     return NextResponse.json({ success: true, ...results });
   } catch (e: any) {
-    console.error('Sync error:', e);
+    console.error('[sheets-sync] Error:', e);
     return NextResponse.json({ error: e.message, partial: results }, { status: 500 });
   }
 }
