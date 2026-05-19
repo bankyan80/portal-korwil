@@ -36,6 +36,9 @@ export default function SuperAdminDashboard() {
   const [syncMsg, setSyncMsg] = useState('');
   const [sheetsSyncing, setSheetsSyncing] = useState(false);
   const [sheetsSyncMsg, setSheetsSyncMsg] = useState('');
+  const [createSheetsLoading, setCreateSheetsLoading] = useState(false);
+  const [createSheetsMsg, setCreateSheetsMsg] = useState('');
+  const [createSheetsUrl, setCreateSheetsUrl] = useState('');
   const [laporanData, setLaporanData] = useState<any[]>([]);
 
   const currentYear = new Date().getFullYear();
@@ -92,6 +95,27 @@ export default function SuperAdminDashboard() {
     } finally {
       setSheetsSyncing(false);
       setTimeout(() => setSheetsSyncMsg(''), 8000);
+    }
+  }, []);
+
+  const handleCreateSheets = useCallback(async () => {
+    setCreateSheetsLoading(true);
+    setCreateSheetsMsg('');
+    setCreateSheetsUrl('');
+    try {
+      const res = await fetch('/api/sync/create-sheets', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setCreateSheetsUrl(data.spreadsheetUrl);
+        setCreateSheetsMsg(`Berhasil! ${data.studentCount} siswa, ${data.employeeCount} pegawai`);
+      } else {
+        setCreateSheetsMsg(data.error || 'Gagal membuat spreadsheet');
+      }
+    } catch {
+      setCreateSheetsMsg('Gagal terhubung ke server');
+    } finally {
+      setCreateSheetsLoading(false);
+      setTimeout(() => setCreateSheetsMsg(''), 10000);
     }
   }, []);
 
@@ -196,6 +220,11 @@ export default function SuperAdminDashboard() {
             <RefreshCw className={`w-4 h-4 ${sheetsSyncing ? 'animate-spin' : ''}`} />
             {sheetsSyncing ? 'Sync Sheets...' : 'Sync ke Sheets'}
           </button>
+          <button onClick={handleCreateSheets} disabled={createSheetsLoading}
+            className="flex items-center gap-2 text-sm text-yellow-300 hover:text-yellow-200 disabled:opacity-50">
+            <FileText className={`w-4 h-4 ${createSheetsLoading ? 'animate-spin' : ''}`} />
+            {createSheetsLoading ? 'Membuat...' : 'Buat Sheet Siswa & Pegawai'}
+          </button>
           <button onClick={() => router.push('/')}
             className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-200">
             <ArrowLeft className="w-4 h-4" /> Portal
@@ -219,6 +248,18 @@ export default function SuperAdminDashboard() {
         <div className="px-6 pt-4 max-w-7xl mx-auto">
           <div className="px-4 py-2 rounded-lg text-sm bg-green-50 border border-green-200 text-green-700">
             {sheetsSyncMsg}
+          </div>
+        </div>
+      )}
+      {createSheetsMsg && (
+        <div className="px-6 pt-4 max-w-7xl mx-auto">
+          <div className="px-4 py-2 rounded-lg text-sm bg-yellow-50 border border-yellow-200 text-yellow-700">
+            {createSheetsMsg}
+            {createSheetsUrl && (
+              <a href={createSheetsUrl} target="_blank" rel="noopener noreferrer" className="ml-2 underline font-medium">
+                Buka Spreadsheet →
+              </a>
+            )}
           </div>
         </div>
       )}
