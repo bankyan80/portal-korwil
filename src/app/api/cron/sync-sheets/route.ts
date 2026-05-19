@@ -141,10 +141,11 @@ async function syncSheetData(sheets: any, spreadsheetId: string, sheetTitle: str
 
 export async function POST(req: Request) {
   const isVercelCron = req.headers.get('x-vercel-signature') !== null;
+  const isRefererPortal = (req.headers.get('referer') || '').includes('portalkorwil.online');
   const authHeader = req.headers.get('authorization');
   const hasSecret = process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`;
 
-  if (!isVercelCron && !hasSecret) {
+  if (!isVercelCron && !isRefererPortal && !hasSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
