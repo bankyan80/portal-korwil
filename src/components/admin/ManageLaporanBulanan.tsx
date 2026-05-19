@@ -8,8 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { BarChart3, Search, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
+import { BarChart3, Search, CheckCircle, XCircle, Clock, Eye, AlertCircle } from 'lucide-react';
 import { allSekolah } from '@/data/sekolah';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 
 const bulanList = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -49,9 +52,10 @@ export function ManageLaporanBulanan() {
   const [data, setData] = useState<LaporanRecord[]>([]);
   const [loading, setLoading] = useState(db ? true : false);
   const [search, setSearch] = useState('');
-  const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
   const [filterBulan, setFilterBulan] = useState<string>('');
   const [tahun] = useState(new Date().getFullYear());
+  const [selectedSchool, setSelectedSchool] = useState<typeof allSekolah[0] | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const userSchool = user?.schoolName || '';
   const isOperator = user?.role === 'operator_sekolah';
@@ -84,6 +88,17 @@ export function ManageLaporanBulanan() {
 
   const allSekolahCount = allSekolah.length;
   const sudahLaporCount = data.filter(d => d.status === 'sudah_lapor' || d.status === 'diverifikasi').length;
+
+  function openDetail(school: typeof allSekolah[0]) {
+    setSelectedSchool(school);
+    setDetailOpen(true);
+  }
+
+  function getSchoolReports(school: typeof allSekolah[0]) {
+    return data
+      .filter(d => d.sekolahId === school.npsn || d.sekolah?.toLowerCase().includes(school.nama.toLowerCase()))
+      .sort((a, b) => (b.tahun || 0) - (a.tahun || 0) || bulanList.indexOf(a.bulan || '') - bulanList.indexOf(b.bulan || ''));
+  }
 
   if (loading) {
     return <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-blue-800 border-t-transparent rounded-full animate-spin" /></div>;
@@ -175,7 +190,7 @@ export function ManageLaporanBulanan() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openDetail(s)}>
                           <Eye className="w-3.5 h-3.5" />
                         </Button>
                       </td>
@@ -190,6 +205,67 @@ export function ManageLaporanBulanan() {
           Menampilkan {filtered.length} sekolah
         </div>
       </div>
+
+      {/* Dialog Riwayat Laporan */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Riwayat Laporan - {selectedSchool?.nama}</DialogTitle>
+          </DialogHeader>
+          {selectedSchool && (
+            <div className="space-y-3">
+              {(() => {
+                const reports = getSchoolReports(selectedSchool);
+                if (reports.length === 0) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <Clock className="w-12 h-12 text-gray-300 mb-3" />
+                      <p className="text-sm text-muted-foreground">Belum ada laporan yang dikirim</p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Bulan</th>
+                          <th className="px-3 py-2 text-center font-semibold text-muted-foreground">Tahun</th>
+                          <th className="px-3 py-2 text-center font-semibold text-muted-foreground">Status</th>
+                          <th className="px-3 py-2 text-center font-semibold text-muted-foreground">Tanggal Kirim</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {reports.map((r) => {
+                          const st = statusConfig[r.status as StatusLaporan] || statusConfig.belum_lapor;
+                          return (
+                            <tr key={r.id} className="hover:bg-muted/50">
+                              <td className="px-3 py-2 font-medium">{r.bulan || '-'}</td>
+                              <td className="px-3 py-2 text-center">{r.tahun || '-'}</td>
+                              <td className="px-3 py-2 text-center">
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${st.className}`}>
+                                  {r.status === 'diverifikasi' && <CheckCircle className="w-3 h-3" />}
+                                  {r.status === 'sudah_lapor' && <Clock className="w-3 h-3" />}
+                                  {r.status === 'belum_lapor' && <XCircle className="w-3 h-3" />}
+                                  {r.status === 'revisi' && <AlertCircle className="w-3 h-3" />}
+                                  {st.label}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 text-center text-xs text-muted-foreground">
+                                {r.tglLapor ? new Date(r.tglLapor).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

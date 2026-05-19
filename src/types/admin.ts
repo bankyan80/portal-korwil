@@ -271,6 +271,21 @@ export interface Sarpras {
   kursi_tamu: string;
   rak_buku: string;
   sumber_air: string;
+  menyewa_per_bulan?: string;
+  menumpang_di_sd?: string;
+  bangunan_sekolah_p?: string;
+  bangunan_sekolah_sp?: string;
+  bangunan_sekolah_dr?: string;
+  r_dinas_kepsek_p?: string;
+  r_dinas_kepsek_sp?: string;
+  r_dinas_kepsek_dr?: string;
+  r_dinas_guru_p?: string;
+  r_dinas_guru_sp?: string;
+  r_dinas_guru_dr?: string;
+  perpustakaan_p?: string;
+  perpustakaan_sp?: string;
+  perpustakaan_dr?: string;
+  [key: string]: any;
   createdAt: number;
   updatedAt: number;
 }

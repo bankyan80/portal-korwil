@@ -325,6 +325,78 @@ export default function LaporBulananPage() {
           ruang_guru: sarpras?.ruang_guru || '',
           ruang_kepala_sekolah: sarpras?.ruang_kepala_sekolah || '',
           rumah_dinas_kepsek: sarpras?.rumah_dinas_kepsek || '',
+          ruang_kelas_baik_bgn: sarpras?.ruang_kelas_baik_bgn || '',
+          ruang_kelas_baik_rgn: sarpras?.ruang_kelas_baik_rgn || '',
+          ruang_kelas_sedang_bgn: sarpras?.ruang_kelas_sedang_bgn || '',
+          ruang_kelas_sedang_rgn: sarpras?.ruang_kelas_sedang_rgn || '',
+          ruang_kelas_rusak_bgn: sarpras?.ruang_kelas_rusak_bgn || '',
+          ruang_kelas_rusak_rgn: sarpras?.ruang_kelas_rusak_rgn || '',
+          perpustakaan_baik_bgn: sarpras?.perpustakaan_baik_bgn || '',
+          perpustakaan_baik_rgn: sarpras?.perpustakaan_baik_rgn || '',
+          perpustakaan_sedang_bgn: sarpras?.perpustakaan_sedang_bgn || '',
+          perpustakaan_sedang_rgn: sarpras?.perpustakaan_sedang_rgn || '',
+          perpustakaan_rusak_bgn: sarpras?.perpustakaan_rusak_bgn || '',
+          perpustakaan_rusak_rgn: sarpras?.perpustakaan_rusak_rgn || '',
+          uks_baik_bgn: sarpras?.uks_baik_bgn || '',
+          uks_baik_rgn: sarpras?.uks_baik_rgn || '',
+          uks_sedang_bgn: sarpras?.uks_sedang_bgn || '',
+          uks_sedang_rgn: sarpras?.uks_sedang_rgn || '',
+          uks_rusak_bgn: sarpras?.uks_rusak_bgn || '',
+          uks_rusak_rgn: sarpras?.uks_rusak_rgn || '',
+          toilet_baik_bgn: sarpras?.toilet_baik_bgn || '',
+          toilet_baik_rgn: sarpras?.toilet_baik_rgn || '',
+          toilet_sedang_bgn: sarpras?.toilet_sedang_bgn || '',
+          toilet_sedang_rgn: sarpras?.toilet_sedang_rgn || '',
+          toilet_rusak_bgn: sarpras?.toilet_rusak_bgn || '',
+          toilet_rusak_rgn: sarpras?.toilet_rusak_rgn || '',
+          mushola_baik_bgn: sarpras?.mushola_baik_bgn || '',
+          mushola_baik_rgn: sarpras?.mushola_baik_rgn || '',
+          mushola_sedang_bgn: sarpras?.mushola_sedang_bgn || '',
+          mushola_sedang_rgn: sarpras?.mushola_sedang_rgn || '',
+          mushola_rusak_bgn: sarpras?.mushola_rusak_bgn || '',
+          mushola_rusak_rgn: sarpras?.mushola_rusak_rgn || '',
+          gudang_baik_bgn: sarpras?.gudang_baik_bgn || '',
+          gudang_baik_rgn: sarpras?.gudang_baik_rgn || '',
+          gudang_sedang_bgn: sarpras?.gudang_sedang_bgn || '',
+          gudang_sedang_rgn: sarpras?.gudang_sedang_rgn || '',
+          gudang_rusak_bgn: sarpras?.gudang_rusak_bgn || '',
+          gudang_rusak_rgn: sarpras?.gudang_rusak_rgn || '',
+          ruang_guru_baik_bgn: sarpras?.ruang_guru_baik_bgn || '',
+          ruang_guru_baik_rgn: sarpras?.ruang_guru_baik_rgn || '',
+          ruang_guru_sedang_bgn: sarpras?.ruang_guru_sedang_bgn || '',
+          ruang_guru_sedang_rgn: sarpras?.ruang_guru_sedang_rgn || '',
+          ruang_guru_rusak_bgn: sarpras?.ruang_guru_rusak_bgn || '',
+          ruang_guru_rusak_rgn: sarpras?.ruang_guru_rusak_rgn || '',
+          ruang_kepala_sekolah_baik_bgn: sarpras?.ruang_kepala_sekolah_baik_bgn || '',
+          ruang_kepala_sekolah_baik_rgn: sarpras?.ruang_kepala_sekolah_baik_rgn || '',
+          ruang_kepala_sekolah_sedang_bgn: sarpras?.ruang_kepala_sekolah_sedang_bgn || '',
+          ruang_kepala_sekolah_sedang_rgn: sarpras?.ruang_kepala_sekolah_sedang_rgn || '',
+          ruang_kepala_sekolah_rusak_bgn: sarpras?.ruang_kepala_sekolah_rusak_bgn || '',
+          ruang_kepala_sekolah_rusak_rgn: sarpras?.ruang_kepala_sekolah_rusak_rgn || '',
+          rumah_dinas_kepsek_baik_bgn: sarpras?.rumah_dinas_kepsek_baik_bgn || '',
+          rumah_dinas_kepsek_baik_rgn: sarpras?.rumah_dinas_kepsek_baik_rgn || '',
+          rumah_dinas_kepsek_sedang_bgn: sarpras?.rumah_dinas_kepsek_sedang_bgn || '',
+          rumah_dinas_kepsek_sedang_rgn: sarpras?.rumah_dinas_kepsek_sedang_rgn || '',
+          rumah_dinas_kepsek_rusak_bgn: sarpras?.rumah_dinas_kepsek_rusak_bgn || '',
+          rumah_dinas_kepsek_rusak_rgn: sarpras?.rumah_dinas_kepsek_rusak_rgn || '',
+          bangku_baik: sarpras?.bangku_baik || '',
+          bangku_rusak: sarpras?.bangku_rusak || '',
+          meja_murid_baik: sarpras?.meja_murid_baik || '',
+          meja_murid_rusak: sarpras?.meja_murid_rusak || '',
+          kursi_murid_baik: sarpras?.kursi_murid_baik || '',
+          kursi_murid_rusak: sarpras?.kursi_murid_rusak || '',
+          kursi_guru_baik: sarpras?.kursi_guru_baik || '',
+          kursi_guru_rusak: sarpras?.kursi_guru_rusak || '',
+          meja_guru_baik: sarpras?.meja_guru_baik || '',
+          meja_guru_rusak: sarpras?.meja_guru_rusak || '',
+          lemari_baik: sarpras?.lemari_baik || '',
+          lemari_rusak: sarpras?.lemari_rusak || '',
+          papan_tulis_baik: sarpras?.papan_tulis_baik || '',
+          papan_tulis_rusak: sarpras?.papan_tulis_rusak || '',
+          kursi_tamu_baik: sarpras?.kursi_tamu_baik || '',
+          kursi_tamu_rusak: sarpras?.kursi_tamu_rusak || '',
+          rak_buku_baik: sarpras?.rak_buku_baik || '',
+          rak_buku_rusak: sarpras?.rak_buku_rusak || '',
           tanah_pemerintah: sarpras?.tanah_pemerintah || '',
           tanah_yayasan: sarpras?.tanah_yayasan || '',
           tanah_perseorangan: sarpras?.tanah_perseorangan || '',
@@ -626,16 +698,23 @@ export default function LaporBulananPage() {
           </thead>
           <tbody>
             {['Ruang Kelas', 'Perpustakaan', 'UKS', 'WC/Toilet', 'Mushola', 'Gudang', 'Ruang Guru', 'Ruang Kepala Sekolah', 'Rumah Dinas Kepala Sekolah'].map((item) => {
+              const key = sarprasRoomMap[item] || '';
+              const baikBgn = sarpras?.[`${key}_baik_bgn`] || laporanData?.dataSarpras?.[`${key}_baik_bgn`] || '-';
+              const baikRgn = sarpras?.[`${key}_baik_rgn`] || laporanData?.dataSarpras?.[`${key}_baik_rgn`] || '-';
+              const sedangBgn = sarpras?.[`${key}_sedang_bgn`] || laporanData?.dataSarpras?.[`${key}_sedang_bgn`] || '-';
+              const sedangRgn = sarpras?.[`${key}_sedang_rgn`] || laporanData?.dataSarpras?.[`${key}_sedang_rgn`] || '-';
+              const rusakBgn = sarpras?.[`${key}_rusak_bgn`] || laporanData?.dataSarpras?.[`${key}_rusak_bgn`] || '-';
+              const rusakRgn = sarpras?.[`${key}_rusak_rgn`] || laporanData?.dataSarpras?.[`${key}_rusak_rgn`] || '-';
               const count = getSarprasCount(item);
               return (
                 <tr key={item}>
                   <td className="border border-black px-1 py-0.5">{item}</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{baikBgn}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{baikRgn}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{sedangBgn}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{sedangRgn}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{rusakBgn}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{rusakRgn}</td>
                   <td className="border border-black px-1 py-0.5 text-center">-</td>
                   <td className="border border-black px-1 py-0.5 text-center">{count}</td>
                 </tr>
@@ -752,14 +831,18 @@ export default function LaporBulananPage() {
                 ['Bangku', 'bangku'], ['Meja Murid', 'meja_murid'], ['Kursi Murid', 'kursi_murid'],
                 ['Kursi Guru', 'kursi_guru'], ['Meja Guru', 'meja_guru'], ['Lemari', 'lemari'],
                 ['Papan Tulis', 'papan_tulis'], ['Kursi Tamu', 'kursi_tamu'], ['Rak Buku', 'rak_buku'],
-              ].map(([label, key]) => (
-                <tr key={label}>
-                  <td className="border border-black px-1 py-0.5 text-[8px]">{label}</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
-                  <td className="border border-black px-1 py-0.5 text-center">-</td>
-                  <td className="border border-black px-1 py-0.5 text-center">{sarpras?.[key] || '-'}</td>
-                </tr>
-              ))}
+              ].map(([label, key]) => {
+                const baik = sarpras?.[`${key}_baik`] || laporanData?.dataSarpras?.[`${key}_baik`] || '-';
+                const rusak = sarpras?.[`${key}_rusak`] || laporanData?.dataSarpras?.[`${key}_rusak`] || '-';
+                return (
+                  <tr key={label}>
+                    <td className="border border-black px-1 py-0.5 text-[8px]">{label}</td>
+                    <td className="border border-black px-1 py-0.5 text-center">{baik}</td>
+                    <td className="border border-black px-1 py-0.5 text-center">{rusak}</td>
+                    <td className="border border-black px-1 py-0.5 text-center">{sarpras?.[key] || '-'}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
