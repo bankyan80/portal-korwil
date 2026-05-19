@@ -103,9 +103,6 @@ async function loadAllData(): Promise<any[]> {
   }
   return [...staticData, ...tambahanData];
 }
-  const [staticData, tambahanData] = await Promise.all([loadStaticData(), loadTambahan()]);
-  return [...staticData, ...tambahanData];
-}
 
 export async function GET() {
   const merged = await loadAllData();
