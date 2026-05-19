@@ -10,8 +10,12 @@ import {
   Users, School, BarChart3, FileText,
   LogOut, Loader2, Building2, RefreshCw, Shield,
   Calendar, Globe, ListTodo, GraduationCap,
-  Image, Link2, ArrowLeft
+  Image, Link2, ArrowLeft, Clock, CheckCircle, XCircle
 } from 'lucide-react';
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { allSekolah } from '@/data/sekolah';
+import { normalizeSchool } from '@/lib/normalize';
 
 export default function SuperAdminDashboard() {
   const { user, setUser } = useAppStore();
@@ -30,6 +34,22 @@ export default function SuperAdminDashboard() {
 
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState('');
+  const [laporanData, setLaporanData] = useState<any[]>([]);
+
+  const currentYear = new Date().getFullYear();
+  const bulanList = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+
+  const statusConfig: Record<string, { label: string; className: string }> = {
+    belum_lapor: { label: 'Belum Lapor', className: 'bg-gray-100 text-gray-600' },
+    sudah_dikirim: { label: 'Sudah Dikirim', className: 'bg-green-100 text-green-700' },
+    perlu_revisi: { label: 'Perlu Revisi', className: 'bg-red-100 text-red-700' },
+    sudah_lapor: { label: 'Sudah Lapor', className: 'bg-blue-100 text-blue-700' },
+    diverifikasi: { label: 'Diverifikasi', className: 'bg-green-100 text-green-700' },
+    revisi: { label: 'Revisi', className: 'bg-red-100 text-red-700' },
+  };
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
@@ -71,6 +91,41 @@ export default function SuperAdminDashboard() {
     if (!user) return;
     if (user.role !== 'super_admin') router.push('/login');
   }, [user, router]);
+
+  // Realtime listener for laporan bulanan
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(collection(db, 'laporan_bulanan'), (snap) => {
+      const items: any[] = [];
+      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      setLaporanData(items);
+    }, (err) => { console.error('Error in laporan listener:', err); });
+    return () => unsub();
+  }, []);
+
+  // Build report matrix: rows = schools, columns = months
+  const reportMatrix = useMemo(() => {
+    const matrix: { sekolah: string; jenjang: string; months: Record<string, any> }[] = [];
+    for (const sekolah of allSekolah) {
+      const months: Record<string, any> = {};
+      for (const bulan of bulanList) {
+        const report = laporanData.find((r) => {
+          if (r.tahun !== currentYear) return false;
+          if (r.bulan !== bulan) return false;
+          const matchSchoolId = r.sekolahId === sekolah.npsn;
+          const matchSchoolName = normalizeSchool(r.sekolah || '') === normalizeSchool(sekolah.nama);
+          return matchSchoolId || matchSchoolName;
+        });
+        months[bulan] = report || null;
+      }
+      matrix.push({ sekolah: sekolah.nama, jenjang: sekolah.jenjang, months });
+    }
+    return matrix;
+  }, [laporanData]);
+
+  const sudahLaporCount = reportMatrix.filter((s) =>
+    bulanList.some((b) => s.months[b] && (s.months[b].status === 'sudah_dikirim' || s.months[b].status === 'diverifikasi'))
+  ).length;
 
   if (!user) return null;
 
@@ -204,6 +259,63 @@ export default function SuperAdminDashboard() {
               </div>
             </a>
           ))}
+        </div>
+
+        {/* Riwayat Laporan Bulanan - Matrix per Sekolah */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
+          <div className="px-5 py-3 border-b bg-blue-50 dark:bg-blue-900/20 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-700" />
+              <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-300">Riwayat Laporan Bulanan {currentYear}</h3>
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-600" /> Sudah Lapor: {sudahLaporCount}</span>
+              <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-gray-400" /> Belum: {allSekolah.length - sudahLaporCount}</span>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/50">
+                  <th className="px-3 py-2 text-left font-semibold text-muted-foreground sticky left-0 bg-muted/50 z-10">Sekolah</th>
+                  {bulanList.map((b) => (
+                    <th key={b} className="px-2 py-2 text-center font-semibold text-muted-foreground text-xs">{b.slice(0, 3)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {reportMatrix.map((row) => (
+                  <tr key={row.sekolah} className="hover:bg-muted/50 transition-colors">
+                    <td className="px-3 py-2 font-medium sticky left-0 bg-white dark:bg-gray-800 z-10">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate max-w-[200px]">{row.sekolah}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0">{row.jenjang}</span>
+                      </div>
+                    </td>
+                    {bulanList.map((b) => {
+                      const report = row.months[b];
+                      const status = report?.status || 'belum_lapor';
+                      const sc = statusConfig[status] || statusConfig.belum_lapor;
+                      return (
+                        <td key={b} className="px-2 py-2 text-center">
+                          {report ? (
+                            <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full ${sc.className}`}>
+                              {sc.label}
+                            </span>
+                          ) : (
+                            <span className="text-gray-300 dark:text-gray-600">-</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-2 border-t text-xs text-muted-foreground">
+            Menampilkan {allSekolah.length} sekolah • Tahun {currentYear}
+          </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6">
