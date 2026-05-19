@@ -6,8 +6,10 @@ import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { normalizeSchool } from '@/lib/normalize';
-import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw, ListTodo, CheckCircle, ExternalLink } from 'lucide-react';
+import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw, ListTodo, CheckCircle, ExternalLink, Clock } from 'lucide-react';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
+import { db } from '@/lib/firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 export default function OperatorDashboard() {
   const { user, setUser } = useAppStore();
@@ -61,6 +63,18 @@ export default function OperatorDashboard() {
   const [syncMsg, setSyncMsg] = useState('');
   const [tugasList, setTugasList] = useState<any[]>([]);
   const [tugasLoading, setTugasLoading] = useState(true);
+  const [laporanHistory, setLaporanHistory] = useState<any[]>([]);
+
+  const bulanList = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+
+  const statusList = [
+    { value: 'belum_lapor', label: 'Belum Lapor', className: 'bg-gray-100 text-gray-600' },
+    { value: 'sudah_dikirim', label: 'Sudah Dikirim', className: 'bg-green-100 text-green-700' },
+    { value: 'perlu_revisi', label: 'Perlu Revisi', className: 'bg-red-100 text-red-700' },
+  ];
 
   useEffect(() => {
     if (!user || user.role === 'publik') {
@@ -103,6 +117,20 @@ export default function OperatorDashboard() {
     if (!user?.schoolId && !user?.schoolName) return;
     fetchTugas();
   }, [user?.schoolId, user?.schoolName]);
+
+  // Realtime listener for laporan bulanan history
+  useEffect(() => {
+    if (!db || (!user?.schoolId && !user?.schoolName)) return;
+    const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
+    const q = query(collection(db, 'laporan_bulanan'), where('sekolahId', '==', schoolId));
+    const unsub = onSnapshot(q, (snap) => {
+      const items: any[] = [];
+      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      items.sort((a, b) => (b.tahun || 0) - (a.tahun || 0) || (bulanList.indexOf(a.bulan || '') - bulanList.indexOf(b.bulan || '')));
+      setLaporanHistory(items);
+    }, (err) => { console.error('Error in laporan history listener:', err); });
+    return () => unsub();
+  }, [db, user?.schoolId, user?.schoolName]);
 
   async function fetchTugas() {
     setTugasLoading(true);
@@ -259,6 +287,57 @@ export default function OperatorDashboard() {
             </div>
           </div>
         )}
+
+        {/* Riwayat Laporan Bulanan */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
+          <div className="px-5 py-3 border-b bg-blue-50 dark:bg-blue-900/20 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-blue-700" />
+            <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-300">Riwayat Laporan Bulanan</h3>
+          </div>
+          {laporanHistory.length === 0 ? (
+            <div className="px-5 py-8 text-center text-sm text-muted-foreground">
+              Belum ada laporan yang dikirim. <a href="/admin/operator/laporan-bulanan" className="text-blue-600 hover:underline font-medium">Kirim laporan →</a>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground">Bulan</th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">Tahun</th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">Status</th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">Tanggal Kirim</th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {laporanHistory.map((item) => {
+                    const st = statusList.find(s => s.value === item.status) || statusList[0];
+                    return (
+                      <tr key={item.id} className="hover:bg-muted/50 transition-colors">
+                        <td className="px-4 py-2.5 font-medium">{item.bulan || '-'}</td>
+                        <td className="px-4 py-2.5 text-center">{item.tahun || '-'}</td>
+                        <td className="px-4 py-2.5 text-center">
+                          <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${st.className}`}>
+                            {st.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-center text-xs text-muted-foreground">
+                          {item.dikirimPada ? new Date(item.dikirimPada).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                        </td>
+                        <td className="px-4 py-2.5 text-center">
+                          <a href="/admin/operator/laporan-bulanan" className="text-blue-600 hover:underline text-xs font-medium">
+                            Lihat
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6">
           <h2 className="font-semibold text-gray-900 dark:text-white mb-2">
