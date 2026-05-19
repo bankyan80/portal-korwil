@@ -137,6 +137,30 @@ export default function SuperAdminDashboard() {
 
   useEffect(() => { fetchAutoSyncStatus(); }, [fetchAutoSyncStatus]);
 
+  useEffect(() => {
+    const triggerAutoSync = async () => {
+      try {
+        const { doc, getDoc } = await import('firebase/firestore');
+        if (!db) return;
+        const configRef = doc(db, 'system_config', 'google_sheets_config');
+        const configSnap = await getDoc(configRef);
+        const lastSynced = configSnap.exists() ? configSnap.data()?.lastSynced : null;
+        if (lastSynced) {
+          const hoursSince = (Date.now() - new Date(lastSynced).getTime()) / (1000 * 60 * 60);
+          if (hoursSince < 6) return;
+        }
+        const res = await fetch('/api/cron/sync-sheets', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          fetchAutoSyncStatus();
+        }
+      } catch {
+        // ignore
+      }
+    };
+    triggerAutoSync();
+  }, []);
+
   const schools = useMemo(() => {
     const set = new Set<string>();
     if (allStudents) {
