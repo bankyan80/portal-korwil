@@ -42,6 +42,7 @@ export default function OperatorProfilSekolah() {
       jenjang: school?.jenjang || '',
       status: school?.status || '',
       kepalaSekolah: school?.kepalaSekolah || '',
+      pltKepalaSekolah: school?.pltKepalaSekolah || '',
       akreditasi: school?.akreditasi || '',
       alamat: school?.alamat || '',
       kontak: school?.kontak || '',
@@ -60,6 +61,7 @@ export default function OperatorProfilSekolah() {
         jenjang: form.jenjang,
         status: form.status,
         kepalaSekolah: form.kepalaSekolah,
+        pltKepalaSekolah: form.pltKepalaSekolah,
         akreditasi: form.akreditasi,
         alamat: form.alamat,
         kontak: form.kontak,
@@ -120,6 +122,10 @@ export default function OperatorProfilSekolah() {
               <div>
                 <p className="text-xs text-muted-foreground">Kepala Sekolah</p>
                 <p className="font-medium text-gray-900 dark:text-white">{school.kepalaSekolah || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Plt. Kepala Sekolah</p>
+                <p className="font-medium text-gray-900 dark:text-white">{school.pltKepalaSekolah || '-'}</p>
               </div>
             </div>
             <div className="pt-4 border-t dark:border-gray-700 space-y-2">
@@ -185,6 +191,10 @@ export default function OperatorProfilSekolah() {
               <div className="space-y-2">
                 <Label>Kepala Sekolah</Label>
                 <Input value={form.kepalaSekolah} onChange={(e: any) => setForm((f: any) => ({ ...f, kepalaSekolah: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Plt. Kepala Sekolah</Label>
+                <Input value={form.pltKepalaSekolah} onChange={(e: any) => setForm((f: any) => ({ ...f, pltKepalaSekolah: e.target.value }))} placeholder="Kosongkan jika ada Kepala Sekolah definitif" />
               </div>
               <div className="space-y-2">
                 <Label>Alamat</Label>

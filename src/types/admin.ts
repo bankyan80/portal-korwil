@@ -71,6 +71,7 @@ export interface School {
   desa: string;
   status: 'NEGERI' | 'SWASTA';
   kepalaSekolah: string;
+  pltKepalaSekolah?: string;
   operatorUid?: string;
   kontak: string;
   logo?: string;

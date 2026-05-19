@@ -115,6 +115,7 @@ for (let i = 0; i < allSekolah.length; i += 500) {
       desa: sekolah.desa,
       status: sekolah.status,
       kepalaSekolah: '',
+      pltKepalaSekolah: '',
       kontak: '',
       akreditasi: sekolah.akreditasi || '',
       createdAt: Date.now(),

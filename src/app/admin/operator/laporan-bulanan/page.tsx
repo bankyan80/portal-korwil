@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/app-store';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot, setDoc, collection, query, where } from 'firebase/firestore';
 import { normalizeSchool } from '@/lib/normalize';
+import pltData from '@/data/data-plt.json';
 import Link from 'next/link';
 import { ArrowLeft, Printer, Loader2, Send, CheckCircle, Clock, AlertCircle, Eye, TriangleAlert } from 'lucide-react';
 
@@ -64,6 +65,12 @@ export default function LaporBulananPage() {
     if (val !== undefined && val !== '' && val !== null) return String(val);
     const lval = laporanData?.dataSarpras?.[key];
     return lval !== undefined && lval !== '' && lval !== null ? String(lval) : '-';
+  }
+
+  function getPltKepsek(): string | null {
+    const schoolName = sekolah?.name || user?.schoolName || '';
+    const plt = pltData.find((p: any) => normalizeSchool(p.sekolah) === normalizeSchool(schoolName));
+    return plt ? `Plt. ${plt.plt_nama}` : null;
   }
 
   function getSiswaVal(key: string): number {
@@ -296,7 +303,7 @@ export default function LaporBulananPage() {
           status: sekolah?.status || '-',
           alamat: sekolah?.alamat || '-',
           desa: sekolah?.desa || '-',
-          kepalaSekolah: sekolah?.kepalaSekolah || '-',
+          kepalaSekolah: sekolah?.kepalaSekolah || getPltKepsek() || '-',
         },
         dataSiswa: {
           ...kelasData,
@@ -816,7 +823,7 @@ export default function LaporBulananPage() {
             <p className="mb-8">Lemahabang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             <p className="font-semibold">Kepala Sekolah</p>
             <br /><br />
-            <p className="font-bold mt-6 underline">{s.kepalaSekolah || 'Mulus, S.Pd'}</p>
+            <p className="font-bold mt-6 underline">{s.kepalaSekolah || getPltKepsek() || 'Plt. Kepala Sekolah'}</p>
           </div>
         </div>
         <p className="text-[7px] text-center mt-1 text-gray-400 print:hidden">*) Coret yang tidak perlu</p>
