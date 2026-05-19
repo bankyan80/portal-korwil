@@ -105,7 +105,7 @@ export function ManageGallery() {
      setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
    }, []);
 
-  async function uploadImageToDrive(file: File): Promise<{ url: string; metadata: GalleryImageFile }> {
+  async function uploadImageToSupabase(file: File): Promise<{ url: string; metadata: GalleryImageFile }> {
     let fileToUpload: File | Blob = file;
     if (file.size > 3 * 1024 * 1024) {
       fileToUpload = await compressImage(file, 1200, 0.7);
@@ -120,7 +120,7 @@ export function ManageGallery() {
     formData.append('kategori', 'galeri');
     formData.append('uploadedBy', currentUser.uid);
 
-    const res = await fetch('/api/drive/upload', {
+    const res = await fetch('/api/supabase/upload', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -133,14 +133,14 @@ export function ManageGallery() {
 
     const data = await res.json();
     return {
-      url: data.data.webViewLink,
+      url: data.data.fileUrl,
       metadata: {
-        driveFileId: data.data.driveFileId,
+        driveFileId: data.data.fileName,
         fileName: data.data.fileName,
         mimeType: data.data.mimeType,
         size: data.data.size,
-        webViewLink: data.data.webViewLink,
-        webContentLink: data.data.webContentLink,
+        webViewLink: data.data.fileUrl,
+        webContentLink: data.data.fileUrl,
         uploadedAt: data.data.uploadedAt,
       },
     };
@@ -167,7 +167,7 @@ export function ManageGallery() {
             setUploadPhase('uploading');
             setUploadProgress(Math.round(((i) / selectedFiles.length) * 100));
 
-            const result = await uploadImageToDrive(file);
+            const result = await uploadImageToSupabase(file);
             imageUrls.push(result.url);
             imageFiles.push(result.metadata);
           }
@@ -376,7 +376,7 @@ export function ManageGallery() {
                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-colors cursor-pointer relative">
                  <ImagePlus className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
                  <p className="text-sm text-muted-foreground">Klik atau seret foto ke sini</p>
-                   <p className="text-xs text-muted-foreground/70 mt-1">JPG/JPEG/PNG/GIF/TIFF hingga 5MB. Foto diupload ke Google Drive, kompresi otomatis untuk &gt;3MB</p>
+                   <p className="text-xs text-muted-foreground/70 mt-1">JPG/JPEG/PNG/GIF/TIFF hingga 5MB. Kompresi otomatis untuk &gt;3MB</p>
                 <Input
                   ref={fileInputRef}
                   type="file"

@@ -25,12 +25,15 @@ export interface Announcement {
 }
 
 export interface GalleryImageFile {
-  driveFileId: string;
+  provider?: 'supabase' | 'google-drive';
+  driveFileId?: string;
   fileName: string;
   mimeType: string;
   size: number;
   webViewLink: string;
   webContentLink?: string;
+  fileUrl?: string;
+  storagePath?: string;
   uploadedAt: string;
 }
 

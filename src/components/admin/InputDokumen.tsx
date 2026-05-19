@@ -153,72 +153,77 @@ export default function InputDokumenPage() {
          setUploadProgress(Math.round(((i) / files.length) * 50));
          setUploadPhase('uploading');
 
-         const formData = new FormData();
-         formData.append('file', fileToUpload, file.name);
-         formData.append('kategori', 'dokumen');
-         formData.append('uploadedBy', currentUser.uid);
+          const formData = new FormData();
+          formData.append('file', fileToUpload, file.name);
+          formData.append('kategori', 'dokumen');
+          formData.append('sekolahId', pegawai.sekolah?.toLowerCase().replace(/\s+/g, '-') || '');
+          formData.append('uploadedBy', currentUser.uid);
 
-         const uploadRes = await fetch('/api/drive/upload', {
-           method: 'POST',
-           headers: { Authorization: `Bearer ${token}` },
-           body: formData,
-         });
+          const uploadRes = await fetch('/api/supabase/upload', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
 
-         if (!uploadRes.ok) {
-           const errData = await uploadRes.json();
-           throw new Error(errData.error || `Upload "${file.name}" gagal`);
-         }
+          if (!uploadRes.ok) {
+            const errData = await uploadRes.json();
+            throw new Error(errData.error || `Upload "${file.name}" gagal`);
+          }
 
-         const uploadData = await uploadRes.json();
-         const driveMetadata = uploadData.data;
+          const uploadData = await uploadRes.json();
+          const supabaseData = uploadData.data;
 
          setUploadProgress(50 + Math.round(((i + 1) / files.length) * 50));
          setUploadPhase('saving');
 
-         const docRef = await addDoc(collection(db!, 'dokumen'), {
-           nik: pegawai.nik || '',
-           nip,
-           nama: pegawai.nama,
-           fileName: file.name,
-           fileType: fileToUpload.type || file.type,
-           fileSize: fileToUpload.size,
-           file: {
-             driveFileId: driveMetadata.driveFileId,
-             fileName: driveMetadata.fileName,
-             mimeType: driveMetadata.mimeType,
-             size: driveMetadata.size,
-             webViewLink: driveMetadata.webViewLink,
-             webContentLink: driveMetadata.webContentLink,
-             uploadedAt: driveMetadata.uploadedAt,
-             uploadedBy: driveMetadata.uploadedBy,
-           },
-           uploadedAt: Date.now(),
-         });
+          const docRef = await addDoc(collection(db!, 'dokumen'), {
+            nik: pegawai.nik || '',
+            nip,
+            nama: pegawai.nama,
+            fileName: file.name,
+            fileType: fileToUpload.type || file.type,
+            fileSize: fileToUpload.size,
+            file: {
+              provider: 'supabase',
+              bucket: supabaseData.bucket,
+              fileName: supabaseData.fileName,
+              originalName: supabaseData.originalName,
+              storagePath: supabaseData.storagePath,
+              fileUrl: supabaseData.fileUrl,
+              mimeType: supabaseData.mimeType,
+              size: supabaseData.size,
+              uploadedAt: supabaseData.uploadedAt,
+              uploadedBy: supabaseData.uploadedBy,
+            },
+            uploadedAt: Date.now(),
+          });
 
-         uploaded.push({
-           id: docRef.id,
-           nik: pegawai.nik || '',
-           nip,
-           nama: pegawai.nama,
-           fileName: file.name,
-           fileType: fileToUpload.type || file.type,
-           fileSize: fileToUpload.size,
-           file: {
-             driveFileId: driveMetadata.driveFileId,
-             fileName: driveMetadata.fileName,
-             mimeType: driveMetadata.mimeType,
-             size: driveMetadata.size,
-             webViewLink: driveMetadata.webViewLink,
-             webContentLink: driveMetadata.webContentLink,
-             uploadedAt: driveMetadata.uploadedAt,
-             uploadedBy: driveMetadata.uploadedBy,
-           },
-           uploadedAt: Date.now(),
-         });
+          uploaded.push({
+            id: docRef.id,
+            nik: pegawai.nik || '',
+            nip,
+            nama: pegawai.nama,
+            fileName: file.name,
+            fileType: fileToUpload.type || file.type,
+            fileSize: fileToUpload.size,
+            file: {
+              provider: 'supabase',
+              bucket: supabaseData.bucket,
+              fileName: supabaseData.fileName,
+              originalName: supabaseData.originalName,
+              storagePath: supabaseData.storagePath,
+              fileUrl: supabaseData.fileUrl,
+              mimeType: supabaseData.mimeType,
+              size: supabaseData.size,
+              uploadedAt: supabaseData.uploadedAt,
+              uploadedBy: supabaseData.uploadedBy,
+            },
+            uploadedAt: Date.now(),
+          });
        }
 
-       setUploadPhase('done');
-       setUploadStatus({ ok: true, msg: `${files.length} dokumen berhasil diupload ke Google Drive` });
+        setUploadPhase('done');
+        setUploadStatus({ ok: true, msg: `${files.length} dokumen berhasil diupload` });
        setFiles([]);
      } catch (e: any) {
        setUploadPhase('error');
@@ -238,7 +243,9 @@ export default function InputDokumenPage() {
   }
 
   function handleDownload(doc: DokumenBersama) {
-    if (doc.file?.webViewLink) {
+    if (doc.file?.fileUrl) {
+      window.open(doc.file.fileUrl, '_blank');
+    } else if (doc.file?.webViewLink) {
       window.open(doc.file.webViewLink, '_blank');
     } else if (doc.downloadUrl) {
       window.open(doc.downloadUrl, '_blank');
@@ -325,7 +332,7 @@ export default function InputDokumenPage() {
             <Upload className="w-5 h-5" />
             Pilih File (PDF, Word, Excel, Gambar, dll)
           </button>
-           <p className="text-xs text-gray-500 mt-1">Gambar &gt;2MB akan dikompres otomatis. Maks: 10MB (dokumen), 5MB (gambar setelah kompresi). File diupload ke Google Drive.</p>
+           <p className="text-xs text-gray-500 mt-1">Gambar &gt;2MB akan dikompres otomatis. Maks: 10MB (dokumen), 5MB (gambar setelah kompresi).</p>
           {files.length > 0 && (
             <div className="space-y-2">
               {files.map((f, i) => (
@@ -355,7 +362,7 @@ export default function InputDokumenPage() {
               <div className="flex items-center gap-2 text-sm text-blue-600">
                 <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                 <span className="truncate">
-                  {uploadPhase === 'uploading' && 'Mengupload ke Google Drive...'}
+                  {uploadPhase === 'uploading' && 'Mengupload file...'}
                   {uploadPhase === 'saving' && 'Menyimpan metadata ke Firestore...'}
                   {uploadPhase === 'done' && 'Upload selesai'}
                   {uploadPhase === 'error' && 'Upload gagal'}
@@ -403,7 +410,7 @@ export default function InputDokumenPage() {
                       <p className="text-xs text-gray-400">{formatSize(doc.fileSize)}</p>
                       {doc.file && (
                         <p className="text-[10px] text-green-600 flex items-center gap-1 mt-0.5">
-                          <CheckCircle className="w-3 h-3" /> Google Drive
+                          <CheckCircle className="w-3 h-3" /> {doc.file.provider === 'supabase' ? 'Supabase Storage' : 'Google Drive'}
                         </p>
                       )}
                     </div>

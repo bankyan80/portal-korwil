@@ -14,6 +14,22 @@ export interface DriveFileMetadata {
   kategori?: string;
 }
 
+export interface SupabaseFileMetadata {
+  provider: 'supabase';
+  bucket: string;
+  fileName: string;
+  originalName: string;
+  storagePath: string;
+  fileUrl: string;
+  mimeType: string;
+  size: number;
+  sizeText?: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+}
+
+export type FileMetadata = DriveFileMetadata | SupabaseFileMetadata;
+
 export interface DokumenBersama {
   id?: string;
   nik: string;
@@ -24,8 +40,8 @@ export interface DokumenBersama {
   fileSize: number;
   storagePath?: string;
   downloadUrl?: string;
-  file?: DriveFileMetadata;
-  /** @deprecated Use file.webViewLink instead */
+  file?: FileMetadata;
+  /** @deprecated Use file.webViewLink or file.fileUrl instead */
   dataUrl?: string;
   uploadedAt: number;
 }

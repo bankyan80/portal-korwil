@@ -10,7 +10,12 @@
     "sync": "node scripts/sync-siswa.mjs",
     "sync:sekolah": "node scripts/sync-sekolah.mjs",
     "sync:data": "node scripts/sync-data.mjs",
-    "watch:sync": "node scripts/watch-and-sync.mjs"
+    "watch:sync": "node scripts/watch-and-sync.mjs",
+    "supabase:version": "supabase --version",
+    "supabase:login": "supabase login",
+    "supabase:init": "supabase init",
+    "migrate:files:dry": "tsx scripts/migrate-firestore-files-to-supabase.ts --dry-run",
+    "migrate:files:execute": "tsx scripts/migrate-firestore-files-to-supabase.ts --execute"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -82,7 +87,8 @@
     "vaul": "^1.1.2",
     "z-ai-web-dev-sdk": "^0.0.17",
     "zod": "^4.0.2",
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.6",
+    "@supabase/supabase-js": "^2.106.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -91,7 +97,9 @@
     "bun-types": "^1.3.4",
     "eslint": "^9",
     "eslint-config-next": "^16.1.1",
+    "supabase": "^2.100.1",
     "tailwindcss": "^4",
+    "tsx": "^4.20.5",
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
   }

@@ -124,7 +124,7 @@ export default function DokumenBersamaPage() {
       formData.append('uploadedBy', currentUser.uid);
 
       setUploadProgress('uploading');
-      const uploadRes = await fetch('/api/drive/upload', {
+      const uploadRes = await fetch('/api/supabase/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -132,11 +132,11 @@ export default function DokumenBersamaPage() {
 
       if (!uploadRes.ok) {
         const errData = await uploadRes.json();
-        throw new Error(errData.error || 'Upload ke Google Drive gagal');
+        throw new Error(errData.error || 'Upload gagal');
       }
 
       const uploadData = await uploadRes.json();
-      const driveMetadata = uploadData.data;
+      const supabaseData = uploadData.data;
 
       setUploadProgress('saving');
       await addDoc(collection(db!, 'dokumen'), {
@@ -147,20 +147,22 @@ export default function DokumenBersamaPage() {
         fileType: file.type,
         fileSize: file.size,
         file: {
-          driveFileId: driveMetadata.driveFileId,
-          fileName: driveMetadata.fileName,
-          mimeType: driveMetadata.mimeType,
-          size: driveMetadata.size,
-          webViewLink: driveMetadata.webViewLink,
-          webContentLink: driveMetadata.webContentLink,
-          uploadedAt: driveMetadata.uploadedAt,
-          uploadedBy: driveMetadata.uploadedBy,
+          provider: 'supabase',
+          bucket: supabaseData.bucket,
+          fileName: supabaseData.fileName,
+          originalName: supabaseData.originalName,
+          storagePath: supabaseData.storagePath,
+          fileUrl: supabaseData.fileUrl,
+          mimeType: supabaseData.mimeType,
+          size: supabaseData.size,
+          uploadedAt: supabaseData.uploadedAt,
+          uploadedBy: supabaseData.uploadedBy,
         },
         uploadedAt: serverTimestamp(),
       });
 
       setUploadProgress('done');
-      setUploadStatus({ ok: true, msg: `"${file.name}" berhasil diupload ke Google Drive dan tersimpan di Firestore.` });
+      setUploadStatus({ ok: true, msg: `"${file.name}" berhasil diupload.` });
     } catch (err) {
       console.error('Upload gagal:', err);
       setUploadProgress('error');
@@ -172,7 +174,9 @@ export default function DokumenBersamaPage() {
   }
 
   function downloadDoc(doc: DokumenBersama) {
-    if (doc.file?.webViewLink) {
+    if (doc.file?.fileUrl) {
+      window.open(doc.file.fileUrl, '_blank');
+    } else if (doc.file?.webViewLink) {
       window.open(doc.file.webViewLink, '_blank');
     } else if (doc.downloadUrl) {
       window.open(doc.downloadUrl, '_blank');
@@ -288,9 +292,9 @@ export default function DokumenBersamaPage() {
             {uploadStatus.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
             <div className="flex-1">
               <p className="font-medium">{uploadStatus.msg}</p>
-              {uploadProgress === 'uploading' && <p className="text-xs mt-1">Mengupload ke Google Drive...</p>}
+              {uploadProgress === 'uploading' && <p className="text-xs mt-1">Mengupload file...</p>}
               {uploadProgress === 'saving' && <p className="text-xs mt-1">Menyimpan metadata ke Firestore...</p>}
-              {uploadProgress === 'done' && <p className="text-xs mt-1 text-green-600">File tersedia di Google Drive</p>}
+              {uploadProgress === 'done' && <p className="text-xs mt-1 text-green-600">File berhasil disimpan</p>}
               {uploadProgress === 'error' && <p className="text-xs mt-1 text-red-600">Silakan coba lagi</p>}
             </div>
           </div>
@@ -324,7 +328,7 @@ export default function DokumenBersamaPage() {
                     <p className="text-xs text-gray-400 mb-3">{formatSize(doc.fileSize)}</p>
                     {doc.file && (
                       <p className="text-[10px] text-green-600 mb-2 flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3" /> Tersimpan di Google Drive
+                        <CheckCircle className="w-3 h-3" /> {doc.file.provider === 'supabase' ? 'Supabase Storage' : 'Google Drive'}
                       </p>
                     )}
                     <div className="mt-auto">
