@@ -28,8 +28,10 @@ export default function DataGTKPage() {
     async function loadGtkSummary() {
       try {
         const res = await fetch('/api/pegawai/gtk-summary');
+        console.log('GTK API status:', res.status);
         if (res.ok) {
           const data = await res.json();
+          console.log('GTK schools count:', data.schools?.length);
           setSchoolData(data.schools || []);
         }
       } catch (e) {
