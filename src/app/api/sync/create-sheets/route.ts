@@ -4,7 +4,7 @@ import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import type { ServiceAccount } from 'firebase-admin';
 
-const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '15o8XOp-mQI4iQnY3mm29lXb2nEWMDShC';
+const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ';
 
 function getServiceAccount(): ServiceAccount | null {
   const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;

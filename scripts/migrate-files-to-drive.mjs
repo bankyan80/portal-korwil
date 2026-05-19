@@ -25,7 +25,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const LOG_FILE = path.join(process.cwd(), 'migration-log.json');
-const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '15o8XOp-mQI4iQnY3mm29lXb2nEWMDShC';
+const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ';
 
 function loadServiceAccount() {
   const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;

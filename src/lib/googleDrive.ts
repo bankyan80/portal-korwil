@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { Readable } from 'stream';
 
-const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '15o8XOp-mQI4iQnY3mm29lXb2nEWMDShC';
+const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ';
 
 const DRIVE_FOLDER_CONFIG: Record<string, { name: string; parentKey?: string }> = {
   root: { name: 'Portal Korwil' },
