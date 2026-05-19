@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { QueryProvider } from '@/contexts/QueryProvider';
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 interface SiswaForm {
   nik: string;
@@ -95,6 +95,7 @@ function DataSiswaContent() {
 
   // UI state
   const [search, setSearch] = useState('');
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -161,8 +162,8 @@ function DataSiswaContent() {
     });
   }, [filteredSiswa]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedSiswa.length / PAGE_SIZE));
-  const paginatedSiswa = sortedSiswa.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(sortedSiswa.length / pageSize));
+  const paginatedSiswa = sortedSiswa.slice((page - 1) * pageSize, page * pageSize);
 
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
 
@@ -318,6 +319,18 @@ function DataSiswaContent() {
               ))}
             </select>
           )}
+          <div className="flex items-center gap-1 text-sm">
+            <span className="text-muted-foreground">Tampilkan</span>
+            <select
+              value={pageSize}
+              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              className="text-sm border rounded-lg px-2 py-1.5 bg-background text-foreground"
+            >
+              {[10, 20, 50, 100].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
         </div>
         <Button onClick={openAdd} className="bg-blue-800 hover:bg-blue-900 text-white gap-2">
           <Plus className="w-4 h-4" /> Tambah
@@ -380,8 +393,8 @@ function DataSiswaContent() {
           </div>
           <div className="px-4 py-3 border-t text-xs text-muted-foreground flex items-center justify-between flex-wrap gap-2">
             <span>
-              Menampilkan {sortedSiswa.length > 0 ? (page - 1) * PAGE_SIZE + 1 : 0}–
-              {Math.min(page * PAGE_SIZE, sortedSiswa.length)} dari {sortedSiswa.length} siswa
+              Menampilkan {sortedSiswa.length > 0 ? (page - 1) * pageSize + 1 : 0}–
+              {Math.min(page * pageSize, sortedSiswa.length)} dari {sortedSiswa.length} siswa
             </span>
             {totalPages > 1 && (
               <div className="flex items-center gap-1">
