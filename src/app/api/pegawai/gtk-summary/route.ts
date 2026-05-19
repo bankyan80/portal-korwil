@@ -16,6 +16,11 @@ function loadStaticData() {
     const tkRaw = JSON.parse(fs.readFileSync(tkPath, 'utf-8'));
     data = [...data, ...tkRaw];
   }
+  const tkGelatikPath = path.join(process.cwd(), 'src', 'data', 'tk-gelatik-pegawai.json');
+  if (fs.existsSync(tkGelatikPath)) {
+    const tkGelatikRaw = JSON.parse(fs.readFileSync(tkGelatikPath, 'utf-8'));
+    data = [...data, ...tkGelatikRaw];
+  }
   dataCache = data;
   return dataCache;
 }
@@ -71,12 +76,33 @@ async function loadTambahan(): Promise<any[]> {
   }
 }
 
-async function loadAllData(): Promise<any[]> {
-  const employees = await loadFromFirestore();
-  if (employees.length > 0) {
-    const tambahan = await loadTambahan();
-    return [...employees, ...tambahan];
+function unionAll(firestoreRecords: any[], staticRecords: any[]): any[] {
+  const map = new Map<string, any>();
+  for (const r of staticRecords) {
+    map.set(r.nik || r.id, { ...r, _source: 'static' });
   }
+  for (const r of firestoreRecords) {
+    const key = r.nik || r.id;
+    if (map.has(key)) {
+      map.set(key, { ...map.get(key), ...r, _source: 'merged' });
+    } else {
+      map.set(key, { ...r, _source: 'firestore' });
+    }
+  }
+  return [...map.values()];
+}
+
+async function loadAllData(): Promise<any[]> {
+  const firestoreData = await loadFromFirestore();
+  const staticData = loadStaticData();
+  const tambahanData = await loadTambahan();
+
+  if (firestoreData.length > 0) {
+    const merged = unionAll(firestoreData, staticData);
+    return [...merged, ...tambahanData];
+  }
+  return [...staticData, ...tambahanData];
+}
   const [staticData, tambahanData] = await Promise.all([loadStaticData(), loadTambahan()]);
   return [...staticData, ...tambahanData];
 }
