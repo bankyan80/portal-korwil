@@ -79,7 +79,11 @@ export default function SuperAdminDashboard() {
       const res = await fetch('/api/sync/google-sheets', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        setSheetsSyncMsg(`Berhasil! Siswa: ${data.students}, Pegawai: ${data.employees}`);
+        const parts = Object.entries(data)
+          .filter(([k]) => k !== 'success')
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(', ');
+        setSheetsSyncMsg(`Berhasil! ${parts}`);
       } else {
         setSheetsSyncMsg(data.error || 'Gagal sync ke Google Sheets');
       }
@@ -87,7 +91,7 @@ export default function SuperAdminDashboard() {
       setSheetsSyncMsg('Gagal terhubung ke server');
     } finally {
       setSheetsSyncing(false);
-      setTimeout(() => setSheetsSyncMsg(''), 5000);
+      setTimeout(() => setSheetsSyncMsg(''), 8000);
     }
   }, []);
 
