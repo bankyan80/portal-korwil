@@ -24,11 +24,23 @@ export interface Announcement {
   author: string;
 }
 
+export interface GalleryImageFile {
+  driveFileId: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  webViewLink: string;
+  webContentLink?: string;
+  uploadedAt: string;
+}
+
 export interface GalleryItem {
   id: string;
   title: string;
   description: string;
+  /** Array of Drive image URLs (webViewLink) or legacy base64 strings */
   images: string[];
+  imageFiles?: GalleryImageFile[];
   category: GalleryCategory;
   authorName: string;
   authorRole: string;

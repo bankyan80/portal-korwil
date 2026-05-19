@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Search, FileText, Download, Loader2, FolderOpen, AlertTriangle, DownloadCloud, Upload as UploadIcon } from 'lucide-react';
+import { ArrowLeft, Search, FileText, Download, Loader2, FolderOpen, AlertTriangle, DownloadCloud, Upload as UploadIcon, CheckCircle, XCircle } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { useAppStore } from '@/store/app-store';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { DokumenBersama } from '@/types';
@@ -22,6 +22,20 @@ function formatSize(bytes: number) {
   return `${(bytes / 1048576).toFixed(1)} MB`;
 }
 
+const ALLOWED_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+];
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 export default function DokumenBersamaPage() {
   const user = useAppStore((s) => s.user);
   const [nip, setNip] = useState('');
@@ -32,6 +46,8 @@ export default function DokumenBersamaPage() {
   const [searched, setSearched] = useState(false);
   const [dbReady, setDbReady] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<'idle' | 'uploading' | 'saving' | 'done' | 'error'>('idle');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = user && (user.role === 'super_admin' || user.role === 'operator_sekolah');
@@ -78,33 +94,87 @@ export default function DokumenBersamaPage() {
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !pegawai || !db) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setUploadStatus({ ok: false, msg: `Tipe file "${file.type}" tidak diizinkan. Gunakan PDF, Word, Excel, JPG/JPEG, PNG, WEBP, GIF, atau TIFF.` });
+      if (fileRef.current) fileRef.current.value = '';
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setUploadStatus({ ok: false, msg: `Ukuran file ${(file.size / (1024 * 1024)).toFixed(1)}MB melebihi batas 10MB.` });
+      if (fileRef.current) fileRef.current.value = '';
+      return;
+    }
+
     setUploading(true);
+    setUploadStatus(null);
+    setUploadProgress('uploading');
+
     try {
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        const dataUrl = ev.target?.result as string;
-        await addDoc(collection(db!, 'dokumen'), {
-          nik: pegawai.nik || '',
-          nip: pegawai.nip || nip.replace(/\D/g, ''),
-          nama: pegawai.nama,
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-          dataUrl,
-          uploadedAt: serverTimestamp(),
-        });
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      const currentUser = auth?.currentUser;
+      if (!currentUser) {
+        throw new Error('Anda harus login untuk upload dokumen');
+      }
+
+      const token = await currentUser.getIdToken();
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('kategori', 'dokumen');
+      formData.append('uploadedBy', currentUser.uid);
+
+      setUploadProgress('uploading');
+      const uploadRes = await fetch('/api/drive/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errData = await uploadRes.json();
+        throw new Error(errData.error || 'Upload ke Google Drive gagal');
+      }
+
+      const uploadData = await uploadRes.json();
+      const driveMetadata = uploadData.data;
+
+      setUploadProgress('saving');
+      await addDoc(collection(db!, 'dokumen'), {
+        nik: pegawai.nik || '',
+        nip: pegawai.nip || nip.replace(/\D/g, ''),
+        nama: pegawai.nama,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        file: {
+          driveFileId: driveMetadata.driveFileId,
+          fileName: driveMetadata.fileName,
+          mimeType: driveMetadata.mimeType,
+          size: driveMetadata.size,
+          webViewLink: driveMetadata.webViewLink,
+          webContentLink: driveMetadata.webContentLink,
+          uploadedAt: driveMetadata.uploadedAt,
+          uploadedBy: driveMetadata.uploadedBy,
+        },
+        uploadedAt: serverTimestamp(),
+      });
+
+      setUploadProgress('done');
+      setUploadStatus({ ok: true, msg: `"${file.name}" berhasil diupload ke Google Drive dan tersimpan di Firestore.` });
     } catch (err) {
       console.error('Upload gagal:', err);
+      setUploadProgress('error');
+      setUploadStatus({ ok: false, msg: err instanceof Error ? err.message : 'Upload gagal' });
+    } finally {
       setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
-    if (fileRef.current) fileRef.current.value = '';
   }
 
   function downloadDoc(doc: DokumenBersama) {
-    if (doc.downloadUrl) {
+    if (doc.file?.webViewLink) {
+      window.open(doc.file.webViewLink, '_blank');
+    } else if (doc.downloadUrl) {
       window.open(doc.downloadUrl, '_blank');
     } else if (doc.dataUrl) {
       const a = document.createElement('a');
@@ -189,14 +259,40 @@ export default function DokumenBersamaPage() {
             </div>
             {isAdmin && db && (
               <div>
-                <input ref={fileRef} type="file" onChange={handleUpload} className="hidden" />
-                <button onClick={() => fileRef.current?.click()} disabled={uploading}
-                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-800 rounded-lg hover:bg-blue-900 disabled:opacity-50">
-                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadIcon className="w-4 h-4" />}
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.gif,.tiff,.tif"
+                  onChange={handleUpload}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-800 rounded-lg hover:bg-blue-900 disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <UploadIcon className="w-4 h-4" />
+                  )}
                   Upload Dokumen
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {uploadStatus && (
+          <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${uploadStatus.ok ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+            {uploadStatus.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
+            <div className="flex-1">
+              <p className="font-medium">{uploadStatus.msg}</p>
+              {uploadProgress === 'uploading' && <p className="text-xs mt-1">Mengupload ke Google Drive...</p>}
+              {uploadProgress === 'saving' && <p className="text-xs mt-1">Menyimpan metadata ke Firestore...</p>}
+              {uploadProgress === 'done' && <p className="text-xs mt-1 text-green-600">File tersedia di Google Drive</p>}
+              {uploadProgress === 'error' && <p className="text-xs mt-1 text-red-600">Silakan coba lagi</p>}
+            </div>
           </div>
         )}
 
@@ -226,6 +322,11 @@ export default function DokumenBersamaPage() {
                     <div className="text-3xl mb-3">{getIcon(doc.fileType)}</div>
                     <p className="text-sm font-medium text-[#0d3b66] truncate mb-1" title={doc.fileName}>{doc.fileName}</p>
                     <p className="text-xs text-gray-400 mb-3">{formatSize(doc.fileSize)}</p>
+                    {doc.file && (
+                      <p className="text-[10px] text-green-600 mb-2 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" /> Tersimpan di Google Drive
+                      </p>
+                    )}
                     <div className="mt-auto">
                       <button
                         onClick={() => downloadDoc(doc)}

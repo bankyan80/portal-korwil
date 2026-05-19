@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, Upload, Trash2, FileText, Download, Loader2, CheckCircle, XCircle, File } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
-import { storage, db } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, auth } from '@/lib/firebase';
 import { collection, addDoc, query, where, deleteDoc, doc, orderBy, onSnapshot } from 'firebase/firestore';
 import type { DokumenBersama } from '@/types';
 
@@ -14,23 +13,11 @@ function formatSize(bytes: number) {
   return `${(bytes / 1048576).toFixed(1)} MB`;
 }
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-// Compress image using Canvas API
 async function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promise<{ blob: Blob; type: string }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
       let { width, height } = img;
-
-      // Calculate new dimensions while maintaining aspect ratio
       if (width > height) {
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
@@ -42,8 +29,6 @@ async function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promis
           height = maxWidth;
         }
       }
-
-      // Create canvas and draw resized image
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
@@ -53,15 +38,10 @@ async function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promis
         return;
       }
       ctx.drawImage(img, 0, 0, width, height);
-
-      // Convert to blob with reduced quality
       canvas.toBlob(
         (blob) => {
-          if (blob) {
-            resolve({ blob, type: file.type });
-          } else {
-            reject(new Error('Failed to compress image'));
-          }
+          if (blob) resolve({ blob, type: file.type });
+          else reject(new Error('Failed to compress image'));
         },
         file.type,
         quality
@@ -83,6 +63,8 @@ export default function InputDokumenPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [uploadPhase, setUploadPhase] = useState<'idle' | 'uploading' | 'saving' | 'done' | 'error'>('idle');
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dataLoaded, setDataLoaded] = useState(db ? false : true);
 
@@ -137,111 +119,115 @@ export default function InputDokumenPage() {
      if (!pegawai || files.length === 0) return;
      setUploading(true);
      setUploadStatus(null);
+     setUploadPhase('uploading');
+     setUploadProgress(0);
 
      const nip = pegawai.nip || nipSearch.replace(/\D/g, '');
      const uploaded: DokumenBersama[] = [];
 
-     for (const file of files) {
-       try {
-         // Validate file size (max 10MB for documents, 5MB for images after compression)
+     try {
+       const currentUser = auth?.currentUser;
+       if (!currentUser) {
+         throw new Error('Anda harus login untuk upload dokumen');
+       }
+
+       const token = await currentUser.getIdToken();
+
+       for (let i = 0; i < files.length; i++) {
+         const file = files[i];
          const isImage = file.type.startsWith('image/');
-         const maxSize = isImage ? 5 * 1024 * 1024 : 10 * 1024 * 1024; // 5MB for images, 10MB for others
+         const maxSize = isImage ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
 
          let fileToUpload = file;
-
-         // Compress images if too large
-         if (isImage && file.size > 2 * 1024 * 1024) { // >2MB
-           toast.info(`Mengompres ${file.name} untuk mempercepat upload...`);
+         if (isImage && file.size > 2 * 1024 * 1024) {
            fileToUpload = (await compressImage(file, 1920, 0.8)).blob;
          }
 
          if (fileToUpload.size > maxSize) {
            setUploadStatus({ ok: false, msg: `File "${file.name}" melebihi ukuran maksimum ${isImage ? '5MB' : '10MB'}` });
+           setUploadPhase('error');
            setUploading(false);
            return;
          }
 
-         if (storage && db) {
-           const storagePath = `dokumen/${nip}/${Date.now()}_${file.name}`;
-           const storageRef = ref(storage, storagePath);
+         setUploadProgress(Math.round(((i) / files.length) * 50));
+         setUploadPhase('uploading');
 
-           // Add metadata to uploaded documents
-           const metadata = {
-             contentType: fileToUpload.type,
-             uploadedBy: pegawai.nama,
-             nip: nip,
-             category: 'dokumen',
-             uploadedAt: Date.now(),
-             originalSize: file.size,
-             compressedSize: fileToUpload.size,
-           };
+         const formData = new FormData();
+         formData.append('file', fileToUpload, file.name);
+         formData.append('kategori', 'dokumen');
+         formData.append('uploadedBy', currentUser.uid);
 
-           await uploadBytes(storageRef, fileToUpload, metadata);
-           const downloadUrl = await getDownloadURL(storageRef);
-           const docRef = await addDoc(collection(db, 'dokumen'), {
-             nik: pegawai.nik || '',
-             nip,
-             nama: pegawai.nama,
-             fileName: file.name,
-             fileType: fileToUpload.type,
-             fileSize: fileToUpload.size,
-             storagePath,
-             downloadUrl,
-             uploadedAt: Date.now(),
-           });
-           uploaded.push({
-             id: docRef.id,
-             nik: pegawai.nik || '',
-             nip,
-             nama: pegawai.nama,
-             fileName: file.name,
-             fileType: fileToUpload.type,
-             fileSize: fileToUpload.size,
-             storagePath,
-             downloadUrl,
-             uploadedAt: Date.now(),
-           });
-         } else {
-           // Mock mode: compress image if needed
-           if (isImage && fileToUpload !== file) {
-             const dataUrl = await fileToBase64(fileToUpload);
-             const doc: DokumenBersama = {
-               nik: pegawai.nik || '',
-               nip,
-               nama: pegawai.nama,
-               fileName: file.name,
-               fileType: fileToUpload.type,
-               fileSize: fileToUpload.size,
-               dataUrl,
-               uploadedAt: Date.now(),
-             };
-             uploaded.push(doc);
-           } else {
-             const dataUrl = await fileToBase64(file);
-             const doc: DokumenBersama = {
-               nik: pegawai.nik || '',
-               nip,
-               nama: pegawai.nama,
-               fileName: file.name,
-               fileType: file.type,
-               fileSize: file.size,
-               dataUrl,
-               uploadedAt: Date.now(),
-             };
-             uploaded.push(doc);
-           }
+         const uploadRes = await fetch('/api/drive/upload', {
+           method: 'POST',
+           headers: { Authorization: `Bearer ${token}` },
+           body: formData,
+         });
+
+         if (!uploadRes.ok) {
+           const errData = await uploadRes.json();
+           throw new Error(errData.error || `Upload "${file.name}" gagal`);
          }
-       } catch (e: any) {
-         setUploadStatus({ ok: false, msg: `Gagal upload ${file.name}: ${e.message}` });
-         setUploading(false);
-         return;
-       }
-     }
 
-    setUploadStatus({ ok: true, msg: `${files.length} dokumen berhasil diupload` });
-    setFiles([]);
-    setUploading(false);
-  }
+         const uploadData = await uploadRes.json();
+         const driveMetadata = uploadData.data;
+
+         setUploadProgress(50 + Math.round(((i + 1) / files.length) * 50));
+         setUploadPhase('saving');
+
+         const docRef = await addDoc(collection(db!, 'dokumen'), {
+           nik: pegawai.nik || '',
+           nip,
+           nama: pegawai.nama,
+           fileName: file.name,
+           fileType: fileToUpload.type || file.type,
+           fileSize: fileToUpload.size,
+           file: {
+             driveFileId: driveMetadata.driveFileId,
+             fileName: driveMetadata.fileName,
+             mimeType: driveMetadata.mimeType,
+             size: driveMetadata.size,
+             webViewLink: driveMetadata.webViewLink,
+             webContentLink: driveMetadata.webContentLink,
+             uploadedAt: driveMetadata.uploadedAt,
+             uploadedBy: driveMetadata.uploadedBy,
+           },
+           uploadedAt: Date.now(),
+         });
+
+         uploaded.push({
+           id: docRef.id,
+           nik: pegawai.nik || '',
+           nip,
+           nama: pegawai.nama,
+           fileName: file.name,
+           fileType: fileToUpload.type || file.type,
+           fileSize: fileToUpload.size,
+           file: {
+             driveFileId: driveMetadata.driveFileId,
+             fileName: driveMetadata.fileName,
+             mimeType: driveMetadata.mimeType,
+             size: driveMetadata.size,
+             webViewLink: driveMetadata.webViewLink,
+             webContentLink: driveMetadata.webContentLink,
+             uploadedAt: driveMetadata.uploadedAt,
+             uploadedBy: driveMetadata.uploadedBy,
+           },
+           uploadedAt: Date.now(),
+         });
+       }
+
+       setUploadPhase('done');
+       setUploadStatus({ ok: true, msg: `${files.length} dokumen berhasil diupload ke Google Drive` });
+       setFiles([]);
+     } catch (e: any) {
+       setUploadPhase('error');
+       setUploadStatus({ ok: false, msg: `Gagal upload: ${e.message}` });
+     } finally {
+       setUploading(false);
+       setUploadProgress(0);
+     }
+   }
 
   async function handleDelete(docId: string) {
     if (db) {
@@ -252,7 +238,9 @@ export default function InputDokumenPage() {
   }
 
   function handleDownload(doc: DokumenBersama) {
-    if (doc.downloadUrl) {
+    if (doc.file?.webViewLink) {
+      window.open(doc.file.webViewLink, '_blank');
+    } else if (doc.downloadUrl) {
       window.open(doc.downloadUrl, '_blank');
     } else if (doc.dataUrl) {
       const a = document.createElement('a');
@@ -260,14 +248,6 @@ export default function InputDokumenPage() {
       a.download = doc.fileName;
       a.click();
     }
-  }
-
-  function makeBlobUrl(base64: string, type: string) {
-    const byteStr = atob(base64.split(',')[1]);
-    const ab = new ArrayBuffer(byteStr.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
-    return URL.createObjectURL(new Blob([ab], { type }));
   }
 
   async function downloadAll() {
@@ -333,6 +313,7 @@ export default function InputDokumenPage() {
           <input
             ref={fileInputRef}
             type="file"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.gif,.tiff,.tif"
             multiple
             onChange={handleFileSelect}
             className="hidden"
@@ -344,7 +325,7 @@ export default function InputDokumenPage() {
             <Upload className="w-5 h-5" />
             Pilih File (PDF, Word, Excel, Gambar, dll)
           </button>
-           <p className="text-xs text-gray-500 mt-1">Gambar &gt;2MB akan dikompres otomatis. Maks: 10MB (dokumen), 5MB (gambar setelah kompresi)</p>
+           <p className="text-xs text-gray-500 mt-1">Gambar &gt;2MB akan dikompres otomatis. Maks: 10MB (dokumen), 5MB (gambar setelah kompresi). File diupload ke Google Drive.</p>
           {files.length > 0 && (
             <div className="space-y-2">
               {files.map((f, i) => (
@@ -367,6 +348,22 @@ export default function InputDokumenPage() {
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                 Upload {files.length} File
               </button>
+            </div>
+          )}
+          {(uploading || uploadPhase !== 'idle') && (
+            <div className="space-y-2 py-2">
+              <div className="flex items-center gap-2 text-sm text-blue-600">
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span className="truncate">
+                  {uploadPhase === 'uploading' && 'Mengupload ke Google Drive...'}
+                  {uploadPhase === 'saving' && 'Menyimpan metadata ke Firestore...'}
+                  {uploadPhase === 'done' && 'Upload selesai'}
+                  {uploadPhase === 'error' && 'Upload gagal'}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+              </div>
             </div>
           )}
           {uploadStatus && (
@@ -404,6 +401,11 @@ export default function InputDokumenPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-[#0d3b66] truncate">{doc.fileName}</p>
                       <p className="text-xs text-gray-400">{formatSize(doc.fileSize)}</p>
+                      {doc.file && (
+                        <p className="text-[10px] text-green-600 flex items-center gap-1 mt-0.5">
+                          <CheckCircle className="w-3 h-3" /> Google Drive
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

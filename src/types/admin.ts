@@ -1,6 +1,19 @@
 export type StatusValidasi = 'valid' | 'tidak_valid' | 'verifikasi';
 export type YatimCategory = 'yatim_piatu' | 'yatim' | 'piatu';
 
+export interface DriveFileMetadata {
+  driveFileId: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  webViewLink: string;
+  webContentLink?: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+  sekolahId?: string;
+  kategori?: string;
+}
+
 export interface DokumenBersama {
   id?: string;
   nik: string;
@@ -10,8 +23,10 @@ export interface DokumenBersama {
   fileType: string;
   fileSize: number;
   storagePath?: string;
-  dataUrl?: string;
   downloadUrl?: string;
+  file?: DriveFileMetadata;
+  /** @deprecated Use file.webViewLink instead */
+  dataUrl?: string;
   uploadedAt: number;
 }
 

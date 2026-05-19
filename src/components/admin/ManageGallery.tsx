@@ -20,19 +20,17 @@ import {
   Search, Plus, Pencil, Trash2, Camera, CheckCircle, XCircle, Clock, ImagePlus, Loader2, FileImage,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { GalleryItem, GalleryCategory, GalleryStatus } from '@/types';
+import type { GalleryItem, GalleryCategory, GalleryStatus, GalleryImageFile } from '@/types';
 import { useGalleryCrud } from '@/hooks/use-firestore-crud';
 import { Progress } from '@/components/ui/progress';
 import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTable';
+import { auth } from '@/lib/firebase';
 
-// Compress image using Canvas API
 async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
       let { width, height } = img;
-
-      // Calculate new dimensions while maintaining aspect ratio
       if (width > height) {
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
@@ -44,8 +42,6 @@ async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promis
           height = maxWidth;
         }
       }
-
-      // Create canvas and draw resized image
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
@@ -55,15 +51,10 @@ async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promis
         return;
       }
       ctx.drawImage(img, 0, 0, width, height);
-
-      // Convert to blob with reduced quality
       canvas.toBlob(
         (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Failed to compress image'));
-          }
+          if (blob) resolve(blob);
+          else reject(new Error('Failed to compress image'));
         },
         file.type,
         quality
@@ -99,10 +90,11 @@ export function ManageGallery() {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState('');
+  const [uploadPhase, setUploadPhase] = useState<'idle' | 'compressing' | 'uploading' | 'saving' | 'done' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
    const openAdd = useCallback(() => { crud.openAdd(); setForm(defaultForm); }, [crud.openAdd]);
-   const openEdit = useCallback((item: GalleryItem) => { crud.openEdit(item.id); setForm({ title: item.title, description: item.description, category: item.category, status: item.status }); }, [crud.openEdit]);
+   const openEdit = useCallback((item: GalleryItem) => { crud.openEdit(item); setForm({ title: item.title, description: item.description, category: item.category, status: item.status }); }, [crud.openEdit]);
 
     const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files) return;
@@ -113,76 +105,119 @@ export function ManageGallery() {
      setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
    }, []);
 
-  function fileToBase64(file: File | Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function processFile(file: File): Promise<string> {
-    let fileToProcess: File | Blob = file;
+  async function uploadImageToDrive(file: File): Promise<{ url: string; metadata: GalleryImageFile }> {
+    let fileToUpload: File | Blob = file;
     if (file.size > 3 * 1024 * 1024) {
-      setUploadStatus(`Mengompresi ${file.name}...`);
-      fileToProcess = await compressImage(file, 1200, 0.7);
+      fileToUpload = await compressImage(file, 1200, 0.7);
     }
-    if (fileToProcess.size > 5 * 1024 * 1024) return '';
-    return fileToBase64(fileToProcess);
-  }
 
-  const getImageUrls = useCallback(async (files: File[]): Promise<string[]> => {
-    if (files.length === 0) return [];
-    setUploadingImages(true);
-    setUploadProgress(0);
-    const results: string[] = [];
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file.type.startsWith('image/')) continue;
-        setUploadStatus(`${i + 1}/${files.length}: ${file.name}`);
-        setUploadProgress(Math.round(((i) / files.length) * 100));
-        const dataUrl = await processFile(file);
-        if (dataUrl) results.push(dataUrl);
-      }
-      setUploadProgress(100);
-      return results;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Gagal memproses gambar';
-      toast.error(`Gagal: ${msg}`);
-      return results;
-    } finally {
-      setUploadingImages(false);
-      setUploadProgress(0);
-      setUploadStatus('');
+    const currentUser = auth?.currentUser;
+    if (!currentUser) throw new Error('Anda harus login untuk upload gambar');
+
+    const token = await currentUser.getIdToken();
+    const formData = new FormData();
+    formData.append('file', fileToUpload, file.name);
+    formData.append('kategori', 'galeri');
+    formData.append('uploadedBy', currentUser.uid);
+
+    const res = await fetch('/api/drive/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Upload gagal');
     }
-  }, []);
+
+    const data = await res.json();
+    return {
+      url: data.data.webViewLink,
+      metadata: {
+        driveFileId: data.data.driveFileId,
+        fileName: data.data.fileName,
+        mimeType: data.data.mimeType,
+        size: data.data.size,
+        webViewLink: data.data.webViewLink,
+        webContentLink: data.data.webContentLink,
+        uploadedAt: data.data.uploadedAt,
+      },
+    };
+  }
 
     const handleSave = useCallback(async () => {
       if (!form.title.trim()) { toast.error('Judul galeri tidak boleh kosong'); return; }
+      if (selectedFiles.length === 0 && !crud.editingId) { toast.error('Pilih minimal 1 foto'); return; }
+
       setSaving(true);
+      setUploadPhase('compressing');
+      setUploadProgress(0);
+
       try {
-        const imageUrls = await getImageUrls(selectedFiles);
+        const imageUrls: string[] = [];
+        const imageFiles: GalleryImageFile[] = [];
+
+        if (selectedFiles.length > 0) {
+          for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            if (!file.type.startsWith('image/')) continue;
+
+            setUploadStatus(`${i + 1}/${selectedFiles.length}: ${file.name}`);
+            setUploadPhase('uploading');
+            setUploadProgress(Math.round(((i) / selectedFiles.length) * 100));
+
+            const result = await uploadImageToDrive(file);
+            imageUrls.push(result.url);
+            imageFiles.push(result.metadata);
+          }
+          setUploadProgress(100);
+          setUploadPhase('saving');
+        }
 
         if (crud.editingId) {
           const existing = crud.items.find(i => i.id === crud.editingId);
           const allImages = existing ? [...existing.images, ...imageUrls] : imageUrls;
-          await crud.updateItem(crud.editingId, { title: form.title, description: form.description, category: form.category, status: form.status, images: allImages });
+          const allImageFiles = existing?.imageFiles ? [...existing.imageFiles, ...imageFiles] : imageFiles;
+          await crud.updateItem(crud.editingId, {
+            title: form.title,
+            description: form.description,
+            category: form.category,
+            status: form.status,
+            images: allImages,
+            imageFiles: allImageFiles,
+          });
           toast.success('Galeri berhasil diperbarui');
         } else {
-          await crud.addItem({ id: `gallery-${Date.now()}`, title: form.title, description: form.description, images: imageUrls, category: form.category, authorName: 'Admin Kecamatan', authorRole: 'Administrator', status: form.status, createdAt: Date.now() });
+          await crud.addItem({
+            id: `gallery-${Date.now()}`,
+            title: form.title,
+            description: form.description,
+            images: imageUrls,
+            imageFiles,
+            category: form.category,
+            authorName: 'Admin Kecamatan',
+            authorRole: 'Administrator',
+            status: form.status,
+            createdAt: Date.now(),
+          });
           toast.success('Galeri berhasil ditambahkan');
         }
+
+        setUploadPhase('done');
         crud.closeForm();
         setSelectedFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = '';
       } catch (error) {
         console.error('Error saving gallery:', error);
+        setUploadPhase('error');
+        toast.error(error instanceof Error ? error.message : 'Gagal menyimpan galeri');
       } finally {
         setSaving(false);
+        setUploadProgress(0);
+        setUploadStatus('');
       }
-    }, [form, crud.editingId, crud.items, crud.updateItem, crud.addItem, crud.closeForm, selectedFiles, getImageUrls]);
+    }, [form, crud.editingId, crud.items, crud.updateItem, crud.addItem, crud.closeForm, selectedFiles]);
 
    const handleApprove = useCallback(async (id: string) => {
      await crud.updateItem(id, { status: 'published' as GalleryStatus });
@@ -265,7 +300,7 @@ export function ManageGallery() {
                           <div className="max-w-[250px]">
                             <p className="font-medium text-sm leading-snug">{item.title}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{item.description}</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{item.images.length} foto</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{item.images.length} foto{item.imageFiles?.length ? ' (Drive)' : ''}</p>
                           </div>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell"><Badge variant="outline" className="text-[10px]">{item.category}</Badge></TableCell>
@@ -341,7 +376,7 @@ export function ManageGallery() {
                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-colors cursor-pointer relative">
                  <ImagePlus className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
                  <p className="text-sm text-muted-foreground">Klik atau seret foto ke sini</p>
-                   <p className="text-xs text-muted-foreground/70 mt-1">JPG/JPEG/PNG/GIF/TIFF hingga 5MB. Foto langsung diupload saat dipilih, kompresi otomatis untuk &gt;3MB</p>
+                   <p className="text-xs text-muted-foreground/70 mt-1">JPG/JPEG/PNG/GIF/TIFF hingga 5MB. Foto diupload ke Google Drive, kompresi otomatis untuk &gt;3MB</p>
                 <Input
                   ref={fileInputRef}
                   type="file"
@@ -378,11 +413,17 @@ export function ManageGallery() {
                   </div>
                 </div>
               )}
-              {uploadingImages && (
+              {(uploadingImages || uploadPhase !== 'idle') && (
                 <div className="space-y-2 py-2">
                   <div className="flex items-center gap-2 text-sm text-blue-600">
                     <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                    <span className="truncate">{uploadStatus || 'Mengunggah...'}</span>
+                    <span className="truncate">
+                      {uploadPhase === 'compressing' && 'Mengompres gambar...'}
+                      {uploadPhase === 'uploading' && uploadStatus}
+                      {uploadPhase === 'saving' && 'Menyimpan ke Firestore...'}
+                      {uploadPhase === 'done' && 'Upload selesai'}
+                      {uploadPhase === 'error' && 'Upload gagal'}
+                    </span>
                   </div>
                   <Progress value={uploadProgress} className="h-2" />
                 </div>
@@ -390,8 +431,19 @@ export function ManageGallery() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={crud.closeForm}>Batal</Button>
-            <Button onClick={handleSave} className="bg-blue-800 hover:bg-blue-900 text-white">{crud.editingId ? 'Simpan Perubahan' : 'Tambah Galeri'}</Button>
+            <Button variant="outline" onClick={crud.closeForm} disabled={saving}>Batal</Button>
+            <Button onClick={handleSave} className="bg-blue-800 hover:bg-blue-900 text-white" disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  {uploadPhase === 'compressing' && 'Mengompres...'}
+                  {uploadPhase === 'uploading' && 'Mengupload...'}
+                  {uploadPhase === 'saving' && 'Menyimpan...'}
+                </>
+              ) : (
+                crud.editingId ? 'Simpan Perubahan' : 'Tambah Galeri'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
