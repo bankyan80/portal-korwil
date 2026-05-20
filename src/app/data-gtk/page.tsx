@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Search, Users, BookOpen, BadgeCheck, Download, GraduationCap, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { ArrowLeft, Search, Users, BookOpen, BadgeCheck, Download, GraduationCap, Loader2, X, MapPin, Briefcase, ChevronRight } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 
 interface SchoolGtk {
@@ -19,10 +19,27 @@ interface SchoolGtk {
   p: number;
 }
 
+interface Pegawai {
+  nik: string;
+  nama: string;
+  nuptk?: string;
+  nip?: string;
+  jk?: string;
+  jenis_ptk: string;
+  status_kepegawaian?: string;
+  tugas_tambahan?: string;
+  mapel?: string;
+  sekolah: string;
+}
+
 export default function DataGTKPage() {
   const [schoolData, setSchoolData] = useState<SchoolGtk[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
+  const [pegawaiList, setPegawaiList] = useState<Pegawai[]>([]);
+  const [pegawaiLoading, setPegawaiLoading] = useState(false);
+  const [allPegawai, setAllPegawai] = useState<Pegawai[] | null>(null);
 
   useEffect(() => {
     async function loadGtkSummary() {
@@ -40,6 +57,34 @@ export default function DataGTKPage() {
     }
     loadGtkSummary();
   }, []);
+
+  const handleSchoolClick = useCallback(async (schoolName: string) => {
+    setSelectedSchool(schoolName);
+    setPegawaiLoading(true);
+    setPegawaiList([]);
+
+    try {
+      let data = allPegawai;
+      if (!data) {
+        const res = await fetch('/api/pegawai/all?all=true');
+        if (res.ok) {
+          const json = await res.json();
+          data = json.items || [];
+          setAllPegawai(data);
+        }
+      }
+      if (data) {
+        const filtered = data.filter((p: Pegawai) =>
+          p.sekolah?.toLowerCase() === schoolName.toLowerCase()
+        );
+        setPegawaiList(filtered);
+      }
+    } catch (e) {
+      console.error('Gagal memuat pegawai:', e);
+    } finally {
+      setPegawaiLoading(false);
+    }
+  }, [allPegawai]);
 
   const totalGTK = schoolData.reduce((a, s) => a + s.total, 0);
   const totalTeachers = schoolData.reduce((a, s) => a + s.teachers, 0);
@@ -209,7 +254,12 @@ export default function DataGTKPage() {
                   {filteredData.map((item, i) => (
                     <tr key={item.name} className="hover:bg-blue-50/50 transition-colors">
                       <td className="px-5 py-3 text-gray-500 text-center">{i + 1}</td>
-                      <td className="px-5 py-3 font-medium text-[#0d3b66]">{item.name}</td>
+                      <td className="px-5 py-3 font-medium text-[#0d3b66]">
+                        <button onClick={() => handleSchoolClick(item.name)} className="text-left hover:text-blue-700 hover:underline transition-colors flex items-center gap-1">
+                          {item.name}
+                          <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-40" />
+                        </button>
+                      </td>
                       <td className="px-5 py-3 text-center font-semibold text-blue-700">{(item.teachers_l || 0)}</td>
                       <td className="px-5 py-3 text-center font-semibold text-pink-700">{(item.teachers_p || 0)}</td>
                       <td className="px-5 py-3 text-center font-semibold text-blue-700">{(item.staff_l || 0)}</td>
@@ -224,6 +274,64 @@ export default function DataGTKPage() {
             )}
           </div>
         </div>
+
+        {selectedSchool && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-10 px-2 sm:px-4">
+            <div className="fixed inset-0 bg-black/50" onClick={() => setSelectedSchool(null)} />
+            <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col z-10">
+              <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
+                <div>
+                  <h3 className="font-semibold text-[#0d3b66] text-base">{selectedSchool}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Daftar Pegawai</p>
+                </div>
+                <button onClick={() => setSelectedSchool(null)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+              <div className="overflow-y-auto flex-1">
+                {pegawaiLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                  </div>
+                ) : pegawaiList.length === 0 ? (
+                  <div className="px-5 py-12 text-center text-gray-400">Tidak ada data pegawai</div>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-5 py-3 font-semibold text-gray-600 text-center w-10">No</th>
+                        <th className="px-5 py-3 font-semibold text-gray-600">Nama</th>
+                        <th className="px-5 py-3 font-semibold text-gray-600">NIK</th>
+                        <th className="px-5 py-3 font-semibold text-gray-600">Jenis PTK</th>
+                        <th className="px-5 py-3 font-semibold text-gray-600">JK</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {pegawaiList.map((p, i) => (
+                        <tr key={p.nik || i} className="hover:bg-blue-50/50 transition-colors">
+                          <td className="px-5 py-2.5 text-gray-500 text-center">{i + 1}</td>
+                          <td className="px-5 py-2.5 font-medium text-gray-900">{p.nama}{p.jenis_ptk === 'Kepala Sekolah' ? <span className="ml-2 inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-800">KEPSEK</span> : ''}</td>
+                          <td className="px-5 py-2.5 text-gray-500 text-xs font-mono">{p.nik || '-'}</td>
+                          <td className="px-5 py-2.5">
+                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                              p.jenis_ptk === 'Guru' ? 'bg-blue-100 text-blue-700' :
+                              p.jenis_ptk === 'Kepala Sekolah' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-purple-100 text-purple-700'
+                            }`}>{p.jenis_ptk}</span>
+                          </td>
+                          <td className="px-5 py-2.5 text-gray-500 text-center">{p.jk || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+              <div className="px-5 py-3 border-t text-xs text-gray-400 shrink-0">
+                Total: {pegawaiList.length} pegawai
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
           <h3 className="font-semibold text-[#0d3b66] mb-2">Perhatian</h3>
