@@ -30,6 +30,7 @@ interface ChatContext {
 interface HaloAIChatProps {
   onClose: () => void;
   context: ChatContext;
+  aiStatus: 'online' | 'slow' | 'error' | 'checking';
   onAiStatusChange: (status: 'online' | 'slow' | 'error' | 'checking') => void;
 }
 
@@ -57,7 +58,7 @@ function getGreeting(context: ChatContext): string {
   }
 }
 
-export default function HaloAIChat({ onClose, context, onAiStatusChange }: HaloAIChatProps) {
+export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChange }: HaloAIChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -199,11 +200,11 @@ export default function HaloAIChat({ onClose, context, onAiStatusChange }: HaloA
     setHistory([]);
   };
 
+  const actualStatus = isTyping ? 'checking' : aiStatus;
+
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-slate-900">
-      <HaloAIHeader onClose={onClose} aiStatus={
-        isTyping ? 'checking' : 'online'
-      } />
+      <HaloAIHeader onClose={onClose} aiStatus={actualStatus} />
 
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
         {messages.map((msg) => (

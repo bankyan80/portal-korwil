@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import HaloAIButton from './HaloAIButton';
 import HaloAIChat from './HaloAIChat';
 import { useAppStore } from '@/store/app-store';
+import { GraduationCap, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 
 type AIStatus = 'online' | 'slow' | 'error' | 'checking';
 
@@ -57,45 +57,52 @@ export default function HaloAIWidget() {
     setIsOpen(prev => !prev);
   }, []);
 
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
   const handleAiStatusChange = useCallback((status: AIStatus) => {
     setAiStatus(status);
   }, []);
 
   return (
     <>
-      <div className="fixed bottom-5 right-5 z-[100] flex flex-col items-end gap-3">
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="w-[380px] max-w-[calc(100vw-2rem)] h-[560px] max-h-[calc(100vh-8rem)] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl shadow-black/20 border border-gray-200 dark:border-slate-700 overflow-hidden"
-            >
-              <HaloAIChat onClose={handleClose} context={context} onAiStatusChange={handleAiStatusChange} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ x: 420 }}
+            animate={{ x: 0 }}
+            exit={{ x: 420 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="fixed top-0 right-0 z-50 h-screen w-[400px] bg-white dark:bg-slate-800 shadow-2xl shadow-black/20 border-l border-gray-200 dark:border-slate-700 flex flex-col"
+          >
+            <HaloAIChat onClose={handleToggle} context={context} aiStatus={aiStatus} onAiStatusChange={handleAiStatusChange} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <motion.div
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <HaloAIButton isOpen={isOpen} onToggle={handleToggle} />
-        </motion.div>
-      </div>
-
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-[99] bg-black/10 backdrop-blur-[1px] md:hidden"
-          onClick={handleClose}
-        />
-      )}
+      <motion.button
+        initial={false}
+        animate={{ x: isOpen ? 0 : 0 }}
+        className={`fixed top-1/2 -translate-y-1/2 z-50 flex items-center gap-2 px-2 py-4 rounded-l-xl shadow-lg transition-all duration-300 ${
+          isOpen
+            ? 'right-[400px] bg-gradient-to-b from-blue-700 to-blue-900 text-white'
+            : 'right-0 bg-gradient-to-b from-blue-700 to-blue-900 text-white rounded-l-xl rounded-r-none'
+        }`}
+        onClick={handleToggle}
+      >
+        <GraduationCap className="w-5 h-5" />
+        {!isOpen && (
+          <motion.span
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: 'auto' }}
+            className="text-xs font-semibold whitespace-nowrap pr-1"
+          >
+            HaloAI
+          </motion.span>
+        )}
+        {isOpen ? (
+          <ChevronRight className="w-4 h-4" />
+        ) : (
+          <ChevronLeft className="w-4 h-4" />
+        )}
+      </motion.button>
     </>
   );
 }
