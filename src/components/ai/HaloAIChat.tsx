@@ -35,6 +35,7 @@ interface HaloAIChatProps {
 }
 
 const chatStore = localforage.createInstance({ name: 'haloai', storeName: 'messages' });
+const cacheStore = localforage.createInstance({ name: 'haloai', storeName: 'cache' });
 
 const quickMenuPrompts: Record<string, string> = {
   'cari-siswa': 'Bagaimana cara mencari data siswa di portal ini?',
@@ -58,13 +59,20 @@ function getGreeting(context: ChatContext): string {
   }
 }
 
+function normalizeQuestion(q: string): string {
+  return q.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
 export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChange }: HaloAIChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [history, setHistory] = useState<HistoryMessage[]>([]);
+  const [lastRequestTime, setLastRequestTime] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastQuestionRef = useRef<string>('');
 
   useEffect(() => {
     const init = async () => {
@@ -113,12 +121,66 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
   }, [messages]);
 
   const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim()) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    if (isTyping) return;
+
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    if (timeSinceLastRequest < 3000) {
+      const waitTime = Math.ceil((3000 - timeSinceLastRequest) / 1000);
+      const cooldownMsg: ChatMessage = {
+        id: `msg-${Date.now()}-cooldown`,
+        from: 'bot',
+        text: `Mohon tunggu ${waitTime} detik sebelum mengirim pesan berikutnya.`,
+        timestamp: Date.now(),
+      };
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last && last.id.includes('cooldown')) return prev;
+        return [...prev, cooldownMsg];
+      });
+      return;
+    }
+
+    const normalized = normalizeQuestion(trimmed);
+    if (normalized === lastQuestionRef.current) {
+      const dupMsg: ChatMessage = {
+        id: `msg-${Date.now()}-dup`,
+        from: 'bot',
+        text: 'Pertanyaan ini baru saja dikirim. Silakan tunggu jawaban atau ajukan pertanyaan lain.',
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, dupMsg]);
+      return;
+    }
+
+    const cached = await cacheStore.getItem<string>(normalized);
+    if (cached) {
+      const userMsg: ChatMessage = {
+        id: `msg-${Date.now()}-user`,
+        from: 'user',
+        text: trimmed,
+        timestamp: Date.now(),
+      };
+      const botMsg: ChatMessage = {
+        id: `msg-${Date.now()}-cached`,
+        from: 'bot',
+        text: cached,
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, userMsg, botMsg]);
+      setHistory(prev => [...prev, { role: 'user', content: trimmed }, { role: 'assistant', content: cached }]);
+      return;
+    }
+
+    lastQuestionRef.current = normalized;
+    setLastRequestTime(Date.now());
 
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       from: 'user',
-      text: text.trim(),
+      text: trimmed,
       timestamp: Date.now(),
     };
     setMessages(prev => [...prev, userMsg]);
@@ -126,14 +188,14 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
     setIsTyping(true);
     onAiStatusChange('checking');
 
-    const newHistory = [...history, { role: 'user' as const, content: text.trim() }];
+    const newHistory = [...history, { role: 'user' as const, content: trimmed }];
 
     try {
       const res = await fetch('/api/haloai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: text.trim(),
+          message: trimmed,
           history: newHistory.slice(-10),
           context,
         }),
@@ -141,7 +203,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
 
       const data = await res.json();
 
-      if (!res.ok || !data.ok) {
+      if (!res.ok || !data.success) {
         console.error('HaloAI Error:', data);
         if (data.code) {
           console.error('HaloAI Error Code:', data.code);
@@ -153,7 +215,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
         const botMsg: ChatMessage = {
           id: `msg-${Date.now()}-err`,
           from: 'bot',
-          text: data.error || data.reply || 'Maaf, terjadi kesalahan.',
+          text: data.reply || 'Maaf, terjadi kesalahan.',
           timestamp: Date.now(),
         };
         setMessages(prev => [...prev, botMsg]);
@@ -172,6 +234,8 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
       };
       setMessages(prev => [...prev, botMsg]);
       setHistory(prev => [...prev, { role: 'assistant' as const, content: data.reply }]);
+
+      cacheStore.setItem(normalized, data.reply).catch(() => {});
     } catch (err: any) {
       console.error('HaloAI Fetch Error:', err?.message || err);
       onAiStatusChange('error');
@@ -185,15 +249,16 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
     } finally {
       setIsTyping(false);
     }
-  }, [history, context, onAiStatusChange]);
+  }, [history, context, onAiStatusChange, isTyping, lastRequestTime]);
 
   const handleSend = () => {
+    if (!input.trim() || isTyping) return;
     sendMessage(input);
   };
 
   const handleQuickMenu = (id: string) => {
     const prompt = quickMenuPrompts[id];
-    if (prompt) {
+    if (prompt && !isTyping) {
       sendMessage(prompt);
     }
   };
@@ -201,7 +266,10 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
   const handleClearChat = async () => {
     try {
       await chatStore.removeItem('chat-history');
+      await cacheStore.clear();
     } catch {}
+    lastQuestionRef.current = '';
+    setLastRequestTime(0);
     const greeting: ChatMessage = {
       id: `msg-${Date.now()}-reset`,
       from: 'bot',
@@ -232,7 +300,8 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
         <div className="flex items-center gap-2">
           <button
             onClick={handleClearChat}
-            className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-500 dark:text-gray-400 flex items-center justify-center transition-colors shrink-0 text-[10px] font-medium"
+            disabled={isTyping}
+            className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-500 dark:text-gray-400 flex items-center justify-center transition-colors shrink-0 disabled:opacity-40"
             title="Reset percakapan"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3-3"/></svg>
@@ -243,9 +312,15 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !isTyping && handleSend()}
-              placeholder="Ketik pertanyaan..."
-              className="w-full text-sm text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50 dark:bg-slate-700 placeholder-gray-400 dark:placeholder-gray-500"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder={isTyping ? 'Menunggu jawaban AI...' : 'Ketik pertanyaan...'}
+              disabled={isTyping}
+              className="w-full text-sm text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50 dark:bg-slate-700 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
           <button

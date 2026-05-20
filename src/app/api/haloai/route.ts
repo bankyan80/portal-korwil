@@ -1,23 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildSystemPrompt, ChatContext } from '@/lib/haloAI';
 
-const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-2.5-flash,gemini-2.0-flash')
+  .split(',')
+  .map(m => m.trim())
+  .filter(m => m.length > 0);
+
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const limit = rateLimitMap.get(ip);
+
+  if (!limit || now > limit.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+
+  if (limit.count >= 15) {
+    return false;
+  }
+
+  limit.count++;
+  return true;
+}
+
+function getIp(req: NextRequest): string {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+         req.headers.get('x-real-ip') ||
+         'unknown';
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export async function POST(req: NextRequest) {
+  const ip = getIp(req);
+
+  if (!checkRateLimit(ip)) {
+    console.warn(`[HaloAI] Rate limited IP: ${ip}`);
+    return NextResponse.json(
+      {
+        success: false,
+        code: 'RATE_LIMITED',
+        reply: 'Terlalu banyak permintaan. Silakan tunggu sebentar.',
+      },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await req.json();
     const { message, history, context }: { message: string; history: { role: string; content: string }[]; context: ChatContext } = body;
 
     if (!message || !message.trim()) {
-      return NextResponse.json({ ok: false, error: 'Pesan tidak boleh kosong.' }, { status: 400 });
+      return NextResponse.json({ success: false, code: 'EMPTY_MESSAGE', reply: 'Pesan tidak boleh kosong.' }, { status: 400 });
     }
 
     const key = process.env.GEMINI_API_KEY;
     if (!key || key === 'YOUR_GEMINI_API_KEY') {
       return NextResponse.json({
-        ok: false,
+        success: false,
         code: 'API_KEY_NOT_CONFIGURED',
-        error: 'GEMINI_API_KEY belum dikonfigurasi. Hubungi administrator.',
+        reply: 'GEMINI_API_KEY belum dikonfigurasi. Hubungi administrator.',
       }, { status: 503 });
     }
 
@@ -35,9 +81,17 @@ export async function POST(req: NextRequest) {
 
     let lastError = '';
     let lastCode = '';
+    let fallbackAttempted = false;
 
-    for (const model of GEMINI_MODELS) {
-      console.log(`[HaloAI] Trying model: ${model}`);
+    for (let i = 0; i < GEMINI_MODELS.length; i++) {
+      const model = GEMINI_MODELS[i];
+
+      if (fallbackAttempted) {
+        console.log(`[HaloAI] Waiting 1.5s before fallback to ${model}...`);
+        await delay(1500);
+      }
+
+      console.log(`[HaloAI] Trying model: ${model} (attempt ${i + 1}/${GEMINI_MODELS.length})`);
 
       try {
         const response = await fetch(
@@ -64,7 +118,7 @@ export async function POST(req: NextRequest) {
           if (text) {
             console.log(`[HaloAI] SUCCESS with model: ${model}`);
             return NextResponse.json({
-              ok: true,
+              success: true,
               model,
               reply: text,
             });
@@ -73,72 +127,95 @@ export async function POST(req: NextRequest) {
           console.warn(`[HaloAI] Empty response from ${model}, trying fallback...`);
           lastError = 'Empty response from Gemini';
           lastCode = 'EMPTY_RESPONSE';
+          fallbackAttempted = true;
           continue;
         }
 
         const errText = await response.text();
-        const isRateLimit = response.status === 429;
+        const statusCode = response.status;
 
         let detail = '';
+        let isModelNotFound = false;
         try {
           const errJson = JSON.parse(errText);
           detail = errJson?.error?.message || errText;
+          isModelNotFound = detail.includes('not found') || statusCode === 404;
         } catch {
           detail = errText;
         }
 
-        if (isRateLimit) {
-          console.warn(`[HaloAI] Rate limited on ${model} (429), trying fallback...`);
+        if (isModelNotFound) {
+          console.warn(`[HaloAI] Model not found: ${model}, skipping...`);
           lastError = detail;
-          lastCode = 'RATE_LIMITED';
+          lastCode = 'MODEL_NOT_FOUND';
+          fallbackAttempted = true;
           continue;
         }
 
-        console.error(`[HaloAI] HTTP error on ${model}: ${response.status} - ${detail}`);
-        lastError = detail;
-        lastCode = `HTTP_${response.status}`;
+        if (statusCode === 429) {
+          console.warn(`[HaloAI] Rate limited on ${model} (429), trying fallback...`);
+          lastError = detail;
+          lastCode = 'RATE_LIMITED';
+          fallbackAttempted = true;
+          continue;
+        }
 
+        console.error(`[HaloAI] HTTP error on ${model}: ${statusCode} - ${detail}`);
+        lastError = detail;
+        lastCode = `HTTP_${statusCode}`;
         break;
       } catch (fetchError: any) {
         console.error(`[HaloAI] Fetch error on ${model}: ${fetchError?.message || fetchError}`);
         lastError = fetchError?.message || 'Fetch failed';
         lastCode = 'FETCH_ERROR';
+        fallbackAttempted = true;
         continue;
       }
     }
 
-    console.error(`[HaloAI] ALL MODELS FAILED. Last error: ${lastCode} - ${lastError}`);
+    console.error(`[HaloAI] ALL MODELS FAILED. Last code: ${lastCode}, Last error: ${lastError}`);
 
     if (lastCode === 'RATE_LIMITED' || lastCode === 'EMPTY_RESPONSE') {
       return NextResponse.json(
         {
-          ok: false,
+          success: false,
           code: 'ALL_MODELS_RATE_LIMITED',
-          error: 'HaloAI sedang ramai digunakan. Silakan coba lagi beberapa saat.',
+          reply: 'HaloAI sedang ramai digunakan. Silakan coba lagi beberapa saat.',
           detail: lastError,
         },
         { status: 429 }
       );
     }
 
+    if (lastCode === 'MODEL_NOT_FOUND') {
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'MODEL_NOT_FOUND',
+          reply: 'Model AI tidak tersedia. Silakan cek konfigurasi Gemini.',
+          detail: lastError,
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       {
-        ok: false,
+        success: false,
         code: lastCode || 'ALL_MODELS_FAILED',
-        error: 'Terjadi kesalahan pada layanan AI. Silakan coba lagi.',
+        reply: 'Terjadi kesalahan pada layanan AI. Silakan coba lagi.',
         detail: lastError,
       },
       { status: 500 }
     );
   } catch (error: any) {
     console.error('[HaloAI] Unhandled error:', error?.message || error);
-    console.error('[HaloAI] Stack:', error?.stack || '');
 
     return NextResponse.json(
       {
-        ok: false,
+        success: false,
         code: 'INTERNAL_ERROR',
-        error: 'Terjadi error pada HaloAI',
+        reply: 'Terjadi error pada HaloAI',
         detail: error?.message || 'Unknown error',
       },
       { status: 500 }
