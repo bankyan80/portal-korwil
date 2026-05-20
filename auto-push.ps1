@@ -12,12 +12,30 @@ while ($true) {
         
         git add -A
         $status = git status --porcelain
+        $status = $status.Trim()
         
         if ($status) {
-            git commit -m "auto: update $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-            if ($?) {
-                git push origin main
-                Write-Host "Committed and pushed successfully"
+            $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+            $commitMsg = "auto: update $ts"
+            git commit -m $commitMsg 2>&1 | Out-Null
+            
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "[ERROR] git commit failed, skipping push"
+            } else {
+                git fetch origin main 2>&1 | Out-Null
+                git push origin main 2>&1 | Write-Host
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "[WARN] push failed - trying pull --rebase + push..."
+                    git pull --rebase origin main --autostash 2>&1 | Write-Host
+                    git push origin main 2>&1 | Write-Host
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Host "Rebased and pushed successfully"
+                    } else {
+                        Write-Host "[ERROR] push still failed after rebase - merge conflict possible"
+                    }
+                } else {
+                    Write-Host "Committed and pushed successfully"
+                }
             }
         }
         
