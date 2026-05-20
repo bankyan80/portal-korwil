@@ -403,3 +403,22 @@ export function getSmartRoutingReply(
 
   return { reply: null, source: null };
 }
+
+export function hasSearchIntent(input: string): boolean {
+  const normalized = input.toLowerCase().trim();
+
+  const patterns = [
+    /\b(berita terbaru|kabar terbaru|info terbaru|perkembangan terbaru|terkini|update|breaking news)\b/i,
+    /\b(regulasi terbaru|peraturan baru|kebijakan baru|undang-undang|permendikbud|permen (dikbud|panrb)|pp \d+|uu \d+)\b/i,
+    /\b(harga|biaya|tarif|ongkos|berapa (biaya|harga))\b/i,
+    /\b(jadwal|tanggal (pelaksanaan|pendaftaran|dimulai)|waktu (pelaksanaan|dimulai)|deadline|batas waktu)\b/i,
+    /\b(kapan|dimana (lokasi|tempat))\b.*\b(dilaksanakan|diadakan|berlangsung|terbaru)\b/i,
+    /\b(teknologi|aplikasi|software|framework|library|versi terbaru)\b.*\b(terbaru|rilis|update)\b/i,
+    /\b(error|bug|troubleshoot|cara memperbaiki|gagal|tidak bisa|masalah)\b.*\b(npm|react|nextjs|node|javascript|typescript|library|dependensi)\b/i,
+    /\b(rekomendasi|review|perbandingan|terbaik|rekomended)\b.*\b(aplikasi|website|sekolah|pendidikan|laptop|hp|guru|belajar)\b/i,
+    /\b(cara (daftar|membuat|install|download|menggunakan|belajar))\b.*\b(aplikasi|website|software|platform|tools)\b/i,
+    /\b(cuaca|ramalan|prakiraan)\b/i,
+  ];
+
+  return patterns.some(p => p.test(normalized));
+}

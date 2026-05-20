@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildSystemPrompt, ChatContext, checkGeminiHealth } from '@/lib/haloAI';
-import { findLocalAnswer, classifyComplexity, classifyQueryType, getSmartRoutingReply, type Complexity, type QueryType } from '@/lib/haloAI-knowledge';
-import { searchGoogle, formatSearchReply, hasSearchIntent } from '@/lib/google-search';
+import { findLocalAnswer, classifyComplexity, classifyQueryType, getSmartRoutingReply, hasSearchIntent, type Complexity } from '@/lib/haloAI-knowledge';
 
 const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-2.5-flash,gemini-2.0-flash')
   .split(',')
@@ -112,22 +111,6 @@ export async function POST(req: NextRequest) {
     const queryType = classifyQueryType(trimmed);
     const shouldSearch = queryType === 'general_search' || (queryType === 'unknown' && hasSearchIntent(trimmed));
 
-    if (shouldSearch) {
-      const searchResponse = await searchGoogle(trimmed);
-      if (searchResponse.results.length > 0) {
-        console.log(`[HaloAI] Google Search grounding used for: "${trimmed}" (${searchResponse.results.length} results)`);
-        return NextResponse.json({
-          success: true,
-          source: 'search',
-          queryType,
-          complexity,
-          reply: formatSearchReply(searchResponse.results, trimmed),
-          sources: searchResponse.results.slice(0, 3).map(r => ({ title: r.title, link: r.link })),
-        });
-      }
-      console.log(`[HaloAI] Google Search failed: ${searchResponse.error}, falling back to Gemini`);
-    }
-
     const key = process.env.GEMINI_API_KEY;
     if (!key || key === 'YOUR_GEMINI_API_KEY') {
       const fallbackReply = getSmartRoutingReply(trimmed, complexity, null, true);
@@ -191,6 +174,7 @@ export async function POST(req: NextRequest) {
     let lastError = '';
     let lastCode = '';
     let fallbackAttempted = false;
+    let useGrounding = shouldSearch;
 
     const modelsToTry = usePro
       ? [...GEMINI_MODELS]
@@ -213,6 +197,7 @@ export async function POST(req: NextRequest) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents,
+              tools: useGrounding ? [{ googleSearch: {} }] : undefined,
               generationConfig: {
                 temperature: complexity === 'kompleks' ? 0.8 : 0.7,
                 topP: 0.95,
@@ -228,13 +213,29 @@ export async function POST(req: NextRequest) {
           const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
           if (text) {
-            console.log(`[HaloAI] SUCCESS with model: ${model}`);
+            let reply = text;
+            let sources: { title: string; link: string }[] = [];
+
+            if (useGrounding && data?.candidates?.[0]?.groundingMetadata?.groundingChunks) {
+              const chunks = data.candidates[0].groundingMetadata.groundingChunks;
+              sources = chunks
+                .filter((c: any) => c?.web?.uri && c?.web?.title)
+                .map((c: any) => ({ title: c.web.title, link: c.web.uri }));
+
+              if (sources.length > 0) {
+                const sourcesMd = sources.map(s => `- [${s.title}](${s.link})`).join('\n');
+                reply = `${reply}\n\n**Sumber:**\n${sourcesMd}`;
+              }
+            }
+
+            console.log(`[HaloAI] SUCCESS with model: ${model}${useGrounding ? ' (grounded)' : ''}`);
             return NextResponse.json({
               success: true,
               model,
-              source: 'gemini',
+              source: useGrounding && sources.length > 0 ? 'search' : 'gemini',
               complexity,
-              reply: text,
+              reply,
+              sources: sources.length > 0 ? sources : undefined,
               remaining: dailyCheck.remaining,
               total: dailyCheck.total,
               quotaStatus: dailyCheck.status,
@@ -245,6 +246,7 @@ export async function POST(req: NextRequest) {
           lastError = 'Empty response from Gemini';
           lastCode = 'EMPTY_RESPONSE';
           fallbackAttempted = true;
+          if (useGrounding) { useGrounding = false; lastError = ''; lastCode = ''; fallbackAttempted = false; continue; }
           continue;
         }
 
@@ -266,6 +268,7 @@ export async function POST(req: NextRequest) {
           lastError = detail;
           lastCode = 'MODEL_NOT_FOUND';
           fallbackAttempted = true;
+          if (useGrounding) { useGrounding = false; lastError = ''; lastCode = ''; fallbackAttempted = false; continue; }
           continue;
         }
 
@@ -274,6 +277,7 @@ export async function POST(req: NextRequest) {
           lastError = detail;
           lastCode = 'RATE_LIMITED';
           fallbackAttempted = true;
+          if (useGrounding) { useGrounding = false; lastError = ''; lastCode = ''; fallbackAttempted = false; continue; }
           continue;
         }
 
@@ -286,6 +290,7 @@ export async function POST(req: NextRequest) {
         lastError = fetchError?.message || 'Fetch failed';
         lastCode = 'FETCH_ERROR';
         fallbackAttempted = true;
+        if (useGrounding) { useGrounding = false; lastError = ''; lastCode = ''; fallbackAttempted = false; continue; }
         continue;
       }
     }
