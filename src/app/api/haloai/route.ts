@@ -63,6 +63,92 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function trySearchGrounded(
+  message: string,
+  history: { role: string; content: string }[],
+  ctx: ChatContext,
+  complexity: Complexity,
+  dailyCheck: { remaining: number; total: number; status: string },
+  key: string,
+  models: string[]
+): Promise<NextResponse | null> {
+  const systemPrompt = buildSystemPrompt(ctx, complexity);
+  const recentHistory = (history || []).slice(-3);
+  const contents = [
+    { role: 'user' as const, parts: [{ text: systemPrompt }] },
+    { role: 'model' as const, parts: [{ text: 'Baik, saya siap membantu sebagai HaloAI.' }] },
+    ...recentHistory.map((h: { role: string; content: string }) => ({
+      role: h.role === 'user' ? 'user' as const : 'model' as const,
+      parts: [{ text: h.content }],
+    })),
+    { role: 'user' as const, parts: [{ text: message }] },
+  ];
+
+  const modelsToTry = models.filter(m => !m.includes('pro'));
+
+  for (const model of modelsToTry) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents,
+            tools: [{ googleSearch: {} }],
+            generationConfig: {
+              temperature: 0.7,
+              topP: 0.95,
+              topK: 40,
+              maxOutputTokens: 1024,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 429 || response.status === 404) continue;
+        break;
+      }
+
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) continue;
+
+      let sources: { title: string; link: string }[] = [];
+      if (data?.candidates?.[0]?.groundingMetadata?.groundingChunks) {
+        const chunks = data.candidates[0].groundingMetadata.groundingChunks;
+        sources = chunks
+          .filter((c: any) => c?.web?.uri && c?.web?.title)
+          .map((c: any) => ({ title: c.web.title, link: c.web.uri }));
+      }
+
+      let reply = text;
+      if (sources.length > 0) {
+        reply = `${text}\n\n**Sumber:**\n${sources.map(s => `- [${s.title}](${s.link})`).join('\n')}`;
+      }
+
+      console.log(`[HaloAI] Search grounded: ${model} (${sources.length} sources)`);
+      return NextResponse.json({
+        success: true,
+        model,
+        source: sources.length > 0 ? 'search' : 'gemini',
+        complexity,
+        reply,
+        sources: sources.length > 0 ? sources : undefined,
+        remaining: dailyCheck.remaining,
+        total: dailyCheck.total,
+        quotaStatus: dailyCheck.status,
+      });
+    } catch (e: any) {
+      console.warn(`[HaloAI] Search grounding failed on ${model}: ${e?.message}`);
+      continue;
+    }
+  }
+
+  return null;
+}
+
 export async function GET() {
   const health = await checkGeminiHealth();
   return NextResponse.json({
@@ -126,6 +212,12 @@ export async function POST(req: NextRequest) {
     const role = ctx?.userRole || 'publik';
     const dailyCheck = checkDailyLimit(userId, role);
 
+    // Phase 1: Try Google Search Grounding (bypasses daily limit — search punya nilai sendiri)
+    if (shouldSearch && key) {
+      const searchResult = await trySearchGrounded(trimmed, history, ctx, complexity, dailyCheck, key, GEMINI_MODELS);
+      if (searchResult) return searchResult;
+    }
+
     if (!dailyCheck.allowed) {
       console.warn(`[HaloAI] Daily limit reached for ${userId} (${role})`);
       const fallbackReply = getSmartRoutingReply(trimmed, complexity, null, true);
@@ -174,7 +266,6 @@ export async function POST(req: NextRequest) {
     let lastError = '';
     let lastCode = '';
     let fallbackAttempted = false;
-    let useGrounding = shouldSearch;
 
     const modelsToTry = usePro
       ? [...GEMINI_MODELS]
@@ -197,7 +288,6 @@ export async function POST(req: NextRequest) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents,
-              tools: useGrounding ? [{ googleSearch: {} }] : undefined,
               generationConfig: {
                 temperature: complexity === 'kompleks' ? 0.8 : 0.7,
                 topP: 0.95,
@@ -213,29 +303,13 @@ export async function POST(req: NextRequest) {
           const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
           if (text) {
-            let reply = text;
-            let sources: { title: string; link: string }[] = [];
-
-            if (useGrounding && data?.candidates?.[0]?.groundingMetadata?.groundingChunks) {
-              const chunks = data.candidates[0].groundingMetadata.groundingChunks;
-              sources = chunks
-                .filter((c: any) => c?.web?.uri && c?.web?.title)
-                .map((c: any) => ({ title: c.web.title, link: c.web.uri }));
-
-              if (sources.length > 0) {
-                const sourcesMd = sources.map(s => `- [${s.title}](${s.link})`).join('\n');
-                reply = `${reply}\n\n**Sumber:**\n${sourcesMd}`;
-              }
-            }
-
-            console.log(`[HaloAI] SUCCESS with model: ${model}${useGrounding ? ' (grounded)' : ''}`);
+            console.log(`[HaloAI] SUCCESS with model: ${model}`);
             return NextResponse.json({
               success: true,
               model,
-              source: useGrounding && sources.length > 0 ? 'search' : 'gemini',
+              source: 'gemini',
               complexity,
-              reply,
-              sources: sources.length > 0 ? sources : undefined,
+              reply: text,
               remaining: dailyCheck.remaining,
               total: dailyCheck.total,
               quotaStatus: dailyCheck.status,
@@ -246,7 +320,6 @@ export async function POST(req: NextRequest) {
           lastError = 'Empty response from Gemini';
           lastCode = 'EMPTY_RESPONSE';
           fallbackAttempted = true;
-          if (useGrounding) { useGrounding = false; lastError = ''; lastCode = ''; fallbackAttempted = false; continue; }
           continue;
         }
 
@@ -268,7 +341,6 @@ export async function POST(req: NextRequest) {
           lastError = detail;
           lastCode = 'MODEL_NOT_FOUND';
           fallbackAttempted = true;
-          if (useGrounding) { useGrounding = false; lastError = ''; lastCode = ''; fallbackAttempted = false; continue; }
           continue;
         }
 
@@ -277,7 +349,6 @@ export async function POST(req: NextRequest) {
           lastError = detail;
           lastCode = 'RATE_LIMITED';
           fallbackAttempted = true;
-          if (useGrounding) { useGrounding = false; lastError = ''; lastCode = ''; fallbackAttempted = false; continue; }
           continue;
         }
 
@@ -290,7 +361,6 @@ export async function POST(req: NextRequest) {
         lastError = fetchError?.message || 'Fetch failed';
         lastCode = 'FETCH_ERROR';
         fallbackAttempted = true;
-        if (useGrounding) { useGrounding = false; lastError = ''; lastCode = ''; fallbackAttempted = false; continue; }
         continue;
       }
     }
