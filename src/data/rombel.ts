@@ -181,10 +181,10 @@ export const rombelData: RombelEntry[] = [
     { name: 'B1', total: 17, l: 8, p: 9 }, { name: 'B2', total: 17, l: 6, p: 11 },
     { name: 'B3', total: 16, l: 9, p: 7 }, { name: 'B4', total: 16, l: 6, p: 10 }, { name: 'B5', total: 16, l: 6, p: 10 },
   ]},
-  { name: 'TK AISYIYAH LEMAHABANG', jenjang: 'TK', total: 27, rombels: 2, details: [
-    { name: 'Kelompok A', total: 14, l: 9, p: 5 },
-    { name: 'Kelompok B', total: 13, l: 8, p: 5 },
-  ]},
+   { name: 'TK AISIYAH LEMAHABANG', jenjang: 'TK', total: 27, rombels: 2, details: [
+     { name: 'Kelompok A', total: 14, l: 9, p: 5 },
+     { name: 'Kelompok B', total: 13, l: 8, p: 5 },
+   ]},
   { name: 'TK AL-AQSO', jenjang: 'TK', total: 46, rombels: 3, details: [
     { name: 'Kelompok A', total: 13, l: 6, p: 7 },
     { name: 'Kelompok B1', total: 18, l: 9, p: 9 },
@@ -209,15 +209,15 @@ export const rombelData: RombelEntry[] = [
   { name: 'KB PALAPA', jenjang: 'KB', total: 23, rombels: 2, details: [
     { name: 'A', total: 12, l: 7, p: 5 }, { name: 'B', total: 11, l: 4, p: 7 },
   ]},
-  { name: 'PAUD AL-HUSNA', jenjang: 'KB', total: 33, rombels: 2, details: [
-    { name: 'A', total: 18, l: 9, p: 9 }, { name: 'B', total: 15, l: 9, p: 6 },
-  ]},
-  { name: 'PAUD AMANAH', jenjang: 'KB', total: 27, rombels: 2, details: [
-    { name: 'A', total: 15, l: 9, p: 6 }, { name: 'B', total: 12, l: 6, p: 6 },
-  ]},
-  { name: 'PAUD AN NAIM', jenjang: 'KB', total: 70, rombels: 3, details: [
-    { name: 'A', total: 34, l: 18, p: 16 }, { name: 'B1', total: 18, l: 11, p: 7 }, { name: 'B2', total: 18, l: 10, p: 8 },
-  ]},
+   { name: 'PAUD AL-HUSNA', jenjang: 'PAUD', total: 33, rombels: 2, details: [
+     { name: 'A', total: 18, l: 9, p: 9 }, { name: 'B', total: 15, l: 9, p: 6 },
+   ]},
+   { name: 'PAUD AMANAH', jenjang: 'PAUD', total: 27, rombels: 2, details: [
+     { name: 'A', total: 15, l: 9, p: 6 }, { name: 'B', total: 12, l: 6, p: 6 },
+   ]},
+   { name: 'PAUD AN NAIM', jenjang: 'PAUD', total: 70, rombels: 3, details: [
+     { name: 'A', total: 34, l: 18, p: 16 }, { name: 'B1', total: 18, l: 11, p: 7 }, { name: 'B2', total: 18, l: 10, p: 8 },
+   ]},
   { name: 'PAUD ASY - SYAFIIYAH', jenjang: 'KB', total: 32, rombels: 2, details: [
     { name: 'A1', total: 17, l: 9, p: 8 }, { name: 'A2', total: 15, l: 7, p: 8 },
   ]},
