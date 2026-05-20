@@ -30,7 +30,7 @@ export default function HaloAIWidget() {
           }),
         });
         const data = await res.json();
-        if (data.success) {
+        if (data.ok) {
           setAiStatus('online');
         } else {
           setAiStatus('error');

@@ -141,19 +141,19 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
 
       const data = await res.json();
 
-      if (!res.ok || !data.success) {
+      if (!res.ok || !data.ok) {
         console.error('HaloAI Error:', data);
+        if (data.code) {
+          console.error('HaloAI Error Code:', data.code);
+        }
         if (data.detail) {
           console.error('HaloAI Detail:', data.detail);
-        }
-        if (data.httpStatus) {
-          console.error('HaloAI HTTP Status:', data.httpStatus);
         }
         onAiStatusChange('error');
         const botMsg: ChatMessage = {
           id: `msg-${Date.now()}-err`,
           from: 'bot',
-          text: data.reply || 'Maaf, terjadi kesalahan.',
+          text: data.error || data.reply || 'Maaf, terjadi kesalahan.',
           timestamp: Date.now(),
         };
         setMessages(prev => [...prev, botMsg]);
@@ -161,6 +161,9 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
       }
 
       onAiStatusChange('online');
+      if (data.model) {
+        console.log(`[HaloAI] Response from: ${data.model}`);
+      }
       const botMsg: ChatMessage = {
         id: `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         from: 'bot',
