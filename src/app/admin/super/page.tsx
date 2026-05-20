@@ -215,7 +215,13 @@ export default function SuperAdminDashboard() {
     bulanList.some((b) => s.months[b] && (s.months[b].status === 'sudah_dikirim' || s.months[b].status === 'diverifikasi'))
   ).length;
 
-  if (!user) return null;
+  if (!user) return (
+    <AuthGuard requiredRoles={['super_admin']} requireActive featureName="Dashboard Super Admin">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    </AuthGuard>
+  );
 
   function handleLogout() {
     if (auth) auth.signOut();

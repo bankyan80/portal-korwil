@@ -471,11 +471,15 @@ export default function LaporBulananPage() {
   const totalGTK = guru.total + tendik.total;
   const s = laporanData?.dataSekolah || sekolah || {};
 
-  if (!user) return null;
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+  const showLoading = !user || loading;
 
   return (
     <AuthGuard requiredRoles={['operator_sekolah', 'super_admin']} requireActive requireSchool featureName="Laporan Bulanan">
+    {showLoading ? (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    ) : (
     <div className="min-h-screen bg-gray-50 print:bg-white">
       <div className="print:hidden bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-4 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -935,6 +939,7 @@ export default function LaporBulananPage() {
         }
       `}</style>
     </div>
+    )}
     </AuthGuard>
   );
 }
