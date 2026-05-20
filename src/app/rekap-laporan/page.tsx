@@ -148,13 +148,18 @@ export default function LaporanBulananPage() {
           const laporanData: LaporanRecord[] = [];
           snapshot.forEach((doc) => {
             const d = doc.data();
+            const rawStatus = d.status || 'draft';
+            const mappedStatus: StatusLaporan =
+              rawStatus === 'sudah_dikirim' ? 'sudah_lapor' :
+              rawStatus === 'perlu_revisi' ? 'revisi' :
+              (rawStatus as StatusLaporan);
             laporanData.push({
               id: doc.id,
               sekolah: d.sekolah || d.dataSekolah?.nama || '',
               bulan: d.bulan,
               tahun: d.tahun,
-              status: d.status || 'draft',
-              tglLapor: d.tglLapor,
+              status: mappedStatus,
+              tglLapor: d.tglLapor || d.dikirimPada,
             });
           });
           setLaporanList(laporanData);
