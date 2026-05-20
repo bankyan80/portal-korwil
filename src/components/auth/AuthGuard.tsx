@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAppStore } from '@/store/app-store'
 import AccessValidation from './AccessValidation'
 import { Loader2 } from 'lucide-react'
@@ -14,7 +14,6 @@ interface AuthGuardProps {
   requireActive?: boolean
   requireSchool?: boolean
   featureName?: string
-  fallbackRoute?: string
 }
 
 export default function AuthGuard({
@@ -23,22 +22,28 @@ export default function AuthGuard({
   requireActive = true,
   requireSchool = false,
   featureName = 'Laporan Bulanan',
-  fallbackRoute = '/login',
 }: AuthGuardProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const user = useAppStore((s) => s.user)
   const isLoadingAuth = useAppStore((s) => s.isLoadingAuth)
   const [validated, setValidated] = useState(false)
-  const [accessStatus, setAccessStatus] = useState<'checking' | 'granted' | 'denied' | 'not-logged-in' | 'no-access' | 'not-activated' | 'wrong-role'>('checking')
+  const [accessStatus, setAccessStatus] = useState<'checking' | 'granted' | 'not-logged-in' | 'no-access' | 'not-activated' | 'wrong-role'>('checking')
 
   useEffect(() => {
-    if (isLoadingAuth) return
+    if (isLoadingAuth) {
+      const timeout = setTimeout(() => {
+        if (!user) {
+          const callbackUrl = pathname + (typeof window !== 'undefined' ? window.location.search : '')
+          router.replace(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`)
+        }
+      }, 3000)
+      return () => clearTimeout(timeout)
+    }
 
     if (!user) {
-      setAccessStatus('not-logged-in')
-      setValidated(true)
+      const callbackUrl = pathname + (typeof window !== 'undefined' ? window.location.search : '')
+      router.replace(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`)
       return
     }
 
@@ -62,9 +67,9 @@ export default function AuthGuard({
 
     setAccessStatus('granted')
     setValidated(true)
-  }, [user, isLoadingAuth, requiredRoles, requireActive, requireSchool])
+  }, [user, isLoadingAuth, requiredRoles, requireActive, requireSchool, router, pathname])
 
-  if (!validated || accessStatus === 'checking') {
+  if (accessStatus === 'checking' || !validated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900">
         <div className="text-center">
@@ -77,15 +82,6 @@ export default function AuthGuard({
 
   if (accessStatus === 'granted') {
     return <>{children}</>
-  }
-
-  if (accessStatus === 'not-logged-in') {
-    return (
-      <AccessValidation
-        status="not-logged-in"
-        featureName={featureName}
-      />
-    )
   }
 
   if (accessStatus === 'not-activated') {

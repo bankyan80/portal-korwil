@@ -180,11 +180,6 @@ export default function SuperAdminDashboard() {
     return Array.from(set).sort();
   }, [allStudents, allEmployees]);
 
-  useEffect(() => {
-    if (!user) return;
-    if (user.role !== 'super_admin') router.push('/login');
-  }, [user, router]);
-
   // Realtime listener for laporan bulanan
   useEffect(() => {
     if (!db) return;

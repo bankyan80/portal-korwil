@@ -79,12 +79,6 @@ export default function OperatorDashboard() {
   ];
 
   useEffect(() => {
-    if (!user || user.role === 'publik') {
-      router.push('/login');
-    }
-  }, [user, router]);
-
-  useEffect(() => {
     if (!user?.schoolId && !user?.schoolName) return;
     fetchTugas();
   }, [user?.schoolId, user?.schoolName]);

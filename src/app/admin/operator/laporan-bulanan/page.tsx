@@ -81,9 +81,8 @@ export default function LaporBulananPage() {
 
   useEffect(() => {
     if (!user) return;
-    if (user.role !== 'operator_sekolah') { router.push('/login'); return; }
     loadData();
-  }, [user, router]);
+  }, [user]);
 
   useEffect(() => {
     if (dataLoading || loading || !sekolah) return;
