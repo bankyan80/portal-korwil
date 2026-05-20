@@ -271,7 +271,7 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {paginated.map((r) => {
+              {paginated.map((r, ri) => {
                 const ds = r.laporan?.dataSarpras
                 return ruanganTypes.map((room) => {
                   const key = roomKeyMap[room] || ''
@@ -282,7 +282,7 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
                   return { room, baik, sedang, rusak, jml }
                 }).filter(x => x.jml > 0).map((x, j) => (
                   <tr key={`${r.sekolah.nama}-${x.room}`} className="hover:bg-blue-50/50 transition-colors">
-                    {j === 0 && <td className="px-4 py-2.5 text-gray-500 text-center align-top" rowSpan={paginated.length > 0 ? 1 : 1}>{i + 1}</td>}
+                    {j === 0 && <td className="px-4 py-2.5 text-gray-500 text-center align-top" rowSpan={1}>{ri + 1}</td>}
                     {j === 0 && <td className="px-4 py-2.5 font-medium text-gray-900 align-top" rowSpan={1}>{r.sekolah.nama}</td>}
                     <td className="px-4 py-2.5 text-gray-700">{x.room}</td>
                     <td className="px-4 py-2.5 text-center text-green-700">{x.baik || '-'}</td>
@@ -356,7 +356,7 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {paginated.map((r) => {
+              {paginated.map((r, ri) => {
                 const ds = r.laporan?.dataSarpras
                 return items.map((item) => {
                   const k = keyMap[item] || ''
@@ -366,7 +366,7 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
                   return { item, baik, rusak, jml }
                 }).filter(x => x.jml > 0).map((x, j) => (
                   <tr key={`${r.sekolah.nama}-${x.item}`} className="hover:bg-blue-50/50 transition-colors">
-                    {j === 0 && <td className="px-4 py-2.5 text-gray-500 text-center align-top">{i + 1}</td>}
+                    {j === 0 && <td className="px-4 py-2.5 text-gray-500 text-center align-top">{ri + 1}</td>}
                     {j === 0 && <td className="px-4 py-2.5 font-medium text-gray-900 align-top">{r.sekolah.nama}</td>}
                     <td className="px-4 py-2.5 text-gray-700">{x.item}</td>
                     <td className="px-4 py-2.5 text-center text-green-700">{Number(x.baik) || '-'}</td>
@@ -474,7 +474,7 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {paginated.map((r) => {
+              {paginated.map((r, ri) => {
                 const ds = r.laporan?.dataSarpras
                 return items.map((item) => {
                   const p = prefMap[item] || ''
@@ -486,7 +486,7 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
                   }
                 }).filter(x => x.p !== '-' || x.sp !== '-' || x.dr !== '-').map((x, j) => (
                   <tr key={`${r.sekolah.nama}-${x.item}`} className="hover:bg-blue-50/50 transition-colors">
-                    {j === 0 && <td className="px-4 py-2.5 text-gray-500 text-center align-top">{i + 1}</td>}
+                    {j === 0 && <td className="px-4 py-2.5 text-gray-500 text-center align-top">{ri + 1}</td>}
                     {j === 0 && <td className="px-4 py-2.5 font-medium text-gray-900 align-top">{r.sekolah.nama}</td>}
                     <td className="px-4 py-2.5 text-gray-700">{x.item}</td>
                     <td className="px-4 py-2.5 text-center font-semibold">{x.p}</td>
