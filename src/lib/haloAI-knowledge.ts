@@ -5,6 +5,27 @@ export interface LocalAnswer {
 
 export type Complexity = 'sederhana' | 'sedang' | 'kompleks';
 
+export type QueryType = 'simple_menu' | 'internal_data' | 'general_search' | 'unknown';
+
+const SEARCH_INTENT_KEYWORDS: string[] = [
+  'berita terbaru', 'kabar terbaru', 'info terbaru', 'perkembangan terbaru', 'terkini', 'update',
+  'regulasi terbaru', 'peraturan baru', 'kebijakan baru', 'undang-undang', 'permendikbud',
+  'harga', 'biaya', 'tarif', 'ongkos',
+  'jadwal', 'tanggal', 'deadline', 'batas waktu',
+  'teknologi', 'aplikasi', 'framework', 'versi',
+  'rekomendasi', 'review', 'perbandingan', 'terbaik',
+  'cuaca', 'ramalan', 'prakiraan',
+];
+
+const INTERNAL_DATA_KEYWORDS: string[] = [
+  'data siswa', 'data guru', 'data tendik', 'data pegawai',
+  'jumlah siswa', 'jumlah guru', 'jumlah kelas', 'jumlah rombel',
+  'status laporan', 'status tugas', 'verifikasi',
+  'rekap laporan', 'rekap sekolah', 'laporan bulanan',
+  'siapa operator', 'siapa kepala sekolah', 'profil sekolah',
+  'sarpras', 'sarana prasarana',
+];
+
 const LOCAL_KB: Record<string, LocalAnswer> = {
   'cara lapor': {
     answer: 'Untuk mengisi laporan bulanan:\n\n1. Login sebagai operator sekolah\n2. Buka menu [📋 Laporan Bulanan](/admin/operator/laporan-bulanan)\n3. Pilih bulan dan tahun\n4. Isi data siswa, GTK, sarpras, dan absen\n5. Klik "Kirim Laporan Bulanan"\n\nStatus laporan: Belum Lapor → Sudah Dikirim → Diverifikasi',
@@ -297,6 +318,28 @@ export function classifyComplexity(input: string): Complexity {
   if (complexScore >= 2) return 'kompleks';
   if (simpleScore >= 1 && complexScore === 0) return 'sederhana';
   return 'sedang';
+}
+
+export function classifyQueryType(input: string): QueryType {
+  const normalized = normalizeInput(input);
+  const localAnswer = findLocalAnswer(input);
+
+  if (localAnswer) return 'simple_menu';
+
+  const searchScore = SEARCH_INTENT_KEYWORDS.filter(k => normalized.includes(k)).length;
+  const internalScore = INTERNAL_DATA_KEYWORDS.filter(k => normalized.includes(k)).length;
+
+  if (internalScore > 0 && searchScore === 0) return 'internal_data';
+  if (searchScore > 0 && internalScore === 0) return 'general_search';
+  if (searchScore > 0 && internalScore > 0) {
+    if (searchScore >= internalScore) return 'general_search';
+    return 'internal_data';
+  }
+
+  const sederhanaScore = SEDERHANA_KEYWORDS.filter(k => normalized.includes(k)).length;
+  if (sederhanaScore > 0) return 'simple_menu';
+
+  return 'unknown';
 }
 
 export function getTemplateFallback(input: string): string | null {

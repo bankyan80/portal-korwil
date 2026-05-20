@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildSystemPrompt, ChatContext, checkGeminiHealth } from '@/lib/haloAI';
-import { findLocalAnswer, classifyComplexity, getSmartRoutingReply, type Complexity } from '@/lib/haloAI-knowledge';
+import { findLocalAnswer, classifyComplexity, classifyQueryType, getSmartRoutingReply, type Complexity, type QueryType } from '@/lib/haloAI-knowledge';
+import { searchGoogle, formatSearchReply, hasSearchIntent } from '@/lib/google-search';
 
 const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-2.5-flash,gemini-2.0-flash')
   .split(',')
@@ -106,6 +107,25 @@ export async function POST(req: NextRequest) {
         complexity,
         reply: localAnswer.answer,
       });
+    }
+
+    const queryType = classifyQueryType(trimmed);
+    const shouldSearch = queryType === 'general_search' || (queryType === 'unknown' && hasSearchIntent(trimmed));
+
+    if (shouldSearch) {
+      const searchResponse = await searchGoogle(trimmed);
+      if (searchResponse.results.length > 0) {
+        console.log(`[HaloAI] Google Search grounding used for: "${trimmed}" (${searchResponse.results.length} results)`);
+        return NextResponse.json({
+          success: true,
+          source: 'search',
+          queryType,
+          complexity,
+          reply: formatSearchReply(searchResponse.results, trimmed),
+          sources: searchResponse.results.slice(0, 3).map(r => ({ title: r.title, link: r.link })),
+        });
+      }
+      console.log(`[HaloAI] Google Search failed: ${searchResponse.error}, falling back to Gemini`);
     }
 
     const key = process.env.GEMINI_API_KEY;
