@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getRedirectPath, getRoleLabel } from '@/lib/auth';
+import { getRedirectPath } from '@/lib/auth';
 import {
   Home,
   Bell,
@@ -14,7 +13,6 @@ import {
   Shield,
   Menu,
   X,
-  MessageCircle,
   Info,
   GraduationCap,
   FileText,
@@ -40,8 +38,6 @@ const navItems = [
   { label: 'Mapping Pegawai', icon: Users, sectionId: null, isView: true, view: 'mapping-pegawai', href: '/mapping-pegawai' },
   { label: 'Laporan', icon: FileText, sectionId: null, isView: true, view: 'laporan', href: '/laporan' },
 ];
-
-const chatNavItem = { label: 'Obrolan Seru', icon: MessageCircle, view: 'chat' as const, isView: true };
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { setCurrentView } = useAppStore();
@@ -77,17 +73,6 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           </button>
         );
       })}
-      <div className="w-px h-6 bg-white/20 mx-1" />
-      <button
-        onClick={() => {
-          setCurrentView(chatNavItem.view);
-          onNavigate?.();
-        }}
-        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded-md transition-all duration-200 cursor-pointer"
-      >
-        <MessageCircle className="w-4 h-4" />
-        <span>{chatNavItem.label}</span>
-      </button>
     </>
   );
 }
@@ -200,16 +185,6 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
               </button>
             );
           })}
-          <button
-            onClick={() => {
-              setCurrentView(chatNavItem.view);
-              onClose();
-            }}
-            className="flex items-center gap-3 w-full px-3 py-2.5 text-sm font-medium text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 rounded-md transition-colors cursor-pointer"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>{chatNavItem.label}</span>
-          </button>
            <div className="border-t border-white/10 my-2" />
           {!user ? (
             <Button

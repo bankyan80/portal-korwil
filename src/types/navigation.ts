@@ -1,5 +1,5 @@
 export type AppView =
-  | 'portal' | 'chat' | 'login'
+  | 'portal' | 'login'
   | 'admin'
   | 'admin-manage-announcements'
   | 'admin-manage-gallery'

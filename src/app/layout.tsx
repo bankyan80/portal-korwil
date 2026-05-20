@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { FirestoreDataProvider } from "@/providers/FirestoreDataProvider";
+import HaloAIWidget from "@/components/ai/HaloAIWidget";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -75,6 +76,7 @@ export default function RootLayout({
                 duration: 3000,
               }}
             />
+            <HaloAIWidget />
           </AuthProvider>
         </ThemeProvider>
       </body>
