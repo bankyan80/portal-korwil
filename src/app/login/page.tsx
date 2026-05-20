@@ -17,6 +17,18 @@ export default function LoginPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const firebaseReady = !!(auth && db);
 
+  const callbackUrl = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('callbackUrl') || ''
+    : '';
+
+  function redirectAfterLogin(role: UserRole) {
+    if (callbackUrl) {
+      router.replace(callbackUrl);
+    } else {
+      router.replace(getAdminDashboardRoute(role));
+    }
+  }
+
   useEffect(() => {
     if (!firebaseReady) {
       setCheckingAuth(false);
@@ -62,7 +74,7 @@ export default function LoginPage() {
             setUser(profile);
           }
           if (profile) {
-            router.replace(getAdminDashboardRoute(profile.role));
+            redirectAfterLogin(profile.role);
           }
         }
       } catch (err) {
@@ -82,7 +94,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user && user.role !== 'publik') {
-      router.replace(getAdminDashboardRoute(user.role));
+      redirectAfterLogin(user.role);
     }
   }, [user, router]);
 
@@ -133,7 +145,7 @@ export default function LoginPage() {
       }
 
       setUser(profile);
-      router.replace(getAdminDashboardRoute(profile.role));
+      redirectAfterLogin(profile.role);
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Login dibatalkan');

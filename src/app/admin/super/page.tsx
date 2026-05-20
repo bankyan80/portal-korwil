@@ -7,6 +7,7 @@ import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
+import AuthGuard from '@/components/auth/AuthGuard';
 import {
   Users, School, BarChart3, FileText,
   LogOut, Loader2, Building2, RefreshCw, Shield,
@@ -244,6 +245,7 @@ export default function SuperAdminDashboard() {
   const isStatsLoading = !allStudents || !allEmployees;
 
   return (
+    <AuthGuard requiredRoles={['super_admin']} requireActive featureName="Dashboard Super Admin">
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-6 py-4 flex items-center justify-between">
         <div>
@@ -486,5 +488,6 @@ export default function SuperAdminDashboard() {
       </main>
       <MobileBottomNav />
     </div>
+    </AuthGuard>
   );
 }

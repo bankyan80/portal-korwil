@@ -9,6 +9,7 @@ import { normalizeSchool } from '@/lib/normalize';
 import pltData from '@/data/data-plt.json';
 import Link from 'next/link';
 import { ArrowLeft, Printer, Loader2, Send, CheckCircle, Clock, AlertCircle, Eye, TriangleAlert } from 'lucide-react';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 const bulanList = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -475,6 +476,7 @@ export default function LaporBulananPage() {
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
 
   return (
+    <AuthGuard requiredRoles={['operator_sekolah', 'super_admin']} requireActive requireSchool featureName="Laporan Bulanan">
     <div className="min-h-screen bg-gray-50 print:bg-white">
       <div className="print:hidden bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-4 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -934,5 +936,6 @@ export default function LaporBulananPage() {
         }
       `}</style>
     </div>
+    </AuthGuard>
   );
 }

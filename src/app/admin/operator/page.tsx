@@ -9,6 +9,7 @@ import { normalizeSchool } from '@/lib/normalize';
 import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw, ListTodo, CheckCircle, ExternalLink, Clock } from 'lucide-react';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
+import AuthGuard from '@/components/auth/AuthGuard';
 import { db } from '@/lib/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
@@ -188,6 +189,7 @@ export default function OperatorDashboard() {
   ];
 
   return (
+    <AuthGuard requiredRoles={['operator_sekolah', 'super_admin']} requireActive featureName="Dashboard Operator">
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-6 py-4 flex items-center justify-between">
         <div>
@@ -351,5 +353,6 @@ export default function OperatorDashboard() {
       </main>
       <MobileBottomNav />
     </div>
+    </AuthGuard>
   );
 }
