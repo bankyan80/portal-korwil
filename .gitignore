@@ -44,7 +44,6 @@ gemini.js
 # IDE
 .aider*
 .kilo/
-ai/
 
 # firestore export (may contain service account keys)
 portal-pendidikan-appscript/firestore-export.json
