@@ -7,7 +7,7 @@ import RekapStats, { buildStats } from './RekapStats'
 import StatusBadge from './StatusBadge'
 import BelumLaporPanel from './BelumLaporPanel'
 import ExportButton, { exportToExcel, exportToCsv } from './ExportButton'
-import { ProgressChart, StatPie, MuridGtkChart, LaporanTrendChart } from './RekapCharts'
+import { ProgressChart, StatPie } from './RekapCharts'
 import { normalizeSchool } from '@/lib/normalize'
 import type { FilterState, KategoriRekap, StatusLaporan } from './types'
 import { Search, Loader2 } from 'lucide-react'
@@ -578,32 +578,12 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
         />
       </div>
 
-      <div className="print:hidden">
-        <BelumLaporPanel data={belumLaporList} bulan={filter.bulan} tahun={filter.tahun} />
-      </div>
-
       {filter.kategori === 'status' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 print:hidden">
           <ProgressChart data={progressByJenjang} />
           <StatPie data={pieStatus} title="Status Laporan" />
         </div>
       )}
-
-      {filter.kategori === 'murid' && (
-        <div className="print:hidden">
-          <MuridGtkChart data={muridGtkByJenjang} />
-        </div>
-      )}
-
-      {filter.kategori === 'gtk' && (
-        <div className="print:hidden">
-          <MuridGtkChart data={muridGtkByJenjang} />
-        </div>
-      )}
-
-      <div className="print:hidden">
-        <LaporanTrendChart data={laporanTrend} />
-      </div>
 
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between print:hidden">
@@ -633,6 +613,10 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
             )}
           </div>
         )}
+      </div>
+
+      <div className="print:hidden">
+        <BelumLaporPanel data={belumLaporList} bulan={filter.bulan} tahun={filter.tahun} hideWhatsApp />
       </div>
 
       {/* Print Layout */}

@@ -10,7 +10,7 @@ interface SekolahBelumLapor {
   noHp?: string
 }
 
-export default function BelumLaporPanel({ data, bulan, tahun }: { data: SekolahBelumLapor[]; bulan: string; tahun: number }) {
+export default function BelumLaporPanel({ data, bulan, tahun, hideWhatsApp }: { data: SekolahBelumLapor[]; bulan: string; tahun: number; hideWhatsApp?: boolean }) {
   if (data.length === 0) return null
 
   const waMessage = encodeURIComponent(
@@ -31,15 +31,17 @@ export default function BelumLaporPanel({ data, bulan, tahun }: { data: SekolahB
               <span className="text-xs text-gray-400 shrink-0">{s.jenjang}</span>
               <StatusBadge status={s.status as any} />
             </div>
-            <a
-              href={`https://wa.me/6281321592990?text=${waMessage}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors shrink-0"
-            >
-              <MessageCircle className="w-3.5 h-3.5" />
-              WA
-            </a>
+            {!hideWhatsApp && (
+              <a
+                href={`https://wa.me/6281321592990?text=${waMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors shrink-0"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                WA
+              </a>
+            )}
           </div>
         ))}
       </div>
