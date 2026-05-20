@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/lib/firebase'
-import { collection, onSnapshot, query, where } from 'firebase/firestore'
+import { collection, onSnapshot } from 'firebase/firestore'
 import { allSekolah } from '@/data/sekolah'
 import { normalizeSchool } from '@/lib/normalize'
 import type { BaseSekolah, LaporanRecord, StatusLaporan, FilterState } from './types'
@@ -24,12 +24,8 @@ export function useRekapData() {
 
   useEffect(() => {
     if (!db) { setLoading(false); setError('Database tidak tersedia'); return }
-    const laporanQuery = query(
-      collection(db, 'laporan_bulanan'),
-      where('tahun', '>=', 2024)
-    )
     const unsub = onSnapshot(
-      laporanQuery,
+      collection(db, 'laporan_bulanan'),
       (snap) => {
         const items: LaporanRecord[] = []
         snap.forEach((d) => {
