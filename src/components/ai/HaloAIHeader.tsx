@@ -4,9 +4,10 @@ import HaloAIStatus from './HaloAIStatus';
 interface HaloAIHeaderProps {
   onClose: () => void;
   aiStatus: 'online' | 'slow' | 'error' | 'checking';
+  quota?: { remaining: number; total: number } | null;
 }
 
-export default function HaloAIHeader({ onClose, aiStatus }: HaloAIHeaderProps) {
+export default function HaloAIHeader({ onClose, aiStatus, quota }: HaloAIHeaderProps) {
   return (
     <div className="bg-gradient-to-r from-[#0d3b66] to-[#1a5276] px-4 py-3 flex items-center gap-3 shrink-0">
       <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
@@ -19,7 +20,7 @@ export default function HaloAIHeader({ onClose, aiStatus }: HaloAIHeaderProps) {
         </h2>
         <p className="text-[11px] text-blue-200">Asisten Pendidikan Digital</p>
       </div>
-      <HaloAIStatus status={aiStatus} />
+      <HaloAIStatus status={aiStatus} remaining={quota?.remaining} total={quota?.total} />
     </div>
   );
 }

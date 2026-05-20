@@ -1,28 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildSystemPrompt, ChatContext } from '@/lib/haloAI';
+import { findLocalAnswer } from '@/lib/haloAI-knowledge';
 
 const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-2.5-flash,gemini-2.0-flash')
   .split(',')
   .map(m => m.trim())
   .filter(m => m.length > 0);
 
+const DAILY_LIMITS: Record<string, number> = {
+  super_admin: 300,
+  operator_sekolah: 100,
+  publik: 20,
+};
+
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const dailyUsageMap = new Map<string, { count: number; date: string }>();
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
   const limit = rateLimitMap.get(ip);
 
   if (!limit || now > limit.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 });
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 5_000 });
     return true;
   }
 
-  if (limit.count >= 15) {
-    return false;
+  return false;
+}
+
+function checkDailyLimit(userId: string, role: string): { allowed: boolean; remaining: number; total: number } {
+  const today = new Date().toISOString().split('T')[0];
+  const key = `${userId}:${today}`;
+  const usage = dailyUsageMap.get(key);
+  const limit = DAILY_LIMITS[role] || DAILY_LIMITS.publik;
+
+  if (!usage || usage.date !== today) {
+    dailyUsageMap.set(key, { count: 1, date: today });
+    return { allowed: true, remaining: limit - 1, total: limit };
   }
 
-  limit.count++;
-  return true;
+  if (usage.count >= limit) {
+    return { allowed: false, remaining: 0, total: limit };
+  }
+
+  usage.count++;
+  return { allowed: true, remaining: limit - usage.count, total: limit };
 }
 
 function getIp(req: NextRequest): string {
@@ -39,12 +61,11 @@ export async function POST(req: NextRequest) {
   const ip = getIp(req);
 
   if (!checkRateLimit(ip)) {
-    console.warn(`[HaloAI] Rate limited IP: ${ip}`);
     return NextResponse.json(
       {
         success: false,
         code: 'RATE_LIMITED',
-        reply: 'Terlalu banyak permintaan. Silakan tunggu sebentar.',
+        reply: 'Mohon tunggu beberapa detik sebelum mengirim pesan berikutnya.',
       },
       { status: 429 }
     );
@@ -58,6 +79,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, code: 'EMPTY_MESSAGE', reply: 'Pesan tidak boleh kosong.' }, { status: 400 });
     }
 
+    const trimmed = message.trim();
+
+    // Step 1: Check local knowledge base (no Gemini needed)
+    const localAnswer = findLocalAnswer(trimmed);
+    if (localAnswer) {
+      console.log(`[HaloAI] Local KB match (confidence: ${localAnswer.confidence})`);
+      return NextResponse.json({
+        success: true,
+        source: 'local',
+        reply: localAnswer.answer,
+      });
+    }
+
+    // Step 2: Check API key
     const key = process.env.GEMINI_API_KEY;
     if (!key || key === 'YOUR_GEMINI_API_KEY') {
       return NextResponse.json({
@@ -67,16 +102,37 @@ export async function POST(req: NextRequest) {
       }, { status: 503 });
     }
 
+    // Step 3: Check daily limit
+    const userId = context.schoolId || context.userName || ip;
+    const role = context.userRole || 'publik';
+    const dailyCheck = checkDailyLimit(userId, role);
+
+    if (!dailyCheck.allowed) {
+      console.warn(`[HaloAI] Daily limit reached for ${userId} (${role})`);
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'DAILY_LIMIT_REACHED',
+          reply: `Batas pertanyaan harian Anda (${dailyCheck.total}/hari) sudah habis. Silakan coba lagi besok.`,
+          remaining: 0,
+          total: dailyCheck.total,
+        },
+        { status: 429 }
+      );
+    }
+
+    // Step 4: Build minimal context for Gemini (only last 3 messages, not full history)
     const systemPrompt = buildSystemPrompt(context);
 
+    const recentHistory = history.slice(-3);
     const contents = [
       { role: 'user' as const, parts: [{ text: systemPrompt }] },
       { role: 'model' as const, parts: [{ text: 'Baik, saya siap membantu sebagai HaloAI.' }] },
-      ...history.slice(-10).map((h: { role: string; content: string }) => ({
+      ...recentHistory.map((h: { role: string; content: string }) => ({
         role: h.role === 'user' ? 'user' : 'model',
         parts: [{ text: h.content }],
       })),
-      { role: 'user' as const, parts: [{ text: message.trim() }] },
+      { role: 'user' as const, parts: [{ text: trimmed }] },
     ];
 
     let lastError = '';
@@ -105,7 +161,7 @@ export async function POST(req: NextRequest) {
                 temperature: 0.7,
                 topP: 0.95,
                 topK: 40,
-                maxOutputTokens: 2048,
+                maxOutputTokens: 1024,
               },
             }),
           }
@@ -120,7 +176,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({
               success: true,
               model,
+              source: 'gemini',
               reply: text,
+              remaining: dailyCheck.remaining,
+              total: dailyCheck.total,
             });
           }
 

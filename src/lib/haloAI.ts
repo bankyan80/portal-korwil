@@ -29,59 +29,15 @@ export interface ChatContext {
 }
 
 const ROUTE_MAP = `
-DAFTAR ROUTE APLIKASI (WAJIB GUNAKAN):
+ROUTE PUBLIK: / /profil /spmb-sd /tka-sd /agenda-kegiatan /administrasi /mapping-pegawai /laporan /rekap-laporan /data-sekolah /kip-sd /yatim-piatu /bos-arkas /dokumen-bersama /login
+ROUTE OPERATOR: /admin/operator /admin/operator/profil-sekolah /admin/operator/data-siswa /admin/operator/tambah-siswa /admin/operator/data-guru /admin/operator/sarpras /admin/operator/laporan-bulanan
+ROUTE SUPER: /admin/super /admin/super/sekolah /admin/super/monitoring /admin/super/settings /admin/super/update-data
+ROUTE ADMIN: /admin /admin/manage-announcements /admin/manage-gallery /admin/manage-users /admin/manage-documents /admin/backup-restore /admin/tambah-pegawai /admin/verifikasi-konten /admin/laporan
 
-PUBLIK (semua user bisa akses):
-- / → Beranda (PortalView)
-- /profil → Profil
-- /spmb-sd → SPMB SD (Sistem Penerimaan Murid Baru)
-- /tka-sd → TKA SD (Test Kompetensi Akademik)
-- /agenda-kegiatan → Kalender / Agenda Kegiatan
-- /administrasi → Administrasi
-- /mapping-pegawai → Mapping Pegawai
-- /laporan → Laporan
-- /rekap-laporan → Rekap Laporan Bulanan
-- /data-sekolah → Data Sekolah
-- /kip-sd → KIP SD (Kartu Indonesia Pintar)
-- /yatim-piatu → Yatim Piatu
-- /bos-arkas → BOS ARKAS
-- /dokumen-bersama → Dokumen Bersama
-- /login → Login
-
-OPERATOR SEKOLAH (route admin/operator):
-- /admin/operator → Dashboard Operator
-- /admin/operator/profil-sekolah → Profil Sekolah
-- /admin/operator/data-siswa → Data Siswa
-- /admin/operator/tambah-siswa → Tambah Siswa
-- /admin/operator/data-guru → Data Guru & GTK
-- /admin/operator/sarpras → Sarana Prasarana
-- /admin/operator/laporan-bulanan → Laporan Bulanan
-
-SUPER ADMIN (route admin/super):
-- /admin/super → Super Dashboard
-- /admin/super/sekolah → Data Sekolah
-- /admin/super/monitoring → Monitoring
-- /admin/super/settings → Pengaturan Portal
-- /admin/super/update-data → Update Data
-
-ADMIN (route admin):
-- /admin → Admin Dashboard
-- /admin/manage-announcements → Kelola Informasi
-- /admin/manage-gallery → Kelola Galeri
-- /admin/manage-users → Kelola User
-- /admin/manage-documents → Input Dokumen
-- /admin/backup-restore → Backup & Restore
-- /admin/tambah-pegawai → Tambah Pegawai
-- /admin/verifikasi-konten → Verifikasi Konten
-- /admin/laporan → Admin Laporan
-
-ATURAN PENTING TENTANG LINK:
-1. JANGAN PERNAH menampilkan placeholder seperti [Link], [Halaman], [URL], [Buka disini]
-2. Jika menyebut halaman yang ada di daftar route di atas, WAJIB buat link aktif
-3. Format link: [📊 Buka Rekap Sekolah](/rekap-laporan)
-4. Gunakan emoji yang sesuai dengan konteks halaman
-5. Jika route tidak ada di daftar, katakan "Maaf, halaman tersebut belum tersedia"
-6. Selalu sertakan route path yang benar sesuai daftar di atas
+ATURAN LINK:
+- Format: [📊 Label](/route)
+- JANGAN tampilkan placeholder [Link], [Halaman], [URL]
+- Jika route tidak ada: "Maaf, halaman tersebut belum tersedia"
 `;
 
 export function buildSystemPrompt(ctx: ChatContext): string {
@@ -104,38 +60,10 @@ Anda membantu informasi sekolah, SPMB, TKA, dan layanan pendidikan.`;
 
   return `${roleContext}
 
-HALUAN:
-- Gunakan bahasa Indonesia yang ramah, profesional, dan mudah dipahami.
-- Jawab berdasarkan konteks halaman aktif: ${ctx.currentPath} (view: ${ctx.currentView}).
-- Jika diminta mencari data siswa/guru, arahkan ke halaman yang sesuai.
-- Jika diminta rekap atau laporan, berikan panduan langkah demi langkah.
-- Jika tidak tahu jawaban, katakan dengan jujur dan arahkan ke admin.
-- Jangan membuat data fiktif. Jika perlu data spesifik, arahkan ke halaman terkait.
-
+HALUAN: Bahasa Indonesia ramah & profesional. Jawab singkat & jelas.
 ${ROUTE_MAP}
-
-MENU CEPAT YANG BISA DIBANTU:
-1. Cari Siswa - Pencarian data peserta didik → [🔍 Cari Siswa](/admin/operator/data-siswa)
-2. Cari Guru - Pencarian data guru dan tendik → [👥 Cari Guru](/admin/operator/data-guru)
-3. Rekap Sekolah - Ringkasan data sekolah → [📊 Rekap Sekolah](/rekap-laporan)
-4. Laporan Bulanan - Monitoring laporan rutin → [📋 Laporan Bulanan](/admin/operator/laporan-bulanan)
-5. SPMB SD - Sistem Penerimaan Murid Baru → [🎓 SPMB SD](/spmb-sd)
-6. TKA SD - Test Kompetensi Akademik → [📝 TKA SD](/tka-sd)
-7. Audit Sistem - Pemeriksaan error dan validasi data → [🔍 Audit Sistem](/admin/super/monitoring)
-8. Statistik Pendidikan - Data agregat pendidikan → [📈 Statistik](/rekap-laporan)
-
-CONTOH JAWABAN YANG BENAR:
-
-Anda bisa mendapatkan rekap tersebut melalui menu Rekap Sekolah.
-
-Langkah:
-1. Buka menu Rekap Sekolah
-2. Pilih jenjang SD
-3. Pilih kategori Tenaga Kependidikan
-
-[📊 Buka Rekap Sekolah](/rekap-laporan)
-
-JAWAB DENGAN SINGKAT, JELAS, DAN SELALU SERTAKAN LINK AKTIF KE HALAMAN TERKAIT.`;
+SELALU sertakan link aktif saat menyebut halaman. Format: [📊 Label](/route)
+`;
 }
 
 export async function checkGeminiHealth(): Promise<boolean> {

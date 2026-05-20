@@ -69,6 +69,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
   const [isTyping, setIsTyping] = useState(false);
   const [history, setHistory] = useState<HistoryMessage[]>([]);
   const [lastRequestTime, setLastRequestTime] = useState(0);
+  const [quota, setQuota] = useState<{ remaining: number; total: number } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -127,8 +128,8 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
 
     const now = Date.now();
     const timeSinceLastRequest = now - lastRequestTime;
-    if (timeSinceLastRequest < 3000) {
-      const waitTime = Math.ceil((3000 - timeSinceLastRequest) / 1000);
+    if (timeSinceLastRequest < 5000) {
+      const waitTime = Math.ceil((5000 - timeSinceLastRequest) / 1000);
       const cooldownMsg: ChatMessage = {
         id: `msg-${Date.now()}-cooldown`,
         from: 'bot',
@@ -196,7 +197,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: trimmed,
-          history: newHistory.slice(-10),
+          history: newHistory.slice(-3),
           context,
         }),
       });
@@ -224,7 +225,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
 
       onAiStatusChange('online');
       if (data.model) {
-        console.log(`[HaloAI] Response from: ${data.model}`);
+        console.log(`[HaloAI] Response from: ${data.model} (source: ${data.source || 'gemini'})`);
       }
       const botMsg: ChatMessage = {
         id: `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -235,7 +236,17 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
       setMessages(prev => [...prev, botMsg]);
       setHistory(prev => [...prev, { role: 'assistant' as const, content: data.reply }]);
 
-      cacheStore.setItem(normalized, data.reply).catch(() => {});
+      if (data.source !== 'local') {
+        cacheStore.setItem(normalized, data.reply).catch(() => {});
+      }
+
+      if (typeof data.remaining === 'number' && typeof data.total === 'number') {
+        setQuota({ remaining: data.remaining, total: data.total });
+        const pct = Math.round((data.remaining / data.total) * 100);
+        if (pct <= 20) {
+          onAiStatusChange('slow');
+        }
+      }
     } catch (err: any) {
       console.error('HaloAI Fetch Error:', err?.message || err);
       onAiStatusChange('error');
@@ -284,7 +295,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-slate-900">
-      <HaloAIHeader onClose={onClose} aiStatus={actualStatus} />
+      <HaloAIHeader onClose={onClose} aiStatus={actualStatus} quota={quota} />
 
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
         {messages.map((msg) => (
