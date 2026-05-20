@@ -619,54 +619,99 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
         <BelumLaporPanel data={belumLaporList} bulan={filter.bulan} tahun={filter.tahun} hideWhatsApp />
       </div>
 
-      {/* Print Layout */}
+      {/* Print Layout - Rekap Lengkap untuk Pimpinan */}
       <div ref={printRef} className="hidden print:block">
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <h1 className="text-lg font-bold">REKAP LAPORAN BULANAN SEKOLAH</h1>
           <p className="text-sm">Kecamatan Lemahabang, Kabupaten Cirebon</p>
           <p className="text-sm font-semibold mt-1">Bulan: {filter.bulan} {filter.tahun}</p>
         </div>
 
-        <table className="w-full text-xs border-collapse border border-black">
+        <table className="w-full text-[7px] border-collapse border border-black">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border border-black px-2 py-1 text-left">No</th>
-              <th className="border border-black px-2 py-1 text-left">Nama Sekolah</th>
-              <th className="border border-black px-2 py-1 text-center">Jenjang</th>
-              {filter.kategori === 'murid' && <><th className="border border-black px-2 py-1 text-center">L</th><th className="border border-black px-2 py-1 text-center">P</th><th className="border border-black px-2 py-1 text-center">Jml</th></>}
-              {filter.kategori === 'gtk' && <><th className="border border-black px-2 py-1 text-center">Guru L</th><th className="border border-black px-2 py-1 text-center">Guru P</th><th className="border border-black px-2 py-1 text-center">Tendik L</th><th className="border border-black px-2 py-1 text-center">Tendik P</th><th className="border border-black px-2 py-1 text-center">Total</th></>}
-              {filter.kategori === 'absen' && <><th className="border border-black px-2 py-1 text-center">Sakit</th><th className="border border-black px-2 py-1 text-center">Izin</th><th className="border border-black px-2 py-1 text-center">Tanpa Ket</th><th className="border border-black px-2 py-1 text-center">Jml</th></>}
-              {filter.kategori === 'status' && <><th className="border border-black px-2 py-1 text-center">Status</th><th className="border border-black px-2 py-1 text-center">Tgl Kirim</th></>}
-              {!['murid','gtk','absen','status'].includes(filter.kategori) && <th className="border border-black px-2 py-1 text-center">Data</th>}
+              <th className="border border-black px-1 py-0.5 text-center" rowSpan={2}>No</th>
+              <th className="border border-black px-1 py-0.5 text-left" rowSpan={2}>Nama Sekolah</th>
+              <th className="border border-black px-1 py-0.5 text-center" rowSpan={2}>Jjg</th>
+              <th className="border border-black px-1 py-0.5 text-center" colSpan={3}>Murid</th>
+              <th className="border border-black px-1 py-0.5 text-center" colSpan={2}>Guru</th>
+              <th className="border border-black px-1 py-0.5 text-center" colSpan={2}>Tendik</th>
+              <th className="border border-black px-1 py-0.5 text-center" colSpan={2}>GTK</th>
+              <th className="border border-black px-1 py-0.5 text-center" colSpan={3}>Ruangan</th>
+              <th className="border border-black px-1 py-0.5 text-center" colSpan={2}>Perkakas</th>
+              <th className="border border-black px-1 py-0.5 text-center" colSpan={3}>Absen</th>
+              <th className="border border-black px-1 py-0.5 text-center" rowSpan={2}>Air</th>
+              <th className="border border-black px-1 py-0.5 text-center" rowSpan={2}>Sewa (Rp)</th>
+            </tr>
+            <tr className="bg-gray-100">
+              <th className="border border-black px-0.5 py-0.5 text-center">L</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">P</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">Jml</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">L</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">P</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">L</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">P</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">Jml</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">Tot</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">Baik</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">Sdg</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">Rsk</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">Baik</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">Rsk</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">Skt</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">Izn</th>
+              <th className="border border-black px-0.5 py-0.5 text-center">TK</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((r, i) => (
-              <tr key={r.sekolah.nama}>
-                <td className="border border-black px-2 py-1 text-center">{i + 1}</td>
-                <td className="border border-black px-2 py-1">{r.sekolah.nama}</td>
-                <td className="border border-black px-2 py-1 text-center">{r.sekolah.jenjang}</td>
-                {filter.kategori === 'murid' && (() => {
-                  const ds = r.laporan?.dataSiswa; let l = 0, p = 0
-                  if (ds) for (let j = 1; j <= 6; j++) { l += Number(ds[`kelas${j}_l`] || 0); p += Number(ds[`kelas${j}_p`] || 0) }
-                  return <><td className="border border-black px-2 py-1 text-center">{l}</td><td className="border border-black px-2 py-1 text-center">{p}</td><td className="border border-black px-2 py-1 text-center font-bold">{l + p}</td></>
-                })()}
-                {filter.kategori === 'gtk' && (() => {
-                  const g = r.laporan?.dataGtk; const gl = g?.guruL || 0; const gp = g?.guruP || 0; const tl = g?.tendikL || 0; const tp = g?.tendikP || 0
-                  return <><td className="border border-black px-2 py-1 text-center">{gl}</td><td className="border border-black px-2 py-1 text-center">{gp}</td><td className="border border-black px-2 py-1 text-center">{tl}</td><td className="border border-black px-2 py-1 text-center">{tp}</td><td className="border border-black px-2 py-1 text-center font-bold">{gl + gp + tl + tp}</td></>
-                })()}
-                {filter.kategori === 'absen' && (() => {
-                  const a = r.laporan?.dataAbsen; const s = a?.sakit || 0; const iz = a?.izin || 0; const tk = a?.tanpa_keterangan || 0
-                  return <><td className="border border-black px-2 py-1 text-center">{s}</td><td className="border border-black px-2 py-1 text-center">{iz}</td><td className="border border-black px-2 py-1 text-center">{tk}</td><td className="border border-black px-2 py-1 text-center font-bold">{s + iz + tk}</td></>
-                })()}
-                {filter.kategori === 'status' && <><td className="border border-black px-2 py-1 text-center">{r.laporan?.status || 'belum_lapor'}</td><td className="border border-black px-2 py-1 text-center">{r.laporan?.tglLapor ? new Date(r.laporan.tglLapor).toLocaleDateString('id-ID') : '-'}</td></>}
-                {!['murid','gtk','absen','status'].includes(filter.kategori) && <td className="border border-black px-2 py-1 text-center">-</td>}
-              </tr>
-            ))}
+            {filtered.map((r, i) => {
+              const ds = r.laporan?.dataSiswa
+              let mL = 0, mP = 0
+              if (ds) for (let j = 1; j <= 6; j++) { mL += Number(ds[`kelas${j}_l`] || 0); mP += Number(ds[`kelas${j}_p`] || 0) }
+              const g = r.laporan?.dataGtk
+              const gL = g?.guruL || 0; const gP = g?.guruP || 0; const tL = g?.tendikL || 0; const tP = g?.tendikP || 0
+              const sar = r.laporan?.dataSarpras
+              const ruanganTypes = ['ruang_kelas','perpustakaan','uks','toilet','mushola','gudang','ruang_guru','ruang_kepala_sekolah','rumah_dinas_kepsek']
+              let rBaik = 0, rSdg = 0, rRsk = 0
+              for (const key of ruanganTypes) { rBaik += Number(sar?.[`${key}_baik_bgn`] || 0); rSdg += Number(sar?.[`${key}_sedang_bgn`] || 0); rRsk += Number(sar?.[`${key}_rusak_bgn`] || 0) }
+              const perkItems = ['bangku','meja_murid','kursi_murid','kursi_guru','meja_guru','lemari','papan_tulis','kursi_tamu','rak_buku']
+              let pBaik = 0, pRsk = 0
+              for (const key of perkItems) { pBaik += Number(sar?.[`${key}_baik`] || 0); pRsk += Number(sar?.[`${key}_rusak`] || 0) }
+              const a = r.laporan?.dataAbsen
+              const aSkt = a?.sakit || 0; const aIzn = a?.izin || 0; const aTk = a?.tanpa_keterangan || 0
+              const sumber = (sar?.sumber_air || '').toLowerCase()
+              const airLabel = sumber.includes('pam') ? 'PAM' : sumber.includes('sumur') ? 'Sumur' : sumber.includes('mata air') ? 'Mata Air' : sumber.includes('sungai') ? 'Sungai' : '-'
+              return (
+                <tr key={r.sekolah.nama}>
+                  <td className="border border-black px-1 py-0.5 text-center">{i + 1}</td>
+                  <td className="border border-black px-1 py-0.5">{r.sekolah.nama}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{r.sekolah.jenjang}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{mL || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{mP || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center font-bold">{mL + mP || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{gL || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{gP || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{tL || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{tP || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center font-bold">{gL + gP || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center font-bold">{gL + gP + tL + tP || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{rBaik || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{rSdg || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{rRsk || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{pBaik || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{pRsk || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{aSkt || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{aIzn || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{aTk || '-'}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{airLabel}</td>
+                  <td className="border border-black px-1 py-0.5 text-center">{sar?.menyewa_per_bulan || '-'}</td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
 
-        <div className="text-right mt-8 text-sm">
+        <div className="text-right mt-6 text-sm">
           <p>Lemahabang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           <br />
           <p className="font-semibold">Ketua Tim Kerja Kecamatan Lemahabang</p>
@@ -678,7 +723,7 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
       <style jsx global>{`
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          @page { margin: 0.8cm; size: A4 portrait; }
+          @page { margin: 0.5cm; size: A4 landscape; }
           .print\\:hidden { display: none !important; }
           .hidden.print\\:block { display: block !important; }
         }
