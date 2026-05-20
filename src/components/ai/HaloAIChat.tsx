@@ -27,6 +27,12 @@ interface ChatContext {
   currentView: string;
 }
 
+interface CachedEntry {
+  reply: string;
+  timestamp: number;
+  source: string;
+}
+
 interface HaloAIChatProps {
   onClose: () => void;
   context: ChatContext;
@@ -36,6 +42,8 @@ interface HaloAIChatProps {
 
 const chatStore = localforage.createInstance({ name: 'haloai', storeName: 'messages' });
 const cacheStore = localforage.createInstance({ name: 'haloai', storeName: 'cache' });
+const CACHE_TTL = 60 * 60 * 1000;
+const COOLDOWN_MS = 5000;
 
 const quickMenuPrompts: Record<string, string> = {
   'cari-siswa': 'Bagaimana cara mencari data siswa di portal ini?',
@@ -74,6 +82,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastQuestionRef = useRef<string>('');
+  const cooldownWarningShownRef = useRef<boolean>(false);
 
   useEffect(() => {
     const init = async () => {
@@ -121,6 +130,17 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
     }
   }, [messages]);
 
+  const addBotMessage = (text: string, idSuffix: string) => {
+    const msg: ChatMessage = {
+      id: `msg-${Date.now()}-${idSuffix}`,
+      from: 'bot',
+      text,
+      timestamp: Date.now(),
+    };
+    setMessages(prev => [...prev, msg]);
+    return msg;
+  };
+
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -128,36 +148,24 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
 
     const now = Date.now();
     const timeSinceLastRequest = now - lastRequestTime;
-    if (timeSinceLastRequest < 5000) {
-      const waitTime = Math.ceil((5000 - timeSinceLastRequest) / 1000);
-      const cooldownMsg: ChatMessage = {
-        id: `msg-${Date.now()}-cooldown`,
-        from: 'bot',
-        text: `Mohon tunggu ${waitTime} detik sebelum mengirim pesan berikutnya.`,
-        timestamp: Date.now(),
-      };
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last && last.id.includes('cooldown')) return prev;
-        return [...prev, cooldownMsg];
-      });
+    if (timeSinceLastRequest < COOLDOWN_MS && cooldownWarningShownRef.current) {
       return;
     }
+
+    if (timeSinceLastRequest < COOLDOWN_MS) {
+      cooldownWarningShownRef.current = true;
+      const waitTime = Math.ceil((COOLDOWN_MS - timeSinceLastRequest) / 1000);
+      return;
+    }
+    cooldownWarningShownRef.current = false;
 
     const normalized = normalizeQuestion(trimmed);
     if (normalized === lastQuestionRef.current) {
-      const dupMsg: ChatMessage = {
-        id: `msg-${Date.now()}-dup`,
-        from: 'bot',
-        text: 'Pertanyaan ini baru saja dikirim. Silakan tunggu jawaban atau ajukan pertanyaan lain.',
-        timestamp: Date.now(),
-      };
-      setMessages(prev => [...prev, dupMsg]);
       return;
     }
 
-    const cached = await cacheStore.getItem<string>(normalized);
-    if (cached) {
+    const cached = await cacheStore.getItem<CachedEntry>(normalized);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
       const userMsg: ChatMessage = {
         id: `msg-${Date.now()}-user`,
         from: 'user',
@@ -167,11 +175,11 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
       const botMsg: ChatMessage = {
         id: `msg-${Date.now()}-cached`,
         from: 'bot',
-        text: cached,
+        text: cached.reply,
         timestamp: Date.now(),
       };
       setMessages(prev => [...prev, userMsg, botMsg]);
-      setHistory(prev => [...prev, { role: 'user', content: trimmed }, { role: 'assistant', content: cached }]);
+      setHistory(prev => [...prev, { role: 'user', content: trimmed }, { role: 'assistant', content: cached.reply }]);
       return;
     }
 
@@ -205,58 +213,31 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        console.error('HaloAI Error:', data);
-        if (data.code) {
-          console.error('HaloAI Error Code:', data.code);
-        }
-        if (data.detail) {
-          console.error('HaloAI Detail:', data.detail);
-        }
         onAiStatusChange('error');
-        const botMsg: ChatMessage = {
-          id: `msg-${Date.now()}-err`,
-          from: 'bot',
-          text: data.reply || 'Maaf, terjadi kesalahan.',
-          timestamp: Date.now(),
-        };
-        setMessages(prev => [...prev, botMsg]);
+        addBotMessage(data.reply || 'Maaf, terjadi kesalahan.', 'err');
         return;
       }
 
-      onAiStatusChange('online');
-      if (data.model) {
-        console.log(`[HaloAI] Response from: ${data.model} (source: ${data.source || 'gemini'})`);
-      }
-      const botMsg: ChatMessage = {
-        id: `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        from: 'bot',
-        text: data.reply,
-        timestamp: Date.now(),
-      };
-      setMessages(prev => [...prev, botMsg]);
+      onAiStatusChange(data.quotaStatus === 'red' ? 'error' : data.quotaStatus === 'yellow' ? 'slow' : 'online');
+      const botMsg = addBotMessage(data.reply, Math.random().toString(36).slice(2));
       setHistory(prev => [...prev, { role: 'assistant' as const, content: data.reply }]);
 
-      if (data.source !== 'local') {
-        cacheStore.setItem(normalized, data.reply).catch(() => {});
+      if (data.source === 'gemini') {
+        const entry: CachedEntry = {
+          reply: data.reply,
+          timestamp: Date.now(),
+          source: 'gemini',
+        };
+        cacheStore.setItem(normalized, entry).catch(() => {});
       }
 
       if (typeof data.remaining === 'number' && typeof data.total === 'number') {
         setQuota({ remaining: data.remaining, total: data.total });
-        const pct = Math.round((data.remaining / data.total) * 100);
-        if (pct <= 20) {
-          onAiStatusChange('slow');
-        }
       }
     } catch (err: any) {
       console.error('HaloAI Fetch Error:', err?.message || err);
       onAiStatusChange('error');
-      const botMsg: ChatMessage = {
-        id: `msg-${Date.now()}-err`,
-        from: 'bot',
-        text: 'Maaf, terjadi kesalahan koneksi. Silakan coba lagi.',
-        timestamp: Date.now(),
-      };
-      setMessages(prev => [...prev, botMsg]);
+      addBotMessage('Maaf, terjadi kesalahan koneksi. Silakan coba lagi.', 'err');
     } finally {
       setIsTyping(false);
     }
@@ -264,7 +245,21 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
 
   const handleSend = () => {
     if (!input.trim() || isTyping) return;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
     sendMessage(input);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   const handleQuickMenu = (id: string) => {
@@ -322,13 +317,8 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
               ref={inputRef}
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               placeholder={isTyping ? 'Menunggu jawaban AI...' : 'Ketik pertanyaan...'}
               disabled={isTyping}
               className="w-full text-sm text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50 dark:bg-slate-700 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 disabled:cursor-not-allowed"

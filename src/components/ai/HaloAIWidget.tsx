@@ -17,30 +17,27 @@ export default function HaloAIWidget() {
   const pathname = usePathname();
 
   useEffect(() => {
+    let failCount = 0;
+    let isOffline = false;
+
     const check = async () => {
-      setAiStatus('checking');
       try {
-        const res = await fetch('/api/haloai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: 'ping',
-            history: [],
-            context: { userRole: 'publik', userName: 'System', currentPath: '/', currentView: 'portal' },
-          }),
-        });
+        const res = await fetch('/api/haloai', { method: 'GET' });
         const data = await res.json();
-        if (data.ok) {
-          setAiStatus('online');
-        } else {
+        isOffline = !data.ok;
+        failCount = data.ok ? 0 : failCount + 1;
+        setAiStatus(data.ok ? 'online' : 'error');
+      } catch {
+        failCount++;
+        isOffline = failCount > 2;
+        if (failCount > 2) {
           setAiStatus('error');
         }
-      } catch {
-        setAiStatus('error');
       }
     };
+
     check();
-    const interval = setInterval(check, 60000);
+    const interval = setInterval(check, 120000);
     return () => clearInterval(interval);
   }, []);
 

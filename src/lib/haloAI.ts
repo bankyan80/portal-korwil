@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { classifyComplexity, type Complexity } from './haloAI-knowledge';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = 'gemini-2.5-flash';
@@ -40,7 +41,7 @@ ATURAN LINK:
 - Jika route tidak ada: "Maaf, halaman tersebut belum tersedia"
 `;
 
-export function buildSystemPrompt(ctx: ChatContext): string {
+export function buildSystemPrompt(ctx: ChatContext, complexity?: Complexity): string {
   const roleContext = (() => {
     switch (ctx.userRole) {
       case 'super_admin':
@@ -58,17 +59,19 @@ Anda membantu informasi sekolah, SPMB, TKA, dan layanan pendidikan.`;
     }
   })();
 
+  const isNavigation = complexity === 'sederhana' || ctx.currentPath === '/';
+  const routeSection = isNavigation ? `\n${ROUTE_MAP}` : '';
+
   return `${roleContext}
 
-HALUAN: Bahasa Indonesia ramah & profesional. Jawab singkat & jelas.
-${ROUTE_MAP}
+HALUAN: Bahasa Indonesia ramah & profesional. Jawab singkat & jelas.${routeSection}
 SELALU sertakan link aktif saat menyebut halaman. Format: [📊 Label](/route)
 `;
 }
 
-export async function checkGeminiHealth(): Promise<boolean> {
+export async function checkGeminiHealth(): Promise<{ ok: boolean; model: string }> {
   try {
-    if (!GEMINI_API_KEY) return false;
+    if (!GEMINI_API_KEY) return { ok: false, model: '' };
     const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
     for (const model of models) {
       const response = await fetch(
@@ -78,16 +81,17 @@ export async function checkGeminiHealth(): Promise<boolean> {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+            generationConfig: { maxOutputTokens: 10 },
           }),
         }
       );
       if (response.ok) {
         const data = await response.json();
-        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) return true;
+        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) return { ok: true, model };
       }
     }
-    return false;
+    return { ok: false, model: '' };
   } catch {
-    return false;
+    return { ok: false, model: '' };
   }
 }

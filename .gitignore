@@ -54,6 +54,7 @@ puter/
 
 # temp
 scripts/sync-data.mjs.log
+*.xlsx
 
 .vercel
 

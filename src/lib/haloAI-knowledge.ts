@@ -3,6 +3,8 @@ export interface LocalAnswer {
   confidence: 'exact' | 'high' | 'medium';
 }
 
+export type Complexity = 'sederhana' | 'sedang' | 'kompleks';
+
 const LOCAL_KB: Record<string, LocalAnswer> = {
   'cara lapor': {
     answer: 'Untuk mengisi laporan bulanan:\n\n1. Login sebagai operator sekolah\n2. Buka menu [📋 Laporan Bulanan](/admin/operator/laporan-bulanan)\n3. Pilih bulan dan tahun\n4. Isi data siswa, GTK, sarpras, dan absen\n5. Klik "Kirim Laporan Bulanan"\n\nStatus laporan: Belum Lapor → Sudah Dikirim → Diverifikasi',
@@ -104,6 +106,86 @@ const LOCAL_KB: Record<string, LocalAnswer> = {
     answer: 'Halo! 👋 Saya HaloAI, asisten digital Portal Pendidikan Kecamatan Lemahabang.\n\nAda yang bisa saya bantu? Anda bisa:\n- Tanyakan cara menggunakan portal\n- Minta informasi tentang SPMB, TKA, KIP\n- Tanya tentang laporan bulanan\n- Atau pertanyaan umum lainnya',
     confidence: 'exact',
   },
+  'bantuan': {
+    answer: 'Saya HaloAI siap membantu! 🎓\n\nBerikut yang bisa saya lakukan:\n- 🔍 **Navigasi menu** — "Dimana halaman SPMB?"\n- 📋 **Panduan** — "Cara laporan bulanan"\n- 🏫 **Data** — "Informasi sekolah"\n- 📝 **TKA/SPMB** — "Cara daftar SPMB"\n- 💡 **FAQ** — "Apa itu KIP?"\n\nSilakan tanya apa saja seputar portal pendidikan!',
+    confidence: 'exact',
+  },
+  'daftar menu': {
+    answer: 'Berikut menu utama Portal Pendidikan Kecamatan Lemahabang:\n\n**Publik:**\n[🏠 Beranda](/) | [🏫 Profil](/profil) | [🎓 SPMB SD](/spmb-sd) | [📝 TKA SD](/tka-sd) | [📅 Agenda](/agenda-kegiatan) | [📂 Administrasi](/administrasi) | [🗺️ Mapping Pegawai](/mapping-pegawai) | [📊 Rekap Laporan](/rekap-laporan) | [🏫 Data Sekolah](/data-sekolah) | [💳 KIP SD](/kip-sd) | [🤝 Yatim Piatu](/yatim-piatu) | [💰 BOS ARKAS](/bos-arkas) | [📁 Dokumen Bersama](/dokumen-bersama)\n\n**Operator:** [📊 Dashboard](/admin/operator) | [🏫 Profil Sekolah](/admin/operator/profil-sekolah) | [👤 Data Siswa](/admin/operator/data-siswa) | [👥 Data Guru](/admin/operator/data-guru) | [🏗️ Sarpras](/admin/operator/sarpras) | [📋 Laporan Bulanan](/admin/operator/laporan-bulanan)\n\n**Admin:** [📊 Dashboard](/admin) | [📢 Pengumuman](/admin/manage-announcements) | [🖼️ Galeri](/admin/manage-gallery) | [👥 User](/admin/manage-users) | [📁 Dokumen](/admin/manage-documents)\n\n**Super Admin:** [📊 Dashboard](/admin/super) | [🏫 Sekolah](/admin/super/sekolah) | [📈 Monitoring](/admin/super/monitoring) | [⚙️ Settings](/admin/super/settings)',
+    confidence: 'exact',
+  },
+  'lokasi halaman': {
+    answer: 'Tentukan halaman yang ingin Anda cari. Contoh:\n- "Dimana halaman SPMB?" → 🎓 [SPMB SD](/spmb-sd)\n- "Cari menu laporan" → [📊 Rekap Laporan](/rekap-laporan)\n- "Halaman profil sekolah" → [🏫 Profil Sekolah](/admin/operator/profil-sekolah)\n\nAtau ketik **"daftar menu"** untuk melihat semua menu.',
+    confidence: 'exact',
+  },
+  'data siswa': {
+    answer: 'Data siswa bisa diakses melalui:\n\n**Operator:**\n- [👤 Tambah Siswa](/admin/operator/tambah-siswa) — input data baru\n- [👥 Data Siswa](/admin/operator/data-siswa) — lihat & kelola\n\n**Publik:**\n- Data siswa bisa dilihat di menu masing-masing sekolah',
+    confidence: 'exact',
+  },
+  'data guru': {
+    answer: 'Data guru & tendik bisa diakses melalui:\n\n**Operator:**\n- [👥 Data Guru](/admin/operator/data-guru) — lihat, tambah, edit\n\n**Publik:**\n- [🗺️ Mapping Pegawai](/mapping-pegawai) — lihat pemetaan pegawai',
+    confidence: 'exact',
+  },
+  'cara ganti password': {
+    answer: 'Untuk mengganti password:\n\n1. Login ke portal\n2. Buka menu profil atau pengaturan akun\n3. Klik "Ganti Password"\n4. Masukkan password lama dan password baru\n5. Klik "Simpan"\n\nAtau hubungi admin jika lupa password.',
+    confidence: 'exact',
+  },
+  'apa itu portal': {
+    answer: '**Portal Pendidikan Kecamatan Lemahabang** 🎓\n\nAdalah sistem informasi pendidikan terpadu untuk:\n- Manajemen data siswa & guru\n- Laporan bulanan sekolah\n- SPMB & TKA SD\n- Monitoring pendidikan\n- Informasi publik\n\nDikelola oleh Dinas Pendidikan Kecamatan Lemahabang, Kabupaten Cirebon.',
+    confidence: 'exact',
+  },
+  'e kinerja': {
+    answer: 'E-Kinerja bisa diakses di:\n\n[📊 E-Kinerja](/e-kinerja)\n\nHalaman ini berisi informasi dan pengelolaan kinerja pegawai.',
+    confidence: 'exact',
+  },
+  'galeri': {
+    answer: 'Galeri foto bisa diakses di:\n\n[🖼️ Galeri](/galeri) — galeri utama\n[📸 Semua Galeri](/semua-galeri) — semua koleksi foto\n\nBerisi dokumentasi kegiatan pendidikan.',
+    confidence: 'exact',
+  },
+  'berita': {
+    answer: 'Berita dan informasi bisa diakses di:\n\n[📰 Berita](/berita) — daftar berita\n[ℹ️ Semua Informasi](/semua-informasi) — semua informasi publik\n\nBerisi pengumuman dan informasi terbaru seputar pendidikan.',
+    confirmation: 'exact',
+  },
+  'donasi': {
+    answer: 'Donasi bisa diakses di:\n\n[❤️ Donasi](/donasi)\n\nHalaman ini berisi informasi donasi untuk kegiatan pendidikan.',
+    confidence: 'exact',
+  },
+  'kalender': {
+    answer: 'Kalender pendidikan bisa diakses di:\n\n[📅 Kalender](/kalender)\n\nBerisi kalender akademik dan jadwal kegiatan pendidikan.',
+    confidence: 'exact',
+  },
+  'organisasi': {
+    answer: 'Struktur organisasi bisa diakses di:\n\n[🏢 Organisasi](/organisasi)\n\nBerisi struktur organisasi Dinas Pendidikan Kecamatan Lemahabang.',
+    confidence: 'exact',
+  },
+  'bup': {
+    answer: 'BUP (Buku Umum Perpustakaan) bisa diakses di:\n\n[📚 BUP](/bup)\n\nHalaman ini berisi data perpustakaan sekolah.',
+    confidence: 'exact',
+  },
+  'dapodik': {
+    answer: 'Data Dapodik bisa diakses di:\n\n[💾 Dapodik](/dapodik)\n\nHalaman ini berisi data pokok pendidikan yang terintegrasi dengan Dapodik.',
+    confidence: 'exact',
+  },
+  'data paud': {
+    answer: 'Data PAUD bisa diakses di:\n\n[👶 Data PAUD](/data-paud)\n\nHalaman ini berisi data Pendidikan Anak Usia Dini di Kecamatan Lemahabang.',
+    confidence: 'exact',
+  },
+  'data rombel': {
+    answer: 'Data rombongan belajar (rombel) bisa diakses di:\n\n[👥 Data Rombel](/data-rombel)\n\nHalaman ini berisi data rombongan belajar setiap sekolah.',
+    confidence: 'exact',
+  },
+  'data gtk': {
+    answer: 'Data GTK (Guru dan Tenaga Kependidikan) bisa diakses di:\n\n[👨‍🏫 Data GTK](/data-gtk)\n\nBerisi data lengkap guru dan tenaga kependidikan.',
+    confidence: 'exact',
+  },
+  'website sekolah': {
+    answer: 'Website sekolah bisa diakses di:\n\n[🌐 Website Sekolah](/website-sekolah)\n\nBerisi daftar website resmi sekolah-sekolah di Kecamatan Lemahabang.',
+    confidence: 'exact',
+  },
+  'lupa password': {
+    answer: 'Jika lupa password:\n\n1. Buka halaman [🔐 Login](/login)\n2. Klik "Lupa Password?"\n3. Masukkan email terdaftar\n4. Ikuti instruksi reset password\n\nAtau hubungi admin untuk bantuan lebih lanjut.',
+    confidence: 'exact',
+  },
 };
 
 const KEYWORD_MAP: Record<string, string[]> = {
@@ -132,7 +214,44 @@ const KEYWORD_MAP: Record<string, string[]> = {
   'super admin': ['super admin', 'dashboard super', 'menu super'],
   'siapa kamu': ['siapa kamu', 'siapa anda', 'kamu siapa', 'anda siapa', 'apa itu haloai', 'haloai apa'],
   'halo': ['halo', 'hai', 'hi', 'hello', 'hey', 'selamat pagi', 'selamat siang', 'selamat sore', 'selamat malam'],
+  'bantuan': ['bantuan', 'help', 'tolong', ' bisa bantu'],
+  'daftar menu': ['daftar menu', 'menu apa saja', 'menu portal', 'semua menu', 'list menu', 'panduan menu', ' navigasi'],
+  'lokasi halaman': ['dimana', 'lokasi halaman', 'cari halaman', 'halaman apa', 'route'],
+  'data siswa': ['data siswa', 'cari siswa', 'cari data siswa', 'daftar siswa'],
+  'data guru': ['data guru', 'cari guru', 'cari data guru', 'daftar guru', 'guru dan tendik'],
+  'cara ganti password': ['ganti password', 'ubah password', 'reset password', 'lupa password'],
+  'apa itu portal': ['apa itu portal', 'tentang portal', 'portal pendidikan', 'informasi portal'],
+  'e kinerja': ['e kinerja', 'e-kinerja', 'kinerja'],
+  'galeri': ['galeri', 'foto', 'dokumentasi'],
+  'berita': ['berita', 'informasi', 'pengumuman', 'artikel', 'news'],
+  'donasi': ['donasi', 'donasi', 'sumbangan'],
+  'kalender': ['kalender pendidikan', 'kalender akademik'],
+  'organisasi': ['organisasi', 'struktur organisasi'],
+  'bup': ['bup', 'buku umum perpustakaan', 'perpustakaan'],
+  'dapodik': ['dapodik', 'data pokok pendidikan'],
+  'data paud': ['data paud', 'paud'],
+  'data rombel': ['data rombel', 'rombongan belajar', 'rombel'],
+  'data gtk': ['data gtk', 'gtk'],
+  'website sekolah': ['website sekolah', 'web sekolah', 'situs sekolah'],
 };
+
+const COMPLEX_KEYWORDS = [
+  'analisa', 'analisis', 'analytics', 'audit', 'audit sistem',
+  'coding', 'kode', 'program', 'script', 'source code',
+  'dokumen', 'surat', 'draft', 'buatkan',
+  'ringkasan', 'summary', 'rekap', 'statistik',
+  'banding', 'perbandingan', 'compare', 'evaluasi',
+  'rekomendasi', 'review', 'periksa', 'cek', 'validasi',
+  'hitung', 'kalkulasi', 'rumus', 'perhitungan',
+  'troubleshoot', 'error', 'debug', 'bug', 'masalah teknis',
+  'generate', 'buatkan', 'tuliskan', 'jelaskan detail',
+];
+
+const SEDERHANA_KEYWORDS = [
+  'halo', 'hai', 'hi', 'help', 'bantuan', 'panduan',
+  'menu', 'halaman', 'lokasi', 'dimana', 'cara',
+  'informasi', 'apa itu', 'siapa', 'fungsi', 'kegunaan',
+];
 
 function normalizeInput(input: string): string {
   return input.trim().toLowerCase().replace(/[?.!,;:]/g, '').replace(/\s+/g, ' ');
@@ -150,4 +269,94 @@ export function findLocalAnswer(input: string): LocalAnswer | null {
   }
 
   return null;
+}
+
+export function classifyComplexity(input: string): Complexity {
+  const normalized = normalizeInput(input);
+  const words = normalized.split(/\s+/);
+
+  let complexScore = 0;
+  let simpleScore = 0;
+
+  for (const keyword of COMPLEX_KEYWORDS) {
+    if (normalized.includes(keyword)) {
+      complexScore += 2;
+    }
+  }
+
+  for (const keyword of SEDERHANA_KEYWORDS) {
+    if (normalized.includes(keyword)) {
+      simpleScore += 1;
+    }
+  }
+
+  if (words.length > 20) {
+    complexScore += 1;
+  }
+
+  if (complexScore >= 2) return 'kompleks';
+  if (simpleScore >= 1 && complexScore === 0) return 'sederhana';
+  return 'sedang';
+}
+
+export function getTemplateFallback(input: string): string | null {
+  const normalized = normalizeInput(input);
+
+  if (/^(maaf|sorry|nggak|tidak|gak|bisa tolong)/.test(normalized)) {
+    return null;
+  }
+
+  if (/^halo|^hai|^hi|^hey|^selamat/.test(normalized)) {
+    return 'Halo! 👋 Ada yang bisa saya bantu?\n\nKetik **"bantuan"** untuk melihat yang bisa saya lakukan.';
+  }
+
+  if (/terima kasih|makasih|thanks|thank you/.test(normalized)) {
+    return 'Sama-sama! 🙏 Senang bisa membantu. Jika ada pertanyaan lain, silakan tanya lagi ya.';
+  }
+
+  if (/selamat tinggal|dadah|bye|sampai jumpa/.test(normalized)) {
+    return 'Sampai jumpa! 👋 Terima kasih telah menggunakan HaloAI.';
+  }
+
+  return null;
+}
+
+export function getSmartRoutingReply(
+  input: string,
+  complexity: Complexity,
+  cachedReply: string | null,
+  quotaExhausted: boolean
+): { reply: string | null; source: 'local' | 'cache' | null } {
+  const templateReply = getTemplateFallback(input);
+  if (templateReply) {
+    return { reply: templateReply, source: 'local' };
+  }
+
+  if (complexity === 'sederhana') {
+    const localAnswer = findLocalAnswer(input);
+    if (localAnswer) {
+      return { reply: localAnswer.answer, source: 'local' };
+    }
+    return {
+      reply: 'Silakan tanya lebih spesifik. Contoh: "Dimana halaman SPMB?", "Cara laporan bulanan", atau ketik **"bantuan"**.',
+      source: 'local',
+    };
+  }
+
+  if (complexity === 'sedang' && cachedReply) {
+    return { reply: cachedReply, source: 'cache' };
+  }
+
+  if (quotaExhausted) {
+    const localAnswer = findLocalAnswer(input);
+    if (localAnswer) {
+      return { reply: localAnswer.answer, source: 'local' };
+    }
+    return {
+      reply: 'Maaf, kuota AI sedang habis. Silakan coba lagi besok atau ajukan pertanyaan yang lebih spesifik. Berikut yang bisa saya bantu:\n- Ketik **"daftar menu"** untuk navigasi\n- Ketik **"bantuan"** untuk panduan fitur\n- Atau tanyakan cara menggunakan portal',
+      source: 'local',
+    };
+  }
+
+  return { reply: null, source: null };
 }

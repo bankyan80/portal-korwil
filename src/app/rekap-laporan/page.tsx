@@ -24,6 +24,7 @@ type StatusLaporan = 'belum_lapor' | 'draft' | 'sudah_lapor' | 'diverifikasi' | 
 interface LaporanRecord {
   id: string;
   sekolah: string;
+  sekolahId: string;
   bulan: string;
   tahun: number;
   status: StatusLaporan;
@@ -121,22 +122,57 @@ export default function LaporanBulananPage() {
       }
     };
 
+    // Use static sekolah data as base (always available)
+    const baseSekolah: Sekolah[] = sharedSekolah.map((s) => ({
+      id: s.npsn,
+      nama: s.nama,
+      npsn: s.npsn,
+      nss: s.nss,
+      jenjang: s.jenjang,
+      status: s.status,
+      kecamatan: 'Lemahabang',
+      desa: s.desa,
+      alamat: s.address,
+      kepalaSekolah: '',
+      operator: '',
+      noHp: '',
+      email: '',
+      akreditasi: s.akreditasi,
+      tahunBerdiri: 0,
+      statusOperasional: '',
+    }));
+
     if (db) {
+      // Merge with tabel_sekolah if available
       const sekolahUnsub = onSnapshot(
         collection(db, 'tabel_sekolah'),
         (snapshot) => {
-          const sekolahData: Sekolah[] = [];
+          const firestoreData: Sekolah[] = [];
           snapshot.forEach((doc) => {
-            sekolahData.push({ id: doc.id, ...doc.data() } as Sekolah);
+            firestoreData.push({ id: doc.id, ...doc.data() } as Sekolah);
           });
-          if (sekolahData.length > 0) {
-            setSekolahList(sekolahData);
+          if (firestoreData.length > 0) {
+            // Merge: start with base, override with Firestore data
+            const merged = [...baseSekolah];
+            for (const fs of firestoreData) {
+              const existingIdx = merged.findIndex((s) => s.npsn === fs.npsn || normalizeSchool(s.nama) === normalizeSchool(fs.nama));
+              if (existingIdx >= 0) {
+                merged[existingIdx] = { ...merged[existingIdx], ...fs };
+              } else {
+                merged.push(fs);
+              }
+            }
+            setSekolahList(merged);
+          } else {
+            setSekolahList(baseSekolah);
           }
           sekolahLoaded = true;
           finishLoading();
         },
         (err) => {
           console.error('Error in tabel_sekolah listener:', err);
+          // Fallback to static data
+          setSekolahList(baseSekolah);
           sekolahLoaded = true;
           finishLoading();
         }
@@ -156,6 +192,7 @@ export default function LaporanBulananPage() {
             laporanData.push({
               id: doc.id,
               sekolah: d.sekolah || d.dataSekolah?.nama || '',
+              sekolahId: d.sekolahId || '',
               bulan: d.bulan,
               tahun: d.tahun,
               status: mappedStatus,
@@ -191,25 +228,40 @@ export default function LaporanBulananPage() {
   }, [sekolahList]);
 
   const laporanLookup = useMemo(() => {
-    const map: Record<string, Record<string, StatusLaporan>> = {};
+    const byName: Record<string, Record<string, StatusLaporan>> = {};
+    const byId: Record<string, Record<string, StatusLaporan>> = {};
     const tahunNum = parseInt(tahun, 10);
     for (const l of laporanList) {
       if (l.tahun !== tahunNum) continue;
-      const key = normalizeSchool(l.sekolah);
-      if (!map[key]) map[key] = {};
-      map[key][l.bulan] = l.status;
+      const nameKey = normalizeSchool(l.sekolah);
+      if (!byName[nameKey]) byName[nameKey] = {};
+      byName[nameKey][l.bulan] = l.status;
+
+      if (l.sekolahId) {
+        if (!byId[l.sekolahId]) byId[l.sekolahId] = {};
+        byId[l.sekolahId][l.bulan] = l.status;
+      }
     }
-    return map;
+    return { byName, byId };
   }, [laporanList, tahun]);
 
   function getBulanStatus(school: Sekolah, bulan: string): StatusLaporan {
-    const key = normalizeSchool(school.nama);
-    return laporanLookup[key]?.[bulan] || 'belum_lapor';
+    const nameKey = normalizeSchool(school.nama);
+    const byNameMatch = laporanLookup.byName[nameKey]?.[bulan];
+    if (byNameMatch) return byNameMatch;
+
+    const byIdMatch = laporanLookup.byId[school.id]?.[bulan] || laporanLookup.byId[school.npsn]?.[bulan];
+    if (byIdMatch) return byIdMatch;
+
+    return 'belum_lapor';
   }
 
   function getSchoolFinalStatus(school: Sekolah): StatusLaporan {
-    const key = normalizeSchool(school.nama);
-    const bulanData = laporanLookup[key];
+    const nameKey = normalizeSchool(school.nama);
+    let bulanData = laporanLookup.byName[nameKey];
+    if (!bulanData) {
+      bulanData = laporanLookup.byId[school.id] || laporanLookup.byId[school.npsn];
+    }
     if (!bulanData) return 'belum_lapor';
     let hasLapor = false;
     for (const b of bulanList) {
@@ -343,15 +395,6 @@ export default function LaporanBulananPage() {
           <h2 className="text-2xl font-bold text-[#0d3b66] dark:text-white">Laporan Rutin Bulanan</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Monitoring pendidikan Kecamatan Lemahabang, Kabupaten Cirebon</p>
         </div>
-
-        {user && user.role !== 'operator_sekolah' && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-5 py-3 print:hidden">
-            <p className="text-sm text-amber-800 dark:text-amber-300 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              Akun Anda saat ini sebagai pengunjung. Silakan hubungi admin untuk diubah menjadi operator sekolah.
-            </p>
-          </div>
-        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 print:grid-cols-6">
           <StatCard icon={School} label="Total Sekolah" value={stats.total} color="blue" />

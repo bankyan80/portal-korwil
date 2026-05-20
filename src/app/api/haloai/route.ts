@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { buildSystemPrompt, ChatContext } from '@/lib/haloAI';
-import { findLocalAnswer } from '@/lib/haloAI-knowledge';
+import { buildSystemPrompt, ChatContext, checkGeminiHealth } from '@/lib/haloAI';
+import { findLocalAnswer, classifyComplexity, getSmartRoutingReply, type Complexity } from '@/lib/haloAI-knowledge';
 
 const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-2.5-flash,gemini-2.0-flash')
   .split(',')
@@ -28,7 +28,7 @@ function checkRateLimit(ip: string): boolean {
   return false;
 }
 
-function checkDailyLimit(userId: string, role: string): { allowed: boolean; remaining: number; total: number } {
+function checkDailyLimit(userId: string, role: string): { allowed: boolean; remaining: number; total: number; status: 'green' | 'yellow' | 'red' } {
   const today = new Date().toISOString().split('T')[0];
   const key = `${userId}:${today}`;
   const usage = dailyUsageMap.get(key);
@@ -36,15 +36,21 @@ function checkDailyLimit(userId: string, role: string): { allowed: boolean; rema
 
   if (!usage || usage.date !== today) {
     dailyUsageMap.set(key, { count: 1, date: today });
-    return { allowed: true, remaining: limit - 1, total: limit };
+    const remaining = limit - 1;
+    const pct = remaining / limit;
+    const status = pct <= 0.2 ? 'yellow' : 'green';
+    return { allowed: true, remaining, total: limit, status };
   }
 
   if (usage.count >= limit) {
-    return { allowed: false, remaining: 0, total: limit };
+    return { allowed: false, remaining: 0, total: limit, status: 'red' };
   }
 
   usage.count++;
-  return { allowed: true, remaining: limit - usage.count, total: limit };
+  const remaining = limit - usage.count;
+  const pct = remaining / limit;
+  const status = remaining === 0 ? 'red' : pct <= 0.2 ? 'yellow' : 'green';
+  return { allowed: true, remaining, total: limit, status };
 }
 
 function getIp(req: NextRequest): string {
@@ -57,97 +63,127 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+export async function GET() {
+  const health = await checkGeminiHealth();
+  return NextResponse.json({
+    ok: health.ok,
+    model: health.model,
+    timestamp: Date.now(),
+  });
+}
+
 export async function POST(req: NextRequest) {
   const ip = getIp(req);
 
   if (!checkRateLimit(ip)) {
     return NextResponse.json(
       {
-        success: false,
+        success: true,
+        source: 'local',
         code: 'RATE_LIMITED',
         reply: 'Mohon tunggu beberapa detik sebelum mengirim pesan berikutnya.',
-      },
-      { status: 429 }
+      }
     );
   }
 
   try {
     const body = await req.json();
-    const { message, history, context }: { message: string; history: { role: string; content: string }[]; context: ChatContext } = body;
+    const { message, history, context: ctx }: { message: string; history: { role: string; content: string }[]; context: ChatContext } = body;
 
     if (!message || !message.trim()) {
       return NextResponse.json({ success: false, code: 'EMPTY_MESSAGE', reply: 'Pesan tidak boleh kosong.' }, { status: 400 });
     }
 
     const trimmed = message.trim();
+    const complexity = classifyComplexity(trimmed);
 
-    // Step 1: Check local knowledge base (no Gemini needed)
     const localAnswer = findLocalAnswer(trimmed);
     if (localAnswer) {
-      console.log(`[HaloAI] Local KB match (confidence: ${localAnswer.confidence})`);
+      console.log(`[HaloAI] Local KB match (confidence: ${localAnswer.confidence}, complexity: ${complexity})`);
       return NextResponse.json({
         success: true,
         source: 'local',
+        complexity,
         reply: localAnswer.answer,
       });
     }
 
-    // Step 2: Check API key
     const key = process.env.GEMINI_API_KEY;
     if (!key || key === 'YOUR_GEMINI_API_KEY') {
+      const fallbackReply = getSmartRoutingReply(trimmed, complexity, null, true);
       return NextResponse.json({
-        success: false,
-        code: 'API_KEY_NOT_CONFIGURED',
-        reply: 'GEMINI_API_KEY belum dikonfigurasi. Hubungi administrator.',
-      }, { status: 503 });
+        success: true,
+        source: 'local',
+        complexity,
+        reply: fallbackReply.reply || 'GEMINI_API_KEY belum dikonfigurasi. Hubungi administrator.',
+      });
     }
 
-    // Step 3: Check daily limit
-    const userId = context.schoolId || context.userName || ip;
-    const role = context.userRole || 'publik';
+    const userId = ctx?.schoolId || ctx?.userName || ip;
+    const role = ctx?.userRole || 'publik';
     const dailyCheck = checkDailyLimit(userId, role);
 
     if (!dailyCheck.allowed) {
       console.warn(`[HaloAI] Daily limit reached for ${userId} (${role})`);
-      return NextResponse.json(
-        {
-          success: false,
-          code: 'DAILY_LIMIT_REACHED',
-          reply: `Batas pertanyaan harian Anda (${dailyCheck.total}/hari) sudah habis. Silakan coba lagi besok.`,
-          remaining: 0,
-          total: dailyCheck.total,
-        },
-        { status: 429 }
-      );
+      const fallbackReply = getSmartRoutingReply(trimmed, complexity, null, true);
+      return NextResponse.json({
+        success: true,
+        source: 'local',
+        complexity,
+        reply: fallbackReply.reply || `Batas pertanyaan harian Anda (${dailyCheck.total}/hari) sudah habis. Silakan coba lagi besok.`,
+        remaining: 0,
+        total: dailyCheck.total,
+        quotaStatus: 'red',
+      });
     }
 
-    // Step 4: Build minimal context for Gemini (only last 3 messages, not full history)
-    const systemPrompt = buildSystemPrompt(context);
+    if (complexity === 'sederhana') {
+      const templateReply = getSmartRoutingReply(trimmed, complexity, null, false);
+      if (templateReply.reply) {
+        return NextResponse.json({
+          success: true,
+          source: 'local',
+          complexity,
+          reply: templateReply.reply,
+          remaining: dailyCheck.remaining,
+          total: dailyCheck.total,
+          quotaStatus: dailyCheck.status,
+        });
+      }
+    }
 
-    const recentHistory = history.slice(-3);
+    const systemPrompt = buildSystemPrompt(ctx, complexity);
+
+    const recentHistory = (history || []).slice(-3);
     const contents = [
       { role: 'user' as const, parts: [{ text: systemPrompt }] },
       { role: 'model' as const, parts: [{ text: 'Baik, saya siap membantu sebagai HaloAI.' }] },
       ...recentHistory.map((h: { role: string; content: string }) => ({
-        role: h.role === 'user' ? 'user' : 'model',
+        role: h.role === 'user' ? 'user' as const : 'model' as const,
         parts: [{ text: h.content }],
       })),
       { role: 'user' as const, parts: [{ text: trimmed }] },
     ];
 
+    const maxTokens = complexity === 'kompleks' ? 2048 : 1024;
+    const usePro = complexity === 'kompleks' && dailyCheck.remaining > 10;
+
     let lastError = '';
     let lastCode = '';
     let fallbackAttempted = false;
 
-    for (let i = 0; i < GEMINI_MODELS.length; i++) {
-      const model = GEMINI_MODELS[i];
+    const modelsToTry = usePro
+      ? [...GEMINI_MODELS]
+      : GEMINI_MODELS.filter(m => !m.includes('pro'));
+
+    for (let i = 0; i < modelsToTry.length; i++) {
+      const model = modelsToTry[i];
 
       if (fallbackAttempted) {
-        console.log(`[HaloAI] Waiting 1.5s before fallback to ${model}...`);
         await delay(1500);
       }
 
-      console.log(`[HaloAI] Trying model: ${model} (attempt ${i + 1}/${GEMINI_MODELS.length})`);
+      console.log(`[HaloAI] Trying model: ${model} (complexity: ${complexity}, attempt ${i + 1}/${modelsToTry.length})`);
 
       try {
         const response = await fetch(
@@ -158,10 +194,10 @@ export async function POST(req: NextRequest) {
             body: JSON.stringify({
               contents,
               generationConfig: {
-                temperature: 0.7,
+                temperature: complexity === 'kompleks' ? 0.8 : 0.7,
                 topP: 0.95,
                 topK: 40,
-                maxOutputTokens: 1024,
+                maxOutputTokens: maxTokens,
               },
             }),
           }
@@ -177,13 +213,15 @@ export async function POST(req: NextRequest) {
               success: true,
               model,
               source: 'gemini',
+              complexity,
               reply: text,
               remaining: dailyCheck.remaining,
               total: dailyCheck.total,
+              quotaStatus: dailyCheck.status,
             });
           }
 
-          console.warn(`[HaloAI] Empty response from ${model}, trying fallback...`);
+          console.warn(`[HaloAI] Empty response from ${model}`);
           lastError = 'Empty response from Gemini';
           lastCode = 'EMPTY_RESPONSE';
           fallbackAttempted = true;
@@ -204,7 +242,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (isModelNotFound) {
-          console.warn(`[HaloAI] Model not found: ${model}, skipping...`);
+          console.warn(`[HaloAI] Model not found: ${model}`);
           lastError = detail;
           lastCode = 'MODEL_NOT_FOUND';
           fallbackAttempted = true;
@@ -212,14 +250,14 @@ export async function POST(req: NextRequest) {
         }
 
         if (statusCode === 429) {
-          console.warn(`[HaloAI] Rate limited on ${model} (429), trying fallback...`);
+          console.warn(`[HaloAI] Rate limited on ${model} (429)`);
           lastError = detail;
           lastCode = 'RATE_LIMITED';
           fallbackAttempted = true;
           continue;
         }
 
-        console.error(`[HaloAI] HTTP error on ${model}: ${statusCode} - ${detail}`);
+        console.error(`[HaloAI] HTTP error on ${model}: ${statusCode}`);
         lastError = detail;
         lastCode = `HTTP_${statusCode}`;
         break;
@@ -232,40 +270,42 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.error(`[HaloAI] ALL MODELS FAILED. Last code: ${lastCode}, Last error: ${lastError}`);
+    console.error(`[HaloAI] ALL MODELS FAILED. Last code: ${lastCode}`);
 
-    if (lastCode === 'RATE_LIMITED' || lastCode === 'EMPTY_RESPONSE') {
-      return NextResponse.json(
-        {
-          success: false,
-          code: 'ALL_MODELS_RATE_LIMITED',
-          reply: 'HaloAI sedang ramai digunakan. Silakan coba lagi beberapa saat.',
-          detail: lastError,
-        },
-        { status: 429 }
-      );
+    const fallbackReply = getSmartRoutingReply(trimmed, complexity, null, true);
+    if (fallbackReply.reply) {
+      return NextResponse.json({
+        success: true,
+        source: 'local',
+        complexity,
+        reply: fallbackReply.reply,
+        remaining: dailyCheck.remaining,
+        total: dailyCheck.total,
+        quotaStatus: dailyCheck.status,
+        fallbackNote: 'Jawaban dari basis pengetahuan lokal (AI tidak tersedia)',
+      });
     }
 
-    if (lastCode === 'MODEL_NOT_FOUND') {
-      return NextResponse.json(
-        {
-          success: false,
-          code: 'MODEL_NOT_FOUND',
-          reply: 'Model AI tidak tersedia. Silakan cek konfigurasi Gemini.',
-          detail: lastError,
-        },
-        { status: 500 }
-      );
-    }
+    const errorMessages: Record<string, string> = {
+      RATE_LIMITED: 'HaloAI sedang ramai digunakan. Silakan coba lagi beberapa saat.',
+      ALL_MODELS_RATE_LIMITED: 'HaloAI sedang ramai digunakan. Silakan coba lagi beberapa saat.',
+      MODEL_NOT_FOUND: 'Model AI tidak tersedia. Silakan coba lagi nanti.',
+      EMPTY_RESPONSE: 'AI sedang sibuk. Silakan coba lagi.',
+      FETCH_ERROR: 'Koneksi ke AI terputus. Silakan coba lagi.',
+    };
 
     return NextResponse.json(
       {
         success: false,
         code: lastCode || 'ALL_MODELS_FAILED',
-        reply: 'Terjadi kesalahan pada layanan AI. Silakan coba lagi.',
-        detail: lastError,
+        reply: lastCode === 'RATE_LIMITED'
+          ? errorMessages.RATE_LIMITED
+          : errorMessages[lastCode] || 'Terjadi kesalahan pada layanan AI. Silakan coba lagi.',
+        remaining: dailyCheck.remaining,
+        total: dailyCheck.total,
+        quotaStatus: dailyCheck.status,
       },
-      { status: 500 }
+      { status: 503 }
     );
   } catch (error: any) {
     console.error('[HaloAI] Unhandled error:', error?.message || error);
@@ -274,8 +314,7 @@ export async function POST(req: NextRequest) {
       {
         success: false,
         code: 'INTERNAL_ERROR',
-        reply: 'Terjadi error pada HaloAI',
-        detail: error?.message || 'Unknown error',
+        reply: 'Terjadi error pada HaloAI. Silakan coba lagi.',
       },
       { status: 500 }
     );
