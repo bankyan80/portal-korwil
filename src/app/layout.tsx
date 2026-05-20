@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { FirestoreDataProvider } from "@/providers/FirestoreDataProvider";
 import HaloAIWidget from "@/components/ai/HaloAIWidget";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -77,6 +78,7 @@ export default function RootLayout({
               }}
             />
             <HaloAIWidget />
+            <MobileBottomNav />
           </AuthProvider>
         </ThemeProvider>
       </body>

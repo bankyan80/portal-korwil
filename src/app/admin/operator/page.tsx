@@ -8,6 +8,7 @@ import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { normalizeSchool } from '@/lib/normalize';
 import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw, ListTodo, CheckCircle, ExternalLink, Clock } from 'lucide-react';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { db } from '@/lib/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
@@ -348,6 +349,7 @@ export default function OperatorDashboard() {
           </p>
         </div>
       </main>
+      <MobileBottomNav />
     </div>
   );
 }

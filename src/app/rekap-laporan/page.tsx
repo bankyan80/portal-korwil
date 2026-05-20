@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronUp, Filter, Eye, Edit, Trash2, SortAsc,
 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { normalizeSchool } from '@/lib/normalize';
@@ -632,6 +633,7 @@ export default function LaporanBulananPage() {
       </main>
 
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 }

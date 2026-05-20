@@ -277,3 +277,37 @@ html {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+
+/* Mobile safe area support */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Touch-friendly interactions */
+@media (max-width: 767px) {
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+}
+
+/* Responsive table horizontal scroll */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile bottom sheet support */
+@media (max-width: 767px) {
+  .bottom-sheet {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}

@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import {
   Users, School, BarChart3, FileText,
   LogOut, Loader2, Building2, RefreshCw, Shield,
@@ -483,6 +484,7 @@ export default function SuperAdminDashboard() {
           )}
         </div>
       </main>
+      <MobileBottomNav />
     </div>
   );
 }

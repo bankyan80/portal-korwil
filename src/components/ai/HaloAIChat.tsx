@@ -292,7 +292,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
     <div className="flex flex-col h-full bg-gray-50 dark:bg-slate-900">
       <HaloAIHeader onClose={onClose} aiStatus={actualStatus} quota={quota} />
 
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
+      <div className="flex-1 overflow-y-auto px-2 sm:px-3 py-2 sm:py-3 space-y-2 sm:space-y-3">
         {messages.map((msg) => (
           <HaloAIMessage key={msg.id} from={msg.from} text={msg.text} timestamp={msg.timestamp} />
         ))}
@@ -302,12 +302,12 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
 
       <HaloAIQuickMenu onSelect={handleQuickMenu} />
 
-      <div className="border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shrink-0">
+      <div className="border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 sm:p-3 shrink-0 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-3">
         <div className="flex items-center gap-2">
           <button
             onClick={handleClearChat}
             disabled={isTyping}
-            className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-500 dark:text-gray-400 flex items-center justify-center transition-colors shrink-0 disabled:opacity-40"
+            className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-500 dark:text-gray-400 flex items-center justify-center transition-colors shrink-0 disabled:opacity-40 active:scale-95"
             title="Reset percakapan"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3-3"/></svg>
@@ -321,13 +321,13 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
               onKeyDown={handleKeyDown}
               placeholder={isTyping ? 'Menunggu jawaban AI...' : 'Ketik pertanyaan...'}
               disabled={isTyping}
-              className="w-full text-sm text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50 dark:bg-slate-700 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full text-sm text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-slate-600 rounded-xl px-3 sm:px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50 dark:bg-slate-700 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
           <button
             onClick={handleSend}
             disabled={!input.trim() || isTyping}
-            className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-700 to-blue-800 text-white flex items-center justify-center hover:from-blue-800 hover:to-blue-900 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 shadow-md shadow-blue-700/20"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-r from-blue-700 to-blue-800 text-white flex items-center justify-center hover:from-blue-800 hover:to-blue-900 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 shadow-md shadow-blue-700/20 active:scale-95"
           >
             {isTyping ? (
               <Loader2 className="w-4 h-4 animate-spin" />
