@@ -1,8 +1,8 @@
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = 'gemini-2.0-flash';
-const GEMINI_PRO_MODEL = 'gemini-2.0-pro-exp-02-05';
+const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_PRO_MODEL = 'gemini-2.5-pro';
 
 let genAI: GoogleGenerativeAI | null = null;
 
@@ -73,7 +73,7 @@ export async function checkGeminiHealth(): Promise<boolean> {
   try {
     if (!GEMINI_API_KEY) return false;
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

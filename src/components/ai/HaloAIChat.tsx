@@ -141,17 +141,14 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
 
       const data = await res.json();
 
-      if (data.success) {
-        onAiStatusChange('online');
-        const botMsg: ChatMessage = {
-          id: `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          from: 'bot',
-          text: data.reply,
-          timestamp: Date.now(),
-        };
-        setMessages(prev => [...prev, botMsg]);
-        setHistory(prev => [...prev, { role: 'assistant' as const, content: data.reply }]);
-      } else {
+      if (!res.ok || !data.success) {
+        console.error('HaloAI Error:', data);
+        if (data.detail) {
+          console.error('HaloAI Detail:', data.detail);
+        }
+        if (data.httpStatus) {
+          console.error('HaloAI HTTP Status:', data.httpStatus);
+        }
         onAiStatusChange('error');
         const botMsg: ChatMessage = {
           id: `msg-${Date.now()}-err`,
@@ -160,8 +157,20 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
           timestamp: Date.now(),
         };
         setMessages(prev => [...prev, botMsg]);
+        return;
       }
-    } catch {
+
+      onAiStatusChange('online');
+      const botMsg: ChatMessage = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        from: 'bot',
+        text: data.reply,
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, botMsg]);
+      setHistory(prev => [...prev, { role: 'assistant' as const, content: data.reply }]);
+    } catch (err: any) {
+      console.error('HaloAI Fetch Error:', err?.message || err);
       onAiStatusChange('error');
       const botMsg: ChatMessage = {
         id: `msg-${Date.now()}-err`,
