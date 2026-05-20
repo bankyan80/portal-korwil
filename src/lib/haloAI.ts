@@ -72,10 +72,19 @@ JAWAB DENGAN SINGKAT, JELAS, DAN BERI LINK/ARAHAN KE HALAMAN TERKAIT JIKA PERLU.
 export async function checkGeminiHealth(): Promise<boolean> {
   try {
     if (!GEMINI_API_KEY) return false;
-    const model = getModel(false);
-    const result = await model.generateContent('ping');
-    const response = await result.response;
-    return !!response.text();
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+        }),
+      }
+    );
+    if (!response.ok) return false;
+    const data = await response.json();
+    return !!data?.candidates?.[0]?.content?.parts?.[0]?.text;
   } catch {
     return false;
   }
