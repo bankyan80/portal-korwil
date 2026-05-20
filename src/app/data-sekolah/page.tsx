@@ -39,17 +39,20 @@ export default function DataSekolahPage() {
       collection(db, 'schools'),
       (snap) => {
         if (snap.size > 0) {
-          const fb: SchoolItem[] = snap.docs.map((d: any) => ({
-            id: d.id,
-            nama: d.name || d.nama || '',
-            npsn: d.npsn || '-',
-            jenjang: d.jenjang || 'SD',
-            alamat: d.alamat || '',
-            status: d.status || 'NEGERI',
-            desa: d.desa || '',
-            kontak: d.kontak || '',
-            kepalaSekolah: d.kepalaSekolah || '-',
-          }));
+          const fb: SchoolItem[] = snap.docs.map((d: any) => {
+            const data = d.data() || {};
+            return {
+              id: d.id,
+              nama: data.name || data.nama || '',
+              npsn: data.npsn || '-',
+              jenjang: data.jenjang || 'SD',
+              alamat: data.alamat || '',
+              status: data.status || 'NEGERI',
+              desa: data.desa || '',
+              kontak: data.kontak || '',
+              kepalaSekolah: data.kepalaSekolah || '-',
+            };
+          });
           setSchools(fb);
         }
         setLoading(false);
