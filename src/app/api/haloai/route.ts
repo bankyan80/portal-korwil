@@ -31,26 +31,54 @@ export async function POST(req: NextRequest) {
       { role: 'user' as const, parts: [{ text: message.trim() }] },
     ];
 
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents,
-          generationConfig: {
-            temperature: 0.7,
-            topP: 0.95,
-            topK: 40,
-            maxOutputTokens: 2048,
-          },
-        }),
-      }
-    );
+    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    let lastError = '';
 
-    if (!response.ok) {
+    for (const model of models) {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents,
+            generationConfig: {
+              temperature: 0.7,
+              topP: 0.95,
+              topK: 40,
+              maxOutputTokens: 2048,
+            },
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (text) {
+          return NextResponse.json({
+            success: true,
+            reply: text,
+            model,
+          });
+        }
+
+        console.error('HaloAI EMPTY RESPONSE from', model, ':', JSON.stringify(data).slice(0, 500));
+        lastError = 'Response from Gemini was empty';
+        continue;
+      }
+
       const errText = await response.text();
-      console.error('HaloAI GEMINI HTTP ERROR:', response.status, errText);
+      const isRateLimit = response.status === 429;
+
+      if (isRateLimit) {
+        console.warn(`HaloAI rate limited on ${model}, trying fallback...`);
+        lastError = errText;
+        continue;
+      }
+
+      console.error(`HaloAI GEMINI HTTP ERROR (${model}):`, response.status, errText);
 
       let detail = 'Unknown error';
       try {
@@ -60,33 +88,20 @@ export async function POST(req: NextRequest) {
         detail = errText;
       }
 
-      return NextResponse.json(
-        {
-          success: false,
-          reply: 'Maaf, terjadi gangguan pada AI. Silakan coba lagi beberapa saat.',
-          detail,
-          httpStatus: response.status,
-        },
-        { status: 500 }
-      );
+      lastError = detail;
+
+      if (!isRateLimit) break;
     }
 
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) {
-      console.error('HaloAI EMPTY RESPONSE:', JSON.stringify(data).slice(0, 500));
-      return NextResponse.json({
+    return NextResponse.json(
+      {
         success: false,
-        reply: 'AI tidak memberikan jawaban. Silakan coba lagi.',
-        detail: 'Response from Gemini was empty or missing candidates[0].content.parts[0].text',
-      }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      reply: text,
-    });
+        reply: 'Maaf, AI sedang sibuk. Silakan tunggu beberapa saat lalu coba lagi.',
+        detail: lastError,
+        httpStatus: 429,
+      },
+      { status: 429 }
+    );
   } catch (error: any) {
     console.error('ERROR /api/haloai:', error?.message || error);
     console.error('ERROR /api/haloai stack:', error?.stack || '');

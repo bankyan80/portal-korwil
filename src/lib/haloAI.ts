@@ -141,19 +141,24 @@ JAWAB DENGAN SINGKAT, JELAS, DAN SELALU SERTAKAN LINK AKTIF KE HALAMAN TERKAIT.`
 export async function checkGeminiHealth(): Promise<boolean> {
   try {
     if (!GEMINI_API_KEY) return false;
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
-        }),
+    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    for (const model of models) {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+          }),
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) return true;
       }
-    );
-    if (!response.ok) return false;
-    const data = await response.json();
-    return !!data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    }
+    return false;
   } catch {
     return false;
   }
