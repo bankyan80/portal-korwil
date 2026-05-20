@@ -117,11 +117,19 @@ export default function LaporanBulananPage() {
   useEffect(() => {
     let sekolahLoaded = false;
     let laporanLoaded = false;
+    let mounted = true;
     const finishLoading = () => {
-      if (sekolahLoaded && laporanLoaded) {
+      if (sekolahLoaded && laporanLoaded && mounted) {
         setLoading(false);
       }
     };
+
+    // Safety timeout: force loading complete after 15s
+    const timeout = setTimeout(() => {
+      if (mounted) {
+        setLoading(false);
+      }
+    }, 15000);
 
     // Use static sekolah data as base (always available)
     const baseSekolah: Sekolah[] = sharedSekolah.map((s) => ({
@@ -172,7 +180,6 @@ export default function LaporanBulananPage() {
         },
         (err) => {
           console.error('Error in tabel_sekolah listener:', err);
-          // Fallback to static data
           setSekolahList(baseSekolah);
           sekolahLoaded = true;
           finishLoading();
@@ -212,9 +219,19 @@ export default function LaporanBulananPage() {
       );
 
       return () => {
+        mounted = false;
+        clearTimeout(timeout);
         sekolahUnsub();
         laporanUnsub();
       };
+    } else {
+      // db not available — show static data immediately
+      setSekolahList(baseSekolah);
+      sekolahLoaded = true;
+      laporanLoaded = true;
+      finishLoading();
+      clearTimeout(timeout);
+      return () => { mounted = false; };
     }
   }, []);
 
