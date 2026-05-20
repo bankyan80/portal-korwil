@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import HaloAIButton from './HaloAIButton';
 import HaloAIChat from './HaloAIChat';
 import { useAppStore } from '@/store/app-store';
-import { checkGeminiHealth } from '@/lib/haloAI';
 
 type AIStatus = 'online' | 'slow' | 'error' | 'checking';
 
@@ -21,8 +20,17 @@ export default function HaloAIWidget() {
     const check = async () => {
       setAiStatus('checking');
       try {
-        const healthy = await checkGeminiHealth();
-        if (healthy) {
+        const res = await fetch('/api/haloai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: 'ping',
+            history: [],
+            context: { userRole: 'publik', userName: 'System', currentPath: '/', currentView: 'portal' },
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
           setAiStatus('online');
         } else {
           setAiStatus('error');
