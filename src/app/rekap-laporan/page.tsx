@@ -124,12 +124,12 @@ export default function LaporanBulananPage() {
       }
     };
 
-    // Safety timeout: force loading complete after 15s
+    // Safety timeout: force loading complete if Firestore slow
     const timeout = setTimeout(() => {
       if (mounted) {
         setLoading(false);
       }
-    }, 15000);
+    }, 3000);
 
     // Use static sekolah data as base (always available)
     const baseSekolah: Sekolah[] = sharedSekolah.map((s) => ({
