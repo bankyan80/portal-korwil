@@ -220,6 +220,10 @@ export async function POST(req: NextRequest) {
 
     if (!dailyCheck.allowed) {
       console.warn(`[HaloAI] Daily limit reached for ${userId} (${role})`);
+
+      const searchResult = await trySearchGrounded(trimmed, history, ctx, complexity, dailyCheck, key, GEMINI_MODELS);
+      if (searchResult) return searchResult;
+
       const fallbackReply = getSmartRoutingReply(trimmed, complexity, null, true);
       return NextResponse.json({
         success: true,
@@ -351,6 +355,9 @@ export async function POST(req: NextRequest) {
     }
 
     console.error(`[HaloAI] ALL MODELS FAILED. Last code: ${lastCode}`);
+
+    const searchResult = await trySearchGrounded(trimmed, history, ctx, complexity, dailyCheck, key, GEMINI_MODELS);
+    if (searchResult) return searchResult;
 
     const fallbackReply = getSmartRoutingReply(trimmed, complexity, null, true);
     if (fallbackReply.reply) {
