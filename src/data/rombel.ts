@@ -181,9 +181,9 @@ export const rombelData: RombelEntry[] = [
     { name: 'B1', total: 17, l: 8, p: 9 }, { name: 'B2', total: 17, l: 6, p: 11 },
     { name: 'B3', total: 16, l: 9, p: 7 }, { name: 'B4', total: 16, l: 6, p: 10 }, { name: 'B5', total: 16, l: 6, p: 10 },
   ]},
-   { name: 'TK AISIYAH LEMAHABANG', jenjang: 'TK', total: 27, rombels: 2, details: [
-     { name: 'Kelompok A', total: 14, l: 9, p: 5 },
-     { name: 'Kelompok B', total: 13, l: 8, p: 5 },
+   { name: 'TK AISYIYAH LEMAHABANG', jenjang: 'TK', total: 27, rombels: 2, details: [
+     { name: 'A', total: 17, l: 7, p: 10 },
+     { name: 'B', total: 10, l: 6, p: 4 },
    ]},
   { name: 'TK AL-AQSO', jenjang: 'TK', total: 46, rombels: 3, details: [
     { name: 'Kelompok A', total: 13, l: 6, p: 7 },
