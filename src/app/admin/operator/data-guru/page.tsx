@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { DataTable } from '@/components/features/DataTable';
 import { usePegawaiAll } from '@/hooks/usePegawai';
 import { useAppStore } from '@/store/app-store';
@@ -11,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
-import { Search, Loader2, Save, Pencil, Loader2 as LoaderIcon } from 'lucide-react';
+import { ArrowLeft, Search, Loader2, Save, Pencil, Loader2 as LoaderIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { QueryProvider } from '@/contexts/QueryProvider';
 
@@ -32,6 +33,7 @@ const defaultForm = {
 
 function GuruContent() {
   const { user } = useAppStore();
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
@@ -140,7 +142,12 @@ function GuruContent() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Data GTK (V2 - Guru &amp; Tendik)</h1>
+      <div className="flex items-center gap-3 mb-4">
+        <button onClick={() => router.push('/admin/operator')} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <h1 className="text-2xl font-bold">Data GTK (V2 - Guru &amp; Tendik)</h1>
+      </div>
       <p className="text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 rounded-lg px-3 py-2 mb-4">
         Mengelola data pegawai: <strong>{userSchool}</strong>
       </p>
