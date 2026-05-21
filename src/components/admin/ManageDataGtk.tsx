@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { normalizeSchool } from '@/lib/normalize';
 import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +11,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot,
+  collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot,
 } from 'firebase/firestore';
 import {
   School, Users, BookOpen, BadgeCheck, Search, Loader2, Plus, Pencil, Trash2, Save, GraduationCap, Eye,
@@ -83,13 +82,12 @@ export function ManageDataGtk() {
       return;
     }
 
-    const q = query(collection(db, 'employees'), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'employees'), where('schoolId', '==', user.schoolId));
     const unsub = onSnapshot(q, (snap) => {
       const list: PegawaiRecord[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...d.data() } as PegawaiRecord));
-      setAllPegawai(list.filter(p =>
-        normalizeSchool(p.sekolah || '') === normalizeSchool(userSchool)
-      ));
+      list.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+      setAllPegawai(list);
       setLoading(false);
     }, (err) => { console.error('Error loading GTK:', err); toast.error('Gagal memuat data GTK'); setLoading(false); });
     return () => unsub();

@@ -12,7 +12,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  collection, addDoc, deleteDoc, doc, setDoc, writeBatch, onSnapshot,
+  collection, addDoc, deleteDoc, doc, setDoc, writeBatch, onSnapshot, query, where,
 } from 'firebase/firestore';
 import {
   School, Users, BarChart3, Search, Loader2, Plus, Pencil, Trash2, Save, ArrowUp, Upload,
@@ -142,8 +142,11 @@ export function ManageDataPd() {
 
       if (db) {
         try {
+          const siswaQuery = user?.schoolId
+            ? query(collection(db, 'students'), where('schoolId', '==', user.schoolId))
+            : collection(db, 'students');
           unsubscribe = onSnapshot(
-            collection(db, 'students'),
+            siswaQuery,
             (snap) => {
               const fsSiswa: SiswaRecord[] = [];
               snap.forEach((d) => {

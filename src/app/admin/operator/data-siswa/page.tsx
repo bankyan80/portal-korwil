@@ -13,7 +13,7 @@ import {
 import { AdminDeleteDialog } from '@/components/shared/AdminTable';
 import { db } from '@/lib/firebase';
 import {
-  collection, addDoc, deleteDoc, doc, onSnapshot, setDoc,
+  collection, addDoc, deleteDoc, doc, onSnapshot, setDoc, query, where,
 } from 'firebase/firestore';
 import {
   Search, Loader2, Plus, Pencil, Trash2, Save, School, BarChart3, ArrowLeft,
@@ -129,8 +129,11 @@ function DataSiswaContent() {
       setTimeout(() => { if (mountedRef.current) setReady(true); }, 0);
       return;
     }
+    const q = user?.schoolId
+      ? query(collection(db, 'students'), where('schoolId', '==', user.schoolId))
+      : collection(db, 'students');
     const unsub = onSnapshot(
-      collection(db, 'students'),
+      q,
       (snap) => {
         if (!mountedRef.current) return;
         const fs: any[] = [];
