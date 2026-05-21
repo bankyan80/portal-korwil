@@ -90,11 +90,12 @@ export function ManageGallery() {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState('');
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
   const [uploadPhase, setUploadPhase] = useState<'idle' | 'compressing' | 'uploading' | 'saving' | 'done' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
    const openAdd = useCallback(() => { crud.openAdd(); setForm(defaultForm); }, [crud.openAdd]);
-   const openEdit = useCallback((item: GalleryItem) => { crud.openEdit(item.id); setForm({ title: item.title, description: item.description, category: item.category, status: item.status }); }, [crud.openEdit]);
+    const openEdit = useCallback((item: GalleryItem) => { crud.openEdit(item.id); setRemovedImages([]); setForm({ title: item.title, description: item.description, category: item.category, status: item.status }); }, [crud.openEdit]);
 
     const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files) return;
@@ -177,8 +178,10 @@ export function ManageGallery() {
 
         if (crud.editingId) {
           const existing = crud.items.find(i => i.id === crud.editingId);
-          const allImages = existing ? [...existing.images, ...imageUrls] : imageUrls;
-          const allImageFiles = existing?.imageFiles ? [...existing.imageFiles, ...imageFiles] : imageFiles;
+          const keptImages = existing ? existing.images.filter(img => !removedImages.includes(img)) : [];
+          const keptFiles = existing?.imageFiles ? existing.imageFiles.filter((_, i) => !removedImages.includes(existing.images[i])) : [];
+          const allImages = [...keptImages, ...imageUrls];
+          const allImageFiles = [...keptFiles, ...imageFiles];
           await crud.updateItem(crud.editingId, {
             title: form.title,
             description: form.description,
@@ -207,6 +210,7 @@ export function ManageGallery() {
         setUploadPhase('done');
         crud.closeForm();
         setSelectedFiles([]);
+        setRemovedImages([]);
         if (fileInputRef.current) fileInputRef.current.value = '';
       } catch (error) {
         console.error('Error saving gallery:', error);
@@ -339,6 +343,7 @@ export function ManageGallery() {
         if (!open) {
           crud.closeForm();
           setSelectedFiles([]);
+          setRemovedImages([]);
         }
       }}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
@@ -373,6 +378,34 @@ export function ManageGallery() {
             </div>
             <div className="space-y-2">
               <Label>Upload Foto</Label>
+
+              {crud.editingId && (() => {
+                const existingItem = crud.items.find(i => i.id === crud.editingId);
+                const existingImages = existingItem?.images?.filter(img => !removedImages.includes(img)) || [];
+                if (existingImages.length > 0) {
+                  return (
+                    <div className="space-y-2 mb-3">
+                      <p className="text-sm font-medium">Foto yang sudah ada ({existingImages.length}):</p>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                        {existingImages.map((img, idx) => (
+                          <div key={idx} className="relative group rounded-lg overflow-hidden border bg-muted aspect-square">
+                            <img src={img} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setRemovedImages(prev => [...prev, img])}
+                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-colors cursor-pointer relative">
                  <ImagePlus className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
                  <p className="text-sm text-muted-foreground">Klik atau seret foto ke sini</p>

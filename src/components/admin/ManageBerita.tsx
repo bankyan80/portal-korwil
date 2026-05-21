@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Pencil, Trash2, Megaphone, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Megaphone, CheckCircle, XCircle, Clock, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
 import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTable';
@@ -35,7 +35,7 @@ const formatDate = (ts: number) =>
   new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(ts));
 
 export function ManageBerita() {
-  const { items, addItem, updateItem, deleteItem } = useFirestoreCollection<News>('news', []);
+  const { items, addItem, updateItem, deleteItem, loading, error } = useFirestoreCollection<News>('news', []);
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -140,7 +140,17 @@ export function ManageBerita() {
         <Button onClick={openAdd} className="bg-blue-800 hover:bg-blue-900 text-white gap-2"><Plus className="w-4 h-4" />Tambah Berita</Button>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">Memuat data...</span>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center py-12">
+          <AlertCircle className="w-6 h-6 text-red-500" />
+          <span className="ml-2 text-red-500">Gagal memuat data: {error}</span>
+        </div>
+      ) : filtered.length === 0 ? (
         <AdminEmptyState icon={Megaphone} title="Belum ada berita" description="Tambahkan berita baru untuk memulai" />
       ) : (
         <div className="rounded-xl border bg-card overflow-hidden">

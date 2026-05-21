@@ -11,7 +11,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { CalendarDays, Search, Plus, Pencil, Trash2, Save, Clock, MapPin } from 'lucide-react';
+import { toast } from 'sonner';
+import { CalendarDays, Search, Plus, Pencil, Trash2, Save, Clock, MapPin, Loader2, AlertCircle } from 'lucide-react';
 import type { CalendarEvent } from '@/types';
 
 const typeOptions = [
@@ -40,7 +41,7 @@ const defaultData: CalendarEvent[] = [
 ];
 
 export function ManageAgendaKegiatan() {
-  const { items, addItem, updateItem, deleteItem } = useFirestoreCollection<CalendarEvent>('calendar_events', defaultData);
+  const { items, addItem, updateItem, deleteItem, loading, error } = useFirestoreCollection<CalendarEvent>('calendar_events', defaultData);
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -63,18 +64,32 @@ export function ManageAgendaKegiatan() {
   }
 
   async function save() {
-    if (!form.title.trim() || !form.tanggal.trim()) return;
-    if (editingId) {
-      await updateItem(editingId, form);
-    } else {
-      await addItem({ ...form, organizerName: 'Admin', createdAt: Date.now() });
+    if (!form.title.trim() || !form.tanggal.trim()) {
+      toast.error('Judul dan tanggal harus diisi');
+      return;
     }
-    setFormOpen(false);
-    setForm(defaultForm);
+    try {
+      if (editingId) {
+        await updateItem(editingId, form);
+        toast.success('Agenda diperbarui');
+      } else {
+        await addItem({ ...form, organizerName: 'Admin', createdAt: Date.now() });
+        toast.success('Agenda ditambahkan');
+      }
+      setFormOpen(false);
+      setForm(defaultForm);
+    } catch {
+      toast.error('Gagal menyimpan agenda');
+    }
   }
 
   async function handleDelete(id: string) {
-    await deleteItem(id);
+    try {
+      await deleteItem(id);
+      toast.success('Agenda dihapus');
+    } catch {
+      toast.error('Gagal menghapus agenda');
+    }
   }
 
   return (
@@ -89,7 +104,17 @@ export function ManageAgendaKegiatan() {
         </Button>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">Memuat data...</span>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center py-12">
+          <AlertCircle className="w-6 h-6 text-red-500" />
+          <span className="ml-2 text-red-500">Gagal memuat data: {error}</span>
+        </div>
+      ) : filtered.length === 0 ? (
         <AdminEmptyState icon={CalendarDays} title="Belum ada agenda" description="Agenda kegiatan belum ditambahkan" />
       ) : (
         <div className="space-y-3">
