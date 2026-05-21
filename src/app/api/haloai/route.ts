@@ -232,21 +232,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (complexity === 'sederhana') {
-      const templateReply = getSmartRoutingReply(trimmed, complexity, null, false);
-      if (templateReply.reply) {
-        return NextResponse.json({
-          success: true,
-          source: 'local',
-          complexity,
-          reply: templateReply.reply,
-          remaining: dailyCheck.remaining,
-          total: dailyCheck.total,
-          quotaStatus: dailyCheck.status,
-        });
-      }
-    }
-
     const systemPrompt = buildSystemPrompt(ctx, complexity);
 
     const recentHistory = (history || []).slice(-3);

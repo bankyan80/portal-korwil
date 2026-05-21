@@ -59,3 +59,4 @@ scripts/sync-data.mjs.log
 .vercel
 
 puter
+.env*.local
