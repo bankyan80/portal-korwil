@@ -111,7 +111,7 @@ function DesktopPanel({
             animate={{ x: 0 }}
             exit={{ x: 420 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="fixed top-0 right-0 z-50 h-screen w-[400px] bg-white dark:bg-slate-800 shadow-2xl shadow-black/20 border-l border-gray-200 dark:border-slate-700 flex flex-col"
+            className="fixed top-0 right-0 z-50 h-screen w-[400px] bg-white dark:bg-slate-800 shadow-2xl shadow-black/20 border-l border-gray-200 dark:border-slate-700 flex flex-col overflow-hidden"
           >
             <HaloAIChat onClose={onToggle} context={context} aiStatus={aiStatus} onAiStatusChange={onAiStatusChange} />
           </motion.div>

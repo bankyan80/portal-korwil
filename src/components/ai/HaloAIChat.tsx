@@ -316,7 +316,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
         <div ref={messagesEndRef} />
       </div>
 
-      <HaloAIQuickMenu onSelect={handleQuickMenu} />
+      <div className="shrink-0"><HaloAIQuickMenu onSelect={handleQuickMenu} /></div>
 
       <div className="border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 sm:p-3 shrink-0 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-3">
         <div className="flex items-center gap-2">
