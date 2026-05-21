@@ -17,19 +17,19 @@ export function SuperAdminDashboard() {
   const { user, setCurrentView } = useAppStore();
 
   const { data: users } = useCachedFirestore<{ id: string }>({
-    collectionName: 'users', realtime: false,
+    collectionName: 'users', realtime: true,
     enabled: !!user,
   });
   const { data: schools, loading: schoolsLoading } = useCachedFirestore<{ id: string }>({
-    collectionName: 'schools', realtime: false,
+    collectionName: 'schools', realtime: true,
     enabled: !!user,
   });
   const { data: orgs, loading: orgsLoading } = useCachedFirestore<{ id: string }>({
-    collectionName: 'organizations', realtime: false,
+    collectionName: 'organizations', realtime: true,
     enabled: !!user,
   });
   const { data: reports, loading: reportsLoading } = useCachedFirestore<{ id: string }>({
-    collectionName: 'reports', realtime: false,
+    collectionName: 'reports', realtime: true,
     enabled: !!user,
   });
 

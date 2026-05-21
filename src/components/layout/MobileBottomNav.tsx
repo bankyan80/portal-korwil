@@ -1,25 +1,25 @@
 'use client'
 
-import { Home, Database, BarChart3, Sparkles, User } from 'lucide-react'
+import { Home, Sparkles, type LucideIcon } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAppStore } from '@/store/app-store'
+import { useDataStore } from '@/store/data-store'
 import { cn } from '@/lib/utils'
 
-interface NavItem {
-  id: string
-  label: string
-  icon: React.ElementType
-  path: string
-  requiresAuth?: boolean
-  allowedRoles?: string[]
+const iconMap: Record<string, LucideIcon> = {
+  Home, School: Home, Baby: Home, GraduationCap: Home, BarChart3: Home,
+  FileText: Home, Users: Home, WalletMinimal: Home, Database: Home,
+  BookOpen: Home, Target: Home, CalendarDays: Home, FolderOpen: Home,
+  Mail: Home, Send: Home, Globe: Home, Phone: Home, Clock: Home,
+  HeartHandshake: Home, Megaphone: Home,
 }
 
-const navItems: NavItem[] = [
+const FALLBACK_ITEMS = [
   { id: 'home', label: 'Home', icon: Home, path: '/' },
-  { id: 'data', label: 'Data', icon: Database, path: '/data-gtk' },
-  { id: 'rekap', label: 'Rekap', icon: BarChart3, path: '/rekap-laporan' },
-  { id: 'haloai', label: 'HaloAI', icon: Sparkles, path: '/haloai' },
-  { id: 'profil', label: 'Profil', icon: User, path: '/profil' },
+  { id: 'data', label: 'Data', icon: Home, path: '/data-gtk' },
+  { id: 'rekap', label: 'Rekap', icon: Home, path: '/rekap-laporan' },
+  { id: 'haloai', label: 'HaloAI', icon: Sparkles, path: '' },
+  { id: 'profil', label: 'Profil', icon: Home, path: '/profil' },
 ]
 
 export default function MobileBottomNav() {
@@ -27,29 +27,47 @@ export default function MobileBottomNav() {
   const router = useRouter()
   const user = useAppStore((s) => s.user)
   const setCurrentView = useAppStore((s) => s.setCurrentView)
+  const firestoreMenus = useDataStore((s) => s.menus)
 
-  const isActive = (item: NavItem) => {
-    if (item.path === '/') return pathname === '/'
-    return pathname?.startsWith(item.path) || false
-  }
+  const navItems = firestoreMenus.length > 0
+    ? firestoreMenus
+        .filter((m) => m.active && m.url && m.url !== '#')
+        .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
+        .slice(0, 5)
+        .map((m) => ({
+          id: m.id,
+          label: m.title,
+          icon: iconMap[m.icon] || Home,
+          path: m.url.startsWith('http') ? '' : m.url,
+          isExternal: m.url.startsWith('http'),
+        }))
+    : FALLBACK_ITEMS
 
-  const handleNav = (item: NavItem) => {
-    if (item.id === 'haloai') {
+  const handleNav = (item: typeof navItems[0]) => {
+    if ('isExternal' in item && item.isExternal) {
+      window.open((item as any).path || '', '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    if (item.id === 'haloai' || item.label === 'HaloAI') {
       window.dispatchEvent(new CustomEvent('haloai:toggle'))
       return
     }
 
-    if (item.requiresAuth && !user) {
-      router.push('/login')
+    if (item.path === '/' || !item.path) {
+      setCurrentView('portal')
+      router.push('/')
       return
     }
 
-    if (item.allowedRoles && user && !item.allowedRoles.includes(user.role)) {
-      return
-    }
-
-    setCurrentView(item.path === '/' ? 'portal' : item.path.replace('/', '') as any)
+    setCurrentView(item.path.replace('/', '') as any)
     router.push(item.path)
+  }
+
+  const isActive = (item: typeof navItems[0]) => {
+    if (item.path === '/') return pathname === '/'
+    if (!item.path) return false
+    return pathname?.startsWith(item.path) || false
   }
 
   return (

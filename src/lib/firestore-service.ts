@@ -2,6 +2,7 @@ import { db } from './firebase';
 import {
   collection, doc, getDocs, setDoc, deleteDoc, writeBatch, query, orderBy,
 } from 'firebase/firestore';
+import { removeCache } from '@/cache/cacheService';
 
 export async function fetchCollection<T extends { id: string }>(
   collectionPath: string,
@@ -25,6 +26,7 @@ export async function addItemToCollection<T extends { id: string }>(
   const docRef = doc(db, collectionPath, newId);
   const { id: _, ...data } = item as any;
   await setDoc(docRef, { ...data, createdAt: Date.now(), updatedAt: Date.now() });
+  removeCache(collectionPath);
   return { ...item, id: newId } as T;
 }
 
@@ -35,6 +37,7 @@ export async function updateItemInCollection(
 ): Promise<void> {
   if (!db) return;
   await setDoc(doc(db, collectionPath, id), { ...updates, updatedAt: Date.now() }, { merge: true });
+  removeCache(collectionPath);
 }
 
 export async function deleteItemFromCollection(
@@ -43,6 +46,7 @@ export async function deleteItemFromCollection(
 ): Promise<void> {
   if (!db) return;
   await deleteDoc(doc(db, collectionPath, id));
+  removeCache(collectionPath);
 }
 
 export async function replaceAllInCollection<T extends { id: string }>(
@@ -58,4 +62,5 @@ export async function replaceAllInCollection<T extends { id: string }>(
     batch.set(doc(db!, collectionPath, id), rest);
   });
   await batch.commit();
+  removeCache(collectionPath);
 }

@@ -4,6 +4,7 @@ import {
   query, where, orderBy, limit, Timestamp, serverTimestamp, onSnapshot,
   type Firestore,
 } from 'firebase/firestore';
+import { removeCache } from '@/cache/cacheService';
 
 export function getCollection(name: string) {
   if (!db) return null;
@@ -25,11 +26,13 @@ export async function getDocById(collectionName: string, id: string) {
 
 export async function addDocument(collectionName: string, data: Record<string, unknown>) {
   if (!db) return null;
-  return addDoc(collection(db, collectionName), {
+  const ref = await addDoc(collection(db, collectionName), {
     ...data,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   });
+  removeCache(collectionName);
+  return ref;
 }
 
 export async function updateDocument(collectionName: string, id: string, data: Record<string, unknown>) {
@@ -38,11 +41,13 @@ export async function updateDocument(collectionName: string, id: string, data: R
     ...data,
     updatedAt: Date.now(),
   });
+  removeCache(collectionName);
 }
 
 export async function deleteDocument(collectionName: string, id: string) {
   if (!db) return;
   await deleteDoc(doc(db, collectionName, id));
+  removeCache(collectionName);
 }
 
 export async function getDocumentsByField(

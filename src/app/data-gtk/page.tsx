@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, Search, Users, BookOpen, BadgeCheck, Download, GraduationCap, Loader2, X, MapPin, Briefcase, ChevronRight } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 
@@ -41,6 +41,8 @@ export default function DataGTKPage() {
   const [pegawaiLoading, setPegawaiLoading] = useState(false);
   const [allPegawai, setAllPegawai] = useState<Pegawai[] | null>(null);
 
+  const refreshInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+
   useEffect(() => {
     async function loadGtkSummary() {
       try {
@@ -56,6 +58,15 @@ export default function DataGTKPage() {
       }
     }
     loadGtkSummary();
+
+    refreshInterval.current = setInterval(() => {
+      fetch('/api/pegawai/gtk-summary')
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d?.schools) setSchoolData(d.schools); })
+        .catch(() => {});
+    }, 30000);
+
+    return () => { if (refreshInterval.current) clearInterval(refreshInterval.current); };
   }, []);
 
   const handleSchoolClick = useCallback(async (schoolName: string) => {

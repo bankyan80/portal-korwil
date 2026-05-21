@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Search, Users, School, Baby, BarChart3, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { rombelData, extractKelas } from '@/data/rombel';
@@ -112,6 +112,8 @@ export default function DataPDPage() {
   const [sekolahData, setSekolahData] = useState<SekolahKelas[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const refreshInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+
   useEffect(() => {
     async function load() {
       try {
@@ -130,6 +132,17 @@ export default function DataPDPage() {
       }
     }
     load();
+
+    refreshInterval.current = setInterval(() => {
+      fetch('/api/siswa/per-kelas')
+        .then(r => r.ok ? r.json() : null)
+        .then(json => {
+          if (json?.data) setSekolahData(buildSekolahData(json.data as SekolahKelas[]));
+        })
+        .catch(() => {});
+    }, 30000);
+
+    return () => { if (refreshInterval.current) clearInterval(refreshInterval.current); };
   }, []);
 
   const totalSekolah = sekolahData.length;

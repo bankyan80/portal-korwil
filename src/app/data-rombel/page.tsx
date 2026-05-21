@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, useRef } from 'react';
 import { ArrowLeft, Search, School, Baby, Users, BookOpen, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { rombelData as fallbackRombel, type RombelEntry, type RombelDetail } from '@/data/rombel';
@@ -57,6 +57,8 @@ export default function DataRombelPage() {
   const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
+  const refreshInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -70,6 +72,20 @@ export default function DataRombelPage() {
       } catch (e) { console.error('Gagal memuat data rombel:', e); } finally { setLoading(false); }
     }
     loadData();
+
+    refreshInterval.current = setInterval(() => {
+      fetch('/api/siswa/list')
+        .then(r => r.ok ? r.json() : null)
+        .then(json => {
+          if (json?.siswa?.length > 0) {
+            const aggregated = aggregateRombel(json.siswa);
+            if (aggregated.length > 0) setData(aggregated);
+          }
+        })
+        .catch(() => {});
+    }, 30000);
+
+    return () => { if (refreshInterval.current) clearInterval(refreshInterval.current); };
   }, []);
 
   const filtered = data.filter((item) => {

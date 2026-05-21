@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { ArrowLeft, Search, Users, Download, Printer, Loader2, AlertTriangle } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
-import { getAllDocs, listenToCollection } from '@/lib/firestore';
+import { collection, onSnapshot, getDocs, query } from 'firebase/firestore';
 import { rombelData } from '@/data/rombel';
 import { sekolahSD } from '@/data/sekolah';
 
@@ -477,76 +477,64 @@ export default function MappingPegawaiPage() {
   const [search, setSearch] = useState('');
 
   const tableRef = useRef<HTMLTableElement>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // ---------- DATA FETCH ----------
+  // ---------- DATA FETCH (REALTIME) ----------
   useEffect(() => {
-    let cancelled = false;
-
-    async function fetchAll() {
-      if (!db) {
-        const cached = loadCache();
-        if (cached) { if (!cancelled) { setRows(cached); setFirebaseStatus('cache'); } }
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-
-      const cachedRows = loadCache();
-      if (cachedRows && !cancelled) {
-        setRows(cachedRows);
-        setFirebaseStatus('cache');
-      }
-
-      try {
-        setLoadingMsg('Memuat data pegawai...');
-        let employees: Record<string, any>[] = [];
-        let students: Record<string, any>[] = [];
-
-        const unsubEmp = listenToCollection(
-          'employees',
-          (snap) => { employees = snap; },
-          () => { /* error handled below */ }
-        );
-        const unsubStu = listenToCollection(
-          'students',
-          (snap) => { students = snap; },
-          () => { /* error handled below */ }
-        );
-
-        await new Promise(r => setTimeout(r, 1800));
-        if (employees.length === 0) {
-          employees = await getAllDocs('employees');
-        }
-        if (students.length === 0) {
-          students = await getAllDocs('students');
-        }
-        unsubEmp();
-        unsubStu();
-
-        if (cancelled) return;
-
-        const sekolahListRaw = sekolahSD.filter(s => s.status === 'NEGERI').map(s => ({ nama: s.nama, npsn: s.npsn }));
-        const sekolahList = orderSchools(sekolahListRaw);
-
-        setLoadingMsg('Memproses data...');
-        const aggregated = aggregate(employees, sekolahList, students);
-
-        if (!cancelled) {
-          setRows(aggregated);
-          setFirebaseStatus('connected');
-          saveCache(aggregated);
-        }
-      } catch (err) {
-        console.error('Mapping pegawai fetch error:', err);
-        if (!cancelled) setFirebaseStatus('error');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+    if (!db) {
+      const cached = loadCache();
+      if (cached) { setRows(cached); setFirebaseStatus('cache'); }
+      setLoading(false);
+      return;
     }
 
-    fetchAll();
-    return () => { cancelled = true; };
+    setLoading(true);
+    const cachedRows = loadCache();
+    if (cachedRows) { setRows(cachedRows); setFirebaseStatus('cache'); }
+
+    function processData(employees: Record<string, any>[], students: Record<string, any>[]) {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        const sekolahListRaw = sekolahSD.filter(s => s.status === 'NEGERI').map(s => ({ nama: s.nama, npsn: s.npsn }));
+        const sekolahList = orderSchools(sekolahListRaw);
+        const aggregated = aggregate(employees, sekolahList, students);
+        setRows(aggregated);
+        setFirebaseStatus('connected');
+        setLoading(false);
+        saveCache(aggregated);
+      }, 500);
+    }
+
+    let latestEmployees: Record<string, any>[] = [];
+    let latestStudents: Record<string, any>[] = [];
+    let empReady = false;
+    let stuReady = false;
+
+    const unsubEmp = onSnapshot(
+      query(collection(db, 'employees')),
+      (snap) => {
+        latestEmployees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        empReady = true;
+        if (stuReady) processData(latestEmployees, latestStudents);
+      },
+      () => { setFirebaseStatus('error'); setLoading(false); }
+    );
+
+    const unsubStu = onSnapshot(
+      query(collection(db, 'students')),
+      (snap) => {
+        latestStudents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        stuReady = true;
+        if (empReady) processData(latestEmployees, latestStudents);
+      },
+      () => { setFirebaseStatus('error'); setLoading(false); }
+    );
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      unsubEmp();
+      unsubStu();
+    };
   }, []);
 
   // ---------- SEARCH ----------

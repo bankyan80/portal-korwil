@@ -15,19 +15,19 @@ export function SuperMonitoring() {
   const { user, setCurrentView } = useAppStore();
 
   const { data: users, loading: usersLoading } = useCachedFirestore({
-    collectionName: 'users', enabled: !!user,
+    collectionName: 'users', realtime: true, enabled: !!user,
   });
   const { data: schools, loading: schoolsLoading } = useCachedFirestore({
-    collectionName: 'schools', enabled: !!user,
+    collectionName: 'schools', realtime: true, enabled: !!user,
   });
   const { data: students, loading: studentsLoading } = useCachedFirestore({
-    collectionName: 'students', enabled: !!user,
+    collectionName: 'students', realtime: true, enabled: !!user,
   });
   const { data: reports, loading: reportsLoading } = useCachedFirestore({
-    collectionName: 'reports', enabled: !!user,
+    collectionName: 'reports', realtime: true, enabled: !!user,
   });
   const { data: employees, loading: employeesLoading } = useCachedFirestore({
-    collectionName: 'employees', enabled: !!user,
+    collectionName: 'employees', realtime: true, enabled: !!user,
   });
 
   const loading = usersLoading || schoolsLoading || studentsLoading || reportsLoading || employeesLoading;

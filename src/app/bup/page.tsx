@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeft, Clock, Search, Loader2, ChevronLeft, ChevronRight, Users, BadgeCheck, UserCheck, Calendar } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 
@@ -98,6 +98,8 @@ export default function BupPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
+  const refreshInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -111,6 +113,15 @@ export default function BupPage() {
         setLoading(false);
       }
     })();
+
+    refreshInterval.current = setInterval(() => {
+      fetch('/api/pegawai/all?page=1&limit=1000')
+        .then(r => r.ok ? r.json() : null)
+        .then(j => { if (j?.items) setAllData(j.items); })
+        .catch(() => {});
+    }, 30000);
+
+    return () => { if (refreshInterval.current) clearInterval(refreshInterval.current); };
   }, []);
 
   const bupDate = (p: Pegawai): number => {
