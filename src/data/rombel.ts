@@ -253,9 +253,8 @@ export function extractKelas(rombelName: string, jenjang: string): string {
     const match = clean.match(/^([A-Z])/);
     return match ? match[1] : '-';
   }
-  if (jenjang === 'KB') {
+  if (jenjang === 'KB' || jenjang === 'PAUD') {
     const clean = rombelName.replace(/[\s.]+/g, '');
-    // letter + optional digits → group by letter, otherwise use full name
     const simple = clean.match(/^([A-Z])\d*$/);
     if (simple) return simple[1];
     return rombelName.trim();
