@@ -37,7 +37,7 @@ export default function OperatorProfilSekolah() {
 
   function openEdit() {
     setForm({
-      name: school?.name || '',
+      name: school?.name || school?.nama || '',
       npsn: school?.npsn || '',
       jenjang: school?.jenjang || '',
       status: school?.status || '',
@@ -52,7 +52,9 @@ export default function OperatorProfilSekolah() {
   }
 
   async function handleSave() {
-    if (!form.name.trim() || !db || !user?.schoolId) { toast.error('Nama sekolah harus diisi'); return; }
+    if (!db) { toast.error('Database tidak tersedia'); return; }
+    if (!user?.schoolId) { toast.error('School ID tidak ditemukan. Hubungi administrator.'); return; }
+    if (!form.name?.trim()) { toast.error('Nama sekolah harus diisi'); return; }
     setSaving(true);
     try {
       await setDoc(doc(db, 'schools', user.schoolId), {
@@ -102,7 +104,7 @@ export default function OperatorProfilSekolah() {
                 <School className="w-8 h-8 text-blue-700 dark:text-blue-300" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{school.name}</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{school.name || school.nama}</h2>
                 <p className="text-sm text-muted-foreground">NPSN: {school.npsn || '-'}</p>
               </div>
             </div>
