@@ -29,7 +29,11 @@ function buildFromStatic(): PerKelasSekolah[] {
       map.set(key, { name, jenjang, perKelas: {}, totalL: 0, totalP: 0 });
     }
     const entry = map.get(key)!;
-    const kelas = s.kelas ? String(s.kelas) : (s.rombel || '-');
+    let kelas = s.kelas ? String(s.kelas) : (s.rombel || '-');
+    if (jenjang !== 'SD' && jenjang !== '') {
+      kelas = kelas.replace(/^kelompok\s+/i, '').trim();
+      if (!kelas || kelas === '-') kelas = 'A';
+    }
     if (!entry.perKelas[kelas]) entry.perKelas[kelas] = { l: 0, p: 0 };
     if (s.jk === 'L') { entry.perKelas[kelas].l++; entry.totalL++; }
     else { entry.perKelas[kelas].p++; entry.totalP++; }
