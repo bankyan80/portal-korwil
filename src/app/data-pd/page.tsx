@@ -117,7 +117,7 @@ export default function DataPDPage() {
       try {
         const res = await fetch('/api/siswa/per-kelas');
         const json = await res.json();
-        if (json.data && json.source === 'firestore') {
+        if (json.data) {
           setSekolahData(buildSekolahData(json.data as SekolahKelas[]));
         } else {
           setSekolahData(buildSekolahData());
