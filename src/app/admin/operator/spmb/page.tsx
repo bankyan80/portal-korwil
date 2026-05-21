@@ -21,7 +21,7 @@ export default function OperatorSpmbPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/admin/operator')} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+          <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
             <ArrowLeft className="w-5 h-5 text-muted-foreground" />
           </button>
           <div>

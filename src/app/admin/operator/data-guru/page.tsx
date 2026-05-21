@@ -143,7 +143,7 @@ function GuruContent() {
   return (
     <div className="p-6">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => router.push('/admin/operator')} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+        <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </button>
         <h1 className="text-2xl font-bold">Data GTK (V2 - Guru &amp; Tendik)</h1>

@@ -87,7 +87,7 @@ export default function OperatorProfilSekolah() {
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         <div className="flex items-center gap-3 justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => router.push('/admin/operator')} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+            <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
               <ArrowLeft className="w-5 h-5 text-muted-foreground" />
             </button>
             <h1 className="text-lg font-bold text-gray-900 dark:text-white">Profil Sekolah</h1>

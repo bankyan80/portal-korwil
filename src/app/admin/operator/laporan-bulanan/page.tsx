@@ -492,7 +492,7 @@ export default function LaporBulananPage() {
     <div className="min-h-screen bg-gray-50 print:bg-white">
       <div className="print:hidden bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-4 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <button onClick={() => router.push('/admin/operator')} className="flex items-center gap-2 text-white/80 hover:text-white">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-white/80 hover:text-white">
             <ArrowLeft className="w-4 h-4" /><span className="text-sm">Kembali</span>
           </button>
           <h1 className="text-sm font-bold text-white">Lapor Bulanan</h1>
