@@ -710,20 +710,12 @@ export default function RekapDashboard({ isAdmin = false }: Props) {
             })}
           </tbody>
         </table>
-
-        <div className="text-right mt-6 text-sm">
-          <p>Lemahabang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-          <br />
-          <p className="font-semibold">Ketua Tim Kerja Kecamatan Lemahabang</p>
-          <br /><br /><br />
-          <p className="font-bold underline mt-6">ETI BUDIWATI, S.Pd</p>
-        </div>
       </div>
 
       <style jsx global>{`
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          @page { margin: 0.5cm; size: A4 landscape; }
+          @page { margin: 0.5cm; size: 215mm 330mm landscape; }
           .print\\:hidden { display: none !important; }
           .hidden.print\\:block { display: block !important; }
         }

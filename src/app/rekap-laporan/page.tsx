@@ -28,8 +28,8 @@ export default function LaporanBulananPage() {
         <RekapDashboard />
       </main>
 
-      <Footer />
-      <MobileBottomNav />
+      <div className="print:hidden"><Footer /></div>
+      <div className="print:hidden"><MobileBottomNav /></div>
     </div>
   );
 }
