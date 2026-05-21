@@ -59,11 +59,27 @@ const quickMenuPrompts: Record<string, string> = {
 function getGreeting(context: ChatContext): string {
   switch (context.userRole) {
     case 'super_admin':
-      return `Selamat datang, ${context.userName} 👋\n\nSaya HaloAI, asisten digital Anda. Saya siap membantu monitoring sekolah, laporan, data, dan audit sistem.\n\nSilakan pilih menu cepat di bawah atau ketik pertanyaan Anda.`;
+      return `Halo, ${context.userName} 😊
+
+Selamat datang di HaloAI, asisten digital Portal Pendidikan Kecamatan Lemahabang.
+
+Saya siap membantu Anda memantau sekolah, laporan, data, dan lainnya.
+
+Ada yang bisa saya bantu?`;
     case 'operator_sekolah':
-      return `Halo, ${context.userName} dari ${context.schoolName || 'sekolah Anda'} 👋\n\nSaya HaloAI, asisten digital Anda. Saya siap membantu input data, laporan bulanan, siswa, guru, dan validasi sekolah.\n\nSilakan pilih menu cepat di bawah atau ketik pertanyaan Anda.`;
+      return `Halo, ${context.userName} dari ${context.schoolName || 'sekolah Anda'} 😊
+
+Saya HaloAI, asisten digital Portal Pendidikan Kecamatan Lemahabang.
+
+Saya siap membantu input data, laporan bulanan, dan informasi sekolah.
+
+Ada yang bisa saya bantu?`;
     default:
-      return `Halo 👋\n\nSaya HaloAI, asisten digital Portal Pendidikan Kecamatan Lemahabang.\n\nSilakan tanyakan informasi sekolah, SPMB, TKA, atau layanan pendidikan.`;
+      return `Halo 😊
+
+Saya HaloAI, asisten digital Portal Pendidikan Kecamatan Lemahabang.
+
+Ada yang bisa saya bantu?`;
   }
 }
 
