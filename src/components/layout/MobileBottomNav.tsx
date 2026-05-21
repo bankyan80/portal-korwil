@@ -16,7 +16,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: 'home', label: 'Home', icon: Home, path: '/' },
-  { id: 'data', label: 'Data', icon: Database, path: '/data-sekolah' },
+  { id: 'data', label: 'Data', icon: Database, path: '/data-gtk' },
   { id: 'rekap', label: 'Rekap', icon: BarChart3, path: '/rekap-laporan' },
   { id: 'haloai', label: 'HaloAI', icon: Sparkles, path: '/haloai' },
   { id: 'profil', label: 'Profil', icon: User, path: '/profil' },
