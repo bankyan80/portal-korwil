@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
@@ -21,12 +21,12 @@ export default function OperatorDashboard() {
 
   const { data: allStudents } = useCachedFirestore<Record<string, any>>({
     collectionName: 'students',
-    realtime: false,
+    realtime: true,
     enabled: !!user?.schoolName,
   });
   const { data: allEmployees } = useCachedFirestore<Record<string, any>>({
     collectionName: 'employees',
-    realtime: false,
+    realtime: true,
     enabled: !!user?.schoolName,
   });
 

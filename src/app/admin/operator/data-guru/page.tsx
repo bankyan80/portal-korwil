@@ -38,7 +38,7 @@ function GuruContent() {
   const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
 
-  const { data: allDataResult, isLoading, isError, error } = usePegawaiAll(search);
+  const { data: allDataResult, isLoading, isError, error, refetch } = usePegawaiAll(search);
 
   const handleSearch = () => { setSearch(searchInput); setPage(1); };
   const resetSearch = () => { setSearch(''); setSearchInput(''); setPage(1); };
@@ -104,7 +104,7 @@ function GuruContent() {
       if (data.success) {
         toast.success('Data pegawai berhasil diperbarui');
         setFormOpen(false);
-        window.location.reload();
+        refetch();
       } else {
         toast.error(data.error || 'Gagal menyimpan data');
       }

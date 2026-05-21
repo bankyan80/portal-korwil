@@ -567,7 +567,7 @@ export default function LaporBulananPage() {
             {bulanList.map((b) => <option key={b} value={b}>{b}</option>)}
           </select>
           <select value={tahun} onChange={(e) => { setTahun(e.target.value); setDataLoading(true); loadData(); }} className="text-sm border rounded-lg px-3 py-2 bg-white" disabled={dataLoading}>
-            {[2026, 2025, 2024].map((y) => <option key={y} value={y}>{y}</option>)}
+            {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
           <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800">
             <Printer className="w-4 h-4" /> Cetak

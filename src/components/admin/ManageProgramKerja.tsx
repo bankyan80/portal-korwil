@@ -11,7 +11,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { FileText, Search, Plus, Pencil, Trash2, Save, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { FileText, Search, Plus, Pencil, Trash2, Save, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
 
 export type ProgramStatus = 'rencana' | 'berjalan' | 'selesai' | 'ditunda';
 
@@ -42,7 +43,7 @@ const defaultForm = {
 };
 
 export function ManageProgramKerja() {
-  const { items, addItem, updateItem, deleteItem } = useFirestoreCollection<ProgramKerja>('program_kerja', []);
+  const { items, addItem, updateItem, deleteItem, loading, error } = useFirestoreCollection<ProgramKerja>('program_kerja', []);
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -65,18 +66,31 @@ export function ManageProgramKerja() {
   }
 
   async function save() {
-    if (!form.nama.trim() || !form.tanggalMulai.trim()) return;
-    if (editingId) {
-      await updateItem(editingId, form);
-    } else {
-      await addItem({ ...form, createdAt: Date.now() });
+    if (!form.nama.trim() || !form.tanggalMulai.trim()) {
+      toast.error('Nama dan tanggal mulai harus diisi');
+      return;
     }
-    setFormOpen(false);
-    setForm(defaultForm);
+    try {
+      if (editingId) {
+        await updateItem(editingId, form);
+      } else {
+        await addItem({ ...form, createdAt: Date.now() });
+      }
+      setFormOpen(false);
+      setForm(defaultForm);
+      toast.success(editingId ? 'Program kerja diperbarui' : 'Program kerja ditambahkan');
+    } catch {
+      toast.error('Gagal menyimpan program kerja');
+    }
   }
 
   async function handleDelete(id: string) {
-    await deleteItem(id);
+    try {
+      await deleteItem(id);
+      toast.success('Program kerja dihapus');
+    } catch {
+      toast.error('Gagal menghapus program kerja');
+    }
   }
 
   return (
@@ -91,7 +105,17 @@ export function ManageProgramKerja() {
         </Button>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">Memuat data...</span>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center py-12">
+          <AlertCircle className="w-6 h-6 text-red-500" />
+          <span className="ml-2 text-red-500">Gagal memuat data: {error}</span>
+        </div>
+      ) : filtered.length === 0 ? (
         <AdminEmptyState icon={FileText} title="Belum ada program kerja" description="Program kerja belum ditambahkan" />
       ) : (
         <div className="space-y-3">

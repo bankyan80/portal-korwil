@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/app-store';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import {
-  ArrowLeft, Building2, Phone, Save,
+  ArrowLeft, Building2, Phone, Save, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ export default function OrganisasiProfilPage() {
   const { user } = useAppStore();
   const router = useRouter();
   const [org, setOrg] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>({});
@@ -31,8 +32,14 @@ export default function OrganisasiProfilPage() {
 
   useEffect(() => {
     if (!db || !user?.organizationId) return;
+    setLoading(true);
     const unsub = onSnapshot(doc(db, 'organizations', user.organizationId), (snap) => {
       if (snap.exists()) setOrg(snap.data());
+      setLoading(false);
+    }, (err) => {
+      console.error('Error loading organisasi profil:', err);
+      toast.error('Gagal memuat data organisasi');
+      setLoading(false);
     });
     return () => unsub();
   }, [user?.organizationId]);
@@ -89,7 +96,12 @@ export default function OrganisasiProfilPage() {
           </Button>
         </div>
 
-        {org ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Memuat data organisasi...</span>
+          </div>
+        ) : org ? (
           <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6 space-y-4">
             <div className="flex items-center gap-4">
               {org.logo ? (

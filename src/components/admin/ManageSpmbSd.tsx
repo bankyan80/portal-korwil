@@ -12,7 +12,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { db } from '@/lib/firebase';
 import {
-  collection, addDoc, query, where, onSnapshot, doc, setDoc,
+  collection, addDoc, query, where, getDocs, doc, setDoc,
 } from 'firebase/firestore';
 import {
   FileText, Users, CheckCircle, Clock, XCircle, Search,
@@ -28,11 +28,13 @@ interface Pendaftar {
   id: string;
   nama: string;
   nik: string;
+  jk?: string;
   jalur: string;
   usia: number;
   status: string;
   tglDaftar: string;
   sekolah: string;
+  sekolahId?: string;
   tanggal_lahir: string;
   alasan?: string;
 }
@@ -74,30 +76,19 @@ const acceptedStatuses = ['Diverifikasi', 'Valid'];
 
 async function autoAddToDataPd(p: Pendaftar) {
   if (!db) return;
+  if (!p.jk || !p.tanggal_lahir) {
+    console.warn('autoAddToDataPd: jk atau tanggal_lahir kosong, skip auto-add untuk', p.nama);
+    return;
+  }
+
   const q = query(collection(db, 'students'), where('nik', '==', p.nik));
-
-  let alreadyExists = false;
-  const checkSub = onSnapshot(q, (snap) => {
-    if (!snap.empty && !alreadyExists) {
-      alreadyExists = true;
-      checkSub();
-    }
-  });
-
-  await new Promise<void>((resolve) => {
-    const timer = setTimeout(() => {
-      if (!alreadyExists) { alreadyExists = true; resolve(); }
-    }, 2000);
-    const iv = setInterval(() => {
-      if (alreadyExists) { clearInterval(iv); resolve(); }
-    }, 50);
-  });
-  (checkSub as any)?.();
-  if (alreadyExists) return;
+  const existing = await getDocs(q);
+  if (!existing.empty) return;
 
   await addDoc(collection(db, 'students'), {
-    nik: p.nik, nama: p.nama, jk: '', nisn: '', tanggal_lahir: '',
-    sekolah: p.sekolah, schoolId: '', jenjang: 'SD', kelas: 1, desa: '',
+    nik: p.nik, nama: p.nama, jk: p.jk, nisn: '',
+    tanggal_lahir: p.tanggal_lahir,
+    sekolah: p.sekolah, schoolId: p.sekolahId || '', jenjang: 'SD', kelas: 1, desa: '',
     alasan: `Auto dari SPMB - ${p.jalur}`,
     createdAt: Date.now(),
     updatedAt: Date.now(),

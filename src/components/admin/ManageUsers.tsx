@@ -16,9 +16,10 @@ import {
 } from '@/components/ui/select';
 import { Users, Mail, Shield, Search, RefreshCw, Building2, School, Pencil, Save, Plus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import type { UserProfile, UserRole } from '@/types';
 import { auth, db } from '@/lib/firebase';
-import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, getDocs } from 'firebase/firestore';
 import { AdminEmptyState, AdminTableSkeleton } from '@/components/shared/AdminTable';
 
 const roleConfig: Record<string, { label: string; className: string }> = {
@@ -61,6 +62,21 @@ export function ManageUsers() {
   const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
   const [orgs, setOrgs] = useState<{ id: string; name: string }[]>([]);
   const [adding, setAdding] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    if (!db) return;
+    setRefreshing(true);
+    try {
+      const snap = await getDocs(collection(db, 'users'));
+      const list = snap.docs.map(d => ({ ...d.data(), uid: d.id } as UserProfile));
+      setUsers(list);
+      toast.success('Data user diperbarui');
+    } catch {
+      toast.error('Gagal memuat ulang data user');
+    }
+    setRefreshing(false);
+  }, []);
 
   useEffect(() => {
     if (!db) return;
@@ -82,7 +98,7 @@ export function ManageUsers() {
     const unsubscribe = onSnapshot(
       collection(db, 'users'),
       (snap) => {
-        const list = snap.docs.map(d => d.data() as UserProfile);
+        const list = snap.docs.map(d => ({ ...d.data(), uid: d.id } as UserProfile));
         setUsers(list);
         setLoading(false);
       },
@@ -197,8 +213,8 @@ export function ManageUsers() {
           <Button onClick={() => setAddOpen(true)} className="bg-blue-800 hover:bg-blue-900 text-white gap-2">
             <Plus className="w-4 h-4" /> Tambah User
           </Button>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={cn('w-3.5 h-3.5', refreshing && 'animate-spin')} /> Refresh
           </Button>
         </div>
       </div>
