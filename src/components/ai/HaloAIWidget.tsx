@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import HaloAIChat from './HaloAIChat'
 import { useAppStore } from '@/store/app-store'
-import { GraduationCap, ChevronLeft, ChevronRight, X, Sparkles } from 'lucide-react'
+import { GraduationCap, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useIsDesktop } from '@/hooks/use-media-query'
 
 type AIStatus = 'online' | 'slow' | 'error' | 'checking'
@@ -172,28 +172,8 @@ function MobileSheet({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="fixed bottom-0 left-0 right-0 z-50 h-[90vh] bg-white dark:bg-slate-800 rounded-t-2xl shadow-2xl flex flex-col md:hidden"
+              className="fixed bottom-0 left-0 right-0 z-50 h-[90vh] bg-white dark:bg-slate-800 rounded-t-2xl shadow-2xl flex flex-col md:hidden overflow-hidden"
             >
-              <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#0d3b66] to-[#1a5276] rounded-t-2xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                    <GraduationCap className="w-4 h-4 text-yellow-400" />
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-sm text-white flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-                      HaloAI
-                    </h2>
-                    <p className="text-[10px] text-blue-200">Asisten Pendidikan Digital</p>
-                  </div>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                >
-                  <X className="w-4 h-4 text-white" />
-                </button>
-              </div>
               <HaloAIChat onClose={onClose} context={context} aiStatus={aiStatus} onAiStatusChange={onAiStatusChange} />
             </motion.div>
           </>

@@ -1,4 +1,4 @@
-import { GraduationCap, Sparkles } from 'lucide-react';
+import { GraduationCap, Sparkles, X } from 'lucide-react';
 import HaloAIStatus from './HaloAIStatus';
 
 interface HaloAIHeaderProps {
@@ -21,6 +21,12 @@ export default function HaloAIHeader({ onClose, aiStatus, quota }: HaloAIHeaderP
         <p className="text-[11px] text-blue-200">Asisten Pendidikan Digital</p>
       </div>
       <HaloAIStatus status={aiStatus} remaining={quota?.remaining} total={quota?.total} />
+      <button
+        onClick={onClose}
+        className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors shrink-0 ml-1"
+      >
+        <X className="w-4 h-4 text-white" />
+      </button>
     </div>
   );
 }
