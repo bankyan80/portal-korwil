@@ -43,7 +43,7 @@ function displaySchoolName(rawName: string): string {
 type JenjangFilter = 'ALL' | 'SD' | 'TK' | 'KB';
 
 export default function SuperDataGuru() {
-  const { data: allDataResult, isLoading } = usePegawaiAll();
+  const { data: allDataResult, isLoading, isError, error } = usePegawaiAll();
   const [searchSekolah, setSearchSekolah] = useState('');
   const [jenjangFilter, setJenjangFilter] = useState<JenjangFilter>('ALL');
   const [formOpen, setFormOpen] = useState(false);
@@ -185,6 +185,14 @@ export default function SuperDataGuru() {
         <div className="flex items-center gap-2 text-muted-foreground py-4">
           <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" /> Memuat data...
         </div>
+      )}
+      {isError && (
+        <div className="flex items-center gap-2 text-red-600 bg-red-50 rounded-lg px-4 py-3 mb-4">
+          <span className="text-sm">Gagal memuat data pegawai: {error?.message || 'Kesalahan jaringan'}. <button onClick={() => window.location.reload()} className="underline font-medium">Muat ulang</button></span>
+        </div>
+      )}
+      {!isLoading && !isError && filteredData.length === 0 && (
+        <p className="text-muted-foreground py-4 text-sm">Tidak ada data pegawai ditemukan.</p>
       )}
 
       {/* Filter Bar */}

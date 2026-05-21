@@ -38,7 +38,7 @@ function GuruContent() {
   const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
 
-  const { data: allDataResult } = usePegawaiAll(search);
+  const { data: allDataResult, isLoading, isError, error } = usePegawaiAll(search);
 
   const handleSearch = () => { setSearch(searchInput); setPage(1); };
   const resetSearch = () => { setSearch(''); setSearchInput(''); setPage(1); };
@@ -169,14 +169,31 @@ function GuruContent() {
         )}
       </div>
 
-      {!allDataResult && (
+      {isLoading && (
         <div className="flex items-center gap-2 text-muted-foreground py-4">
           <Loader2 className="w-4 h-4 animate-spin" /> Memuat data...
+        </div>
+      )}
+      {isError && (
+        <div className="flex items-center gap-2 text-red-600 bg-red-50 rounded-lg px-4 py-3 mb-4">
+          <span className="text-sm">Gagal memuat data pegawai: {error?.message || 'Kesalahan jaringan'}. <button onClick={() => window.location.reload()} className="underline font-medium">Muat ulang</button></span>
+        </div>
+      )}
+      {!isLoading && !isError && !normalizedSchool && (
+        <div className="text-amber-600 bg-amber-50 rounded-lg px-4 py-3 mb-4 text-sm">
+          Data sekolah tidak ditemukan untuk akun Anda. Hubungi administrator.
+        </div>
+      )}
+      {!isLoading && !isError && normalizedSchool && allPegawai.length === 0 && (
+        <div className="text-muted-foreground py-4 text-sm">
+          Belum ada data pegawai untuk sekolah ini.
         </div>
       )}
 
       {/* ── Flat paginated table ── */}
       <>
+        {paginated.length > 0 && (
+          <>
         {search && (
           <p className="text-xs text-muted-foreground mb-2">Hasil pencarian "{search}" — {total} record(s)</p>
         )}
@@ -193,6 +210,8 @@ function GuruContent() {
           </div>
         )}
         <p className="text-xs text-muted-foreground mt-2">Guru: {guruCount} | Tendik: {tendikCount}</p>
+          </>
+        )}
       </>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
