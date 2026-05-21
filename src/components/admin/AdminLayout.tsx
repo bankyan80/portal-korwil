@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Menu, Sun, Moon } from 'lucide-react';
 import { VIEW_TITLES } from '@/lib/navigation';
+import { FirebaseLED } from '@/components/portal/FirebaseLED';
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const { currentView } = useAppStore();
@@ -52,7 +53,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
            </div>
          </header>
          <main className="flex-1 p-4 lg:p-6 overflow-y-auto">{children}</main>
-       </div>
-     </div>
+        </div>
+        <FirebaseLED />
+      </div>
    );
 }

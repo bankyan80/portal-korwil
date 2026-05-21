@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { Heart, Search, Plus, Trash2, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import type { YatimPiatuData, YatimCategory } from '@/types';
 
 const kategoriLabel: Record<YatimCategory, string> = {
@@ -41,7 +42,7 @@ export function ManageYatimPiatu() {
       snap.forEach((d) => list.push({ id: d.id, ...d.data() } as YatimPiatuData));
       setData(list);
       setLoading(false);
-    }, () => setLoading(false));
+    }, (err) => { console.error('Error loading yatim piatu:', err); toast.error('Gagal memuat data yatim piatu'); setLoading(false); });
     return () => unsub();
   }, []);
 

@@ -50,6 +50,7 @@ export function SuperSekolah() {
       },
       (err) => {
         console.error('Error in schools realtime listener:', err);
+        toast.error('Gagal memuat data sekolah');
         setLoading(false);
       }
     );

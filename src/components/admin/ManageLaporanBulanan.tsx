@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { BarChart3, Search, CheckCircle, XCircle, Clock, Eye, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { allSekolah } from '@/data/sekolah';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -69,7 +70,7 @@ export function ManageLaporanBulanan() {
       snap.forEach((d) => list.push({ id: d.id, ...d.data() } as LaporanRecord));
       setData(list);
       setLoading(false);
-    }, () => setLoading(false));
+    }, (err) => { console.error('Error loading laporan:', err); toast.error('Gagal memuat data laporan'); setLoading(false); });
     return () => unsub();
   }, []);
 

@@ -163,6 +163,7 @@ export function ManageDataPd() {
             },
             (err) => {
               console.error('Error in students realtime listener:', err);
+              toast.error('Gagal memuat data siswa');
               if (!loadingDone) {
                 setAllSiswa(computeMerged([]));
                 setLoading(false);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Search, Upload, Trash2, FileText, Download, Loader2, CheckCircle, XCircle, File } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAppStore } from '@/store/app-store';
 import { db, auth } from '@/lib/firebase';
 import { collection, addDoc, query, where, deleteDoc, doc, orderBy, onSnapshot } from 'firebase/firestore';
@@ -76,7 +77,7 @@ export default function InputDokumenPage() {
       snap.forEach((d) => list.push({ id: d.id, ...d.data() } as DokumenBersama));
       setDocuments(list);
       setDataLoaded(true);
-    }, () => { setDataLoaded(true); });
+    }, (err) => { console.error('Error loading dokumen:', err); toast.error('Gagal memuat data dokumen'); setDataLoaded(true); });
     return () => unsub();
   }, []);
 

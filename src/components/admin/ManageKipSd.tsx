@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { WalletMinimal, Search, Plus, Trash2, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import type { KipSdData } from '@/types';
 
 interface SiswaItem {
@@ -43,7 +44,7 @@ export function ManageKipSd() {
       snap.forEach((d) => list.push({ id: d.id, ...d.data() } as KipSdData));
       setData(list);
       setLoading(false);
-    }, () => setLoading(false));
+    }, (err) => { console.error('Error loading KIP:', err); toast.error('Gagal memuat data KIP'); setLoading(false); });
     return () => unsub();
   }, []);
 

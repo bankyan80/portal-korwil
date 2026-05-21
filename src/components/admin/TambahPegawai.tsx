@@ -48,7 +48,7 @@ export default function TambahPegawai() {
       snap.forEach((d) => list.push({ id: d.id, ...d.data() } as PegawaiTambahan));
       setData(list);
       setLoading(false);
-    }, () => setLoading(false));
+    }, (err) => { console.error('Error loading pegawai tambahan:', err); toast.error('Gagal memuat data pegawai'); setLoading(false); });
     return () => unsub();
   }, []);
 

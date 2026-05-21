@@ -91,7 +91,7 @@ export function ManageDataGtk() {
         normalizeSchool(p.sekolah || '') === normalizeSchool(userSchool)
       ));
       setLoading(false);
-    }, () => setLoading(false));
+    }, (err) => { console.error('Error loading GTK:', err); toast.error('Gagal memuat data GTK'); setLoading(false); });
     return () => unsub();
   }, [isOperator, userSchool]);
 

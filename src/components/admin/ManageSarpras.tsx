@@ -163,6 +163,7 @@ export function ManageSarpras() {
       },
       (err) => {
         console.error('Error in sarpras realtime listener:', err);
+        toast.error('Gagal memuat data sarpras');
         setLoading(false);
       }
     );

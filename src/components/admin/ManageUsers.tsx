@@ -82,10 +82,10 @@ export function ManageUsers() {
     if (!db) return;
     const schoolsUnsub = onSnapshot(collection(db, 'schools'), (snap) => {
       setSchools(snap.docs.map(d => ({ id: d.id, name: d.data().name || '' })));
-    }, () => {});
+    }, (err) => { console.error('Error loading schools:', err); });
     const orgsUnsub = onSnapshot(collection(db, 'organizations'), (snap) => {
       setOrgs(snap.docs.map(d => ({ id: d.id, name: d.data().name || '' })));
-    }, () => {});
+    }, (err) => { console.error('Error loading organizations:', err); });
 
     return () => {
       schoolsUnsub();
