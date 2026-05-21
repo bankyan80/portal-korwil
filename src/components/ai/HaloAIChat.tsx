@@ -289,7 +289,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
   const actualStatus = isTyping ? 'checking' : aiStatus;
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-slate-900">
+    <div className="flex flex-col flex-1 bg-gray-50 dark:bg-slate-900">
       <HaloAIHeader onClose={onClose} aiStatus={actualStatus} quota={quota} />
 
       <div className="flex-1 overflow-y-auto px-2 sm:px-3 py-2 sm:py-3 space-y-2 sm:space-y-3">
