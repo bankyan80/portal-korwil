@@ -3,6 +3,8 @@ import dataPegawai from '@/data/data-pegawai.json';
 import dataPegawaiTk from '@/data/data-pegawai-tk.json';
 import tkGelatikPegawai from '@/data/tk-gelatik-pegawai.json';
 import pltData from '@/data/data-plt.json';
+import { getAllPegawai } from '@/services/pegawai.service';
+import { getCanonicalSchoolName } from '@/lib/normalize';
 
 const SHEETS = [
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR4PhpkeqQjr9cbHrEoGwgQW9CvqVBA1D0--o1ZhXv_OaBqNPddwAHs_PZCsgXP-g/pub?gid=296347908&single=true&output=csv', sekolah: 'SD NEGERI 1 ASEM' },
@@ -42,7 +44,7 @@ function mapRow(cols: string[], sekolah: string) {
     status_kepegawaian: (cols[7] || '').trim(),
     jenis_ptk: (cols[8] || '').trim(),
     tugas_tambahan: (cols[20] || '').trim(),
-    sekolah,
+    sekolah: getCanonicalSchoolName(sekolah),
   };
 }
 
@@ -81,7 +83,10 @@ async function loadFromSheets() {
 }
 
 function loadStaticData() {
-  return [...dataPegawai, ...dataPegawaiTk, ...tkGelatikPegawai];
+  return [...dataPegawai, ...dataPegawaiTk, ...tkGelatikPegawai].map(r => ({
+    ...r,
+    sekolah: r.sekolah ? getCanonicalSchoolName(r.sekolah) : r.sekolah,
+  }));
 }
 
 function unionAll(sheetRecords: any[], staticRecords: any[]): any[] {
@@ -118,12 +123,13 @@ interface SchoolGtk {
 export async function GET() {
   const sheetData = await loadFromSheets();
   const staticData = loadStaticData();
-  const merged = unionAll(sheetData, staticData);
+  const firestoreData = await getAllPegawai();
+  const merged = unionAll(sheetData, unionAll(staticData, firestoreData));
 
   const schools: Record<string, SchoolGtk> = {};
   for (const p of merged) {
     if (!p.sekolah) continue;
-    const name = p.sekolah;
+    const name = getCanonicalSchoolName(p.sekolah);
     if (!schools[name]) {
       schools[name] = {
         name, teachers: 0, staff: 0, total: 0, certified: 0,
@@ -149,8 +155,9 @@ export async function GET() {
   }
 
   for (const plt of pltData) {
-    if (schools[plt.sekolah] && !schools[plt.sekolah].headmaster) {
-      schools[plt.sekolah].headmaster = `plt. ${plt.plt_nama}`;
+    const pltSchool = getCanonicalSchoolName(plt.sekolah);
+    if (schools[pltSchool] && !schools[pltSchool].headmaster) {
+      schools[pltSchool].headmaster = `plt. ${plt.plt_nama}`;
     }
   }
 
