@@ -2,7 +2,7 @@ import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { classifyComplexity, type Complexity } from './haloAI-knowledge';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 const GEMINI_PRO_MODEL = 'gemini-2.5-pro';
 
 let genAI: GoogleGenerativeAI | null = null;
@@ -83,7 +83,7 @@ SELALU sertakan link aktif saat menyebut halaman. Format: [📊 Label](/route)
 export async function checkGeminiHealth(): Promise<{ ok: boolean; model: string }> {
   try {
     if (!GEMINI_API_KEY) return { ok: false, model: '' };
-    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    const models = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash'];
     for (const model of models) {
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
