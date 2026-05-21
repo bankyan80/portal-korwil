@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
@@ -9,6 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Loader2, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
+import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
+import { enqueue } from '@/lib/local/offlineQueue';
+import type { AutoSaveStatus } from '@/hooks/useAutoSaveForm';
 
 const defaultForm = {
   tanah_pemerintah: '', tanah_yayasan: '', tanah_perseorangan: '',
@@ -101,6 +105,42 @@ export function ManageSarpras() {
   const [form, setForm] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
+
+  const draftKey = {
+    userId: user?.uid || 'anon',
+    schoolId: user?.schoolId,
+    page: 'sarpras',
+    formType: 'sarpras',
+  };
+  const { debouncedSave, load: loadDraft, clear: clearDraft } = useAutoSaveForm<Record<string, unknown>>(
+    draftKey,
+    setAutoSaveStatus,
+    1000,
+  );
+
+  const updateField = useCallback((key: string, value: string) => {
+    setForm(prev => {
+      const next = { ...prev, [key]: value };
+      debouncedSave(next as unknown as Record<string, unknown>);
+      return next;
+    });
+  }, [debouncedSave]);
+
+  useEffect(() => {
+    loadDraft<Record<string, unknown>>().then(draft => {
+      if (draft && Object.keys(draft).length > 0) {
+        setForm(prev => {
+          const next = { ...prev };
+          for (const k of Object.keys(defaultForm)) {
+            if (draft[k] !== undefined && String(draft[k]) !== '') next[k as keyof typeof defaultForm] = String(draft[k]);
+          }
+          return next;
+        });
+        setAutoSaveStatus('saved');
+      }
+    });
+  }, [loadDraft]);
 
   useEffect(() => {
     if (!db || !user?.schoolId) return;
@@ -141,10 +181,13 @@ export function ManageSarpras() {
         schoolId: user.schoolId,
         updatedAt: Date.now(),
       }, { merge: true });
+      await clearDraft();
+      setAutoSaveStatus('saved');
       toast.success('Data sarpras berhasil disimpan');
     } catch (e) {
       console.error('Error saving sarpras:', e);
-      toast.error('Gagal menyimpan');
+      await enqueue('update', 'sarpras', user.schoolId, { ...form, schoolId: user.schoolId, updatedAt: Date.now() });
+      toast.error('Koneksi terputus, data akan dikirim saat online kembali');
     } finally {
       setSaving(false);
     }
@@ -158,6 +201,7 @@ export function ManageSarpras() {
         <div className="flex items-center gap-3">
           <Building2 className="w-6 h-6 text-blue-700" />
           <h2 className="text-lg font-bold">Data Sarana & Prasarana</h2>
+          <AutoSaveStatusBadge status={autoSaveStatus} />
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white gap-2">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan
@@ -177,7 +221,7 @@ export function ManageSarpras() {
             <div key={key} className="space-y-1.5">
               <Label className="text-xs">{labelMap[key]}</Label>
               <Input value={form[key as keyof typeof defaultForm]}
-                onChange={(e) => setForm(f => ({ ...f, [key]: e.target.value }))}
+                onChange={(e) => updateField(key, e.target.value)}
                 placeholder="0" />
             </div>
           ))}
@@ -212,13 +256,13 @@ export function ManageSarpras() {
               {roomList.map((room) => (
                 <tr key={room.key} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="border border-gray-300 dark:border-gray-600 px-2 py-1.5 text-xs font-medium">{room.label}</td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_baik_bgn` as keyof typeof defaultForm] || ''} onChange={(e) => setForm(f => ({ ...f, [`${room.key}_baik_bgn`]: e.target.value }))} placeholder="0" /></td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_baik_rgn` as keyof typeof defaultForm] || ''} onChange={(e) => setForm(f => ({ ...f, [`${room.key}_baik_rgn`]: e.target.value }))} placeholder="0" /></td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_sedang_bgn` as keyof typeof defaultForm] || ''} onChange={(e) => setForm(f => ({ ...f, [`${room.key}_sedang_bgn`]: e.target.value }))} placeholder="0" /></td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_sedang_rgn` as keyof typeof defaultForm] || ''} onChange={(e) => setForm(f => ({ ...f, [`${room.key}_sedang_rgn`]: e.target.value }))} placeholder="0" /></td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_rusak_bgn` as keyof typeof defaultForm] || ''} onChange={(e) => setForm(f => ({ ...f, [`${room.key}_rusak_bgn`]: e.target.value }))} placeholder="0" /></td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_rusak_rgn` as keyof typeof defaultForm] || ''} onChange={(e) => setForm(f => ({ ...f, [`${room.key}_rusak_rgn`]: e.target.value }))} placeholder="0" /></td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[room.key as keyof typeof defaultForm] || ''} onChange={(e) => setForm(f => ({ ...f, [room.key]: e.target.value }))} placeholder="0" /></td>
+                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_baik_bgn` as keyof typeof defaultForm] || ''} onChange={(e) => updateField(`${room.key}_baik_bgn`, e.target.value)} placeholder="0" /></td>
+                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_baik_rgn` as keyof typeof defaultForm] || ''} onChange={(e) => updateField(`${room.key}_baik_rgn`, e.target.value)} placeholder="0" /></td>
+                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_sedang_bgn` as keyof typeof defaultForm] || ''} onChange={(e) => updateField(`${room.key}_sedang_bgn`, e.target.value)} placeholder="0" /></td>
+                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_sedang_rgn` as keyof typeof defaultForm] || ''} onChange={(e) => updateField(`${room.key}_sedang_rgn`, e.target.value)} placeholder="0" /></td>
+                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_rusak_bgn` as keyof typeof defaultForm] || ''} onChange={(e) => updateField(`${room.key}_rusak_bgn`, e.target.value)} placeholder="0" /></td>
+                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[`${room.key}_rusak_rgn` as keyof typeof defaultForm] || ''} onChange={(e) => updateField(`${room.key}_rusak_rgn`, e.target.value)} placeholder="0" /></td>
+                  <td className="border border-gray-300 dark:border-gray-600 px-1 py-1"><Input className="h-7 text-xs text-center" value={form[room.key as keyof typeof defaultForm] || ''} onChange={(e) => updateField(room.key, e.target.value)} placeholder="0" /></td>
                 </tr>
               ))}
             </tbody>
@@ -234,7 +278,7 @@ export function ManageSarpras() {
             <div key={key} className="space-y-1.5">
               <Label className="text-xs">{labelMap[key]}</Label>
               <Input value={form[key as keyof typeof defaultForm]}
-                onChange={(e) => setForm(f => ({ ...f, [key]: e.target.value }))}
+                onChange={(e) => updateField(key, e.target.value)}
                 placeholder="0" />
             </div>
           ))}
@@ -249,7 +293,7 @@ export function ManageSarpras() {
             <div key={key} className="space-y-1.5">
               <Label className="text-xs">{labelMap[key]}</Label>
               <Input value={form[key as keyof typeof defaultForm]}
-                onChange={(e) => setForm(f => ({ ...f, [key]: e.target.value }))}
+                onChange={(e) => updateField(key, e.target.value)}
                 placeholder="0" />
             </div>
           ))}
@@ -273,9 +317,9 @@ export function ManageSarpras() {
               {perkakasList.map((item) => (
                 <tr key={item.key} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium">{item.label}</td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-2 py-1"><Input className="h-7 text-xs text-center" value={form[`${item.key}_baik` as keyof typeof defaultForm] || ''} onChange={(e) => setForm(f => ({ ...f, [`${item.key}_baik`]: e.target.value }))} placeholder="0" /></td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-2 py-1"><Input className="h-7 text-xs text-center" value={form[`${item.key}_rusak` as keyof typeof defaultForm] || ''} onChange={(e) => setForm(f => ({ ...f, [`${item.key}_rusak`]: e.target.value }))} placeholder="0" /></td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-2 py-1"><Input className="h-7 text-xs text-center" value={form[item.key as keyof typeof defaultForm] || ''} onChange={(e) => setForm(f => ({ ...f, [item.key]: e.target.value }))} placeholder="0" /></td>
+                  <td className="border border-gray-300 dark:border-gray-600 px-2 py-1"><Input className="h-7 text-xs text-center" value={form[`${item.key}_baik` as keyof typeof defaultForm] || ''} onChange={(e) => updateField(`${item.key}_baik`, e.target.value)} placeholder="0" /></td>
+                  <td className="border border-gray-300 dark:border-gray-600 px-2 py-1"><Input className="h-7 text-xs text-center" value={form[`${item.key}_rusak` as keyof typeof defaultForm] || ''} onChange={(e) => updateField(`${item.key}_rusak`, e.target.value)} placeholder="0" /></td>
+                  <td className="border border-gray-300 dark:border-gray-600 px-2 py-1"><Input className="h-7 text-xs text-center" value={form[item.key as keyof typeof defaultForm] || ''} onChange={(e) => updateField(item.key, e.target.value)} placeholder="0" /></td>
                 </tr>
               ))}
             </tbody>
@@ -291,7 +335,7 @@ export function ManageSarpras() {
             <div key={key} className="space-y-1.5">
               <Label className="text-xs">{labelMap[key]}</Label>
               <Input value={form[key as keyof typeof defaultForm]}
-                onChange={(e) => setForm(f => ({ ...f, [key]: e.target.value }))}
+                onChange={(e) => updateField(key, e.target.value)}
                 placeholder="PAM / Sumur / Mata Air / Sungai" />
             </div>
           ))}

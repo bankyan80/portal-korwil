@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, Fragment } from 'react';
+import { useEffect, useState, useRef, Fragment, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { db } from '@/lib/firebase';
@@ -10,6 +10,10 @@ import pltData from '@/data/data-plt.json';
 import Link from 'next/link';
 import { ArrowLeft, Printer, Loader2, Send, CheckCircle, Clock, AlertCircle, Eye, TriangleAlert } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { saveDraft, loadDraft, removeDraft } from '@/lib/local/draftStorage';
+import { enqueue } from '@/lib/local/offlineQueue';
+import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
+import type { AutoSaveStatus } from '@/hooks/useAutoSaveForm';
 
 const bulanList = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -44,7 +48,45 @@ export default function LaporBulananPage() {
   const [submitMsg, setSubmitMsg] = useState('');
   const [history, setHistory] = useState<any[]>([]);
   const [absen, setAbsen] = useState({ sakit: 0, izin: 0, tanpa_keterangan: 0 });
+  const [absenAutoSaveStatus, setAbsenAutoSaveStatus] = useState<AutoSaveStatus>('idle');
   const [warnings, setWarnings] = useState<{ page: string; label: string; href: string; message: string }[]>([]);
+  const absenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Autosave absen on change with 1s debounce
+  useEffect(() => {
+    if (absenTimerRef.current) clearTimeout(absenTimerRef.current);
+    absenTimerRef.current = setTimeout(async () => {
+      const key = {
+        userId: user?.uid || 'anon',
+        schoolId: user?.schoolId,
+        page: 'laporan-bulanan',
+        formType: 'absen',
+        bulan: bulanList.indexOf(bulan) + 1,
+        tahun: Number(tahun),
+      };
+      setAbsenAutoSaveStatus('saving');
+      await saveDraft(key, absen);
+      setAbsenAutoSaveStatus('saved');
+    }, 800);
+    return () => {
+      if (absenTimerRef.current) clearTimeout(absenTimerRef.current);
+    };
+  }, [absen, user?.uid, user?.schoolId, bulan, tahun]);
+
+  // Load absen draft on mount
+  useEffect(() => {
+    (async () => {
+      if (!user?.schoolId) return;
+      const key = {
+        userId: user.uid || 'anon',
+        schoolId: user.schoolId,
+        page: 'laporan-bulanan',
+        formType: 'absen',
+      };
+      const draft = await loadDraft<{ sakit: number; izin: number; tanpa_keterangan: number }>(key);
+      if (draft) setAbsen(draft);
+    })();
+  }, [user?.uid, user?.schoolId]);
 
   const sarprasRoomMap: Record<string, string> = {
     'Ruang Kelas': 'ruang_kelas', 'Perpustakaan': 'perpustakaan', 'UKS': 'uks',
@@ -290,6 +332,7 @@ export default function LaporBulananPage() {
     setSubmitStatus('idle');
     setSubmitMsg('');
 
+    let payload: any;
     try {
       const blnIndex = String(bulanList.indexOf(bulan) + 1).padStart(2, '0');
       const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
@@ -303,7 +346,7 @@ export default function LaporBulananPage() {
         kelasData[`kelas${i}_p`] = k.p;
       }
 
-      const payload = {
+      payload = {
         sekolahId: schoolId,
         sekolah: user.schoolName || sekolah?.name || '',
         npsn: sekolah?.npsn || '',
@@ -454,14 +497,31 @@ export default function LaporBulananPage() {
 
       await setDoc(docRef, payload, { merge: true });
 
+      // Clear absen draft on successful submit
+      const clearKey = {
+        userId: user?.uid || 'anon',
+        schoolId: user?.schoolId,
+        page: 'laporan-bulanan',
+        formType: 'absen',
+      };
+      await removeDraft(clearKey);
+      setAbsenAutoSaveStatus('saved');
+
       setExistingDocId(docRef.id);
       setLaporanData(payload);
       setSubmitStatus('success');
       setSubmitMsg('Laporan bulanan berhasil dikirim!');
     } catch (e: any) {
       console.error('Gagal kirim laporan:', e);
+      // Offline queue: save for retry
+      try {
+        const sid = user?.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
+        const blnIndex = String(bulanList.indexOf(bulan) + 1).padStart(2, '0');
+        const docId = `${sid}_${tahun}_${blnIndex}`;
+        await enqueue('update', 'laporan_bulanan', docId, payload || {});
+      } catch {}
       setSubmitStatus('error');
-      setSubmitMsg(`Gagal: ${e.message || 'Terjadi kesalahan'}`);
+      setSubmitMsg(`Koneksi terputus: data akan dikirim saat online kembali.`);
     } finally {
       setSending(false);
     }
@@ -579,7 +639,9 @@ export default function LaporBulananPage() {
 
           {/* Absen Murid */}
           <div className="border-t pt-4 mt-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">G. Absen Murid (Bulan Ini)</h4>
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">G. Absen Murid (Bulan Ini)
+              <span className="ml-2"><AutoSaveStatusBadge status={absenAutoSaveStatus} /></span>
+            </h4>
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="text-xs text-gray-500">Sakit</label>

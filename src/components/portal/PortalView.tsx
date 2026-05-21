@@ -10,12 +10,14 @@ import InstitutionLinks from '@/components/portal/InstitutionLinks';
 import Footer from '@/components/portal/Footer';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { FirebaseLED } from './FirebaseLED';
+import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 
 export default function PortalView() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-gray-950">
       <Header />
       <FirebaseLED />
+      <div className="fixed bottom-20 right-4 z-40"><SyncStatusBadge /></div>
       <main className="flex-1 w-full">
         <HeroSection />
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 sm:space-y-12 md:pb-20">

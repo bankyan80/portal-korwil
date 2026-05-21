@@ -17,6 +17,10 @@ import { toast } from 'sonner';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
 import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTable';
 import type { News } from '@/types';
+import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
+import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
+import { enqueue } from '@/lib/local/offlineQueue';
+import type { AutoSaveStatus } from '@/hooks/useAutoSaveForm';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   published: { label: 'Published', className: 'bg-green-100 text-green-800 border-green-200' },
@@ -39,23 +43,39 @@ export function ManageBerita() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState(defaultForm);
   const [saving, setSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
+
+  const { debouncedSave: autoSave, load: loadDraft, clear: clearDraft } = useAutoSaveForm<Record<string, unknown>>(
+    { userId: 'admin', page: 'berita', formType: 'berita' },
+    setAutoSaveStatus,
+    800,
+  );
 
   const filtered = items.filter(item => {
     const q = search.toLowerCase();
     return !search.trim() || item.title.toLowerCase().includes(q) || item.authorName.toLowerCase().includes(q);
   });
 
-  const openAdd = useCallback(() => {
+  const openAdd = useCallback(async () => {
     setEditingId(null);
-    setForm(defaultForm);
+    const draft = await loadDraft();
+    setForm(draft ? (draft as typeof defaultForm) : defaultForm);
     setFormOpen(true);
-  }, []);
+  }, [loadDraft]);
 
-  const openEdit = useCallback((item: News) => {
+  const openEdit = useCallback(async (item: News) => {
     setEditingId(item.id || null);
-    setForm({ title: item.title, content: item.content, slug: item.slug, excerpt: item.excerpt, status: item.status });
+    const base = { title: item.title, content: item.content, slug: item.slug, excerpt: item.excerpt, status: item.status };
+    const draft = await loadDraft();
+    setForm(draft ? (draft as typeof defaultForm) : base);
     setFormOpen(true);
-  }, []);
+  }, [loadDraft]);
+
+  function updateForm(updater: (prev: typeof defaultForm) => typeof defaultForm) {
+    setForm(updater);
+    const next = updater(form);
+    autoSave(next as unknown as Record<string, unknown>);
+  }
 
   const requestDelete = useCallback((id: string) => {
     setDeletingId(id);
@@ -91,11 +111,20 @@ export function ManageBerita() {
         await addItem({ id: `news-${Date.now()}`, title: form.title, content: form.content, slug, excerpt, authorName: 'Admin', authorRole: 'Administrator', status: form.status, createdAt: Date.now(), updatedAt: Date.now() });
         toast.success('Berita berhasil ditambahkan');
       }
+      await clearDraft();
       setFormOpen(false);
       setForm(defaultForm);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error saving berita:', e);
-      toast.error('Gagal menyimpan berita');
+      if (e.code === 'unavailable' || e.message?.includes('offline') || e.message?.includes('network')) {
+        try {
+          await enqueue(editingId ? 'update' : 'add', 'news', editingId || `news-${Date.now()}`, form);
+          toast.info(editingId ? 'Berita akan diperbarui saat online' : 'Berita akan ditambahkan saat online');
+          setFormOpen(false);
+        } catch {}
+      } else {
+        toast.error('Gagal menyimpan berita');
+      }
     } finally {
       setSaving(false);
     }
@@ -165,22 +194,22 @@ export function ManageBerita() {
       <Dialog open={formOpen} onOpenChange={(open) => { if (!open) { setFormOpen(false); } }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Berita' : 'Tambah Berita Baru'}</DialogTitle>
+            <DialogTitle>{editingId ? 'Edit Berita' : 'Tambah Berita Baru'} <span className="ml-2 inline-flex"><AutoSaveStatusBadge status={autoSaveStatus} /></span></DialogTitle>
             <DialogDescription>{editingId ? 'Perbarui informasi berita.' : 'Isi formulir berikut untuk menambahkan berita baru.'}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Judul Berita</Label>
-              <Input value={form.title} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Contoh: Kegiatan MPLS SDN 1" />
+              <Input value={form.title} onChange={(e) => updateForm(f => ({ ...f, title: e.target.value }))} placeholder="Contoh: Kegiatan MPLS SDN 1" />
             </div>
             <div className="space-y-2">
               <Label>Konten</Label>
-              <Textarea value={form.content} onChange={(e) => setForm(f => ({ ...f, content: e.target.value }))} rows={5} placeholder="Tulis konten berita..." />
+              <Textarea value={form.content} onChange={(e) => updateForm(f => ({ ...f, content: e.target.value }))} rows={5} placeholder="Tulis konten berita..." />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Status</Label>
-                <select value={form.status} onChange={(e) => setForm(f => ({ ...f, status: e.target.value as News['status'] }))}
+                <select value={form.status} onChange={(e) => updateForm(f => ({ ...f, status: e.target.value as News['status'] }))}
                   className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground">
                   <option value="draft">Draft</option>
                   <option value="pending">Pending</option>
@@ -190,7 +219,7 @@ export function ManageBerita() {
               </div>
               <div className="space-y-2">
                 <Label>Slug</Label>
-                <Input value={form.slug} onChange={(e) => setForm(f => ({ ...f, slug: e.target.value }))} placeholder="auto-fill" />
+                <Input value={form.slug} onChange={(e) => updateForm(f => ({ ...f, slug: e.target.value }))} placeholder="auto-fill" />
               </div>
             </div>
           </div>

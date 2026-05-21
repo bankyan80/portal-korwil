@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
+import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import AuthGuard from '@/components/auth/AuthGuard';
 import {
@@ -282,6 +283,7 @@ export default function SuperAdminDashboard() {
       </header>
 
       <FirebaseLED userLabel={user.email} />
+      <div className="fixed bottom-20 right-4 z-40"><SyncStatusBadge /></div>
 
       {syncMsg && (
         <div className="px-6 pt-4 max-w-7xl mx-auto">

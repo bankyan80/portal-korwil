@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { db } from '@/lib/firebase';
@@ -13,6 +13,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
+import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
+import { enqueue } from '@/lib/local/offlineQueue';
+import type { AutoSaveStatus } from '@/hooks/useAutoSaveForm';
 
 export default function OperatorProfilSekolah() {
   const { user } = useAppStore();
@@ -21,6 +25,19 @@ export default function OperatorProfilSekolah() {
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>({});
+  const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
+
+  const draftKey = {
+    userId: user?.uid || 'anon',
+    schoolId: user?.schoolId,
+    page: 'profil-sekolah',
+    formType: 'profil-sekolah',
+  };
+  const { save: autoSave, load: loadDraft, clear: clearDraft } = useAutoSaveForm(
+    draftKey,
+    setAutoSaveStatus,
+    1000,
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -35,8 +52,8 @@ export default function OperatorProfilSekolah() {
     return () => unsub();
   }, [user?.schoolId]);
 
-  function openEdit() {
-    setForm({
+  async function openEdit() {
+    const baseForm = {
       name: school?.name || school?.nama || '',
       npsn: school?.npsn || '',
       jenjang: school?.jenjang || '',
@@ -47,8 +64,16 @@ export default function OperatorProfilSekolah() {
       alamat: school?.alamat || '',
       kontak: school?.kontak || '',
       website: school?.website || '',
-    });
+    };
+    const draft = await loadDraft(baseForm);
+    setForm(draft);
     setEditOpen(true);
+  }
+
+  function updateForm(updater: (prev: any) => any) {
+    setForm(updater);
+    const next = updater(form);
+    autoSave(next);
   }
 
   async function handleSave() {
@@ -70,11 +95,20 @@ export default function OperatorProfilSekolah() {
         website: form.website,
         updatedAt: Date.now(),
       }, { merge: true });
+      await clearDraft();
       toast.success('Profil sekolah berhasil diperbarui');
       setEditOpen(false);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error saving profil sekolah:', e);
-      toast.error('Gagal menyimpan profil');
+      if (e.code === 'unavailable' || e.message?.includes('offline') || e.message?.includes('network')) {
+        try {
+          await enqueue('update', 'schools', user.schoolId, { ...form, updatedAt: Date.now() });
+          toast.info('Data disimpan secara offline');
+          setEditOpen(false);
+        } catch {}
+      } else {
+        toast.error('Gagal menyimpan profil');
+      }
     } finally {
       setSaving(false);
     }
@@ -151,21 +185,21 @@ export default function OperatorProfilSekolah() {
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Edit Profil Sekolah</DialogTitle>
+              <DialogTitle>Edit Profil Sekolah <span className="ml-2 inline-flex"><AutoSaveStatusBadge status={autoSaveStatus} /></span></DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="space-y-2">
                 <Label>Nama Sekolah</Label>
-                <Input value={form.name} onChange={(e: any) => setForm((f: any) => ({ ...f, name: e.target.value }))} />
+                <Input value={form.name} onChange={(e: any) => updateForm((f: any) => ({ ...f, name: e.target.value }))} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>NPSN</Label>
-                  <Input value={form.npsn} onChange={(e: any) => setForm((f: any) => ({ ...f, npsn: e.target.value }))} />
+                  <Input value={form.npsn} onChange={(e: any) => updateForm((f: any) => ({ ...f, npsn: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Jenjang</Label>
-                  <select value={form.jenjang} onChange={(e: any) => setForm((f: any) => ({ ...f, jenjang: e.target.value }))}
+                  <select value={form.jenjang} onChange={(e: any) => updateForm((f: any) => ({ ...f, jenjang: e.target.value }))}
                     className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground">
                     <option value="">Pilih jenjang</option>
                     <option value="SD">SD</option>
@@ -178,7 +212,7 @@ export default function OperatorProfilSekolah() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  <select value={form.status} onChange={(e: any) => setForm((f: any) => ({ ...f, status: e.target.value }))}
+                  <select value={form.status} onChange={(e: any) => updateForm((f: any) => ({ ...f, status: e.target.value }))}
                     className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground">
                     <option value="">Pilih status</option>
                     <option value="NEGERI">NEGERI</option>
@@ -187,29 +221,29 @@ export default function OperatorProfilSekolah() {
                 </div>
                 <div className="space-y-2">
                   <Label>Akreditasi</Label>
-                  <Input value={form.akreditasi} onChange={(e: any) => setForm((f: any) => ({ ...f, akreditasi: e.target.value }))} placeholder="A / B / C" />
+                  <Input value={form.akreditasi} onChange={(e: any) => updateForm((f: any) => ({ ...f, akreditasi: e.target.value }))} placeholder="A / B / C" />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Kepala Sekolah</Label>
-                <Input value={form.kepalaSekolah} onChange={(e: any) => setForm((f: any) => ({ ...f, kepalaSekolah: e.target.value }))} />
+                <Input value={form.kepalaSekolah} onChange={(e: any) => updateForm((f: any) => ({ ...f, kepalaSekolah: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label>Plt. Kepala Sekolah</Label>
-                <Input value={form.pltKepalaSekolah} onChange={(e: any) => setForm((f: any) => ({ ...f, pltKepalaSekolah: e.target.value }))} placeholder="Kosongkan jika ada Kepala Sekolah definitif" />
+                <Input value={form.pltKepalaSekolah} onChange={(e: any) => updateForm((f: any) => ({ ...f, pltKepalaSekolah: e.target.value }))} placeholder="Kosongkan jika ada Kepala Sekolah definitif" />
               </div>
               <div className="space-y-2">
                 <Label>Alamat</Label>
-                <Input value={form.alamat} onChange={(e: any) => setForm((f: any) => ({ ...f, alamat: e.target.value }))} />
+                <Input value={form.alamat} onChange={(e: any) => updateForm((f: any) => ({ ...f, alamat: e.target.value }))} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Kontak</Label>
-                  <Input value={form.kontak} onChange={(e: any) => setForm((f: any) => ({ ...f, kontak: e.target.value }))} />
+                  <Input value={form.kontak} onChange={(e: any) => updateForm((f: any) => ({ ...f, kontak: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Website</Label>
-                  <Input value={form.website} onChange={(e: any) => setForm((f: any) => ({ ...f, website: e.target.value }))} />
+                  <Input value={form.website} onChange={(e: any) => updateForm((f: any) => ({ ...f, website: e.target.value }))} />
                 </div>
               </div>
             </div>

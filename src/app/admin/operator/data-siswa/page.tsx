@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useSiswa } from '@/hooks/useSiswa';
 import { useAppStore } from '@/store/app-store';
 import { normalizeSchool } from '@/lib/normalize';
@@ -21,6 +21,10 @@ import {
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { QueryProvider } from '@/contexts/QueryProvider';
+import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
+import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
+import { enqueue } from '@/lib/local/offlineQueue';
+import type { AutoSaveStatus } from '@/hooks/useAutoSaveForm';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -102,6 +106,19 @@ function DataSiswaContent() {
   const [form, setForm] = useState<SiswaForm>(defaultForm);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
+
+  const draftKey = {
+    userId: user?.uid || 'anon',
+    schoolId: user?.schoolId,
+    page: 'data-siswa',
+    formType: 'data-siswa',
+  };
+  const { debouncedSave: autoSave, load: loadDraft, clear: clearDraft } = useAutoSaveForm<Record<string, unknown>>(
+    draftKey,
+    setAutoSaveStatus,
+    800,
+  );
 
   const userSchool = user?.schoolName || '';
 
@@ -172,21 +189,31 @@ function DataSiswaContent() {
   const totalP = mergedSiswa.filter((s) => s.jk === 'P').length;
 
   // ── CRUD ──
-  function openAdd() {
+  async function openAdd() {
     setEditingId(null);
-    setForm({ ...defaultForm, sekolah: userSchool });
+    const base = { ...defaultForm, sekolah: userSchool };
+    const draft = await loadDraft();
+    setForm(draft ? (draft as SiswaForm) : base);
     setFormOpen(true);
   }
 
-  function openEdit(s: any) {
+  async function openEdit(s: any) {
     setEditingId(s.id || null);
-    setForm({
+    const base: SiswaForm = {
       nik: s.nik || '', nama: s.nama || '', jk: s.jk || 'L',
       nisn: s.nisn || '', tanggal_lahir: s.tanggal_lahir || '',
       sekolah: s.sekolah || userSchool, jenjang: s.jenjang || 'SD',
       kelas: s.kelas || 1, desa: s.desa || '', alasan: s.alasan || '',
-    });
+    };
+    const draft = await loadDraft();
+    setForm(draft ? (draft as SiswaForm) : base);
     setFormOpen(true);
+  }
+
+  function updateForm(updater: (prev: SiswaForm) => SiswaForm) {
+    setForm(updater);
+    const next = updater(form);
+    autoSave(next as unknown as Record<string, unknown>);
   }
 
   async function handleSave() {
@@ -211,11 +238,22 @@ function DataSiswaContent() {
       } else {
         await addDoc(collection(db, 'students'), { ...data, nik: form.nik });
       }
+      await clearDraft();
       toast.success(editingId ? 'Data siswa diperbarui' : 'Data siswa ditambahkan');
       setFormOpen(false);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error saving siswa:', e);
-      toast.error('Gagal menyimpan data');
+      if (e.code === 'unavailable' || e.message?.includes('offline') || e.message?.includes('network')) {
+        try {
+          const sid = editingId || 'new';
+          await enqueue(editingId ? 'update' : 'add', 'students', sid, form);
+          toast.info(editingId ? 'Data siswa akan diperbarui saat online' : 'Data siswa akan ditambahkan saat online');
+          await clearDraft();
+          setFormOpen(false);
+        } catch {}
+      } else {
+        toast.error('Gagal menyimpan data');
+      }
     } finally {
       setSaving(false);
     }
@@ -425,29 +463,29 @@ function DataSiswaContent() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Data Siswa' : 'Tambah Data Siswa'}</DialogTitle>
+            <DialogTitle>{editingId ? 'Edit Data Siswa' : 'Tambah Data Siswa'} <span className="ml-2 inline-flex"><AutoSaveStatusBadge status={autoSaveStatus} /></span></DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>NIK *</Label>
-                <Input value={form.nik} disabled={!!editingId} onChange={(e) => setForm((f) => ({ ...f, nik: e.target.value }))} maxLength={16} />
+                <Input value={form.nik} disabled={!!editingId} onChange={(e) => updateForm((f) => ({ ...f, nik: e.target.value }))} maxLength={16} />
               </div>
               <div className="space-y-2">
                 <Label>NISN</Label>
-                <Input value={form.nisn} onChange={(e) => setForm((f) => ({ ...f, nisn: e.target.value }))} />
+                <Input value={form.nisn} onChange={(e) => updateForm((f) => ({ ...f, nisn: e.target.value }))} />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Nama Lengkap *</Label>
-              <Input value={form.nama} onChange={(e) => setForm((f) => ({ ...f, nama: e.target.value }))} />
+              <Input value={form.nama} onChange={(e) => updateForm((f) => ({ ...f, nama: e.target.value }))} />
             </div>
             <div className="grid grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>JK</Label>
                 <select
                   value={form.jk}
-                  onChange={(e) => setForm((f) => ({ ...f, jk: e.target.value }))}
+                  onChange={(e) => updateForm((f) => ({ ...f, jk: e.target.value }))}
                   className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground"
                 >
                   <option value="L">L</option>
@@ -458,7 +496,7 @@ function DataSiswaContent() {
                 <Label>Jenjang</Label>
                 <select
                   value={form.jenjang}
-                  onChange={(e) => setForm((f) => ({ ...f, jenjang: e.target.value }))}
+                  onChange={(e) => updateForm((f) => ({ ...f, jenjang: e.target.value }))}
                   className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground"
                 >
                   <option value="SD">SD</option>
@@ -471,7 +509,7 @@ function DataSiswaContent() {
                   <Label>Kelas</Label>
                   <select
                     value={form.kelas}
-                    onChange={(e) => setForm((f) => ({ ...f, kelas: Number(e.target.value) }))}
+                    onChange={(e) => updateForm((f) => ({ ...f, kelas: Number(e.target.value) }))}
                     className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground"
                   >
                     {[1, 2, 3, 4, 5, 6].map((k) => (
@@ -482,24 +520,24 @@ function DataSiswaContent() {
               )}
               <div className="space-y-2">
                 <Label>Tgl Lahir</Label>
-                <Input type="date" value={form.tanggal_lahir} onChange={(e) => setForm((f) => ({ ...f, tanggal_lahir: e.target.value }))} />
+                <Input type="date" value={form.tanggal_lahir} onChange={(e) => updateForm((f) => ({ ...f, tanggal_lahir: e.target.value }))} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Sekolah</Label>
-                <Input value={form.sekolah} onChange={(e) => setForm((f) => ({ ...f, sekolah: e.target.value }))} />
+                <Input value={form.sekolah} onChange={(e) => updateForm((f) => ({ ...f, sekolah: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label>Desa</Label>
-                <Input value={form.desa} onChange={(e) => setForm((f) => ({ ...f, desa: e.target.value }))} />
+                <Input value={form.desa} onChange={(e) => updateForm((f) => ({ ...f, desa: e.target.value }))} />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Alasan <span className="text-xs text-muted-foreground">(tambahan)</span></Label>
               <textarea
                 value={form.alasan}
-                onChange={(e) => setForm((f) => ({ ...f, alasan: e.target.value }))}
+                onChange={(e) => updateForm((f) => ({ ...f, alasan: e.target.value }))}
                 placeholder="Contoh: Mutasi masuk, data baru, perbaikan data..."
                 rows={2}
                 className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground resize-none"
