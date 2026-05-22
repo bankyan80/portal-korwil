@@ -12,6 +12,7 @@ const SHEETS = [
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vThPc1fGt2M1KTJmm6X2eJvSEMQIIgNn8QBCtcwLQN9zGjc0TLZDJTwREBOYzX0qQ/pub?gid=430985553&single=true&output=csv', sekolah: 'SD NEGERI 1 ASEM' },
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTtIJapNJgcZ2Z0GR83o916wOHGwt-W0KiQtaC0-mtvL8KpUVBOKWJCaD1TK8DMAA/pub?gid=1187748548&single=true&output=csv', sekolah: 'TK GELATIK' },
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTjHBZ44HfzBKjyVdoUN_GsGGpCMKZqh7xygrVX8xal2AsCBrlQ02VH52PUfoRobA/pub?gid=1625950301&single=true&output=csv', sekolah: 'TK GELATIK' },
+  { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShSwUruSTzg53g2ICR74hjRI2lUkiFgDFrnWz4X4D1atV1bHP174t26Nc6C53_LQ/pub?gid=766555456&single=true&output=csv', sekolah: 'SD NEGERI 3 SIGONG' },
 ];
 
 let dataCache: any[] = [];
