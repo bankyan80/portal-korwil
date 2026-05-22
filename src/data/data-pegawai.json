@@ -4251,7 +4251,27 @@
     "jk": "P",
     "jenis_ptk": "Guru",
     "status_kepegawaian": "GTY/PTY",
+    "tugas_tambahan": "Kepala Sekolah",
+    "sekolah": "KB MUTIARA"
+  },
+  {
+    "nik": "3209100412800007",
+    "nama": "DEDI ZUBAIDI",
+    "nuptk": "1536758659120003",
+    "jk": "L",
+    "jenis_ptk": "Tenaga Kependidikan",
+    "status_kepegawaian": "PPPK",
     "tugas_tambahan": "",
+    "sekolah": "KB MUTIARA"
+  },
+  {
+    "nik": "3209076904790003",
+    "nama": "DIANA RAHMAWATI, S.Sos",
+    "nuptk": "0761757658230132",
+    "jk": "P",
+    "jenis_ptk": "Kepala Sekolah",
+    "status_kepegawaian": "GTY/PTY",
+    "tugas_tambahan": "Kepala Sekolah",
     "sekolah": "KB MUTIARA"
   }
 ]
