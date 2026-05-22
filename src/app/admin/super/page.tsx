@@ -19,6 +19,7 @@ import { db } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { useSekolah } from '@/hooks/useSekolah';
 import { normalizeSchool } from '@/lib/normalize';
+import type { StatusLaporan } from '@/components/laporan/types';
 
 export default function SuperAdminDashboard() {
   const { user, setUser } = useAppStore();
@@ -52,7 +53,7 @@ export default function SuperAdminDashboard() {
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
   ];
 
-  const statusConfig: Record<string, { label: string; className: string }> = {
+  const statusConfig: Partial<Record<StatusLaporan | 'sudah_dikirim' | 'perlu_revisi', { label: string; className: string }>> = {
     belum_lapor: { label: 'Belum Lapor', className: 'bg-gray-100 text-gray-600' },
     sudah_dikirim: { label: 'Sudah Dikirim', className: 'bg-green-100 text-green-700' },
     perlu_revisi: { label: 'Perlu Revisi', className: 'bg-red-100 text-red-700' },

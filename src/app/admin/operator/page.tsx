@@ -75,8 +75,8 @@ export default function OperatorDashboard() {
 
   const statusList = [
     { value: 'belum_lapor', label: 'Belum Lapor', className: 'bg-gray-100 text-gray-600' },
-    { value: 'sudah_dikirim', label: 'Sudah Dikirim', className: 'bg-green-100 text-green-700' },
-    { value: 'perlu_revisi', label: 'Perlu Revisi', className: 'bg-red-100 text-red-700' },
+    { value: 'sudah_lapor', label: 'Sudah Dikirim', className: 'bg-green-100 text-green-700' },
+    { value: 'revisi', label: 'Perlu Revisi', className: 'bg-red-100 text-red-700' },
   ];
 
   useEffect(() => {

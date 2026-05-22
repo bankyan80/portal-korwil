@@ -22,8 +22,8 @@ const bulanList = [
 
 const statusList = [
   { value: 'belum_lapor', label: 'Belum Lapor', icon: Clock, warn: 'text-yellow-600 bg-yellow-50 border-yellow-200' },
-  { value: 'sudah_dikirim', label: 'Sudah Dikirim', icon: CheckCircle, warn: 'text-green-600 bg-green-50 border-green-200' },
-  { value: 'perlu_revisi', label: 'Perlu Revisi', icon: AlertCircle, warn: 'text-red-600 bg-red-50 border-red-200' },
+  { value: 'sudah_lapor', label: 'Sudah Dikirim', icon: CheckCircle, warn: 'text-green-600 bg-green-50 border-green-200' },
+  { value: 'revisi', label: 'Perlu Revisi', icon: AlertCircle, warn: 'text-red-600 bg-red-50 border-red-200' },
 ];
 
 export default function LaporBulananPage() {
@@ -488,7 +488,7 @@ export default function LaporBulananPage() {
           totalTendik: tendik.total,
           totalGtk: guru.total + tendik.total,
         },
-        status: 'sudah_dikirim',
+        status: 'sudah_lapor',
         dikirimOleh: user.uid || '',
         dikirimNama: user.displayName || '',
         dikirimPada: Date.now(),
@@ -528,8 +528,8 @@ export default function LaporBulananPage() {
   }
 
   function getCurrentStatus() {
-    if (existingDocId && laporanData?.status === 'sudah_dikirim') return 'sudah_dikirim';
-    if (laporanData?.status === 'perlu_revisi') return 'perlu_revisi';
+    if (existingDocId && (laporanData?.status === 'sudah_lapor' || laporanData?.status === 'sudah_dikirim')) return 'sudah_lapor';
+    if (laporanData?.status === 'revisi' || laporanData?.status === 'perlu_revisi') return 'revisi';
     return 'belum_lapor';
   }
 
@@ -583,8 +583,8 @@ export default function LaporBulananPage() {
           <div className="flex-1">
             <p className="text-sm font-semibold">{statusDef.label}</p>
             <p className="text-xs opacity-75">
-              {currentStatus === 'sudah_dikirim' ? `Dikirim: ${new Date(laporanData?.dikirimPada || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
-              {currentStatus === 'perlu_revisi' ? 'Laporan perlu direvisi. Silakan periksa data dan kirim ulang.' : ''}
+              {currentStatus === 'sudah_lapor' ? `Dikirim: ${new Date(laporanData?.dikirimPada || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
+              {currentStatus === 'revisi' ? 'Laporan perlu direvisi. Silakan periksa data dan kirim ulang.' : ''}
               {currentStatus === 'belum_lapor' ? 'Belum ada laporan untuk bulan ini.' : ''}
             </p>
           </div>

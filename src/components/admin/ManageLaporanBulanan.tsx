@@ -11,6 +11,7 @@ import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { BarChart3, Search, CheckCircle, XCircle, Clock, Eye, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSekolah, type SekolahItem } from '@/hooks/useSekolah';
+import type { StatusLaporan } from '@/components/laporan/types';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -20,7 +21,13 @@ const bulanList = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
 ];
 
-type StatusLaporan = 'belum_lapor' | 'draft' | 'sudah_lapor' | 'diverifikasi' | 'revisi';
+const statusMap: Record<string, StatusLaporan> = {
+  sudah_dikirim: 'sudah_lapor',
+  perlu_revisi: 'revisi',
+  diverifikasi: 'diverifikasi',
+  draft: 'draft',
+  belum_lapor: 'belum_lapor',
+};
 
 const statusConfig: Record<StatusLaporan, { label: string; className: string }> = {
   belum_lapor: { label: 'Belum Lapor', className: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' },
@@ -58,7 +65,7 @@ export function ManageLaporanBulanan() {
   const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
   const [tahun] = useState(new Date().getFullYear());
   const [selectedSchool, setSelectedSchool] = useState<SekolahItem | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);;
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const userSchool = user?.schoolName || '';
   const isOperator = user?.role === 'operator_sekolah';
@@ -68,7 +75,10 @@ export function ManageLaporanBulanan() {
     const q = query(collection(db, 'laporan_bulanan'), orderBy('tglLapor', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
       const list: LaporanRecord[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as LaporanRecord));
+      snap.forEach((d) => {
+        const raw = d.data();
+        list.push({ id: d.id, ...raw, status: statusMap[raw.status] || raw.status || 'belum_lapor' } as LaporanRecord);
+      });
       setData(list);
       setLoading(false);
     }, (err) => { console.error('Error loading laporan:', err); toast.error('Gagal memuat data laporan'); setLoading(false); });
