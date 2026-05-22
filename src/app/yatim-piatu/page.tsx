@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Heart, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { ArrowLeft, Heart, Loader2, FileDown, Printer } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import * as XLSX from 'xlsx';
 import type { YatimPiatuData, YatimCategory } from '@/types';
 
 const kategoriLabel: Record<YatimCategory, string> = {
@@ -17,6 +18,12 @@ const kategoriColors: Record<YatimCategory, string> = {
   yatim_piatu: 'bg-red-100 text-red-700',
   yatim: 'bg-blue-100 text-blue-700',
   piatu: 'bg-purple-100 text-purple-700',
+};
+
+const kategoriSimple: Record<YatimCategory, string> = {
+  yatim_piatu: 'Yatim Piatu',
+  yatim: 'Yatim',
+  piatu: 'Piatu',
 };
 
 export default function YatimPiatuPage() {
@@ -41,6 +48,28 @@ export default function YatimPiatuPage() {
     piatu: data.filter(d => d.kategori === 'piatu').length,
   }), [data]);
 
+  const exportExcel = useCallback(() => {
+    const rows = data.map((d, i) => ({
+      No: i + 1,
+      NIK: d.nik,
+      Nama: d.nama,
+      Sekolah: d.sekolah,
+      Desa: d.desa || '',
+      Kategori: kategoriSimple[d.kategori],
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 4 }, { wch: 18 }, { wch: 30 }, { wch: 35 }, { wch: 20 }, { wch: 16 },
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Yatim Piatu');
+    XLSX.writeFile(wb, `Data_Yatim_Piatu_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }, [data]);
+
+  const exportPdf = useCallback(() => {
+    window.print();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="sticky top-0 z-50 bg-gradient-to-b from-[#1a5276] to-[#0d3b66]">
@@ -60,9 +89,27 @@ export default function YatimPiatuPage() {
       </header>
 
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold text-[#0d3b66]">Data Yatim Piatu</h2>
-          <p className="text-sm text-gray-500 mt-1">Kecamatan Lemahabang, Kabupaten Cirebon</p>
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-[#0d3b66]">Data Yatim Piatu</h2>
+            <p className="text-sm text-gray-500 mt-1">Kecamatan Lemahabang, Kabupaten Cirebon</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportExcel}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-700 rounded-lg hover:bg-emerald-800 transition-colors"
+            >
+              <FileDown className="w-4 h-4" />
+              Unduh Excel
+            </button>
+            <button
+              onClick={exportPdf}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-red-700 rounded-lg hover:bg-red-800 transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+              Unduh PDF
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -88,7 +135,7 @@ export default function YatimPiatuPage() {
 
             <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm" id="yatim-piatu-table">
                   <thead>
                     <tr className="bg-gray-50 text-left">
                       <th className="px-5 py-3 font-semibold text-gray-600">No</th>
@@ -141,6 +188,48 @@ export default function YatimPiatuPage() {
       </main>
 
       <Footer />
+
+      {/* Print-only layout */}
+      <style>{`
+        @media print {
+          header, footer, .no-print { display: none !important; }
+          body { background: white !important; }
+          .print-only { display: block !important; }
+          @page { margin: 15mm; }
+          table { font-size: 10pt; width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #000; padding: 4px 6px; text-align: left; }
+          th { background: #f0f0f0; font-weight: 600; }
+        }
+        .print-only { display: none; }
+      `}</style>
+      <div className="print-only p-8">
+        <h1 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Data Yatim Piatu</h1>
+        <p style={{ fontSize: 11, color: '#555', marginBottom: 16 }}>Kecamatan Lemahabang, Kabupaten Cirebon — Per {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>NIK</th>
+              <th>Nama</th>
+              <th>Sekolah</th>
+              <th>Desa</th>
+              <th>Kategori</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((d, i) => (
+              <tr key={d.id || d.nik}>
+                <td>{i + 1}</td>
+                <td>{d.nik}</td>
+                <td>{d.nama}</td>
+                <td>{d.sekolah}</td>
+                <td>{d.desa || '-'}</td>
+                <td>{kategoriSimple[d.kategori]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
