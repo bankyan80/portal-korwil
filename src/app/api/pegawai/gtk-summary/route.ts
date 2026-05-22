@@ -179,5 +179,5 @@ export async function GET() {
     return school;
   }).sort((a, b) => a.name.localeCompare(b.name));
 
-  return NextResponse.json({ schools: result });
+  return NextResponse.json({ schools: result, total: result.length });
 }
