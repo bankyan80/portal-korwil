@@ -65,3 +65,31 @@ export function getSchoolByNpsn(npsn: string): string {
   buildNpsnMaps();
   return sekolahByNpsn.get(npsn) || '';
 }
+
+const romanMap: Record<string, string> = {
+  i: '1', ii: '2', iii: '3', iv: '4', v: '5', vi: '6',
+  vii: '7', viii: '8', ix: '9', x: '10',
+};
+
+export function normalizeKelas(kelas: string, jenjang: string): string {
+  if (!kelas) return jenjang === 'SD' ? '1' : 'A';
+  let k = kelas.trim().toUpperCase();
+  // Already a simple number: "1", "2" etc
+  if (/^\d+$/.test(k)) return k;
+  // "KELAS 1", "KELAS 1 A" etc → "1A"
+  k = k.replace(/^KELAS\s+/i, '');
+  // Extract leading roman numeral: "I A" → I → 1
+  const romanMatch = k.match(/^([IVXLCDM]+)/);
+  if (romanMatch) {
+    const arabic = romanMap[romanMatch[1].toLowerCase()];
+    if (arabic) {
+      return arabic; // return just the grade number, sub-classes (A/B/C) merged
+    }
+  }
+  // Strip trailing sub-class letters for SD: "1A" → "1", "2B" → "2"
+  if (jenjang === 'SD') {
+    const numMatch = k.match(/^(\d+)/);
+    if (numMatch) return numMatch[1];
+  }
+  return k;
+}

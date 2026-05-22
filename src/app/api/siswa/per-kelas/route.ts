@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { normalizeKelas } from '@/lib/normalize';
 import fs from 'fs';
 import path from 'path';
 
@@ -29,11 +30,8 @@ function buildFromStatic(): PerKelasSekolah[] {
       map.set(key, { name, jenjang, perKelas: {}, totalL: 0, totalP: 0 });
     }
     const entry = map.get(key)!;
-    let kelas = s.kelas ? String(s.kelas) : (s.rombel || '-');
-    if (jenjang !== 'SD' && jenjang !== '') {
-      kelas = kelas.replace(/^kelompok\s+/i, '').trim();
-      if (!kelas || kelas === '-') kelas = 'A';
-    }
+    const rawKelas = s.kelas ? String(s.kelas) : (s.rombel || '-');
+    const kelas = normalizeKelas(rawKelas, jenjang);
     if (!entry.perKelas[kelas]) entry.perKelas[kelas] = { l: 0, p: 0 };
     if (s.jk === 'L') { entry.perKelas[kelas].l++; entry.totalL++; }
     else { entry.perKelas[kelas].p++; entry.totalP++; }
@@ -48,12 +46,13 @@ export async function GET() {
   }
 
   try {
-    function addToMap(sekolahMap: Map<string, PerKelasSekolah>, name: string, jenjang: string, kelas: string, jk: string) {
+    function addToMap(sekolahMap: Map<string, PerKelasSekolah>, name: string, jenjang: string, rawKelas: string, jk: string) {
       const key = `${name}||${jenjang}`;
       if (!sekolahMap.has(key)) {
         sekolahMap.set(key, { name, jenjang, perKelas: {}, totalL: 0, totalP: 0 });
       }
       const entry = sekolahMap.get(key)!;
+      const kelas = normalizeKelas(rawKelas, jenjang);
       if (!entry.perKelas[kelas]) entry.perKelas[kelas] = { l: 0, p: 0 };
       if (jk === 'L') { entry.perKelas[kelas].l++; entry.totalL++; }
       else { entry.perKelas[kelas].p++; entry.totalP++; }
@@ -77,20 +76,19 @@ export async function GET() {
       const s = doc.data();
       if (!s.sekolah) continue;
       const jenjang = s.jenjang || 'SD';
-      const kelas = jenjang === 'TK' ? (s.kelas ? String(s.kelas) : 'A') : (jenjang === 'KB' ? (s.rombel || s.kelas ? String(s.kelas) : 'A') : (s.kelas ? String(s.kelas) : '-'));
-      const kelasKey = jenjang === 'TK' && !['A', 'B'].includes(kelas) ? 'A' : (jenjang === 'KB' && !['A', 'B'].includes(kelas) ? 'A' : kelas);
-      addToMap(sekolahMap, s.sekolah, jenjang, kelasKey, s.jk || 'L');
+      const rawKelas = jenjang === 'TK' ? (s.kelas ? String(s.kelas) : 'A') : (jenjang === 'KB' ? (s.rombel || s.kelas ? String(s.kelas) : 'A') : (s.kelas ? String(s.kelas) : '-'));
+      addToMap(sekolahMap, s.sekolah, jenjang, rawKelas, s.jk || 'L');
     }
 
     const snapSiswa = await adminDb.collection('siswa').get();
     for (const doc of snapSiswa.docs) {
-      const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; tanggal_lahir?: string };
+      const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; tanggal_lahir?: string; kelas?: string };
       if (!s.sekolah) continue;
       const jenjang = s.jenjang || 'SD';
       const key = `${s.sekolah}||${jenjang}`;
       if (sekolahMap.has(key)) continue;
-      const kelas = jenjang !== 'SD' ? 'A' : inferKelas(s.tanggal_lahir);
-      addToMap(sekolahMap, s.sekolah, jenjang, kelas, s.jk || 'L');
+      const rawKelas = s.kelas ? String(s.kelas) : (jenjang !== 'SD' ? 'A' : inferKelas(s.tanggal_lahir));
+      addToMap(sekolahMap, s.sekolah, jenjang, rawKelas, s.jk || 'L');
     }
 
     const snapStudents = await adminDb.collection('students').get();
@@ -100,8 +98,8 @@ export async function GET() {
       const jenjang = s.jenjang || 'SD';
       const key = `${s.sekolah}||${jenjang}`;
       if (sekolahMap.has(key)) continue;
-      const kelas = s.kelas ? String(s.kelas) : (jenjang !== 'SD' ? 'A' : '1');
-      addToMap(sekolahMap, s.sekolah, jenjang, kelas, s.jk || 'L');
+      const rawKelas = s.kelas ? String(s.kelas) : (jenjang !== 'SD' ? 'A' : '1');
+      addToMap(sekolahMap, s.sekolah, jenjang, rawKelas, s.jk || 'L');
     }
 
     const data = Array.from(sekolahMap.values()).sort((a, b) =>
