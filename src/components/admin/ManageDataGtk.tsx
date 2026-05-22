@@ -35,6 +35,7 @@ interface PegawaiRecord {
 }
 
 interface SchoolGtkSummary {
+  npsn: string;
   name: string;
   teachers: number;
   staff: number;
@@ -167,8 +168,9 @@ export function ManageDataGtk() {
     const totalAllP = schoolSummary.reduce((a, s) => a + s.p, 0);
 
     const filteredSummary = schoolSummary.filter(item => {
-      if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return item.name.toLowerCase().includes(q) || (item.npsn || '').includes(search);
     });
 
     return (
@@ -235,6 +237,7 @@ export function ManageDataGtk() {
                   <tr className="bg-muted/50">
                     <th className="px-4 py-3 text-left font-semibold text-muted-foreground">No</th>
                     <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Sekolah</th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">NPSN</th>
                     <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Guru</th>
                     <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Tendik</th>
                     <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Total</th>
@@ -251,6 +254,7 @@ export function ManageDataGtk() {
                     <tr key={item.name} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                       <td className="px-4 py-3 font-medium text-foreground">{item.name}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{item.npsn || '-'}</td>
                       <td className="px-4 py-3 text-center text-muted-foreground">{item.teachers}</td>
                       <td className="px-4 py-3 text-center text-muted-foreground">{item.staff}</td>
                       <td className="px-4 py-3 text-center font-semibold text-foreground">{item.total}</td>

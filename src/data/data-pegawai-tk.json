@@ -12,7 +12,9 @@
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "Ya",
     "sekolah": "TK AL-AQSO",
-    "role": "guru"
+    "role": "guru",
+    "npsn": "20254376",
+    "jenjang": "TK"
   },
   {
     "nik": "3209075210790008",
@@ -27,7 +29,9 @@
     "tugas_tambahan": "",
     "sertifikasi": "Ya",
     "sekolah": "TK AL-AQSO",
-    "role": "guru"
+    "role": "guru",
+    "npsn": "20254376",
+    "jenjang": "TK"
   },
   {
     "nik": "3209076908930002",
@@ -42,7 +46,9 @@
     "tugas_tambahan": "",
     "sertifikasi": "Tidak",
     "sekolah": "TK AL-AQSO",
-    "role": "guru"
+    "role": "guru",
+    "npsn": "20254376",
+    "jenjang": "TK"
   },
   {
     "nik": "3209072807780002",
@@ -57,7 +63,9 @@
     "tugas_tambahan": "",
     "sertifikasi": "Ya",
     "sekolah": "TK AL-AQSO",
-    "role": "tendik"
+    "role": "tendik",
+    "npsn": "20254376",
+    "jenjang": "TK"
   },
   {
     "nik": "3209106006890004",
@@ -72,7 +80,9 @@
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "Ya",
     "sekolah": "TK AL-AQSO",
-    "role": "kepsek"
+    "role": "kepsek",
+    "npsn": "20254376",
+    "jenjang": "TK"
   },
   {
     "nik": "3209075012810005",
@@ -87,7 +97,9 @@
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
     "role": "guru",
-    "tempat_lahir": ""
+    "tempat_lahir": "",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209074609010004",
@@ -102,7 +114,9 @@
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
     "role": "guru",
-    "tempat_lahir": ""
+    "tempat_lahir": "",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209076112840007",
@@ -117,7 +131,9 @@
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
     "role": "guru",
-    "tempat_lahir": ""
+    "tempat_lahir": "",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209105403990024",
@@ -132,7 +148,9 @@
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
     "role": "guru",
-    "tempat_lahir": ""
+    "tempat_lahir": "",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209087007880004",
@@ -147,7 +165,9 @@
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
     "role": "guru",
-    "tempat_lahir": ""
+    "tempat_lahir": "",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209075607800013",
@@ -162,7 +182,9 @@
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
     "role": "kepsek",
-    "tempat_lahir": ""
+    "tempat_lahir": "",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209077004710002",
@@ -177,7 +199,9 @@
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
     "role": "tendik",
-    "tempat_lahir": ""
+    "tempat_lahir": "",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209064904670008",
@@ -187,7 +211,9 @@
     "jenis_ptk": "Guru",
     "status_kepegawaian": "PNS",
     "tugas_tambahan": "",
-    "sekolah": "TK NEGERI LEMAHABANG"
+    "sekolah": "TK NEGERI LEMAHABANG",
+    "npsn": "20270605",
+    "jenjang": "TK"
   },
   {
     "nik": "3209064907680004",
@@ -197,7 +223,9 @@
     "jenis_ptk": "Guru",
     "status_kepegawaian": "PNS",
     "tugas_tambahan": "",
-    "sekolah": "TK NEGERI LEMAHABANG"
+    "sekolah": "TK NEGERI LEMAHABANG",
+    "npsn": "20270605",
+    "jenjang": "TK"
   },
   {
     "nik": "3209074608740008",
@@ -207,7 +235,9 @@
     "jenis_ptk": "Guru",
     "status_kepegawaian": "PNS",
     "tugas_tambahan": "Bendahara BOS/BOP",
-    "sekolah": "TK NEGERI LEMAHABANG"
+    "sekolah": "TK NEGERI LEMAHABANG",
+    "npsn": "20270605",
+    "jenjang": "TK"
   },
   {
     "nik": "3209074202670001",
@@ -217,7 +247,9 @@
     "jenis_ptk": "Guru",
     "status_kepegawaian": "PNS",
     "tugas_tambahan": "",
-    "sekolah": "TK NEGERI LEMAHABANG"
+    "sekolah": "TK NEGERI LEMAHABANG",
+    "npsn": "20270605",
+    "jenjang": "TK"
   },
   {
     "nik": "3209064307670006",
@@ -227,7 +259,9 @@
     "jenis_ptk": "Guru",
     "status_kepegawaian": "PNS",
     "tugas_tambahan": "",
-    "sekolah": "TK NEGERI LEMAHABANG"
+    "sekolah": "TK NEGERI LEMAHABANG",
+    "npsn": "20270605",
+    "jenjang": "TK"
   },
   {
     "nik": "3209025204710007",
@@ -237,7 +271,9 @@
     "jenis_ptk": "Guru",
     "status_kepegawaian": "PNS",
     "tugas_tambahan": "",
-    "sekolah": "TK NEGERI LEMAHABANG"
+    "sekolah": "TK NEGERI LEMAHABANG",
+    "npsn": "20270605",
+    "jenjang": "TK"
   },
   {
     "nik": "3209076505680007",
@@ -247,7 +283,9 @@
     "jenis_ptk": "Guru",
     "status_kepegawaian": "PNS",
     "tugas_tambahan": "",
-    "sekolah": "TK NEGERI LEMAHABANG"
+    "sekolah": "TK NEGERI LEMAHABANG",
+    "npsn": "20270605",
+    "jenjang": "TK"
   },
   {
     "nik": "3209076407670002",
@@ -257,7 +295,9 @@
     "jenis_ptk": "Guru",
     "status_kepegawaian": "PNS",
     "tugas_tambahan": "",
-    "sekolah": "TK NEGERI LEMAHABANG"
+    "sekolah": "TK NEGERI LEMAHABANG",
+    "npsn": "20270605",
+    "jenjang": "TK"
   },
   {
     "nik": "3209074908740001",
@@ -267,7 +307,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "status_kepegawaian": "PNS",
     "tugas_tambahan": "Kepala Sekolah",
-    "sekolah": "TK NEGERI LEMAHABANG"
+    "sekolah": "TK NEGERI LEMAHABANG",
+    "npsn": "20270605",
+    "jenjang": "TK"
   },
   {
     "nik": "3274035003940003",
@@ -277,6 +319,8 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "status_kepegawaian": "Honor Daerah TK.II Kab/Kota",
     "tugas_tambahan": "",
-    "sekolah": "TK NEGERI LEMAHABANG"
+    "sekolah": "TK NEGERI LEMAHABANG",
+    "npsn": "20270605",
+    "jenjang": "TK"
   }
 ]

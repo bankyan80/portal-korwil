@@ -1,10 +1,11 @@
 import { adminDb } from '@/lib/firebase-admin';
-import { getCanonicalSchoolName } from '@/lib/normalize';
+import { getCanonicalSchoolName, getNpsnBySchool } from '@/lib/normalize';
 import fs from 'fs';
 import path from 'path';
 
 function normalizeRecord(d: any) {
   if (d.sekolah) d.sekolah = getCanonicalSchoolName(d.sekolah);
+  if (!d.npsn && d.sekolah) d.npsn = getNpsnBySchool(d.sekolah);
   return d;
 }
 

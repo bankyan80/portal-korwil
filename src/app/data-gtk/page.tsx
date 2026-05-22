@@ -5,6 +5,7 @@ import { ArrowLeft, Search, Users, BookOpen, BadgeCheck, Download, GraduationCap
 import Footer from '@/components/portal/Footer';
 
 interface SchoolGtk {
+  npsn: string;
   name: string;
   teachers: number;
   staff: number;
@@ -110,7 +111,8 @@ export default function DataGTKPage() {
 
   const filteredData = schoolData.filter(item => {
     if (!search) return true;
-    return item.name.toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase();
+    return item.name.toLowerCase().includes(q) || (item.npsn || '').includes(search);
   });
 
   return (
@@ -247,6 +249,7 @@ export default function DataGTKPage() {
                   <tr className="bg-gray-50 text-left">
                     <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600 w-10 text-center">No</th>
                     <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600">Sekolah / Unit</th>
+                    <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600">NPSN</th>
                     <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Guru</th>
                     <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Tendik</th>
                     <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Total</th>
@@ -271,6 +274,7 @@ export default function DataGTKPage() {
                           <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-40" />
                         </button>
                       </td>
+                      <td className="px-5 py-3 text-gray-400 text-xs font-mono">{item.npsn || '-'}</td>
                       <td className="px-5 py-3 text-center font-semibold text-blue-700">{(item.teachers_l || 0)}</td>
                       <td className="px-5 py-3 text-center font-semibold text-pink-700">{(item.teachers_p || 0)}</td>
                       <td className="px-5 py-3 text-center font-semibold text-blue-700">{(item.staff_l || 0)}</td>

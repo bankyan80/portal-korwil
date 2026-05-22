@@ -11,7 +11,9 @@
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
-    "role": "guru"
+    "role": "guru",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209074609010004",
@@ -25,7 +27,9 @@
     "tugas_tambahan": "",
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
-    "role": "guru"
+    "role": "guru",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209076112840007",
@@ -39,7 +43,9 @@
     "tugas_tambahan": "",
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
-    "role": "guru"
+    "role": "guru",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209105403990024",
@@ -53,7 +59,9 @@
     "tugas_tambahan": "",
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
-    "role": "guru"
+    "role": "guru",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209087007880004",
@@ -67,7 +75,9 @@
     "tugas_tambahan": "",
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
-    "role": "guru"
+    "role": "guru",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209075607800013",
@@ -81,7 +91,9 @@
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
-    "role": "kepsek"
+    "role": "kepsek",
+    "npsn": "20254370",
+    "jenjang": "TK"
   },
   {
     "nik": "3209077004710002",
@@ -95,6 +107,8 @@
     "tugas_tambahan": "",
     "sertifikasi": "",
     "sekolah": "TK GELATIK",
-    "role": "tendik"
+    "role": "tendik",
+    "npsn": "20254370",
+    "jenjang": "TK"
   }
 ]

@@ -5,7 +5,7 @@ import tkGelatikPegawai from '@/data/tk-gelatik-pegawai.json';
 import pltData from '@/data/data-plt.json';
 import { allSekolah } from '@/data/sekolah';
 import { getAllPegawai } from '@/services/pegawai.service';
-import { getCanonicalSchoolName } from '@/lib/normalize';
+import { getCanonicalSchoolName, getNpsnBySchool } from '@/lib/normalize';
 
 const SHEETS = [
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR4PhpkeqQjr9cbHrEoGwgQW9CvqVBA1D0--o1ZhXv_OaBqNPddwAHs_PZCsgXP-g/pub?gid=296347908&single=true&output=csv', sekolah: 'SD NEGERI 1 ASEM' },
@@ -42,15 +42,17 @@ function parseCSVLine(line: string) {
 function mapRow(cols: string[], sekolah: string) {
   const nik = (cols[44] || '').trim();
   if (!nik) return null;
+  const sekolahName = getCanonicalSchoolName(sekolah);
   return {
     nik,
     nama: (cols[1] || '').trim(),
     nuptk: (cols[2] || '').trim(),
+    npsn: getNpsnBySchool(sekolahName),
     jk: (cols[3] || '').trim(),
     status_kepegawaian: (cols[7] || '').trim(),
     jenis_ptk: (cols[8] || '').trim(),
     tugas_tambahan: (cols[20] || '').trim(),
-    sekolah: getCanonicalSchoolName(sekolah),
+    sekolah: sekolahName,
   };
 }
 
@@ -91,6 +93,7 @@ async function loadFromSheets() {
 function loadStaticData() {
   return [...dataPegawai, ...dataPegawaiTk, ...tkGelatikPegawai].map(r => ({
     ...r,
+    npsn: r.npsn || getNpsnBySchool(r.sekolah),
     sekolah: r.sekolah ? getCanonicalSchoolName(r.sekolah) : r.sekolah,
   }));
 }
@@ -112,6 +115,7 @@ function unionAll(sheetRecords: any[], staticRecords: any[]): any[] {
 }
 
 interface SchoolGtk {
+  npsn: string;
   name: string;
   teachers: number;
   staff: number;
@@ -132,12 +136,12 @@ export async function GET() {
   const firestoreData = await getAllPegawai();
   const merged = unionAll(sheetData, unionAll(staticData, firestoreData));
 
-  // Seed with all schools from master data (so zero-GTK schools still appear)
+  // Seed with all schools from master data (keyed by NPSN)
   const schools: Record<string, SchoolGtk> = {};
   for (const s of allSekolah) {
     const name = getCanonicalSchoolName(s.nama);
-    schools[name] = {
-      name, teachers: 0, staff: 0, total: 0, certified: 0,
+    schools[s.npsn] = {
+      npsn: s.npsn, name, teachers: 0, staff: 0, total: 0, certified: 0,
       headmaster: '', teachers_l: 0, teachers_p: 0,
       staff_l: 0, staff_p: 0, l: 0, p: 0,
     };
@@ -146,15 +150,9 @@ export async function GET() {
   // Overlay GTK data from merged pegawai records
   for (const p of merged) {
     if (!p.sekolah) continue;
-    const name = getCanonicalSchoolName(p.sekolah);
-    if (!schools[name]) {
-      schools[name] = {
-        name, teachers: 0, staff: 0, total: 0, certified: 0,
-        headmaster: '', teachers_l: 0, teachers_p: 0,
-        staff_l: 0, staff_p: 0, l: 0, p: 0,
-      };
-    }
-    const s = schools[name];
+    const npsn = p.npsn || getNpsnBySchool(p.sekolah);
+    if (!npsn || !schools[npsn]) continue;
+    const s = schools[npsn];
     const isGuru = p.jenis_ptk === 'Guru';
     const isStaff = p.jenis_ptk === 'Tenaga Kependidikan' || p.jenis_ptk === 'Kepala Sekolah';
     if (isGuru) {
@@ -171,10 +169,12 @@ export async function GET() {
     }
   }
 
+  // PLT fallback – lookup by canonical name
   for (const plt of pltData) {
     const pltSchool = getCanonicalSchoolName(plt.sekolah);
-    if (schools[pltSchool] && !schools[pltSchool].headmaster) {
-      schools[pltSchool].headmaster = `plt. ${plt.plt_nama}`;
+    const npsn = getNpsnBySchool(pltSchool);
+    if (npsn && schools[npsn] && !schools[npsn].headmaster) {
+      schools[npsn].headmaster = `plt. ${plt.plt_nama}`;
     }
   }
 
