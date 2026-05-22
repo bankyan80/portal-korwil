@@ -3,6 +3,17 @@ import { adminAuth, adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-ad
 import { verifyAuth, requireRole } from '@/lib/server-auth';
 import type { UserProfile, UserRole } from '@/types';
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error && 'message' in error) return String(error.message);
+  return String(error);
+}
+
+function getErrorCode(error: unknown) {
+  if (typeof error === 'object' && error && 'code' in error) return String(error.code);
+  return '';
+}
+
 export async function GET(request: Request) {
   const auth = await verifyAuth(request);
   const forbidden = requireRole(auth, ['super_admin']);
@@ -107,7 +118,10 @@ export async function POST(request: Request) {
     try {
       const existingUser = await adminAuth.getUserByEmail(email);
       uid = existingUser.uid;
-    } catch {
+    } catch (error) {
+      if (getErrorCode(error) !== 'auth/user-not-found') {
+        throw error;
+      }
       const newUser = await adminAuth.createUser({ email });
       uid = newUser.uid;
     }
@@ -142,6 +156,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, uid });
   } catch (error) {
     console.error('Error creating user:', error);
-    return NextResponse.json({ success: false, error: 'Failed to create user' }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      error: getErrorMessage(error) || 'Failed to create user',
+      code: getErrorCode(error) || undefined,
+    }, { status: 500 });
   }
 }

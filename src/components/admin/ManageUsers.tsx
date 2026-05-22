@@ -5,7 +5,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -299,7 +299,10 @@ export function ManageUsers() {
       {/* Edit Affiliation Dialog */}
       <Dialog open={!!editUser} onOpenChange={(o) => { if (!o) setEditUser(null); }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Edit {editUser?.role === 'operator_sekolah' ? 'Sekolah' : 'Organisasi'}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Edit {editUser?.role === 'operator_sekolah' ? 'Sekolah' : 'Organisasi'}</DialogTitle>
+            <DialogDescription>Perbarui relasi sekolah atau organisasi untuk akun ini.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <p className="text-sm font-medium text-foreground">{editUser?.displayName}</p>
             {editUser?.role === 'operator_sekolah' && (
@@ -359,7 +362,10 @@ export function ManageUsers() {
       {/* Add User Dialog */}
       <Dialog open={addOpen} onOpenChange={(o) => { if (!o) setAddOpen(false); }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Tambah User Baru</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Tambah User Baru</DialogTitle>
+            <DialogDescription>Daftarkan akun Firebase Auth dan profil akses pengguna.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Email *</Label>
