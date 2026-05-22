@@ -47,6 +47,8 @@ export interface GalleryItem {
   category: GalleryCategory;
   authorName: string;
   authorRole: string;
+  schoolId?: string;
+  schoolName?: string;
   status: GalleryStatus;
   createdAt: number;
 }

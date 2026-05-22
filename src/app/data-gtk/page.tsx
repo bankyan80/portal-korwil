@@ -21,7 +21,7 @@ interface SchoolGtk {
 }
 
 interface Pegawai {
-  nik: string;
+  nik?: string;
   nama: string;
   nuptk?: string;
   nip?: string;
@@ -316,17 +316,15 @@ export default function DataGTKPage() {
                       <tr>
                         <th className="px-5 py-3 font-semibold text-gray-600 text-center w-10">No</th>
                         <th className="px-5 py-3 font-semibold text-gray-600">Nama</th>
-                        <th className="px-5 py-3 font-semibold text-gray-600">NIK</th>
                         <th className="px-5 py-3 font-semibold text-gray-600">Jenis PTK</th>
                         <th className="px-5 py-3 font-semibold text-gray-600">JK</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
                       {pegawaiList.map((p, i) => (
-                        <tr key={p.nik || i} className="hover:bg-blue-50/50 transition-colors">
+                        <tr key={`${p.nama}-${i}`} className="hover:bg-blue-50/50 transition-colors">
                           <td className="px-5 py-2.5 text-gray-500 text-center">{i + 1}</td>
                           <td className="px-5 py-2.5 font-medium text-gray-900">{p.nama}{p.jenis_ptk === 'Kepala Sekolah' ? <span className="ml-2 inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-800">KEPSEK</span> : ''}</td>
-                          <td className="px-5 py-2.5 text-gray-500 text-xs font-mono">{p.nik || '-'}</td>
                           <td className="px-5 py-2.5">
                             <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
                               p.jenis_ptk === 'Guru' ? 'bg-blue-100 text-blue-700' :

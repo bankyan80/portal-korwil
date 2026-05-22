@@ -81,6 +81,7 @@ export default function OperatorYatimPiatuPage() {
         nik: s.nik,
         nama: s.nama,
         sekolah: s.sekolah,
+        schoolId: user?.schoolId || s.schoolId || '',
         desa: s.desa,
         kategori,
         createdAt: Date.now(),

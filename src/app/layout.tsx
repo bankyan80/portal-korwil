@@ -19,7 +19,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.portalkorwil.online"),
   title: "Portal Pendidikan Kecamatan Lemahabang - Dinas Pendidikan Kabupaten Cirebon",
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: "/portalnew.png",
     apple: "/portalnew.png",
@@ -45,8 +49,25 @@ export const metadata: Metadata = {
     title: "Portal Pendidikan Kecamatan Lemahabang",
     description:
       "Portal resmi pendidikan Kecamatan Lemahabang, Dinas Pendidikan Kabupaten Cirebon",
+    url: "https://www.portalkorwil.online",
+    siteName: "Portal Pendidikan Kecamatan Lemahabang",
+    images: [
+      {
+        url: "/portalnew.png",
+        width: 1200,
+        height: 630,
+        alt: "Portal Pendidikan Kecamatan Lemahabang",
+      },
+    ],
     type: "website",
     locale: "id_ID",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Portal Pendidikan Kecamatan Lemahabang",
+    description:
+      "Portal resmi pendidikan Kecamatan Lemahabang, Dinas Pendidikan Kabupaten Cirebon",
+    images: ["/portalnew.png"],
   },
   robots: {
     index: true,

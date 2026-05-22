@@ -22,6 +22,12 @@ service cloud.firestore {
     function getOperatorSchoolId() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId;
     }
+
+    function ownsSchool(data) {
+      return data.schoolId == getOperatorSchoolId() ||
+             data.sekolahId == getOperatorSchoolId() ||
+             data.sekolah_id == getOperatorSchoolId();
+    }
     
     function getOperatorOrganizationId() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId;
@@ -42,9 +48,9 @@ service cloud.firestore {
       // Public can read (for dashboards)
       allow read: if true;
       // Operators can only manage their own school's employees
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
     }
     
     // Students collection
@@ -52,17 +58,18 @@ service cloud.firestore {
       // Public can read (for dashboards)
       allow read: if true;
       // Operators can only manage their own school's students
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
     }
     
     // Schools collection
     match /schools/{schoolId} {
       // Public can read
       allow read: if true;
-      // Only super admin can write
-      allow write: if isSuperAdmin();
+      // Super admin can write all; operators can update their own school profile.
+      allow create, delete: if isSuperAdmin();
+      allow update: if isSuperAdmin() || (isOperator() && schoolId == getOperatorSchoolId());
     }
     
     // Monthly reports (laporan_bulanan)
@@ -70,9 +77,9 @@ service cloud.firestore {
       // Public can read
       allow read: if true;
       // Operators can only manage their own school's reports
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.schoolId == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.schoolId == getOperatorSchoolId());
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
     }
     
     // News (berita)
@@ -80,9 +87,17 @@ service cloud.firestore {
       // Public can read
       allow read: if true;
       // Operators can only manage their own school's news
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
+    }
+
+    // News collection used by admin UI
+    match /news/{newsId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
     }
     
     // Gallery
@@ -90,19 +105,31 @@ service cloud.firestore {
       // Public can read
       allow read: if true;
       // Operators can only manage their own school's gallery
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
+    }
+
+    // Gallery collection used by admin UI
+    match /gallery/{galleryId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
     }
     
     // Documents
     match /dokumen/{dokumenId} {
-      // Public can read
-      allow read: if true;
+      // Documents are not public-listable; public lookup goes through /api/dokumen/list.
+      allow read: if isSuperAdmin() || 
+                  (isOperator() && ownsSchool(resource.data));
       // Operators can only manage their own school's documents
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+      allow create: if isSuperAdmin() ||
+                    (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() ||
+                    (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() ||
+                    (isOperator() && ownsSchool(resource.data));
     }
     
     // SPMB (student registration)
@@ -110,9 +137,9 @@ service cloud.firestore {
       // Operators and super admin can read
       allow read: if isSuperAdmin() || isOperator();
       // Operators can only manage their own school's registrations
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
     }
     
     // Sarpras (facilities)
@@ -120,9 +147,9 @@ service cloud.firestore {
       // Public can read
       allow read: if true;
       // Operators can only manage their own school's facilities
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
     }
     
     // Settings
@@ -138,9 +165,9 @@ service cloud.firestore {
       // Public can read
       allow read: if true;
       // Operators can only manage their own school's KIP data
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
     }
     
     // Yatim Piatu
@@ -148,9 +175,9 @@ service cloud.firestore {
       // Public can read
       allow read: if true;
       // Operators can only manage their own school's data
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
     }
     
     // BOS Arkas
@@ -158,9 +185,9 @@ service cloud.firestore {
       // Public can read
       allow read: if true;
       // Operators can only manage their own school's data
-      allow write: if isSuperAdmin() || 
-                   (isOperator() && resource.data.sekolah_id == getOperatorSchoolId()) ||
-                   (isOperator() && request.resource.data.sekolah_id == getOperatorSchoolId());
+      allow create: if isSuperAdmin() || (isOperator() && ownsSchool(request.resource.data));
+      allow update: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data) && ownsSchool(request.resource.data));
+      allow delete: if isSuperAdmin() || (isOperator() && ownsSchool(resource.data));
     }
     
     // Tabel Sekolah

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { ArrowLeft, Search, FileText, Download, Loader2, FolderOpen, AlertTriangle, DownloadCloud, Upload as UploadIcon, CheckCircle, XCircle } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { db, auth } from '@/lib/firebase';
 import { useAppStore } from '@/store/app-store';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { DokumenBersama } from '@/types';
 
 function getIcon(type: string) {
@@ -41,28 +41,14 @@ export default function DokumenBersamaPage() {
   const [nip, setNip] = useState('');
   const [pegawai, setPegawai] = useState<any | null>(null);
   const [documents, setDocuments] = useState<DokumenBersama[]>([]);
-  const [allDocs, setAllDocs] = useState<DokumenBersama[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [dbReady, setDbReady] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [uploadProgress, setUploadProgress] = useState<'idle' | 'uploading' | 'saving' | 'done' | 'error'>('idle');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = user && (user.role === 'super_admin' || user.role === 'operator_sekolah');
-
-  useEffect(() => {
-    if (!db) { queueMicrotask(() => setDbReady(true)); return; }
-    const q = query(collection(db, 'dokumen'), orderBy('uploadedAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      const list: DokumenBersama[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as DokumenBersama));
-      setAllDocs(list);
-      setDbReady(true);
-    }, () => {});
-    return () => unsub();
-  }, []);
 
   async function cari() {
     const clean = nip.replace(/\D/g, '');
@@ -77,8 +63,9 @@ export default function DokumenBersamaPage() {
       const json = await res.json();
       if (json.found) {
         setPegawai(json.pegawai);
-        const filtered = allDocs.filter(d => d.nip === clean || d.nip === json.pegawai.nip);
-        setDocuments(filtered);
+        const docsRes = await fetch(`/api/dokumen/list?nip=${clean}`);
+        const docsJson = await docsRes.json();
+        setDocuments(docsJson.documents || []);
       } else {
         setPegawai(null);
         setDocuments([]);
@@ -121,7 +108,7 @@ export default function DokumenBersamaPage() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('kategori', 'dokumen');
-      formData.append('uploadedBy', currentUser.uid);
+      formData.append('sekolahId', user?.schoolId || pegawai.schoolId || '');
 
       setUploadProgress('uploading');
       const uploadRes = await fetch('/api/supabase/upload', {
@@ -143,6 +130,8 @@ export default function DokumenBersamaPage() {
         nik: pegawai.nik || '',
         nip: pegawai.nip || nip.replace(/\D/g, ''),
         nama: pegawai.nama,
+        sekolah: pegawai.sekolah || user?.schoolName || '',
+        schoolId: pegawai.schoolId || user?.schoolId || '',
         fileName: file.name,
         fileType: file.type,
         fileSize: file.size,

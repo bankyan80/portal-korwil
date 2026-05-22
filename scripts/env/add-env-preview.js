@@ -2,11 +2,14 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Use the sirubin token
-const token = 'puOymIh3y5f1w3ePG6rZh4qLbwsEv5SZDD2eWkc6kyhA15S4';
+const token = process.env.VERCEL_TOKEN;
+
+if (!token) {
+  throw new Error('Missing VERCEL_TOKEN environment variable.');
+}
 
 // Read service account
-const saPath = path.join(__dirname, 'service-account', 'kedinasan-e5317-firebase-adminsdk-fbsvc-79852a38b0.json');
+const saPath = path.join(process.cwd(), 'service-account', 'kedinasan-e5317-firebase-adminsdk-fbsvc-79852a38b0.json');
 const sa = fs.readFileSync(saPath, 'utf8');
 
 const body = {

@@ -5,12 +5,13 @@ import { ArrowLeft, Clock, Search, Loader2, ChevronLeft, ChevronRight, Users, Ba
 import Footer from '@/components/portal/Footer';
 
 interface Pegawai {
-  nik: string;
+  nik?: string;
   nama: string;
   jk: string;
   nuptk: string;
-  tanggal_lahir: string;
-  nip: string;
+  tanggal_lahir?: string;
+  bup_tanggal?: string;
+  nip?: string;
   status_kepegawaian: string;
   jenis_ptk: string;
   tugas_tambahan: string;
@@ -52,13 +53,18 @@ function getBupDate(iso: string): Date | null {
   return new Date(year, month, 1);
 }
 
-function formatBupDate(iso: string): string {
-  const d = getBupDate(iso);
+function getBupDateForPegawai(p: Pegawai): Date | null {
+  if (p.bup_tanggal) return parseDate(p.bup_tanggal);
+  return getBupDate(p.tanggal_lahir || '');
+}
+
+function formatBupDate(p: Pegawai): string {
+  const d = getBupDateForPegawai(p);
   return d ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(d) : '-';
 }
 
-function getSisa(iso: string): string {
-  const bup = getBupDate(iso);
+function getSisa(p: Pegawai): string {
+  const bup = getBupDateForPegawai(p);
   if (!bup) return '-';
   const now = new Date();
   if (bup <= now) return 'Pensiun';
@@ -77,9 +83,10 @@ function isPensionEligible(status: string): boolean {
   return status === 'PNS' || status === 'PPPK';
 }
 
-function getStatusBup(iso: string, status: string): 'hijau' | 'kuning' | 'merah' | 'none' {
+function getStatusBup(p: Pegawai): 'hijau' | 'kuning' | 'merah' | 'none' {
+  const status = p.status_kepegawaian;
   if (!isPensionEligible(status)) return 'none';
-  const bup = getBupDate(iso);
+  const bup = getBupDateForPegawai(p);
   if (!bup) return 'none';
   const now = new Date();
   if (bup <= now) return 'merah';
@@ -125,7 +132,7 @@ export default function BupPage() {
   }, []);
 
   const bupDate = (p: Pegawai): number => {
-    const d = getBupDate(p.tanggal_lahir);
+    const d = getBupDateForPegawai(p);
     return d ? d.getTime() : Infinity;
   };
 
@@ -135,8 +142,6 @@ export default function BupPage() {
       const q = search.toLowerCase();
       items = items.filter((p) =>
         p.nama.toLowerCase().includes(q) ||
-        p.nik.includes(q) ||
-        p.nip.includes(q) ||
         (p.sekolah || '').toLowerCase().includes(q)
       );
     }
@@ -234,7 +239,7 @@ export default function BupPage() {
             <h3 className="font-semibold text-[#0d3b66]">Daftar Pegawai</h3>
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input type="text" placeholder="Cari NIK, Nama, NIP, atau Sekolah..." value={search}
+              <input type="text" placeholder="Cari nama atau sekolah..." value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
                 className="pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-full" />
             </div>
@@ -251,10 +256,7 @@ export default function BupPage() {
                   <thead>
                     <tr className="bg-gray-50 text-left">
                       <th className="px-3 py-3 font-semibold text-gray-600 w-10">No</th>
-                      <th className="px-3 py-3 font-semibold text-gray-600 whitespace-nowrap">NIK</th>
                       <th className="px-3 py-3 font-semibold text-gray-600">Nama</th>
-                      <th className="px-3 py-3 font-semibold text-gray-600 whitespace-nowrap hidden sm:table-cell">Tgl. Lahir</th>
-                      <th className="px-3 py-3 font-semibold text-gray-600 whitespace-nowrap">Usia</th>
                       <th className="px-3 py-3 font-semibold text-gray-600 hidden sm:table-cell">Status</th>
                       <th className="px-3 py-3 font-semibold text-gray-600 hidden md:table-cell max-w-[180px]">Sekolah</th>
                       <th className="px-3 py-3 font-semibold text-gray-600 whitespace-nowrap hidden md:table-cell">BUP</th>
@@ -263,22 +265,12 @@ export default function BupPage() {
                   </thead>
                   <tbody className="divide-y">
                     {paginated.map((p, i) => {
-                      const usia = calculateAge(p.tanggal_lahir);
                       const isPensionEligibleFlag = isPensionEligible(p.status_kepegawaian);
-                      const statusBup = getStatusBup(p.tanggal_lahir, p.status_kepegawaian);
+                      const statusBup = getStatusBup(p);
                       return (
-                        <tr key={p.nik} className="hover:bg-blue-50/50 transition-colors">
+                        <tr key={`${p.nama}-${i}`} className="hover:bg-blue-50/50 transition-colors">
                           <td className="px-3 py-3 text-gray-500">{(page - 1) * PER_PAGE + i + 1}</td>
-                          <td className="px-3 py-3 font-mono text-xs text-gray-500">{p.nik}</td>
                           <td className="px-3 py-3 font-medium text-[#0d3b66] whitespace-nowrap">{p.nama}</td>
-                          <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden sm:table-cell">{formatDateLocale(p.tanggal_lahir)}</td>
-                          <td className="px-3 py-3 whitespace-nowrap">
-                            {usia ? (
-                              <span className={`font-medium ${usia.tahun >= BUP_AGE ? 'text-red-600' : usia.tahun >= BUP_AGE - 2 ? 'text-orange-600' : 'text-gray-700'}`}>
-                                {usia.tahun} thn
-                              </span>
-                            ) : '-'}
-                          </td>
                           <td className="px-3 py-3 hidden sm:table-cell">
                             <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${
                               p.status_kepegawaian === 'PNS' ? 'bg-green-100 text-green-700' :
@@ -290,7 +282,7 @@ export default function BupPage() {
                           </td>
                           <td className="px-3 py-3 text-gray-500 text-xs hidden md:table-cell max-w-[180px] truncate">{p.sekolah}</td>
                           <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap hidden md:table-cell">
-                            {isPensionEligibleFlag ? formatBupDate(p.tanggal_lahir) : '-'}
+                            {isPensionEligibleFlag ? formatBupDate(p) : '-'}
                           </td>
                           <td className="px-3 py-3 whitespace-nowrap">
                             {isPensionEligibleFlag ? (
@@ -300,7 +292,7 @@ export default function BupPage() {
                                 statusBup === 'hijau' ? 'bg-green-100 text-green-700' :
                                 'bg-gray-100 text-gray-500'
                               }`}>
-                                {getSisa(p.tanggal_lahir)}
+                                {getSisa(p)}
                               </span>
                             ) : (
                               <span className="text-gray-400 text-xs">-</span>

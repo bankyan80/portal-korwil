@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
 import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTable';
 import type { News } from '@/types';
+import { useAppStore } from '@/store/app-store';
 import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
 import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
 import { enqueue } from '@/lib/local/offlineQueue';
@@ -35,6 +36,7 @@ const formatDate = (ts: number) =>
   new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(ts));
 
 export function ManageBerita() {
+  const user = useAppStore((s) => s.user);
   const { items, addItem, updateItem, deleteItem, loading, error } = useFirestoreCollection<News>('news', []);
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
@@ -108,7 +110,19 @@ export function ManageBerita() {
         await updateItem(editingId, { title: form.title, content: form.content, slug, excerpt, status: form.status, updatedAt: Date.now() });
         toast.success('Berita berhasil diperbarui');
       } else {
-        await addItem({ id: `news-${Date.now()}`, title: form.title, content: form.content, slug, excerpt, authorName: 'Admin', authorRole: 'Administrator', status: form.status, createdAt: Date.now(), updatedAt: Date.now() });
+        await addItem({
+          id: `news-${Date.now()}`,
+          title: form.title,
+          content: form.content,
+          slug,
+          excerpt,
+          authorName: user?.displayName || 'Admin',
+          authorRole: user?.role === 'operator_sekolah' ? 'Operator Sekolah' : 'Administrator',
+          schoolId: user?.schoolId || '',
+          status: form.status,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
         toast.success('Berita berhasil ditambahkan');
       }
       await clearDraft();
@@ -128,7 +142,7 @@ export function ManageBerita() {
     } finally {
       setSaving(false);
     }
-  }, [form, editingId, addItem, updateItem]);
+  }, [form, editingId, addItem, updateItem, user?.displayName, user?.role, user?.schoolId]);
 
   return (
     <div className="space-y-4">

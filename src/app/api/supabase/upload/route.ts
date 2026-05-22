@@ -1,10 +1,22 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { Readable } from 'stream';
+import { verifyAuth, requireRole } from '@/lib/server-auth';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const storageBucket = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'portal-files';
+const allowedRoles = ['super_admin', 'operator_sekolah', 'ketua_organisasi'] as const;
+const schoolScopedCategories = new Set([
+  'laporan_bulanan',
+  'galeri',
+  'spmb',
+  'tka',
+  'arsip',
+  'administrasi',
+  'pegawai',
+  'siswa',
+  'dokumen',
+]);
 
 function getSafeFileName(fileName: string): string {
   const ext = fileName.split('.').pop()?.toLowerCase() || '';
@@ -69,6 +81,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Supabase tidak dikonfigurasi' }, { status: 500 });
   }
 
+  const auth = await verifyAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const forbidden = requireRole(auth, [...allowedRoles]);
+  if (forbidden) return forbidden;
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
@@ -78,10 +95,15 @@ export async function POST(req: Request) {
     const tahun = formData.get('tahun') as string | undefined;
     const bulan = formData.get('bulan') as string | undefined;
     const sekolahId = formData.get('sekolahId') as string | undefined;
-    const uploadedBy = formData.get('uploadedBy') as string | undefined;
+    const uploadedBy = auth.uid;
 
     if (!file) {
       return NextResponse.json({ error: 'Tidak ada file' }, { status: 400 });
+    }
+    if (auth.role === 'operator_sekolah' && schoolScopedCategories.has(kategori)) {
+      if (!auth.schoolId || sekolahId !== auth.schoolId) {
+        return NextResponse.json({ error: 'Tidak boleh upload untuk sekolah lain' }, { status: 403 });
+      }
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -129,12 +151,23 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: 'Supabase tidak dikonfigurasi' }, { status: 500 });
   }
 
+  const auth = await verifyAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const forbidden = requireRole(auth, [...allowedRoles]);
+  if (forbidden) return forbidden;
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
     const { storagePath } = await req.json();
     if (!storagePath) {
       return NextResponse.json({ error: 'storagePath required' }, { status: 400 });
+    }
+    if (auth.role === 'operator_sekolah') {
+      const pathSegments = String(storagePath).split('/');
+      if (!auth.schoolId || !pathSegments.includes(auth.schoolId)) {
+        return NextResponse.json({ error: 'Tidak boleh menghapus file sekolah lain' }, { status: 403 });
+      }
     }
 
     const { error } = await supabase.storage

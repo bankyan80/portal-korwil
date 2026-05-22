@@ -33,7 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           // Set auth-token cookie for API route protection
           const token = await getIdToken(firebaseUser);
-          document.cookie = `auth-token=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
+          const secureCookie = window.location.protocol === 'https:' ? '; Secure' : '';
+          document.cookie = `auth-token=${token}; path=/; max-age=3600; SameSite=Lax${secureCookie}`;
 
           let userProfile: UserProfile | null = null;
           let isOffline = false;

@@ -13,7 +13,7 @@ import {
   Users, School, BarChart3, FileText,
   LogOut, Loader2, Building2, RefreshCw, Shield,
   Calendar, Globe, ListTodo, GraduationCap,
-  Image, Link2, ArrowLeft, Clock, CheckCircle, XCircle
+  Image, Link2, ArrowLeft, Clock, CheckCircle, XCircle, FolderOpen
 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -118,7 +118,11 @@ export default function SuperAdminDashboard() {
     }
   }, []);
 
-  useEffect(() => { fetchAutoSyncStatus(); }, [fetchAutoSyncStatus]);
+  useEffect(() => {
+    queueMicrotask(() => {
+      void fetchAutoSyncStatus();
+    });
+  }, [fetchAutoSyncStatus]);
 
   const handleCreateSheets = useCallback(async () => {
     setCreateSheetsLoading(true);
@@ -242,6 +246,7 @@ export default function SuperAdminDashboard() {
     { label: 'Galeri', icon: Image, desc: 'Atur galeri foto semua kategori', href: '/admin/super/galeri', color: 'bg-pink-100 text-pink-700' },
     { label: 'Organisasi', icon: Globe, desc: 'Kelola data & kepengurusan organisasi', href: '/admin/super/organisasi', color: 'bg-teal-100 text-teal-700' },
     { label: 'Link Instansi', icon: Link2, desc: 'Atur tautan instansi terkait', href: '/admin/super/link-instansi', color: 'bg-amber-100 text-amber-700' },
+    { label: 'Dokumen Bersama', icon: FolderOpen, desc: 'Kelola dokumen pegawai', href: '/admin/super/dokumen', color: 'bg-cyan-100 text-cyan-700' },
     { label: 'Kalender', icon: Calendar, desc: 'Kalender kegiatan', href: '/kalender', color: 'bg-red-100 text-red-700' },
 
   ];

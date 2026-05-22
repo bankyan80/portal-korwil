@@ -6,6 +6,10 @@ import { getStorage } from 'firebase-admin/storage';
 import * as path from 'path';
 import * as fs from 'fs';
 
+function normalizePrivateKey(privateKey: string) {
+  return privateKey.replace(/\\n/g, '\n');
+}
+
 function findServiceAccountFile(): string | null {
   // 1) Env var (raw JSON string or base64)
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
@@ -30,22 +34,18 @@ function findServiceAccountFile(): string | null {
     console.warn(`[firebase-admin] FIREBASE_SERVICE_ACCOUNT_KEY env var is not set`);
   }
 
-  // 2) Known relative paths from cwd (dev: repo root, prod: standalone dir)
-  const candidates = [
-    path.join(process.cwd(), 'service-account'),
-    path.join(process.cwd(), '.', 'service-account'),
-    // next up from cwd
-    ...(['', '..', '../..', '../../..'].map(p =>
-      path.resolve(process.cwd(), p, 'service-account')
-    )),
-    // alongside the compiled module file
-    path.join(__dirname, 'service-account'),
-    path.join(path.dirname(__dirname), 'service-account'),
-  ];
+  if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    console.info('[firebase-admin] Using service-account from split FIREBASE_* env vars');
+    return '__env_split__';
+  }
+
+  // 2) Local development fallback. Production should use FIREBASE_SERVICE_ACCOUNT_KEY.
+  const serviceAccountDir = path.join(/*turbopackIgnore: true*/ process.cwd(), 'service-account');
+  const candidates = [serviceAccountDir];
 
   for (const dir of candidates) {
-    if (!fs.existsSync(dir)) continue;
-    const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
+    if (!fs.existsSync(/*turbopackIgnore: true*/ dir)) continue;
+    const files = fs.readdirSync(/*turbopackIgnore: true*/ dir).filter((f) => f.endsWith('.json'));
     if (files.length > 0) {
       console.info(`[firebase-admin] Using service-account from: ${path.join(dir, files[0])}`);
       return path.join(dir, files[0]);
@@ -70,7 +70,14 @@ function loadServiceAccount(): ServiceAccount | null {
       const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!, 'base64').toString('utf-8');
       return JSON.parse(decoded) as ServiceAccount;
     }
-    const content = fs.readFileSync(matched, 'utf-8');
+    if (matched === '__env_split__') {
+      return {
+        projectId: process.env.FIREBASE_PROJECT_ID!,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+        privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY!),
+      } as ServiceAccount;
+    }
+    const content = fs.readFileSync(/*turbopackIgnore: true*/ matched, 'utf-8');
     return JSON.parse(content) as ServiceAccount;
   } catch (err) {
     console.error(`[firebase-admin] Failed to load service-account from ${matched}:`, err);

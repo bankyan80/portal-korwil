@@ -35,6 +35,8 @@ export interface DokumenBersama {
   nik: string;
   nip: string;
   nama: string;
+  sekolah?: string;
+  schoolId?: string;
   fileName: string;
   fileType: string;
   fileSize: number;
@@ -61,6 +63,7 @@ export interface YatimPiatuData {
   nik: string;
   nama: string;
   sekolah: string;
+  schoolId?: string;
   desa: string;
   kategori: YatimCategory;
   createdAt: number;

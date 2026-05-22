@@ -25,6 +25,7 @@ import { useGalleryCrud } from '@/hooks/use-firestore-crud';
 import { Progress } from '@/components/ui/progress';
 import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTable';
 import { auth } from '@/lib/firebase';
+import { useAppStore } from '@/store/app-store';
 
 async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -83,6 +84,7 @@ const formatDate = (ts: number) =>
 
 export function ManageGallery() {
   const crud = useGalleryCrud();
+  const user = useAppStore((s) => s.user);
   const [form, setForm] = useState<GalleryFormData>(defaultForm);
   const [activeTab, setActiveTab] = useState('semua');
   const [saving, setSaving] = useState(false);
@@ -119,7 +121,7 @@ export function ManageGallery() {
     const formData = new FormData();
     formData.append('file', fileToUpload, file.name);
     formData.append('kategori', 'galeri');
-    formData.append('uploadedBy', currentUser.uid);
+    if (user?.schoolId) formData.append('sekolahId', user.schoolId);
 
     const res = await fetch('/api/supabase/upload', {
       method: 'POST',
@@ -199,8 +201,10 @@ export function ManageGallery() {
             images: imageUrls,
             imageFiles,
             category: form.category,
-            authorName: 'Admin Kecamatan',
-            authorRole: 'Administrator',
+            authorName: user?.displayName || 'Admin Kecamatan',
+            authorRole: user?.role === 'operator_sekolah' ? 'Operator Sekolah' : 'Administrator',
+            schoolId: user?.schoolId || '',
+            schoolName: user?.schoolName || '',
             status: form.status,
             createdAt: Date.now(),
           });
@@ -221,7 +225,7 @@ export function ManageGallery() {
         setUploadProgress(0);
         setUploadStatus('');
       }
-    }, [form, crud.editingId, crud.items, crud.updateItem, crud.addItem, crud.closeForm, selectedFiles]);
+    }, [form, crud.editingId, crud.items, crud.updateItem, crud.addItem, crud.closeForm, selectedFiles, user?.displayName, user?.role, user?.schoolId, user?.schoolName]);
 
    const handleApprove = useCallback(async (id: string) => {
      await crud.updateItem(id, { status: 'published' as GalleryStatus });

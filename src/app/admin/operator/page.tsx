@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { normalizeSchool } from '@/lib/normalize';
-import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw, ListTodo, CheckCircle, ExternalLink, Clock, Heart } from 'lucide-react';
+import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, ListTodo, CheckCircle, ExternalLink, Clock, Heart, FolderOpen } from 'lucide-react';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
 import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
@@ -62,8 +62,6 @@ export default function OperatorDashboard() {
     );
   }, [allStudents, allEmployees, user?.schoolName, user?.schoolId]);
 
-  const [syncing, setSyncing] = useState(false);
-  const [syncMsg, setSyncMsg] = useState('');
   const [tugasList, setTugasList] = useState<any[]>([]);
   const [tugasLoading, setTugasLoading] = useState(true);
   const [laporanHistory, setLaporanHistory] = useState<any[]>([]);
@@ -131,25 +129,6 @@ export default function OperatorDashboard() {
     } catch (e) { console.error(e); }
   }
 
-  const handleSync = useCallback(async () => {
-    setSyncing(true);
-    setSyncMsg('');
-    try {
-      const res = await fetch('/api/sync/all', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        setSyncMsg(data.message);
-      } else {
-        setSyncMsg(data.error || 'Gagal sinkronisasi');
-      }
-    } catch {
-      setSyncMsg('Gagal terhubung ke server');
-    } finally {
-      setSyncing(false);
-      setTimeout(() => setSyncMsg(''), 5000);
-    }
-  }, []);
-
   const isStatsLoading = !allStudents || !allEmployees;
 
   if (isLoadingAuth) {
@@ -179,6 +158,7 @@ export default function OperatorDashboard() {
     { label: 'SPMB', icon: FileText, desc: 'Penerimaan peserta didik baru', count: null, href: '/admin/operator/spmb' },
     { label: 'Upload Berita', icon: Megaphone, desc: 'Kirim berita sekolah', count: null, href: '/admin/operator/berita' },
     { label: 'Upload Galeri', icon: Image, desc: 'Dokumentasi kegiatan sekolah', count: null, href: '/admin/operator/galeri' },
+    { label: 'Dokumen Bersama', icon: FolderOpen, desc: 'Upload dan kelola dokumen pegawai', count: null, href: '/admin/operator/dokumen' },
     { label: 'Sarpras', icon: Building2, desc: 'Data sarana dan prasarana sekolah', count: null, href: '/admin/operator/sarpras' },
     { label: 'Lapor Bulanan', icon: FileText, desc: 'Cetak & kirim laporan bulanan sekolah', count: null, href: '/admin/operator/laporan-bulanan' },
     { label: 'Data Yatim Piatu', icon: Heart, desc: 'Kelola data siswa yatim piatu', count: null, href: '/admin/operator/yatim-piatu' },
@@ -193,11 +173,6 @@ export default function OperatorDashboard() {
           <p className="text-sm text-blue-200">{user.displayName} • {user.schoolName || 'Sekolah'}</p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={handleSync} disabled={syncing}
-            className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-200 disabled:opacity-50">
-            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Menyinkronkan...' : 'Sinkronisasi Data'}
-          </button>
           <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-300 hover:text-red-200">
             <LogOut className="w-4 h-4" /> Logout
           </button>
@@ -207,13 +182,6 @@ export default function OperatorDashboard() {
       <FirebaseLED userLabel={user.displayName} schoolLabel={user.schoolName} />
       <div className="fixed bottom-20 right-4 z-40"><SyncStatusBadge /></div>
 
-      {syncMsg && (
-        <div className="px-6 pt-4 max-w-7xl mx-auto">
-          <div className="px-4 py-2 rounded-lg text-sm bg-blue-50 border border-blue-200 text-blue-700">
-            {syncMsg}
-          </div>
-        </div>
-      )}
       <main className="p-6 max-w-7xl mx-auto space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {menu.slice(0, 4).map((item) => (
