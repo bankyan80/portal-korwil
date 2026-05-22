@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Heart, Search, Plus, Trash2, Loader2, CheckCircle, XCircle, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Heart, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import type { YatimPiatuData, YatimCategory } from '@/types';
 
 const kategoriLabel: Record<YatimCategory, string> = {
@@ -22,10 +22,6 @@ const kategoriColors: Record<YatimCategory, string> = {
 export default function YatimPiatuPage() {
   const [data, setData] = useState<YatimPiatuData[]>([]);
   const [loading, setLoading] = useState(db ? true : false);
-  const [nikInput, setNikInput] = useState('');
-  const [kategori, setKategori] = useState<YatimCategory>('yatim_piatu');
-  const [addStatus, setAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
-  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     if (!db) return;
@@ -38,71 +34,6 @@ export default function YatimPiatuPage() {
     }, () => setLoading(false));
     return () => unsub();
   }, []);
-
-  async function handleAdd() {
-    const clean = nikInput.replace(/\D/g, '');
-    if (clean.length !== 16) {
-      setAddStatus({ ok: false, msg: 'NIK harus 16 digit' });
-      return;
-    }
-    if (data.some(d => d.nik === clean)) {
-      setAddStatus({ ok: false, msg: 'NIK sudah terdaftar' });
-      return;
-    }
-    setAdding(true);
-    setAddStatus(null);
-
-    try {
-      const res = await fetch(`/api/siswa/lookup?nik=${clean}`);
-      const json = await res.json();
-
-      if (!db) {
-        if (!json.found) {
-          setAddStatus({ ok: false, msg: 'NIK tidak ditemukan dalam database siswa' });
-          return;
-        }
-        const s = json.siswa;
-        const newItem: YatimPiatuData = { id: Date.now().toString(), nik: s.nik, nama: s.nama, sekolah: s.sekolah, desa: s.desa, kategori, createdAt: Date.now() };
-        setData(prev => [newItem, ...prev]);
-        setAddStatus({ ok: true, msg: `${s.nama} ditambahkan sebagai ${kategoriLabel[kategori]}` });
-        setNikInput('');
-        return;
-      }
-
-      if (!json.found) {
-        setAddStatus({ ok: false, msg: 'NIK tidak ditemukan dalam database siswa' });
-        return;
-      }
-      const s = json.siswa;
-      await addDoc(collection(db, 'yatim_piatu'), {
-        nik: s.nik,
-        nama: s.nama,
-        sekolah: s.sekolah,
-        desa: s.desa,
-        kategori,
-        createdAt: Date.now(),
-      });
-      setAddStatus({ ok: true, msg: `${s.nama} ditambahkan sebagai ${kategoriLabel[kategori]}` });
-      setNikInput('');
-    } catch (e) {
-      console.error('Error adding yatim piatu:', e);
-      setAddStatus({ ok: false, msg: 'Gagal menghubungi server' });
-    } finally {
-      setAdding(false);
-    }
-  }
-
-  async function handleDelete(id: string) {
-    if (!db) {
-      setData(prev => prev.filter(d => d.id !== id));
-      return;
-    }
-    try {
-      await deleteDoc(doc(db, 'yatim_piatu', id));
-    } catch (e) {
-      console.error('Gagal hapus data:', e);
-    }
-  }
 
   const counts = useMemo(() => ({
     yatim_piatu: data.filter(d => d.kategori === 'yatim_piatu').length,
@@ -156,59 +87,6 @@ export default function YatimPiatuPage() {
             </div>
 
             <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b space-y-3">
-                <h3 className="font-semibold text-[#0d3b66]">Tambah Data</h3>
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative flex-1 max-w-xs">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      maxLength={16}
-                      placeholder="Masukkan 16 digit NIK"
-                      value={nikInput}
-                      onChange={e => { setNikInput(e.target.value.replace(/\D/g, '').slice(0, 16)); setAddStatus(null); }}
-                      className="pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-full font-mono tracking-wider"
-                    />
-                  </div>
-                  <select
-                    value={kategori}
-                    onChange={e => setKategori(e.target.value as YatimCategory)}
-                    className="text-sm border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                  >
-                    <option value="yatim_piatu">Yatim Piatu</option>
-                    <option value="yatim">Yatim (Ayah Meninggal)</option>
-                    <option value="piatu">Piatu (Ibu Meninggal)</option>
-                  </select>
-                  <button
-                    onClick={handleAdd}
-                    disabled={adding}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-800 rounded-lg hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                    Tambah
-                  </button>
-                </div>
-                {addStatus && (
-                  <div className={`p-3 rounded-lg text-sm ${addStatus.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                    <div className="flex items-center gap-2">
-                      {addStatus.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
-                      <span>{addStatus.msg}</span>
-                    </div>
-                    {!addStatus.ok && addStatus.msg.includes('NIK tidak ditemukan') && (
-                      <a
-                        href={`https://wa.me/6281321592990?text=${encodeURIComponent(`Assalamualaikum, saya ingin melaporkan data yatim piatu dengan NIK: ${nikInput}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        Hubungi Admin via WhatsApp
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -219,13 +97,12 @@ export default function YatimPiatuPage() {
                       <th className="px-5 py-3 font-semibold text-gray-600">Sekolah</th>
                       <th className="px-5 py-3 font-semibold text-gray-600 hidden md:table-cell">Desa</th>
                       <th className="px-5 py-3 font-semibold text-gray-600">Kategori</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {data.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-5 py-10 text-center text-gray-400 text-sm">
+                        <td colSpan={6} className="px-5 py-10 text-center text-gray-400 text-sm">
                           Belum ada data
                         </td>
                       </tr>
@@ -242,15 +119,6 @@ export default function YatimPiatuPage() {
                               {kategoriLabel[d.kategori]}
                             </span>
                           </td>
-                          <td className="px-5 py-3">
-                            <button
-                              onClick={() => handleDelete(d.id!)}
-                              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              Hapus
-                            </button>
-                          </td>
                         </tr>
                       ))
                     )}
@@ -265,7 +133,7 @@ export default function YatimPiatuPage() {
                 <li><strong>Yatim Piatu</strong>: Kedua orang tua (ayah dan ibu) meninggal dunia.</li>
                 <li><strong>Yatim</strong>: Ayah yang meninggal dunia.</li>
                 <li><strong>Piatu</strong>: Ibu yang meninggal dunia.</li>
-                <li>Data diambil dari database siswa. Jika tidak ditemukan, sekolah dapat menambahkan dengan memasukkan NIK.</li>
+                <li>Jika ada perubahan data, silakan hubungi operator sekolah masing-masing.</li>
               </ul>
             </div>
           </>

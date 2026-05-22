@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
 import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { normalizeSchool } from '@/lib/normalize';
-import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw, ListTodo, CheckCircle, ExternalLink, Clock } from 'lucide-react';
+import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, RefreshCw, ListTodo, CheckCircle, ExternalLink, Clock, Heart } from 'lucide-react';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
 import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
@@ -181,6 +181,7 @@ export default function OperatorDashboard() {
     { label: 'Upload Galeri', icon: Image, desc: 'Dokumentasi kegiatan sekolah', count: null, href: '/admin/operator/galeri' },
     { label: 'Sarpras', icon: Building2, desc: 'Data sarana dan prasarana sekolah', count: null, href: '/admin/operator/sarpras' },
     { label: 'Lapor Bulanan', icon: FileText, desc: 'Cetak & kirim laporan bulanan sekolah', count: null, href: '/admin/operator/laporan-bulanan' },
+    { label: 'Data Yatim Piatu', icon: Heart, desc: 'Kelola data siswa yatim piatu', count: null, href: '/admin/operator/yatim-piatu' },
   ];
 
   return (
