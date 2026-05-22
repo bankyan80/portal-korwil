@@ -44,11 +44,21 @@ function unionAll(firestoreRecords: any[], staticRecords: any[]): any[] {
 export async function getAllPegawai() {
   if (!adminDb) return loadFromStatic();
   try {
-    const snapshot = await adminDb.collection('employees').get();
-    if (snapshot.empty) return loadFromStatic();
-    const firestoreRecords = snapshot.docs.map(doc => normalizeRecord({ id: doc.id, ...doc.data() }));
+    const [empSnap, tambahanSnap] = await Promise.all([
+      adminDb.collection('employees').get(),
+      adminDb.collection('pegawai_tambahan').get(),
+    ]);
+    let combined: any[] = [];
+    if (!empSnap.empty) {
+      combined = empSnap.docs.map(doc => normalizeRecord({ id: doc.id, ...doc.data() }));
+    }
+    if (!tambahanSnap.empty) {
+      const tambahan = tambahanSnap.docs.map(doc => normalizeRecord({ id: doc.id, ...doc.data() }));
+      combined = [...combined, ...tambahan];
+    }
+    if (combined.length === 0) return loadFromStatic();
     const staticRecords = loadFromStatic();
-    return unionAll(firestoreRecords, staticRecords);
+    return unionAll(combined, staticRecords);
   } catch {
     return loadFromStatic();
   }
@@ -62,6 +72,8 @@ export async function getPegawaiByNik(nik: string) {
   try {
     const doc = await adminDb.collection('employees').doc(nik).get();
     if (doc.exists) return normalizeRecord({ id: doc.id, ...doc.data() });
+    const docTambahan = await adminDb.collection('pegawai_tambahan').doc(nik).get();
+    if (docTambahan.exists) return normalizeRecord({ id: docTambahan.id, ...docTambahan.data() });
     const all = loadFromStatic();
     return all.find((d: any) => d.nik === nik) || null;
   } catch {
