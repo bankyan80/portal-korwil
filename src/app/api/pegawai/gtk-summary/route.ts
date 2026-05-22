@@ -3,6 +3,7 @@ import dataPegawai from '@/data/data-pegawai.json';
 import dataPegawaiTk from '@/data/data-pegawai-tk.json';
 import tkGelatikPegawai from '@/data/tk-gelatik-pegawai.json';
 import pltData from '@/data/data-plt.json';
+import { allSekolah } from '@/data/sekolah';
 import { getAllPegawai } from '@/services/pegawai.service';
 import { getCanonicalSchoolName } from '@/lib/normalize';
 
@@ -126,7 +127,18 @@ export async function GET() {
   const firestoreData = await getAllPegawai();
   const merged = unionAll(sheetData, unionAll(staticData, firestoreData));
 
+  // Seed with all schools from master data (so zero-GTK schools still appear)
   const schools: Record<string, SchoolGtk> = {};
+  for (const s of allSekolah) {
+    const name = getCanonicalSchoolName(s.nama);
+    schools[name] = {
+      name, teachers: 0, staff: 0, total: 0, certified: 0,
+      headmaster: '', teachers_l: 0, teachers_p: 0,
+      staff_l: 0, staff_p: 0, l: 0, p: 0,
+    };
+  }
+
+  // Overlay GTK data from merged pegawai records
   for (const p of merged) {
     if (!p.sekolah) continue;
     const name = getCanonicalSchoolName(p.sekolah);
