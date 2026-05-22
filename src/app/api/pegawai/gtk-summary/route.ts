@@ -13,6 +13,9 @@ const SHEETS = [
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTtIJapNJgcZ2Z0GR83o916wOHGwt-W0KiQtaC0-mtvL8KpUVBOKWJCaD1TK8DMAA/pub?gid=1187748548&single=true&output=csv', sekolah: 'TK GELATIK' },
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTjHBZ44HfzBKjyVdoUN_GsGGpCMKZqh7xygrVX8xal2AsCBrlQ02VH52PUfoRobA/pub?gid=1625950301&single=true&output=csv', sekolah: 'TK GELATIK' },
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShSwUruSTzg53g2ICR74hjRI2lUkiFgDFrnWz4X4D1atV1bHP174t26Nc6C53_LQ/pub?gid=766555456&single=true&output=csv', sekolah: 'SD NEGERI 3 SIGONG' },
+  { url: 'https://docs.google.com/spreadsheets/d/1KCVDeAwkeTFzKSd_t9d2rtV2gNLjEGY3/export?format=csv', sekolah: 'TK NEGERI LEMAHABANG' },
+  { url: 'https://docs.google.com/spreadsheets/d/1-x_9YA0T3oZKDfu4fZLqFN886kaZHbuB/export?format=csv', sekolah: 'TK NEGERI LEMAHABANG' },
+  { url: 'https://docs.google.com/spreadsheets/d/1HD28oILkZ5X-wZn7bSYNeWQgucS1cFVp/export?format=csv', sekolah: 'KB MUTIARA' },
 ];
 
 let dataCache: any[] = [];

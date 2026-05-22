@@ -4223,5 +4223,35 @@
     "tugas_tambahan": "",
     "status_kepegawaian": "Tenaga Honor Sekolah",
     "sekolah": "SD NEGERI 3 SIGONG"
+  },
+  {
+    "nik": "3209076806880004",
+    "nama": "ANA ROSLIANA",
+    "nuptk": "",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "GTY/PTY",
+    "tugas_tambahan": "",
+    "sekolah": "KB MUTIARA"
+  },
+  {
+    "nik": "3522154903930003",
+    "nama": "FITROH FITRI LESTARI",
+    "nuptk": "0641771672230392",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "GTY/PTY",
+    "tugas_tambahan": "",
+    "sekolah": "KB MUTIARA"
+  },
+  {
+    "nik": "3209084407770007",
+    "nama": "SITI AMELAH",
+    "nuptk": "1036755656230163",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "GTY/PTY",
+    "tugas_tambahan": "",
+    "sekolah": "KB MUTIARA"
   }
 ]

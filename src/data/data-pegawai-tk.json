@@ -178,5 +178,105 @@
     "sekolah": "TK GELATIK",
     "role": "tendik",
     "tempat_lahir": ""
+  },
+  {
+    "nik": "3209064904670008",
+    "nama": "AMINAH",
+    "nuptk": "9741745648300032",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "PNS",
+    "tugas_tambahan": "",
+    "sekolah": "TK NEGERI LEMAHABANG"
+  },
+  {
+    "nik": "3209064907680004",
+    "nama": "HENI PRIANI",
+    "nuptk": "1041746648300063",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "PNS",
+    "tugas_tambahan": "",
+    "sekolah": "TK NEGERI LEMAHABANG"
+  },
+  {
+    "nik": "3209074608740008",
+    "nama": "HERLINA",
+    "nuptk": "7138752654300053",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "PNS",
+    "tugas_tambahan": "Bendahara BOS/BOP",
+    "sekolah": "TK NEGERI LEMAHABANG"
+  },
+  {
+    "nik": "3209074202670001",
+    "nama": "HULASOH",
+    "nuptk": "9534745649300012",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "PNS",
+    "tugas_tambahan": "",
+    "sekolah": "TK NEGERI LEMAHABANG"
+  },
+  {
+    "nik": "3209064307670006",
+    "nama": "HURAERAH",
+    "nuptk": "4035745648300063",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "PNS",
+    "tugas_tambahan": "",
+    "sekolah": "TK NEGERI LEMAHABANG"
+  },
+  {
+    "nik": "3209025204710007",
+    "nama": "SURYANI",
+    "nuptk": "2744749651300092",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "PNS",
+    "tugas_tambahan": "",
+    "sekolah": "TK NEGERI LEMAHABANG"
+  },
+  {
+    "nik": "3209076505680007",
+    "nama": "TITIN SUPRIHATIN",
+    "nuptk": "7857746648300102",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "PNS",
+    "tugas_tambahan": "",
+    "sekolah": "TK NEGERI LEMAHABANG"
+  },
+  {
+    "nik": "3209076407670002",
+    "nama": "YAYAH SAERAH",
+    "nuptk": "1056745648300033",
+    "jk": "P",
+    "jenis_ptk": "Guru",
+    "status_kepegawaian": "PNS",
+    "tugas_tambahan": "",
+    "sekolah": "TK NEGERI LEMAHABANG"
+  },
+  {
+    "nik": "3209074908740001",
+    "nama": "ELI LAELASARI",
+    "nuptk": "1141752654300063",
+    "jk": "P",
+    "jenis_ptk": "Kepala Sekolah",
+    "status_kepegawaian": "PNS",
+    "tugas_tambahan": "Kepala Sekolah",
+    "sekolah": "TK NEGERI LEMAHABANG"
+  },
+  {
+    "nik": "3274035003940003",
+    "nama": "MERTYANI RAHAYU",
+    "nuptk": "3642772673130042",
+    "jk": "P",
+    "jenis_ptk": "Tenaga Kependidikan",
+    "status_kepegawaian": "Honor Daerah TK.II Kab/Kota",
+    "tugas_tambahan": "",
+    "sekolah": "TK NEGERI LEMAHABANG"
   }
 ]
