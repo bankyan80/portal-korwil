@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Search, Users, School, Baby, BarChart3, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { rombelData, extractKelas } from '@/data/rombel';
-import { allSekolah } from '@/data/sekolah';
+import { useSekolah, type SekolahItem } from '@/hooks/useSekolah';
 
 interface SekolahKelas {
   name: string;
@@ -37,7 +37,7 @@ function matchKey(n: string): string {
     .replace(/[\s.\-]+/g, '');
 }
 
-function buildSekolahData(firestoreSd?: SekolahKelas[]) {
+function buildSekolahData(allSekolah: SekolahItem[], firestoreSd?: SekolahKelas[]) {
   const fbMap = new Map<string, SekolahKelas>();
   if (firestoreSd) {
     for (const s of firestoreSd) fbMap.set(normName(s.name), s);
@@ -107,6 +107,7 @@ function buildSekolahData(firestoreSd?: SekolahKelas[]) {
 }
 
 export default function DataPDPage() {
+  const { schools } = useSekolah();
   const [search, setSearch] = useState('');
   const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
   const [sekolahData, setSekolahData] = useState<SekolahKelas[]>([]);
@@ -120,13 +121,13 @@ export default function DataPDPage() {
         const res = await fetch('/api/siswa/per-kelas');
         const json = await res.json();
         if (json.data) {
-          setSekolahData(buildSekolahData(json.data as SekolahKelas[]));
+          setSekolahData(buildSekolahData(schools, json.data as SekolahKelas[]));
         } else {
-          setSekolahData(buildSekolahData());
+          setSekolahData(buildSekolahData(schools));
         }
       } catch (e) {
         console.error('Gagal memuat data PD:', e);
-        setSekolahData(buildSekolahData());
+        setSekolahData(buildSekolahData(schools));
       } finally {
         setLoading(false);
       }
@@ -137,7 +138,7 @@ export default function DataPDPage() {
       fetch('/api/siswa/per-kelas')
         .then(r => r.ok ? r.json() : null)
         .then(json => {
-          if (json?.data) setSekolahData(buildSekolahData(json.data as SekolahKelas[]));
+          if (json?.data) setSekolahData(buildSekolahData(schools, json.data as SekolahKelas[]));
         })
         .catch(() => {});
     }, 30000);

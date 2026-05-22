@@ -10,7 +10,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { BarChart3, Search, CheckCircle, XCircle, Clock, Eye, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { allSekolah } from '@/data/sekolah';
+import { useSekolah, type SekolahItem } from '@/hooks/useSekolah';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -50,14 +50,15 @@ interface LaporanRecord {
 
 export function ManageLaporanBulanan() {
   const { user } = useAppStore();
+  const { schools } = useSekolah();
   const [data, setData] = useState<LaporanRecord[]>([]);
   const [loading, setLoading] = useState(db ? true : false);
   const [search, setSearch] = useState('');
   const [filterBulan, setFilterBulan] = useState<string>('');
   const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
   const [tahun] = useState(new Date().getFullYear());
-  const [selectedSchool, setSelectedSchool] = useState<typeof allSekolah[0] | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState<SekolahItem | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);;
 
   const userSchool = user?.schoolName || '';
   const isOperator = user?.role === 'operator_sekolah';
@@ -76,8 +77,8 @@ export function ManageLaporanBulanan() {
 
   const filtered = useMemo(() => {
     let items = isOperator && userSchool
-      ? allSekolah.filter(s => s.nama.toLowerCase().includes(userSchool.toLowerCase()))
-      : allSekolah;
+      ? schools.filter(s => s.nama.toLowerCase().includes(userSchool.toLowerCase()))
+      : schools;
 
     if (filterJenjang !== 'ALL') {
       items = items.filter(s => s.jenjang === filterJenjang);
@@ -86,17 +87,17 @@ export function ManageLaporanBulanan() {
       items = items.filter(s => s.nama.toLowerCase().includes(search.toLowerCase()));
     }
     return items;
-  }, [search, filterJenjang, isOperator, userSchool]);
+  }, [search, filterJenjang, isOperator, userSchool, schools]);
 
-  const allSekolahCount = allSekolah.length;
+  const allSekolahCount = schools.length;
   const sudahLaporCount = data.filter(d => d.status === 'sudah_lapor' || d.status === 'diverifikasi').length;
 
-  function openDetail(school: typeof allSekolah[0]) {
+  function openDetail(school: SekolahItem) {
     setSelectedSchool(school);
     setDetailOpen(true);
   }
 
-  function getSchoolReports(school: typeof allSekolah[0]) {
+  function getSchoolReports(school: SekolahItem) {
     return data
       .filter(d => d.sekolahId === school.npsn || d.sekolah?.toLowerCase().includes(school.nama.toLowerCase()))
       .sort((a, b) => (b.tahun || 0) - (a.tahun || 0) || bulanList.indexOf(a.bulan || '') - bulanList.indexOf(b.bulan || ''));

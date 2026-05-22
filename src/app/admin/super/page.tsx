@@ -17,12 +17,13 @@ import {
 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
-import { allSekolah } from '@/data/sekolah';
+import { useSekolah } from '@/hooks/useSekolah';
 import { normalizeSchool } from '@/lib/normalize';
 
 export default function SuperAdminDashboard() {
   const { user, setUser } = useAppStore();
   const router = useRouter();
+  const { schools: semuaSekolah } = useSekolah();
 
   const { data: allStudents } = useCachedFirestore<Record<string, any>>({
     collectionName: 'students',
@@ -195,7 +196,7 @@ export default function SuperAdminDashboard() {
   // Build report matrix: rows = schools, columns = months
   const reportMatrix = useMemo(() => {
     const matrix: { sekolah: string; jenjang: string; months: Record<string, any> }[] = [];
-    for (const sekolah of allSekolah) {
+    for (const sekolah of semuaSekolah) {
       const months: Record<string, any> = {};
       for (const bulan of bulanList) {
         const report = laporanData.find((r) => {
@@ -210,7 +211,7 @@ export default function SuperAdminDashboard() {
       matrix.push({ sekolah: sekolah.nama, jenjang: sekolah.jenjang, months });
     }
     return matrix;
-  }, [laporanData]);
+  }, [laporanData, semuaSekolah]);
 
   const sudahLaporCount = reportMatrix.filter((s) =>
     bulanList.some((b) => s.months[b] && (s.months[b].status === 'sudah_dikirim' || s.months[b].status === 'diverifikasi'))
@@ -421,7 +422,7 @@ export default function SuperAdminDashboard() {
             </div>
             <div className="flex items-center gap-4 text-xs">
               <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-600" /> Sudah Lapor: {sudahLaporCount}</span>
-              <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-gray-400" /> Belum: {allSekolah.length - sudahLaporCount}</span>
+              <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-gray-400" /> Belum: {semuaSekolah.length - sudahLaporCount}</span>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -465,7 +466,7 @@ export default function SuperAdminDashboard() {
             </table>
           </div>
           <div className="px-4 py-2 border-t text-xs text-muted-foreground">
-            Menampilkan {allSekolah.length} sekolah • Tahun {currentYear}
+            Menampilkan {semuaSekolah.length} sekolah • Tahun {currentYear}
           </div>
         </div>
 

@@ -3,9 +3,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '@/lib/firebase'
 import { collection, onSnapshot } from 'firebase/firestore'
-import { allSekolah } from '@/data/sekolah'
+import { useSekolah } from '@/hooks/useSekolah'
 import { normalizeSchool } from '@/lib/normalize'
-import type { BaseSekolah, LaporanRecord, StatusLaporan, FilterState } from './types'
+import type { LaporanRecord, StatusLaporan, FilterState } from './types'
 
 const bulanList = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
 
@@ -18,6 +18,7 @@ const statusMap: Record<string, StatusLaporan> = {
 }
 
 export function useRekapData() {
+  const { schools } = useSekolah()
   const [laporanList, setLaporanList] = useState<LaporanRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -64,16 +65,16 @@ export function useRekapData() {
   }, [])
 
   const sekolahList = useMemo(() => {
-    return allSekolah.map((s) => ({
+    return schools.map((s) => ({
       nama: s.nama,
       npsn: s.npsn,
       nss: s.nss,
-      jenjang: s.jenjang as BaseSekolah['jenjang'],
-      status: s.status as BaseSekolah['status'],
+      jenjang: s.jenjang,
+      status: s.status,
       desa: s.desa,
       alamat: s.address,
     }))
-  }, [])
+  }, [schools])
 
   const getFilteredData = useMemo(() => {
     return (filter: FilterState) => {

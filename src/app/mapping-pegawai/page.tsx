@@ -6,7 +6,7 @@ import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot, getDocs, query } from 'firebase/firestore';
 import { rombelData } from '@/data/rombel';
-import { sekolahSD } from '@/data/sekolah';
+import { useSekolah } from '@/hooks/useSekolah';
 
 // ---------------------------------------------------------------------------
 // CACHE
@@ -470,6 +470,7 @@ function computeTotals(rows: SchoolRow[]): SchoolRow {
 // MAIN PAGE
 // ---------------------------------------------------------------------------
 export default function MappingPegawaiPage() {
+  const { schools } = useSekolah();
   const [rows, setRows] = useState<SchoolRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMsg, setLoadingMsg] = useState('Memuat data pegawai...');
@@ -495,7 +496,7 @@ export default function MappingPegawaiPage() {
     function processData(employees: Record<string, any>[], students: Record<string, any>[]) {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
       debounceTimer.current = setTimeout(() => {
-        const sekolahListRaw = sekolahSD.filter(s => s.status === 'NEGERI').map(s => ({ nama: s.nama, npsn: s.npsn }));
+        const sekolahListRaw = schools.filter(s => s.jenjang === 'SD' && s.status === 'NEGERI').map(s => ({ nama: s.nama, npsn: s.npsn }));
         const sekolahList = orderSchools(sekolahListRaw);
         const aggregated = aggregate(employees, sekolahList, students);
         setRows(aggregated);

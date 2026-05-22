@@ -1,72 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { sekolahSD, sekolahTK, sekolahKB } from '@/data/sekolah';
+import { useState, useMemo } from 'react';
 import { Search, School, MapPin, BadgeCheck, Loader2 } from 'lucide-react';
-import type { School as SchoolType } from '@/types';
-
-type Jenjang = 'SD' | 'TK' | 'KB' | 'PAUD';
-
-interface SchoolItem {
-  id?: string;
-  nama: string;
-  npsn?: string;
-  jenjang: string;
-  alamat?: string;
-  status?: string;
-  desa?: string;
-  kontak?: string;
-  kepalaSekolah?: string;
-}
-
-const staticSchools: SchoolItem[] = [
-  ...sekolahSD.map(s => ({ ...s, jenjang: 'SD' as const })),
-  ...sekolahTK.map(s => ({ ...s, jenjang: 'TK' as const })),
-  ...sekolahKB.map(s => ({ ...s, jenjang: 'KB' as const })),
-];
+import { useSekolah } from '@/hooks/useSekolah';
 
 export default function DataSekolahPage() {
-  const [schools, setSchools] = useState<SchoolItem[]>(staticSchools);
-  const [loading, setLoading] = useState(false);
+  const { schools, loading } = useSekolah();
   const [jenjang, setJenjang] = useState<'SD' | 'TK' | 'KB' | 'PAUD' | 'all'>('all');
   const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    if (!db) return;
-    const unsubscribe = onSnapshot(
-      collection(db, 'schools'),
-      (snap) => {
-        if (snap.size > 0) {
-          const fb: SchoolItem[] = snap.docs.map((d: any) => {
-            const data = d.data() || {};
-            return {
-              id: d.id,
-              nama: data.name || data.nama || '',
-              npsn: data.npsn || '-',
-              jenjang: data.jenjang || 'SD',
-              alamat: data.alamat || '',
-              status: data.status || 'NEGERI',
-              desa: data.desa || '',
-              kontak: data.kontak || '',
-              kepalaSekolah: data.kepalaSekolah || '-',
-            };
-          });
-          setSchools(fb);
-        }
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error in schools realtime listener:', err);
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
   const filtered = useMemo(() => {
     return schools.filter(s => {
@@ -111,7 +52,7 @@ export default function DataSekolahPage() {
 
         <div className="grid gap-4">
           {filtered.map((s, i) => (
-            <div key={s.id || i} className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-5 hover:shadow-sm transition-shadow">
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-5 hover:shadow-sm transition-shadow">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
@@ -138,7 +79,7 @@ export default function DataSekolahPage() {
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          {schools === staticSchools ? 'Data dari database statis' : 'Data dari Firebase Firestore'}
+          Data dari Firebase Firestore
         </p>
       </div>
     </div>

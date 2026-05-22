@@ -14,35 +14,34 @@ import {
   Users, GraduationCap, BookOpen, Search, MapPin, School as SchoolIcon,
   Save, Loader2,
 } from 'lucide-react';
-import { allSekolah } from '@/data/sekolah';
 import { toast } from 'sonner';
 import { normalizeSchool } from '@/lib/normalize';
+import { useSekolah } from '@/hooks/useSekolah';
 import type { UserRole } from '@/types';
-
-// Build a lookup: normalized firestore-style name → canonical name from master data
-const schoolDisplayLookup = new Map<string, string>();
-for (const s of allSekolah) {
-  const nk = normalizeSchool(s.nama);
-  if (nk && !schoolDisplayLookup.has(nk)) schoolDisplayLookup.set(nk, s.nama);
-  // also index by raw name (case-normalized) so exact matches work too
-  if (s.nama && !schoolDisplayLookup.has(s.nama.toUpperCase())) schoolDisplayLookup.set(s.nama.toUpperCase(), s.nama);
-}
-
-/** Return the canonical (short) school name from the master list, or the original name if no match found. */
-function displaySchoolName(rawName: string): string {
-  if (!rawName) return '-';
-  // Try normalized lookup
-  const norm = normalizeSchool(rawName);
-  if (norm && schoolDisplayLookup.has(norm)) return schoolDisplayLookup.get(norm)!;
-  // Try uppercase exact match on master names
-  const up = rawName.toUpperCase();
-  if (schoolDisplayLookup.has(up)) return schoolDisplayLookup.get(up)!;
-  return rawName;
-}
 
 type JenjangFilter = 'ALL' | 'SD' | 'TK' | 'KB';
 
 export default function SuperDataGuru() {
+  const { schools: allSekolah } = useSekolah();
+
+  const schoolDisplayLookup = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of allSekolah) {
+      const nk = normalizeSchool(s.nama);
+      if (nk && !m.has(nk)) m.set(nk, s.nama);
+      if (s.nama && !m.has(s.nama.toUpperCase())) m.set(s.nama.toUpperCase(), s.nama);
+    }
+    return m;
+  }, [allSekolah]);
+
+  function displaySchoolName(rawName: string): string {
+    if (!rawName) return '-';
+    const norm = normalizeSchool(rawName);
+    if (norm && schoolDisplayLookup.has(norm)) return schoolDisplayLookup.get(norm)!;
+    const up = rawName.toUpperCase();
+    if (schoolDisplayLookup.has(up)) return schoolDisplayLookup.get(up)!;
+    return rawName;
+  }
   const { data: allDataResult, isLoading, isError, error } = usePegawaiAll();
   const [searchSekolah, setSearchSekolah] = useState('');
   const [jenjangFilter, setJenjangFilter] = useState<JenjangFilter>('ALL');

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, FileText, Home, ShieldCheck, Truck, CheckCircle, AlertTriangle, MapPin, School, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
-import { sekolahSD } from '@/data/sekolah';
+import { useSekolah } from '@/hooks/useSekolah';
 
 function hitungUsia(tanggalLahir: string): number {
   if (!tanggalLahir) return 0;
@@ -32,6 +32,8 @@ const colorMap: Record<string, string> = {
 };
 
 function FormPendaftaranContent() {
+  const { schools } = useSekolah();
+  const sdSekolah = useMemo(() => schools.filter(s => s.jenjang === 'SD'), [schools]);
   const searchParams = useSearchParams();
   const [jalur, setJalur] = useState('Domisili');
   const [nik, setNik] = useState('');
@@ -47,7 +49,7 @@ function FormPendaftaranContent() {
   const [pekerjaan, setPekerjaan] = useState('');
   const [fromDb, setFromDb] = useState(false);
   const [sekolahId, setSekolahId] = useState('');
-  const selectedSekolah = sekolahSD.find((s) => s.npsn === sekolahId);
+  const selectedSekolah = sdSekolah.find((s) => s.npsn === sekolahId);
 
   useEffect(() => {
     if (!searchParams.has('nik')) return;
@@ -174,7 +176,7 @@ function FormPendaftaranContent() {
               <select value={sekolahId} onChange={(e) => setSekolahId(e.target.value)}
                 className="border dark:border-slate-700 p-3 rounded-xl text-sm bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-full">
                 <option value="">Pilih Sekolah</option>
-                {sekolahSD.map((s) => <option key={s.npsn} value={s.npsn}>{s.nama}</option>)}
+                {sdSekolah.map((s) => <option key={s.npsn} value={s.npsn}>{s.nama}</option>)}
               </select>
               {selectedSekolah && (
                 <div className="mt-3 flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3">
