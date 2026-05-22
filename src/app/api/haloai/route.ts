@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
 import { buildSystemPrompt, ChatContext, checkGeminiHealth } from '@/lib/haloAI';
 import { findLocalAnswer, classifyComplexity, classifyQueryType, getSmartRoutingReply, hasSearchIntent, type Complexity } from '@/lib/haloAI-knowledge';
 
@@ -72,6 +73,7 @@ async function trySearchGrounded(
   key: string,
   models: string[]
 ): Promise<NextResponse | null> {
+  const ai = new GoogleGenAI({ apiKey: key });
   const systemPrompt = buildSystemPrompt(ctx, complexity);
   const recentHistory = (history || []).slice(-3);
   const contents = [
@@ -88,54 +90,28 @@ async function trySearchGrounded(
 
   for (const model of modelsToTry) {
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents,
-            tools: [{ googleSearch: {} }],
-            generationConfig: {
-              temperature: 0.7,
-              topP: 0.95,
-              topK: 40,
-              maxOutputTokens: 1024,
-            },
-          }),
-        }
-      );
+      const response = await ai.models.generateContent({
+        model,
+        contents,
+        config: {
+          tools: [{ googleSearch: {} }],
+          temperature: 0.7,
+          topP: 0.95,
+          topK: 40,
+          maxOutputTokens: 1024,
+        },
+      });
 
-      if (!response.ok) {
-        if (response.status === 429 || response.status === 404) continue;
-        break;
-      }
-
-      const data = await response.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const text = response?.text;
       if (!text) continue;
 
-      let sources: { title: string; link: string }[] = [];
-      if (data?.candidates?.[0]?.groundingMetadata?.groundingChunks) {
-        const chunks = data.candidates[0].groundingMetadata.groundingChunks;
-        sources = chunks
-          .filter((c: any) => c?.web?.uri && c?.web?.title)
-          .map((c: any) => ({ title: c.web.title, link: c.web.uri }));
-      }
-
-      let reply = text;
-      if (sources.length > 0) {
-        reply = `${text}\n\n**Sumber:**\n${sources.map(s => `- [${s.title}](${s.link})`).join('\n')}`;
-      }
-
-      console.log(`[HaloAI] Search grounded: ${model} (${sources.length} sources)`);
+      console.log(`[HaloAI] Search grounded: ${model}`);
       return NextResponse.json({
         success: true,
         model,
-        source: sources.length > 0 ? 'search' : 'gemini',
+        source: 'search',
         complexity,
-        reply,
-        sources: sources.length > 0 ? sources : undefined,
+        reply: text,
         remaining: dailyCheck.remaining,
         total: dailyCheck.total,
         quotaStatus: dailyCheck.status,
@@ -237,6 +213,7 @@ export async function POST(req: NextRequest) {
     }
 
     const systemPrompt = buildSystemPrompt(ctx, complexity);
+    const ai = new GoogleGenAI({ apiKey: key });
 
     const recentHistory = (history || []).slice(-3);
     const contents = [
@@ -270,85 +247,42 @@ export async function POST(req: NextRequest) {
       console.log(`[HaloAI] Trying model: ${model} (complexity: ${complexity}, attempt ${i + 1}/${modelsToTry.length})`);
 
       try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents,
-              generationConfig: {
-                temperature: complexity === 'kompleks' ? 0.8 : 0.7,
-                topP: 0.95,
-                topK: 40,
-                maxOutputTokens: maxTokens,
-              },
-            }),
-          }
-        );
+        const response = await ai.models.generateContent({
+          model,
+          contents,
+          config: {
+            temperature: complexity === 'kompleks' ? 0.8 : 0.7,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: maxTokens,
+          },
+        });
 
-        if (response.ok) {
-          const data = await response.json();
-          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        const text = response?.text;
 
-          if (text) {
-            console.log(`[HaloAI] SUCCESS with model: ${model}`);
-            return NextResponse.json({
-              success: true,
-              model,
-              source: 'gemini',
-              complexity,
-              reply: text,
-              remaining: dailyCheck.remaining,
-              total: dailyCheck.total,
-              quotaStatus: dailyCheck.status,
-            });
-          }
-
-          console.warn(`[HaloAI] Empty response from ${model}`);
-          lastError = 'Empty response from Gemini';
-          lastCode = 'EMPTY_RESPONSE';
-          fallbackAttempted = true;
-          continue;
+        if (text) {
+          console.log(`[HaloAI] SUCCESS with model: ${model}`);
+          return NextResponse.json({
+            success: true,
+            model,
+            source: 'gemini',
+            complexity,
+            reply: text,
+            remaining: dailyCheck.remaining,
+            total: dailyCheck.total,
+            quotaStatus: dailyCheck.status,
+          });
         }
 
-        const errText = await response.text();
-        const statusCode = response.status;
-
-        let detail = '';
-        let isModelNotFound = false;
-        try {
-          const errJson = JSON.parse(errText);
-          detail = errJson?.error?.message || errText;
-          isModelNotFound = detail.includes('not found') || statusCode === 404;
-        } catch {
-          detail = errText;
-        }
-
-        if (isModelNotFound) {
-          console.warn(`[HaloAI] Model not found: ${model}`);
-          lastError = detail;
-          lastCode = 'MODEL_NOT_FOUND';
-          fallbackAttempted = true;
-          continue;
-        }
-
-        if (statusCode === 429) {
-          console.warn(`[HaloAI] Rate limited on ${model} (429)`);
-          lastError = detail;
-          lastCode = 'RATE_LIMITED';
-          fallbackAttempted = true;
-          continue;
-        }
-
-        console.error(`[HaloAI] HTTP error on ${model}: ${statusCode}`);
-        lastError = detail;
-        lastCode = `HTTP_${statusCode}`;
-        break;
+        console.warn(`[HaloAI] Empty response from ${model}`);
+        lastError = 'Empty response from Gemini';
+        lastCode = 'EMPTY_RESPONSE';
+        fallbackAttempted = true;
+        continue;
       } catch (fetchError: any) {
-        console.error(`[HaloAI] Fetch error on ${model}: ${fetchError?.message || fetchError}`);
-        lastError = fetchError?.message || 'Fetch failed';
-        lastCode = 'FETCH_ERROR';
+        console.warn(`[HaloAI] Failed on ${model}: ${fetchError?.message || fetchError}`);
+        lastError = fetchError?.message || 'API call failed';
+        lastCode = 'API_ERROR';
         fallbackAttempted = true;
         continue;
       }

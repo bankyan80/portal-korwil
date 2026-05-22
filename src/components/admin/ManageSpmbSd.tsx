@@ -237,7 +237,7 @@ export function ManageSpmbSd() {
       console.error('Error saving spmb:', e);
       if (e.code === 'unavailable' || e.message?.includes('offline') || e.message?.includes('network')) {
         try {
-          await enqueue(editingId ? 'update' : 'add', 'spmb_sd', editingId || `spmb-${Date.now()}`, form);
+          await enqueue(editingId ? 'update' : 'create', 'spmb_sd', editingId || `spmb-${Date.now()}`, form);
           toast.info(editingId ? 'Data akan diperbarui saat online' : 'Data akan ditambahkan saat online');
           setFormOpen(false);
         } catch {}

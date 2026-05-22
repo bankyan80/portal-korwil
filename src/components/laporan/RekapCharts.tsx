@@ -40,7 +40,7 @@ export function StatPie({ data, title }: { data: PieData[]; title: string }) {
       <h3 className="text-sm font-semibold text-gray-800 mb-3">{title}</h3>
       <ResponsiveContainer width="100%" height={250}>
         <PieChart>
-          <Pie data={data} cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name}: ${value}`}>
+          <Pie data={data} dataKey="value" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name}: ${value}`}>
             {data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
           </Pie>
           <Tooltip />

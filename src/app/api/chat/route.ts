@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { GoogleGenAI } from '@google/genai';
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -163,42 +164,29 @@ export async function POST(req: Request) {
       });
     }
 
+    const ai = new GoogleGenAI({ apiKey: key });
+
     const contents = [
       ...history.map((msg) => ({
-        role: msg.role === "assistant" ? "model" : "user",
+        role: msg.role === "assistant" ? "model" as const : "user" as const,
         parts: [{ text: msg.content }],
       })),
-      { role: "user", parts: [{ text: message }] },
+      { role: "user" as const, parts: [{ text: message }] },
     ];
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: SYSTEM_PROMPT }],
-          },
-          contents,
-          generationConfig: {
-            temperature: 0.8,
-            topP: 0.95,
-            topK: 40,
-            maxOutputTokens: 4096,
-          },
-        }),
-      }
-    );
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-lite',
+      contents,
+      config: {
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        temperature: 0.8,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 4096,
+      },
+    });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("GEMINI HTTP ERROR:", response.status, errText);
-      return NextResponse.json({ success: false, reply: "Maaf, terjadi gangguan pada AI. Silakan coba lagi beberapa saat." }, { status: 500 });
-    }
-
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const text = response?.text;
 
     return NextResponse.json({
       success: true,

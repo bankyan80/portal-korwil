@@ -128,7 +128,7 @@ export function ManageSarpras() {
   }, [debouncedSave]);
 
   useEffect(() => {
-    loadDraft<Record<string, unknown>>().then(draft => {
+    loadDraft().then(draft => {
       if (draft && Object.keys(draft).length > 0) {
         setForm(prev => {
           const next = { ...prev };

@@ -195,12 +195,17 @@ export function ManageDataPd() {
   }, [isOperator, userSchool]);
 
   const [page, setPage] = useState(1);
-  const itemsPerPage = 20;
+  const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
+  const [filterKelas, setFilterKelas] = useState<string>('ALL');
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   const filteredSiswa = useMemo(() => {
+    let items = allSiswa;
+    if (filterJenjang !== 'ALL') items = items.filter(s => s.jenjang === filterJenjang);
+    if (filterKelas !== 'ALL') items = items.filter(s => String(s.kelas) === filterKelas);
     const q = search.toLowerCase();
-    return q ? allSiswa.filter(s => s.nama.toLowerCase().includes(q) || s.nik.includes(q)) : allSiswa;
-  }, [allSiswa, search]);
+    return q ? items.filter(s => s.nama.toLowerCase().includes(q) || s.nik.includes(q)) : items;
+  }, [allSiswa, search, filterJenjang, filterKelas]);
 
   const sortedSiswa = useMemo(() => {
     return [...filteredSiswa].sort((a, b) => {
@@ -436,22 +441,44 @@ export function ManageDataPd() {
         </div>
       )}
 
-      <div className="flex items-center gap-2 justify-between flex-wrap">
-        <div className="relative w-full sm:w-72">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+            {['ALL','SD','TK','KB','TPA','SPS','RA'].map(j => (
+              <button key={j} onClick={() => { setFilterJenjang(j); setPage(1); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${filterJenjang === j ? 'bg-blue-800 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                {j === 'ALL' ? 'Semua' : j}
+              </button>
+            ))}
+          </div>
+          {filterJenjang === 'SD' && (
+            <select value={filterKelas} onChange={(e) => { setFilterKelas(e.target.value); setPage(1); }}
+              className="text-xs border rounded-lg px-2 py-1.5 bg-background text-foreground">
+              <option value="ALL">Semua Kelas</option>
+              {[1,2,3,4,5,6].map(k => <option key={k} value={k}>Kelas {k}</option>)}
+            </select>
+          )}
+          <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setPage(1); }}
+            className="text-xs border rounded-lg px-2 py-1.5 bg-background text-foreground">
+            {[10,20,50,100].map(n => <option key={n} value={n}>{n} baris</option>)}
+          </select>
+        </div>
+        <div className="relative w-full sm:w-56">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input type="text" placeholder="Cari NIK/nama..." value={search} onChange={(e) => setSearch(e.target.value)}
             className="pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-full bg-background text-foreground" />
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => { setCsvUrl(''); setImportResult(null); setImportOpen(true); }} variant="outline" className="gap-2">
-            <Upload className="w-4 h-4" /> Import Dapodik
-          </Button>
-          <Button onClick={handlePromote} disabled={promoting} variant="outline" className="gap-2">
-            {promoting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
-            Naik Kelas
-          </Button>
-          <Button onClick={openAdd} className="bg-blue-800 hover:bg-blue-900 text-white gap-2"><Plus className="w-4 h-4" /> Tambah</Button>
-        </div>
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button onClick={() => { setCsvUrl(''); setImportResult(null); setImportOpen(true); }} variant="outline" className="gap-2">
+          <Upload className="w-4 h-4" /> Import Dapodik
+        </Button>
+        <Button onClick={handlePromote} disabled={promoting} variant="outline" className="gap-2">
+          {promoting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
+          Naik Kelas
+        </Button>
+        <Button onClick={openAdd} className="bg-blue-800 hover:bg-blue-900 text-white gap-2"><Plus className="w-4 h-4" /> Tambah</Button>
       </div>
 
       {sortedSiswa.length === 0 ? (

@@ -165,7 +165,7 @@ const LOCAL_KB: Record<string, LocalAnswer> = {
   },
   'berita': {
     answer: 'Berita dan informasi bisa diakses di:\n\n[📰 Berita](/berita) — daftar berita\n[ℹ️ Semua Informasi](/semua-informasi) — semua informasi publik\n\nBerisi pengumuman dan informasi terbaru seputar pendidikan.',
-    confirmation: 'exact',
+    confidence: 'exact',
   },
   'donasi': {
     answer: 'Donasi bisa diakses di:\n\n[❤️ Donasi](/donasi)\n\nHalaman ini berisi informasi donasi untuk kegiatan pendidikan.',

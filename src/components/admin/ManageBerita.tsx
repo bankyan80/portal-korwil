@@ -118,7 +118,7 @@ export function ManageBerita() {
       console.error('Error saving berita:', e);
       if (e.code === 'unavailable' || e.message?.includes('offline') || e.message?.includes('network')) {
         try {
-          await enqueue(editingId ? 'update' : 'add', 'news', editingId || `news-${Date.now()}`, form);
+          await enqueue(editingId ? 'update' : 'create', 'news', editingId || `news-${Date.now()}`, form);
           toast.info(editingId ? 'Berita akan diperbarui saat online' : 'Berita akan ditambahkan saat online');
           setFormOpen(false);
         } catch {}

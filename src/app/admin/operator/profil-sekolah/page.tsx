@@ -65,8 +65,8 @@ export default function OperatorProfilSekolah() {
       kontak: school?.kontak || '',
       website: school?.website || '',
     };
-    const draft = await loadDraft(baseForm);
-    setForm(draft);
+    const draft = await loadDraft();
+    setForm(draft ?? baseForm);
     setEditOpen(true);
   }
 

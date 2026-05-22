@@ -1,23 +1,21 @@
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { classifyComplexity, type Complexity } from './haloAI-knowledge';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 const GEMINI_PRO_MODEL = 'gemini-2.5-pro';
 
-let genAI: GoogleGenerativeAI | null = null;
+let ai: GoogleGenAI | null = null;
 
-function getGenAI(): GoogleGenerativeAI {
-  if (!genAI) {
-    genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+function getAI(): GoogleGenAI {
+  if (!ai) {
+    ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
   }
-  return genAI;
+  return ai;
 }
 
-export function getModel(usePro: boolean = false): GenerativeModel {
-  const ai = getGenAI();
-  const modelName = usePro ? GEMINI_PRO_MODEL : GEMINI_MODEL;
-  return ai.getGenerativeModel({ model: modelName });
+export function getModelName(usePro: boolean = false): string {
+  return usePro ? GEMINI_PRO_MODEL : GEMINI_MODEL;
 }
 
 export interface ChatContext {
@@ -85,21 +83,14 @@ export async function checkGeminiHealth(): Promise<{ ok: boolean; model: string 
     if (!GEMINI_API_KEY) return { ok: false, model: '' };
     const models = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash'];
     for (const model of models) {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
-            generationConfig: { maxOutputTokens: 10 },
-          }),
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) return { ok: true, model };
-      }
+      try {
+        const response = await getAI().models.generateContent({
+          model,
+          contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+          config: { maxOutputTokens: 10 },
+        });
+        if (response?.text) return { ok: true, model };
+      } catch {}
     }
     return { ok: false, model: '' };
   } catch {
