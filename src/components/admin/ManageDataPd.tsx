@@ -119,8 +119,9 @@ export function ManageDataPd() {
       // Load API data (one-shot)
       let dbSiswa: SiswaRecord[] = [];
       try {
+        // Coba pakai schoolId dulu, jika gagal API akan fallback ke filter manual di server
         const apiUrl = user?.schoolId 
-          ? `/api/siswa/list?schoolId=${user.schoolId}`
+          ? `/api/siswa/list?schoolId=${user.schoolId}&sekolah=${encodeURIComponent(userSchool)}`
           : `/api/siswa/list?sekolah=${encodeURIComponent(userSchool)}`;
         
         console.log(`[ManageDataPd] Fetching API: ${apiUrl}`);
@@ -129,7 +130,7 @@ export function ManageDataPd() {
         console.log(`[ManageDataPd] API Result Count: ${json.siswa?.length || 0}`);
         dbSiswa = (json.siswa || [])
           .map((s: any) => ({
-            id: s.id, // Pastikan ID terbawa jika ada
+            id: s.id || s.nik, 
             nik: s.nik, nama: s.nama, jk: s.jk, nisn: s.nisn || '',
             tanggal_lahir: s.tanggal_lahir || '', sekolah: s.sekolah || userSchool,
             jenjang: s.jenjang || 'SD', kelas: s.kelas ? Number(s.kelas) : undefined,
@@ -140,29 +141,33 @@ export function ManageDataPd() {
       // Load Firestore overlay
       const computeMerged = (fsSiswa: SiswaRecord[]) => {
         const localNiks = new Set(fsSiswa.map(s => s.nik));
-        // Gabungkan data dari Firestore dan API, prioritaskan Firestore (local overlay)
         const combined = [...fsSiswa, ...dbSiswa.filter(s => !localNiks.has(s.nik))];
-        console.log(`[ManageDataPd] Loaded ${fsSiswa.length} from FS, ${dbSiswa.length} from API. Total: ${combined.length}`);
         return combined;
       };
 
       if (db) {
         try {
-          const siswaQuery = user?.schoolId
-            ? query(collection(db, 'students'), where('schoolId', '==', user.schoolId))
-            : query(collection(db, 'students'), where('sekolah', '==', userSchool));
+          // Pencarian di Firestore ditingkatkan: tarik semua data siswa aktif, filter di client agar akurat
+          // (Karena data di Firestore mungkin tidak punya schoolId yang konsisten)
+          const siswaQuery = query(collection(db, 'students'), limit(2000));
           
-          console.log(`[ManageDataPd] Querying Firestore for schoolId: ${user?.schoolId} or sekolah: ${userSchool}`);
+          console.log(`[ManageDataPd] Fetching Firestore for local overlay...`);
           const snap = await getDocs(siswaQuery);
           const fsSiswa: SiswaRecord[] = [];
+          const q = normalizeSchool(userSchool);
+
           snap.forEach((d) => {
             const s = d.data() as SiswaRecord;
-            if (s.status !== 'lulus') {
+            const normS = normalizeSchool(s.sekolah || '');
+            // Filter berdasarkan kesamaan nama sekolah atau schoolId
+            if ((normS === q || s.schoolId === user?.schoolId) && s.status !== 'lulus') {
               fsSiswa.push({ id: d.id, ...s });
             }
           });
           
-          setAllSiswa(computeMerged(fsSiswa));
+          const finalData = computeMerged(fsSiswa);
+          console.log(`[ManageDataPd] Final Merged Count: ${finalData.length} (${fsSiswa.length} from FS)`);
+          setAllSiswa(finalData);
         } catch (e) {
           console.error('Error loading Firestore students:', e);
           setAllSiswa(dbSiswa);
