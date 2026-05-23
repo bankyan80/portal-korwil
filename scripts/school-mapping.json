@@ -1,0 +1,688 @@
+{
+  "generatedAt": "2026-05-22T15:51:08.852Z",
+  "mapping": {
+    "kb mutiara": {
+      "canonical": "KB MUTIARA",
+      "reason": "exact",
+      "count": 54,
+      "examples": [
+        "KB MUTIARA"
+      ],
+      "docIds": [
+        "08xtWNpj8DckWx0eng4Z",
+        "1902012207200005",
+        "3209070403190002",
+        "3209070411190001",
+        "3209070707190002"
+      ]
+    },
+    "tk al irsyad al islamiyyah": {
+      "canonical": "TK AL-IRSYAD AL-ISLAMIYYAH",
+      "reason": "exact",
+      "count": 240,
+      "examples": [
+        "TK AL-IRSYAD AL-ISLAMIYYAH"
+      ],
+      "docIds": [
+        "0GfgHeZIuc9rXAzV26NE",
+        "0vlsWJKVRXNDPLNqaEpa",
+        "13CUVqGpilP7WmqcsCjq",
+        "1QDuM5xTh1EEnbsctKMm",
+        "2DPm2bVpeiUDjsG8vqVr"
+      ]
+    },
+    "kb az zahra": {
+      "canonical": "KB AZ-ZAHRA",
+      "reason": "exact",
+      "count": 43,
+      "examples": [
+        "KB AZ-ZAHRA"
+      ],
+      "docIds": [
+        "0Jm3urWjy7WVrUVgGnbf",
+        "0MJipc4oY4s8v4i1wT4U",
+        "1OLLvvRdMenoOQjlfG9U",
+        "1YPqoB1PMJTaS77MAObu",
+        "7ApILPmWF05kIsawZgRA"
+      ]
+    },
+    "paud asy syafiiyah": {
+      "canonical": "PAUD ASY-SYAFIIYAH",
+      "reason": "exact",
+      "count": 32,
+      "examples": [
+        "PAUD ASY-SYAFIIYAH"
+      ],
+      "docIds": [
+        "0b7KsSMz0aClYReyfyDN",
+        "1t4sx81g4rCVetjS41Ms",
+        "4I8XtcwFLrqpUNprY1IX",
+        "6LCb5hgoqwS1GZOv1ifF",
+        "7DBZI1jxuBUtu6Gzo3My"
+      ]
+    },
+    "muslimat nu": {
+      "canonical": "TK MUSLIMAT NU",
+      "reason": "jaccard:0.67",
+      "count": 75,
+      "examples": [
+        "MUSLIMAT NU"
+      ],
+      "docIds": [
+        "1107121312190001",
+        "3208275207200001",
+        "3209062910200002",
+        "3209064311190001",
+        "3209064912190001"
+      ]
+    },
+    "it al irsyad al islamiyyah": {
+      "canonical": "SD IT AL IRSYAD AL ISLAMIYYAH",
+      "reason": "jaccard:0.80",
+      "count": 546,
+      "examples": [
+        "IT AL IRSYAD AL ISLAMIYYAH"
+      ],
+      "docIds": [
+        "1406031506160001",
+        "1471116311140003",
+        "3171036201190003",
+        "3171052010160003",
+        "3171056103131004"
+      ]
+    },
+    "kb a h plus": {
+      "canonical": "KB A.H. PLUS",
+      "reason": "exact",
+      "count": 65,
+      "examples": [
+        "KB A.H. PLUS"
+      ],
+      "docIds": [
+        "1RfIq6bQOVHezAkCW8aB",
+        "1sQ2rCO3OzInHsSFLFeG",
+        "2Eqxte9rJZQkYspwyR6S",
+        "6U3DUK0mUYj9qnhkxidi",
+        "6t9NJpbGuKjQhZB0thlF"
+      ]
+    },
+    "paud al husna": {
+      "canonical": "PAUD AL-HUSNA",
+      "reason": "exact",
+      "count": 33,
+      "examples": [
+        "PAUD AL-HUSNA"
+      ],
+      "docIds": [
+        "1nYeaNDLnXibwdLgXHHb",
+        "2iHzuj3niu29LQrM32hg",
+        "64K4Gq9TR4q7WEjxR1qK",
+        "7Z8170gVYF3quAT9iWbZ",
+        "8LGFGfOVGRNglWuX7TnO"
+      ]
+    },
+    "negeri 2 lemahabang kecamatan lemahabang": {
+      "canonical": "SD NEGERI 2 LEMAHABANG",
+      "reason": "jaccard:0.60",
+      "count": 383,
+      "examples": [
+        "NEGERI 2 LEMAHABANG KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "2171070405140004",
+        "2171070804160002",
+        "3175024809160010",
+        "3175060703180013",
+        "3175070802170004"
+      ]
+    },
+    "an naim": {
+      "canonical": "PAUD AN NAIM",
+      "reason": "jaccard:0.67",
+      "count": 70,
+      "examples": [
+        "AN NAIM"
+      ],
+      "docIds": [
+        "3171021107190002",
+        "3171036809200009",
+        "3173080106190009",
+        "3208121205210001",
+        "3209063012190002"
+      ]
+    },
+    "negeri 1 lemahabang kulon kecamatan lemahabang": {
+      "canonical": "SD NEGERI 1 LEMAHABANG KULON",
+      "reason": "jaccard:0.67",
+      "count": 241,
+      "examples": [
+        "NEGERI 1 LEMAHABANG KULON KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "3172012204160005",
+        "3174061104151006",
+        "3174066603121004",
+        "3175024107180008",
+        "3201320702160001"
+      ]
+    },
+    "negeri 1 lemahabang kecamatan lemahabang": {
+      "canonical": "SD NEGERI 1 LEMAHABANG",
+      "reason": "jaccard:0.60",
+      "count": 149,
+      "examples": [
+        "NEGERI 1 LEMAHABANG KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "3172021104160012",
+        "3172026401141007",
+        "3173067112180003",
+        "3209061808150003",
+        "3209064403150001"
+      ]
+    },
+    "tunas harapan": {
+      "canonical": "PAUD TUNAS HARAPAN",
+      "reason": "jaccard:0.67",
+      "count": 30,
+      "examples": [
+        "TUNAS HARAPAN"
+      ],
+      "docIds": [
+        "3172056409190008",
+        "3209070108190001",
+        "3209070204190001",
+        "3209070512200001",
+        "3209070604200002"
+      ]
+    },
+    "tk al aqso": {
+      "canonical": "TK AL-AQSO",
+      "reason": "exact",
+      "count": 46,
+      "examples": [
+        "TK AL-AQSO"
+      ],
+      "docIds": [
+        "3175042604200007",
+        "3202294604200001",
+        "3209056307190001",
+        "3209070110190002",
+        "3209070204200001"
+      ]
+    },
+    "negeri lemahabang": {
+      "canonical": "TK NEGERI LEMAHABANG",
+      "reason": "jaccard:0.67",
+      "count": 131,
+      "examples": [
+        "NEGERI LEMAHABANG"
+      ],
+      "docIds": [
+        "3175105706210007",
+        "3203074602210002",
+        "3207311208190001",
+        "3209063004200002",
+        "3209067005200001"
+      ]
+    },
+    "aisyiyah lemahabang": {
+      "canonical": "TK AISYIYAH LEMAHABANG",
+      "reason": "jaccard:0.67",
+      "count": 27,
+      "examples": [
+        "AISYIYAH LEMAHABANG"
+      ],
+      "docIds": [
+        "3204385312200001",
+        "3209061102210002",
+        "3209066611200001",
+        "3209070403200002",
+        "3209070704210004"
+      ]
+    },
+    "amalia salsabila": {
+      "canonical": "KB AMALIA SALSABILA",
+      "reason": "jaccard:0.67",
+      "count": 70,
+      "examples": [
+        "AMALIA SALSABILA"
+      ],
+      "docIds": [
+        "3208104605190001",
+        "3209012101200002",
+        "3209070307190001",
+        "3209070406200004",
+        "3209070407190002"
+      ]
+    },
+    "al husna": {
+      "canonical": "PAUD AL-HUSNA",
+      "reason": "jaccard:0.67",
+      "count": 33,
+      "examples": [
+        "AL-HUSNA"
+      ],
+      "docIds": [
+        "3208221802200001",
+        "3208225409220001",
+        "3209070905210002",
+        "3209071703210002",
+        "3209072706200001"
+      ]
+    },
+    "az zahra": {
+      "canonical": "KB AZ-ZAHRA",
+      "reason": "jaccard:0.67",
+      "count": 42,
+      "examples": [
+        "AZ-ZAHRA"
+      ],
+      "docIds": [
+        "3209061311200001",
+        "3209062909210001",
+        "3209070309200001",
+        "3209070703200001",
+        "3209072902200004"
+      ]
+    },
+    "bpp kenanga": {
+      "canonical": "TK BPP KENANGA",
+      "reason": "jaccard:0.67",
+      "count": 18,
+      "examples": [
+        "BPP KENANGA"
+      ],
+      "docIds": [
+        "3209062008190001",
+        "3209070309190001",
+        "3209070406200001",
+        "3209070912200003",
+        "3209072509200001"
+      ]
+    },
+    "paud al hambra": {
+      "canonical": "PAUD AL HAMBRA",
+      "reason": "exact",
+      "count": 30,
+      "examples": [
+        "PAUD AL HAMBRA"
+      ],
+      "docIds": [
+        "3209062103200001",
+        "3209070208200001",
+        "3209070304190001",
+        "3209070404190003",
+        "3209070501210001"
+      ]
+    },
+    "sps melati": {
+      "canonical": "PAUD SPS MELATI",
+      "reason": "jaccard:0.67",
+      "count": 19,
+      "examples": [
+        "SPS MELATI"
+      ],
+      "docIds": [
+        "3209070111190002",
+        "3209070805190002",
+        "3209071105190001",
+        "3209071603190002",
+        "3209071901200002"
+      ]
+    },
+    "asy syafiiyah": {
+      "canonical": "PAUD ASY-SYAFIIYAH",
+      "reason": "jaccard:0.67",
+      "count": 32,
+      "examples": [
+        "ASY - SYAFIIYAH"
+      ],
+      "docIds": [
+        "3209070608200005",
+        "3209070808200002",
+        "3209070812210002",
+        "3209071302220003",
+        "3209071612210002"
+      ]
+    }
+  },
+  "review": [
+    {
+      "norm": "negeri 1 cipeujeuh wetan kecamatan lemahabang",
+      "count": 392,
+      "examples": [
+        "NEGERI 1 CIPEUJEUH WETAN KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "1271022610180001",
+        "1405021704150004",
+        "1405022006130004",
+        "1605121801150001",
+        "1871145310170002"
+      ]
+    },
+    {
+      "norm": "negeri 3 cipeujeuh wetan kecamatan lemahabang",
+      "count": 355,
+      "examples": [
+        "NEGERI 3 CIPEUJEUH WETAN KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "1271024603140003",
+        "2171114212150006",
+        "2172020204170002",
+        "3172062806180001",
+        "3174034510170002"
+      ]
+    },
+    {
+      "norm": "gelatik",
+      "count": 96,
+      "examples": [
+        "GELATIK"
+      ],
+      "docIds": [
+        "1401066307200001",
+        "1871141705190001",
+        "2171111009190005",
+        "3171055501190003",
+        "3209062201210002"
+      ]
+    },
+    {
+      "norm": "negeri 2 cipeujeuh wetan kecamatan lemahabang",
+      "count": 207,
+      "examples": [
+        "NEGERI 2 CIPEUJEUH WETAN KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "1603250609180001",
+        "1607042307160001",
+        "3172021101141014",
+        "3175070910131005",
+        "3175074505151001"
+      ]
+    },
+    {
+      "norm": "negeri 1 wangkelang kecamatan lemahabang",
+      "count": 269,
+      "examples": [
+        "NEGERI 1 WANGKELANG KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "1671162409130001",
+        "3172026405160004",
+        "3172026405160005",
+        "3172032403170010",
+        "3173016412150006"
+      ]
+    },
+    {
+      "norm": "negeri 1 sigong kecamatan lemahabang",
+      "count": 313,
+      "examples": [
+        "NEGERI 1 SIGONG KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "1705072002160001",
+        "3201022211140004",
+        "3201314707150005",
+        "3203074211170003",
+        "3208141610160001"
+      ]
+    },
+    {
+      "norm": "negeri 1 sindanglaut kecamatan lemahabang",
+      "count": 411,
+      "examples": [
+        "NEGERI 1 SINDANGLAUT KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "1706011306140001",
+        "3172012201141002",
+        "3172032205160008",
+        "3172033008151010",
+        "3172036006151001"
+      ]
+    },
+    {
+      "norm": "negeri 1 cipeujeuh kulon kecamatan lemahabang",
+      "count": 274,
+      "examples": [
+        "NEGERI 1 CIPEUJEUH KULON KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "1801060104150001",
+        "3172035503131009",
+        "3172036703180007",
+        "3174022612180001",
+        "3174026306141005"
+      ]
+    },
+    {
+      "norm": "negeri 1 leuwidingding kecamatan lemahabang",
+      "count": 194,
+      "examples": [
+        "NEGERI 1 LEUWIDINGDING KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "1871041602170004",
+        "3172036112170007",
+        "3173045204170006",
+        "3175020210170007",
+        "3204054302150002"
+      ]
+    },
+    {
+      "norm": "negeri 2 belawa kecamatan lemahabang",
+      "count": 256,
+      "examples": [
+        "NEGERI 2 BELAWA KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "3171031405160003",
+        "3172041211180004",
+        "3173046911141006",
+        "3201010501150004",
+        "3206225609160001"
+      ]
+    },
+    {
+      "norm": "negeri 4 sigong kecamatan lemahabang",
+      "count": 217,
+      "examples": [
+        "NEGERI 4 SIGONG KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "3171035412150007",
+        "3171035412150008",
+        "3209070109140001",
+        "3209070110170002",
+        "3209070205150002"
+      ]
+    },
+    {
+      "norm": "negeri 1 tuk karangsuwung kecamatan lemahabang",
+      "count": 224,
+      "examples": [
+        "NEGERI 1 TUK KARANGSUWUNG KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "3171072506151005",
+        "3171074901180003",
+        "3171076309160004",
+        "3175065604160007",
+        "3175080910170008"
+      ]
+    },
+    {
+      "norm": "sdn 3 sigong",
+      "count": 216,
+      "examples": [
+        "SDN 3 SIGONG"
+      ],
+      "docIds": [
+        "3171076506151004",
+        "3172014709180004",
+        "3172046004141004",
+        "3209025702170002",
+        "3209061006190003"
+      ]
+    },
+    {
+      "norm": "negeri 1 sarajaya kecamatan lemahabang",
+      "count": 163,
+      "examples": [
+        "NEGERI 1 SARAJAYA KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "3172025806160008",
+        "3172067108141001",
+        "3175031207170005",
+        "3175031312141009",
+        "3201170505190001"
+      ]
+    },
+    {
+      "norm": "negeri 1 belawa kecamatan lemahabang",
+      "count": 323,
+      "examples": [
+        "NEGERI 1 BELAWA KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "3172030802131001",
+        "3172032109151001",
+        "3172035602180002",
+        "3173071607131004",
+        "3175031310180004"
+      ]
+    },
+    {
+      "norm": "negeri 1 picungpugur kecamatan lemahabang",
+      "count": 122,
+      "examples": [
+        "NEGERI 1 PICUNGPUGUR KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "3172046305190018",
+        "3201022912150006",
+        "3201025412150002",
+        "3201025611160002",
+        "3201110805160001"
+      ]
+    },
+    {
+      "norm": "negeri 2 cipeujeuh kulon kecamatan lemahabang",
+      "count": 310,
+      "examples": [
+        "NEGERI 2 CIPEUJEUH KULON KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "3201020511140004",
+        "3209011409180002",
+        "3209014707160004",
+        "3209070102180001",
+        "3209070103140002"
+      ]
+    },
+    {
+      "norm": "ah plus",
+      "count": 62,
+      "examples": [
+        "AH PLUS"
+      ],
+      "docIds": [
+        "3208122502200004",
+        "3209067003200003",
+        "3209070212210003",
+        "3209070307200001",
+        "3209070312200004"
+      ]
+    },
+    {
+      "norm": "negeri 1 asem kecamatan lemahabang",
+      "count": 150,
+      "examples": [
+        "NEGERI 1 ASEM KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "32090102050450",
+        "32090102171656",
+        "32090103073400",
+        "32090104155378",
+        "32090109104930"
+      ]
+    },
+    {
+      "norm": "negeri 2 sarajaya kecamatan lemahabang",
+      "count": 170,
+      "examples": [
+        "NEGERI 2 SARAJAYA KECAMATAN LEMAHABANG"
+      ],
+      "docIds": [
+        "3209060612150002",
+        "3209061611170001",
+        "3209064507180001",
+        "3209064510180001",
+        "3209065005180001"
+      ]
+    },
+    {
+      "norm": "palapa",
+      "count": 23,
+      "examples": [
+        "PALAPA"
+      ],
+      "docIds": [
+        "3209064306210001",
+        "3209070901200003",
+        "3209070905190002",
+        "3209070908200002",
+        "3209070910190006"
+      ]
+    },
+    {
+      "norm": "budgenvil",
+      "count": 25,
+      "examples": [
+        "BUDGENVIL"
+      ],
+      "docIds": [
+        "3209070206200001",
+        "3209070503230002",
+        "3209070708190002",
+        "3209071208210001",
+        "3209071408200001"
+      ]
+    },
+    {
+      "norm": "melati",
+      "count": 50,
+      "examples": [
+        "MELATI"
+      ],
+      "docIds": [
+        "3209070404200001",
+        "3209070412200001",
+        "3209070510190001",
+        "3209070510190002",
+        "3209070701200001"
+      ]
+    },
+    {
+      "norm": "amanah",
+      "count": 27,
+      "examples": [
+        "AMANAH"
+      ],
+      "docIds": [
+        "3209070703210001",
+        "3209070712200002",
+        "3209071104230002",
+        "3209071304200004",
+        "3209071912200001"
+      ]
+    }
+  ]
+}

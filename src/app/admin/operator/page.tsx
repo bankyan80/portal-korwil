@@ -162,6 +162,7 @@ export default function OperatorDashboard() {
     { label: 'Sarpras', icon: Building2, desc: 'Data sarana dan prasarana sekolah', count: null, href: '/admin/operator/sarpras' },
     { label: 'Lapor Bulanan', icon: FileText, desc: 'Cetak & kirim laporan bulanan sekolah', count: null, href: '/admin/operator/laporan-bulanan' },
     { label: 'Data Yatim Piatu', icon: Heart, desc: 'Kelola data siswa yatim piatu', count: null, href: '/admin/operator/yatim-piatu' },
+    { label: 'Dokumen Bersama', icon: FolderOpen, desc: 'Upload & kelola dokumen pegawai', count: null, href: '/admin/operator/dokumen' },
   ];
 
   return (
