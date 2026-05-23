@@ -123,8 +123,10 @@ export function ManageDataPd() {
           ? `/api/siswa/list?schoolId=${user.schoolId}`
           : `/api/siswa/list?sekolah=${encodeURIComponent(userSchool)}`;
         
+        console.log(`[ManageDataPd] Fetching API: ${apiUrl}`);
         const res = await fetch(apiUrl);
         const json = await res.json();
+        console.log(`[ManageDataPd] API Result Count: ${json.siswa?.length || 0}`);
         dbSiswa = (json.siswa || [])
           .map((s: any) => ({
             id: s.id, // Pastikan ID terbawa jika ada
@@ -150,6 +152,7 @@ export function ManageDataPd() {
             ? query(collection(db, 'students'), where('schoolId', '==', user.schoolId))
             : query(collection(db, 'students'), where('sekolah', '==', userSchool));
           
+          console.log(`[ManageDataPd] Querying Firestore for schoolId: ${user?.schoolId} or sekolah: ${userSchool}`);
           const snap = await getDocs(siswaQuery);
           const fsSiswa: SiswaRecord[] = [];
           snap.forEach((d) => {
