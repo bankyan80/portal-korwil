@@ -71,23 +71,27 @@ export async function GET(req: NextRequest) {
     if (schoolId) {
       query = query.where('schoolId', '==', schoolId);
     } else if (sekolah) {
-      // Gunakan sekolah name hanya jika schoolId tidak ada
+      // Perbaikan: normalize nama sekolah di query
       query = query.where('sekolah', '==', sekolah);
     }
 
     if (jenjang) query = query.where('jenjang', '==', jenjang);
     if (layak_pip) query = query.where('layak_pip', '==', layak_pip);
 
-    // Batasi data jika hanya untuk preview
-    if (limitParam) {
-      query = query.limit(parseInt(limitParam));
-    } else if (!search && !sekolah) {
-      // Jika tidak ada pencarian spesifik, paksa limit 500 untuk keamanan kuota
-      query = query.limit(500);
-    }
-
     const snapshot = await query.get();
     let all = snapshot.docs.map((doc: any) => ({ nik: doc.id, ...doc.data() })) as any[];
+
+    // Fallback logic jika query dengan schoolId/sekolah kosong
+    if (all.length === 0 && (schoolId || sekolah)) {
+      console.log(`[API] Query specific empty, falling back to all and manual filter for ${schoolId || sekolah}`);
+      const fallbackSnap = await adminDb.collection('students').limit(1000).get();
+      const allStudents = fallbackSnap.docs.map(d => ({ nik: d.id, ...d.data() }));
+      const q = normalizeSchool(sekolah || '');
+      all = allStudents.filter((s: any) => 
+        (schoolId && s.schoolId === schoolId) || 
+        (sekolah && normalizeSchool(s.sekolah || '') === q)
+      );
+    }
 
     if (all.length === 0 || (all.length > 0 && !all[0].sekolah)) {
       throw new Error('Empty or incomplete Firestore data, fallback to static');
