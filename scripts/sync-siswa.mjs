@@ -36,9 +36,28 @@ const sa = JSON.parse(readFileSync(join(saDir, files[0]), 'utf-8'));
 const app = initializeApp({ credential: cert(sa) });
 const db = getFirestore(app);
 
+// Fields to KEEP in Firestore (excludes rarely-used data like physical, bank, coordinates)
+const MINIMAL_FIELDS = new Set([
+  'nik', 'nama', 'jk', 'nisn', 'tempat_lahir', 'tanggal_lahir',
+  'nipd', 'agama', 'alamat', 'rt', 'rw', 'dusun', 'desa', 'kecamatan', 'kode_pos',
+  'hp', 'rombel', 'kelas', 'sekolah', 'npsn', 'jenjang',
+  'layak_pip', 'penerima_kip', 'nomor_kip', 'no_kk', 'no_reg_akta_lahir',
+  'anak_ke', 'no_peserta_ujian', 'no_seri_ijazah',
+  'data_ayah', 'data_ibu',
+]);
+
+function pickMinimal(raw) {
+  const out = {};
+  for (const key of Object.keys(raw)) {
+    if (MINIMAL_FIELDS.has(key)) out[key] = raw[key];
+  }
+  return out;
+}
+
 // read args
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
+const minimal = !args.includes('--full');
 const skipUnchanged = !args.includes('--no-skip-unchanged');
 const resume = args.includes('--resume');
 const resetResume = args.includes('--reset-resume');
@@ -128,7 +147,7 @@ if (sekolahFilter && filteredSiswa.length === 0) {
 }
 
 console.log(`Syncing ${filteredSiswa.length} siswa to Firestore${sekolahFilter ? ` (school: ${sekolahFilter})` : ''}...`);
-console.log(`Options: batchSize=${batchSize}, delayMs=${delayMs}, skipUnchanged=${skipUnchanged}, dryRun=${dryRun}, resume=${resume}`);
+console.log(`Options: batchSize=${batchSize}, delayMs=${delayMs}, skipUnchanged=${skipUnchanged}, dryRun=${dryRun}, resume=${resume}, minimal=${minimal}`);
 
 const collection = db.collection('students');
 let committed = 0;
@@ -168,14 +187,12 @@ for (let i = resumeIndex; i < filteredSiswa.length; i += batchSize) {
     let canonical = null;
     if (mapping && norm && mapping[norm] && mapping[norm].canonical) canonical = mapping[norm].canonical;
 
-    const payloadBase = {
-      ...siswa,
-    };
-    if (skolRaw && !payloadBase.sekolah_original) payloadBase.sekolah_original = skolRaw;
-    if (canonical) {
+    const payloadBase = minimal ? pickMinimal(siswa) : { ...siswa };
+    if (skolRaw && !payloadBase.sekolah_original && !minimal) payloadBase.sekolah_original = skolRaw;
+    if (canonical && !minimal) {
       payloadBase.sekolah_canonical = canonical;
       payloadBase.sekolah_normalized = normalizeName(canonical);
-    } else if (skolRaw) {
+    } else if (skolRaw && !minimal) {
       payloadBase.sekolah_normalized = norm;
     }
 
