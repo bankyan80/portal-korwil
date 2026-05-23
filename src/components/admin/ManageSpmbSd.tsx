@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
 import { useAppStore } from '@/store/app-store';
 import { AdminEmptyState } from '@/components/shared/AdminTable';
