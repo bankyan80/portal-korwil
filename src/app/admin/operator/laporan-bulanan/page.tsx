@@ -14,6 +14,7 @@ import { saveDraft, loadDraft, removeDraft } from '@/lib/local/draftStorage';
 import { enqueue } from '@/lib/local/offlineQueue';
 import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
 import type { AutoSaveStatus } from '@/hooks/useAutoSaveForm';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 const bulanList = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -544,22 +545,13 @@ export default function LaporBulananPage() {
 
   return (
     <AuthGuard requiredRoles={['operator_sekolah', 'super_admin']} requireActive requireSchool featureName="Laporan Bulanan">
+    <AdminLayout>
     {showLoading ? (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     ) : (
-    <div className="min-h-screen bg-gray-50 print:bg-white">
-      <div className="print:hidden bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <button onClick={() => router.back()} className="flex items-center gap-2 text-white/80 hover:text-white">
-            <ArrowLeft className="w-4 h-4" /><span className="text-sm">Kembali</span>
-          </button>
-          <h1 className="text-sm font-bold text-white">Lapor Bulanan</h1>
-          <div />
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50 print:bg-white p-0 sm:p-2">
       <div className="max-w-5xl mx-auto px-4 py-4 print:hidden space-y-4">
         {/* Controls */}
         <div className="flex items-center gap-3 flex-wrap">
@@ -1011,6 +1003,7 @@ export default function LaporBulananPage() {
       `}</style>
     </div>
     )}
+    </AdminLayout>
     </AuthGuard>
   );
 }

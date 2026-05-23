@@ -1,74 +1,15 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAppStore } from '@/store/app-store';
-import { db } from '@/lib/firebase';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { ArrowLeft, School, MapPin, Phone, Globe, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog';
-import { toast } from 'sonner';
-import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
-import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
-import { enqueue } from '@/lib/local/offlineQueue';
-import type { AutoSaveStatus } from '@/hooks/useAutoSaveForm';
+import { SuperSekolah } from '@/components/admin/SuperSekolah';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
-export default function OperatorProfilSekolah() {
-  const { user } = useAppStore();
-  const router = useRouter();
-  const [school, setSchool] = useState<any>(null);
-  const [editOpen, setEditOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<any>({});
-  const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
-
-  const draftKey = {
-    userId: user?.uid || 'anon',
-    schoolId: user?.schoolId,
-    page: 'profil-sekolah',
-    formType: 'profil-sekolah',
-  };
-  const { save: autoSave, load: loadDraft, clear: clearDraft } = useAutoSaveForm(
-    draftKey,
-    setAutoSaveStatus,
-    1000,
+export default function ProfilSekolahPage() {
+  return (
+    <AdminLayout>
+      <SuperSekolah />
+    </AdminLayout>
   );
-
-  useEffect(() => {
-    if (!user) return;
-    if (user.role !== 'operator_sekolah') router.push('/login');
-  }, [user, router]);
-
-  useEffect(() => {
-    if (!db || !user?.schoolId) return;
-    const unsub = onSnapshot(doc(db, 'schools', user.schoolId), (snap) => {
-      if (snap.exists()) setSchool(snap.data());
-    }, (err) => { console.error('Error listening to school:', err); toast.error('Gagal memuat data sekolah'); });
-    return () => unsub();
-  }, [user?.schoolId]);
-
-  async function openEdit() {
-    const baseForm = {
-      name: school?.name || school?.nama || '',
-      npsn: school?.npsn || '',
-      jenjang: school?.jenjang || '',
-      status: school?.status || '',
-      kepalaSekolah: school?.kepalaSekolah || '',
-      pltKepalaSekolah: school?.pltKepalaSekolah || '',
-      akreditasi: school?.akreditasi || '',
-      alamat: school?.alamat || '',
-      kontak: school?.kontak || '',
-      website: school?.website || '',
-    };
-    const draft = await loadDraft();
-    setForm(draft ?? baseForm);
-    setEditOpen(true);
-  }
+}
 
   function updateForm(updater: (prev: any) => any) {
     setForm(updater);

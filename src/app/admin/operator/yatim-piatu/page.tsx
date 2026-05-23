@@ -1,53 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Heart, Search, Plus, Trash2, Loader2, CheckCircle, XCircle, MessageCircle } from 'lucide-react';
-import Footer from '@/components/portal/Footer';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
-import { useAppStore } from '@/store/app-store';
-import AuthGuard from '@/components/auth/AuthGuard';
-import type { YatimPiatuData, YatimCategory } from '@/types';
+import { ManageYatimPiatu } from '@/components/admin/ManageYatimPiatu';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
-const kategoriLabel: Record<YatimCategory, string> = {
-  yatim_piatu: 'Yatim Piatu',
-  yatim: 'Yatim',
-  piatu: 'Piatu',
-};
-
-const kategoriColors: Record<YatimCategory, string> = {
-  yatim_piatu: 'bg-red-100 text-red-700',
-  yatim: 'bg-blue-100 text-blue-700',
-  piatu: 'bg-purple-100 text-purple-700',
-};
-
-export default function OperatorYatimPiatuPage() {
-  const { user } = useAppStore();
-  const [data, setData] = useState<YatimPiatuData[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
-  const [nikInput, setNikInput] = useState('');
-  const [kategori, setKategori] = useState<YatimCategory>('yatim_piatu');
-  const [addStatus, setAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
-  const [adding, setAdding] = useState(false);
-
-  useEffect(() => {
-    if (!db) return;
-    const q = query(collection(db, 'yatim_piatu'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      const list: YatimPiatuData[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as YatimPiatuData));
-      setData(list);
-      setLoading(false);
-    }, () => setLoading(false));
-    return () => unsub();
-  }, []);
-
-  async function handleAdd() {
-    const clean = nikInput.replace(/\D/g, '');
-    if (clean.length !== 16) {
-      setAddStatus({ ok: false, msg: 'NIK harus 16 digit' });
-      return;
-    }
+export default function YatimPiatuPage() {
+  return (
+    <AdminLayout>
+      <ManageYatimPiatu />
+    </AdminLayout>
+  );
+}
     if (data.some(d => d.nik === clean)) {
       setAddStatus({ ok: false, msg: 'NIK sudah terdaftar' });
       return;

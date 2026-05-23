@@ -1,31 +1,14 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { ArrowLeft, Search, Trash2, Loader2, FolderOpen, FileText, Upload, CheckCircle, XCircle, Download } from 'lucide-react';
-import { db, auth } from '@/lib/firebase';
-import { useAppStore } from '@/store/app-store';
-import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import AuthGuard from '@/components/auth/AuthGuard';
-import { normalizeSchool } from '@/lib/normalize';
-import type { DokumenBersama } from '@/types';
+import InputDokumen from '@/components/admin/InputDokumen';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
-const ALLOWED_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
-];
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-interface PegawaiLookup {
-  nik?: string;
-  nip?: string;
-  nama: string;
-  sekolah?: string;
-  schoolId?: string;
+export default function DokumenPage() {
+  return (
+    <AdminLayout>
+      <InputDokumen />
+    </AdminLayout>
+  );
 }
 
 function formatSize(bytes: number) {

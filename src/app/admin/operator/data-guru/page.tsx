@@ -15,6 +15,7 @@ import {
 import { ArrowLeft, Search, Loader2, Save, Pencil, Loader2 as LoaderIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { QueryProvider } from '@/contexts/QueryProvider';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 export const dynamic = 'force-dynamic';
 
@@ -141,12 +142,9 @@ function GuruContent() {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-0 sm:p-2">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-        </button>
-        <h1 className="text-2xl font-bold">Data GTK (V2 - Guru &amp; Tendik)</h1>
+        <h1 className="text-2xl font-bold">Data GTK</h1>
       </div>
       <p className="text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 rounded-lg px-3 py-2 mb-4">
         Mengelola data pegawai: <strong>{userSchool}</strong>
@@ -300,8 +298,10 @@ function GuruContent() {
 
 export default function DataGuruV2Page() {
   return (
-    <QueryProvider>
-      <GuruContent />
-    </QueryProvider>
+    <AdminLayout>
+      <QueryProvider>
+        <GuruContent />
+      </QueryProvider>
+    </AdminLayout>
   );
 }

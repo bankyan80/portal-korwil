@@ -13,6 +13,7 @@ import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { db } from '@/lib/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 export default function OperatorDashboard() {
   const { user, setUser } = useAppStore();
@@ -154,19 +155,8 @@ export default function OperatorDashboard() {
 
   return (
     <AuthGuard requiredRoles={['operator_sekolah', 'super_admin']} requireActive featureName="Dashboard Operator">
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold text-white">Dashboard Operator Sekolah</h1>
-          <p className="text-sm text-blue-200">{user.displayName} • {user.schoolName || 'Sekolah'}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-300 hover:text-red-200">
-            <LogOut className="w-4 h-4" /> Logout
-          </button>
-        </div>
-      </header>
-
+    <AdminLayout>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-0 sm:p-2">
       <FirebaseLED userLabel={user.displayName} schoolLabel={user.schoolName} />
       <div className="fixed bottom-20 right-4 z-40"><SyncStatusBadge /></div>
 
@@ -306,6 +296,7 @@ export default function OperatorDashboard() {
       </main>
       <MobileBottomNav />
     </div>
+    </AdminLayout>
     </AuthGuard>
   );
 }
