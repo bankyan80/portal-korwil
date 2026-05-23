@@ -119,10 +119,15 @@ export function ManageDataPd() {
       // Load API data (one-shot)
       let dbSiswa: SiswaRecord[] = [];
       try {
-        const res = await fetch(`/api/siswa/list?sekolah=${encodeURIComponent(userSchool)}`);
+        const apiUrl = user?.schoolId 
+          ? `/api/siswa/list?schoolId=${user.schoolId}`
+          : `/api/siswa/list?sekolah=${encodeURIComponent(userSchool)}`;
+        
+        const res = await fetch(apiUrl);
         const json = await res.json();
         dbSiswa = (json.siswa || [])
           .map((s: any) => ({
+            id: s.id, // Pastikan ID terbawa jika ada
             nik: s.nik, nama: s.nama, jk: s.jk, nisn: s.nisn || '',
             tanggal_lahir: s.tanggal_lahir || '', sekolah: s.sekolah || userSchool,
             jenjang: s.jenjang || 'SD', kelas: s.kelas ? Number(s.kelas) : undefined,
@@ -130,12 +135,13 @@ export function ManageDataPd() {
           }));
       } catch (e) { console.error('Error fetching siswa API:', e); }
 
-      // Load Firestore overlay (one-time fetch instead of onSnapshot to save quota)
-      const schoolFilter = normalizeSchool(userSchool);
-
+      // Load Firestore overlay
       const computeMerged = (fsSiswa: SiswaRecord[]) => {
         const localNiks = new Set(fsSiswa.map(s => s.nik));
-        return [...fsSiswa, ...dbSiswa.filter(s => !localNiks.has(s.nik))];
+        // Gabungkan data dari Firestore dan API, prioritaskan Firestore (local overlay)
+        const combined = [...fsSiswa, ...dbSiswa.filter(s => !localNiks.has(s.nik))];
+        console.log(`[ManageDataPd] Loaded ${fsSiswa.length} from FS, ${dbSiswa.length} from API. Total: ${combined.length}`);
+        return combined;
       };
 
       if (db) {
@@ -154,11 +160,10 @@ export function ManageDataPd() {
           });
           
           setAllSiswa(computeMerged(fsSiswa));
-          setLoading(false);
-          loadingDone = true;
         } catch (e) {
           console.error('Error loading Firestore students:', e);
           setAllSiswa(dbSiswa);
+        } finally {
           setLoading(false);
           loadingDone = true;
         }

@@ -38,19 +38,22 @@ export async function GET(req: NextRequest) {
   const jenjang = req.nextUrl.searchParams.get('jenjang');
   const layak_pip = req.nextUrl.searchParams.get('layak_pip');
   const sekolah = req.nextUrl.searchParams.get('sekolah');
+  const schoolId = req.nextUrl.searchParams.get('schoolId');
   const search = req.nextUrl.searchParams.get('search');
   const limitParam = req.nextUrl.searchParams.get('limit');
   const fullData = await canReadFullData(req);
 
   if (!isFirebaseAdminConfigured || !adminDb) {
-    // ... logic fallback static tetap sama ...
     let all = siswaData as any[];
     if (jenjang) all = all.filter((s) => s.jenjang === jenjang);
     if (layak_pip) all = all.filter((s) => s.layak_pip === layak_pip);
-    if (sekolah) {
+    if (schoolId) {
+      all = all.filter((s) => s.schoolId === schoolId);
+    } else if (sekolah) {
       const q = normalizeSchool(sekolah);
       all = all.filter((s) => normalizeSchool(s.sekolah || '') === q);
     }
+    // ... rest of static logic ...
     if (search) {
       const q = search.toLowerCase();
       all = all.filter((s) =>
@@ -65,16 +68,15 @@ export async function GET(req: NextRequest) {
   try {
     let query: any = adminDb.collection('students');
     
-    // Server-side filtering untuk menghemat READ
-    if (jenjang) query = query.where('jenjang', '==', jenjang);
-    if (layak_pip) query = query.where('layak_pip', '==', layak_pip);
-    
-    // Jika ada filter sekolah, lakukan di server
-    if (sekolah) {
-      // Catatan: Firestore butuh index untuk multiple where. 
-      // Jika error index, biarkan filter jenjang saja di server.
+    if (schoolId) {
+      query = query.where('schoolId', '==', schoolId);
+    } else if (sekolah) {
+      // Gunakan sekolah name hanya jika schoolId tidak ada
       query = query.where('sekolah', '==', sekolah);
     }
+
+    if (jenjang) query = query.where('jenjang', '==', jenjang);
+    if (layak_pip) query = query.where('layak_pip', '==', layak_pip);
 
     // Batasi data jika hanya untuk preview
     if (limitParam) {
