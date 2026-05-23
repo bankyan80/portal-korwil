@@ -52,7 +52,7 @@ export async function GET(request: Request) {
         phone: profile.phone,
         isActive: profile.isActive ?? true,
         lastLogin: profile.lastLogin,
-        createdAt: profile.createdAt || authUser.metadata.creationTime ? new Date(authUser.metadata.creationTime!).getTime() : Date.now(),
+        createdAt: profile.createdAt || (authUser.metadata.creationTime ? new Date(authUser.metadata.creationTime!).getTime() : Date.now()),
         updatedAt: profile.updatedAt || Date.now(),
       });
     }

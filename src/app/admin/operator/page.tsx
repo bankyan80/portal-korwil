@@ -30,36 +30,24 @@ export default function OperatorDashboard() {
     enabled: !!user?.schoolName,
   });
 
-  const calculateCounts = (
-    students: Record<string, any>[],
-    employees: Record<string, any>[],
-    schoolName: string | undefined,
-    schoolId: string | undefined
-  ) => {
+  const calculatedCounts = useMemo(() => {
+    const schoolName = user?.schoolName;
+    const schoolId = user?.schoolId;
     if (!schoolName && !schoolId) return { sCount: 0, eCount: 0 };
     const normalized = normalizeSchool(schoolName || '');
     let sCount = 0;
     let eCount = 0;
-    for (const d of students) {
+    for (const d of allStudents) {
       if (d.schoolId === schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized) {
         sCount++;
       }
     }
-    for (const d of employees) {
+    for (const d of allEmployees) {
       if (d.schoolId === schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized) {
         eCount++;
       }
     }
     return { sCount, eCount };
-  };
-
-  const calculatedCounts = useMemo(() => {
-    return calculateCounts(
-      allStudents,
-      allEmployees,
-      user?.schoolName,
-      user?.schoolId
-    );
   }, [allStudents, allEmployees, user?.schoolName, user?.schoolId]);
 
   const [tugasList, setTugasList] = useState<any[]>([]);
@@ -77,26 +65,8 @@ export default function OperatorDashboard() {
     { value: 'revisi', label: 'Perlu Revisi', className: 'bg-red-100 text-red-700' },
   ];
 
-  useEffect(() => {
+  const fetchTugas = useCallback(async () => {
     if (!user?.schoolId && !user?.schoolName) return;
-    fetchTugas();
-  }, [user?.schoolId, user?.schoolName]);
-
-  // Realtime listener for laporan bulanan history
-  useEffect(() => {
-    if (!db || (!user?.schoolId && !user?.schoolName)) return;
-    const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
-    const q = query(collection(db, 'laporan_bulanan'), where('sekolahId', '==', schoolId));
-    const unsub = onSnapshot(q, (snap) => {
-      const items: any[] = [];
-      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
-      items.sort((a, b) => (b.tahun || 0) - (a.tahun || 0) || (bulanList.indexOf(a.bulan || '') - bulanList.indexOf(b.bulan || '')));
-      setLaporanHistory(items);
-    }, (err) => { console.error('Error in laporan history listener:', err); });
-    return () => unsub();
-  }, [db, user?.schoolId, user?.schoolName]);
-
-  async function fetchTugas() {
     setTugasLoading(true);
     try {
       const res = await fetch('/api/tugas', {
@@ -111,9 +81,27 @@ export default function OperatorDashboard() {
       const json = await res.json();
       if (json.success) setTugasList(json.tasks);
     } catch (e) { console.error(e); } finally { setTugasLoading(false); }
-  }
+  }, [user?.schoolId, user?.schoolName]);
 
-  async function handleCompleteTask(taskId: string) {
+  useEffect(() => {
+    fetchTugas();
+  }, [fetchTugas]);
+
+  // Realtime listener for laporan bulanan history
+  useEffect(() => {
+    if (!db || (!user?.schoolId && !user?.schoolName)) return;
+    const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
+    const q = query(collection(db, 'laporan_bulanan'), where('sekolahId', '==', schoolId));
+    const unsub = onSnapshot(q, (snap) => {
+      const items: any[] = [];
+      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      items.sort((a, b) => (b.tahun || 0) - (a.tahun || 0) || (bulanList.indexOf(a.bulan || '') - bulanList.indexOf(b.bulan || '')));
+      setLaporanHistory(items);
+    }, (err) => { console.error('Error in laporan history listener:', err); });
+    return () => unsub();
+  }, [user?.schoolId, user?.schoolName]);
+
+  const handleCompleteTask = useCallback(async (taskId: string) => {
     try {
       await fetch('/api/tugas', {
         method: 'POST',
@@ -127,7 +115,7 @@ export default function OperatorDashboard() {
       });
       await fetchTugas();
     } catch (e) { console.error(e); }
-  }
+  }, [user?.schoolId, user?.schoolName, fetchTugas]);
 
   const isStatsLoading = !allStudents || !allEmployees;
 
@@ -162,7 +150,6 @@ export default function OperatorDashboard() {
     { label: 'Sarpras', icon: Building2, desc: 'Data sarana dan prasarana sekolah', count: null, href: '/admin/operator/sarpras' },
     { label: 'Lapor Bulanan', icon: FileText, desc: 'Cetak & kirim laporan bulanan sekolah', count: null, href: '/admin/operator/laporan-bulanan' },
     { label: 'Data Yatim Piatu', icon: Heart, desc: 'Kelola data siswa yatim piatu', count: null, href: '/admin/operator/yatim-piatu' },
-    { label: 'Dokumen Bersama', icon: FolderOpen, desc: 'Upload & kelola dokumen pegawai', count: null, href: '/admin/operator/dokumen' },
   ];
 
   return (

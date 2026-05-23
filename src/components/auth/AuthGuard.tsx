@@ -31,15 +31,7 @@ export default function AuthGuard({
   const [accessStatus, setAccessStatus] = useState<'checking' | 'granted' | 'not-logged-in' | 'no-access' | 'not-activated' | 'wrong-role'>('checking')
 
   useEffect(() => {
-    if (isLoadingAuth) {
-      const timeout = setTimeout(() => {
-        if (!user) {
-          const callbackUrl = pathname + (typeof window !== 'undefined' ? window.location.search : '')
-          router.replace(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`)
-        }
-      }, 3000)
-      return () => clearTimeout(timeout)
-    }
+    if (isLoadingAuth) return
 
     if (!user) {
       const callbackUrl = pathname + (typeof window !== 'undefined' ? window.location.search : '')

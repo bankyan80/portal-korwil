@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { collection, getDocs, onSnapshot, query, where, orderBy, limit, type Firestore, type QueryConstraint, type Unsubscribe } from 'firebase/firestore';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { collection, getDocs, onSnapshot, query, type QueryConstraint, type Unsubscribe } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getCacheOrFetch, setCache, getCache, compareData } from '@/cache/cacheService';
+import { setCache, getCache } from '@/cache/cacheService';
 
 interface UseCachedFirestoreOptions {
   collectionName: string;
@@ -41,30 +41,28 @@ export function useCachedFirestore<T extends { id?: string }>(
   const unsubscribeRef = useRef<Unsubscribe | null>(null);
   const mountedRef = useRef(true);
 
-  const cacheParts = cacheKey ? [cacheKey] : [];
+  // Stable cache key string — avoids array identity issues
+  const cacheKeyStr = cacheKey ?? collectionName;
+
+  const constraintsKey = JSON.stringify(constraints);
 
   const fetchData = useCallback(async (): Promise<T[]> => {
     if (!db) return [];
     const q = query(collection(db, collectionName), ...constraints);
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as T));
-  }, [collectionName, constraints]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collectionName, constraintsKey]);
 
   const loadFromCacheThenRefresh = useCallback(async () => {
-    if (!enabled) {
-      setData([]);
-      setLoading(false);
-      return;
-    }
-
-    if (!db) {
+    if (!enabled || !db) {
       setData([]);
       setLoading(false);
       return;
     }
 
     try {
-      const cached = await getCache<T[]>(collectionName, ...cacheParts);
+      const cached = await getCache<T[]>(collectionName, cacheKeyStr);
       if (cached && mountedRef.current) {
         setData(cached);
         setLoading(false);
@@ -74,17 +72,17 @@ export function useCachedFirestore<T extends { id?: string }>(
       const fresh = await fetchData();
       if (!mountedRef.current) return;
 
-      await setCache(collectionName, fresh, ...cacheParts);
+      await setCache(collectionName, fresh, cacheKeyStr);
       setData(fresh);
       setError(null);
     } catch (e) {
       if (!mountedRef.current) return;
       const message = e instanceof Error ? e.message : 'Unknown error';
-      if (data.length === 0) setError(message);
+      setError(message);
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [collectionName, cacheParts, fetchData, enabled, data.length]);
+  }, [collectionName, cacheKeyStr, fetchData, enabled]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -102,7 +100,7 @@ export function useCachedFirestore<T extends { id?: string }>(
           if (!mountedRef.current) return;
           const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as T));
           setData(docs);
-          setCache(collectionName, docs, ...cacheParts);
+          setCache(collectionName, docs, cacheKeyStr);
         }, (err) => {
           if (mountedRef.current) setError(err.message);
         });
@@ -117,14 +115,15 @@ export function useCachedFirestore<T extends { id?: string }>(
         unsubscribeRef.current = null;
       }
     };
-  }, [collectionName, JSON.stringify(constraints), realtime, enabled, cacheParts.join(',')]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collectionName, constraintsKey, realtime, enabled, cacheKeyStr]);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
       const fresh = await fetchData();
       if (!mountedRef.current) return;
-      await setCache(collectionName, fresh, ...cacheParts);
+      await setCache(collectionName, fresh, cacheKeyStr);
       setData(fresh);
       setError(null);
     } catch (e) {
@@ -133,7 +132,7 @@ export function useCachedFirestore<T extends { id?: string }>(
     } finally {
       if (mountedRef.current) setRefreshing(false);
     }
-  }, [fetchData, collectionName, cacheParts]);
+  }, [fetchData, cacheKeyStr]);
 
   return { data, loading, error, refreshing, refresh, count: data.length };
 }

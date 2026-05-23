@@ -106,7 +106,7 @@ export default function SuperAdminDashboard() {
 
   const fetchAutoSyncStatus = useCallback(async () => {
     try {
-      const { getFirestore, collection, query, doc, getDoc } = await import('firebase/firestore');
+      const { doc, getDoc } = await import('firebase/firestore');
       if (!db) return;
       const configRef = doc(db, 'system_config', 'google_sheets_config');
       const configSnap = await getDoc(configRef);
@@ -168,7 +168,7 @@ export default function SuperAdminDashboard() {
       }
     };
     triggerAutoSync();
-  }, []);
+  }, [fetchAutoSyncStatus]);
 
   const schools = useMemo(() => {
     const set = new Set<string>();
@@ -222,13 +222,7 @@ export default function SuperAdminDashboard() {
     bulanList.some((b) => s.months[b] && (s.months[b].status === 'sudah_dikirim' || s.months[b].status === 'diverifikasi'))
   ).length;
 
-  if (!user) return (
-    <AuthGuard requiredRoles={['super_admin']} requireActive featureName="Dashboard Super Admin">
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    </AuthGuard>
-  );
+  if (!user) return null;
 
   function handleLogout() {
     if (auth) auth.signOut();
