@@ -1,102 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useAppStore } from '@/store/app-store';
 import { getAdminDashboardRoute } from '@/lib/permissions';
-import type { UserRole, UserProfile } from '@/types';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, setUser } = useAppStore();
+  const user = useAppStore((s) => s.user);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(auth && db ? '' : 'Firebase tidak dikonfigurasi. Hubungi administrator.');
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const firebaseReady = !!(auth && db);
+  const [error, setError] = useState('');
+  const redirecting = useRef(false);
 
   const callbackUrl = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('callbackUrl') || ''
     : '';
 
-  function redirectAfterLogin(role: UserRole) {
-    if (callbackUrl) {
-      router.replace(callbackUrl);
-    } else {
-      router.replace(getAdminDashboardRoute(role));
-    }
-  }
-
+  // Jika sudah login, redirect
   useEffect(() => {
-    if (!firebaseReady) {
-      setCheckingAuth(false);
-      setError('Firebase tidak dikonfigurasi. Hubungi administrator.');
-      return;
+    if (user && user.role !== 'publik' && !redirecting.current) {
+      redirecting.current = true;
+      const target = callbackUrl || getAdminDashboardRoute(user.role);
+      router.replace(target);
     }
-
-    let timeoutId: NodeJS.Timeout;
-    const unsubscribe = onAuthStateChanged(auth!, async (firebaseUser) => {
-      clearTimeout(timeoutId);
-      try {
-        if (firebaseUser && db) {
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          let profile: UserProfile | null = null;
-          if (userDoc.exists()) {
-            profile = userDoc.data() as UserProfile;
-            setUser(profile);
-          } else {
-            const email = firebaseUser.email || '';
-            const SUPER_ADMIN_EMAILS = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS
-              ? process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS.split(',').map(email => email.trim())
-              : [];
-            const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
-            const role: UserRole = isSuperAdmin ? 'super_admin' : 'publik';
-
-            if (!isSuperAdmin) {
-              setError('Email Anda tidak terdaftar. Hubungi administrator.');
-              setLoading(false);
-              return;
-            }
-
-            profile = {
-              uid: firebaseUser.uid,
-              email,
-              displayName: firebaseUser.displayName || '',
-              role,
-              isActive: true,
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-            };
-            await setDoc(userDocRef, profile);
-            setUser(profile);
-          }
-          if (profile) {
-            redirectAfterLogin(profile.role);
-          }
-        }
-      } catch (err) {
-        console.error('Gagal memeriksa sesi:', err);
-        setError('Gagal memeriksa sesi. Silakan coba lagi.');
-      } finally {
-        setCheckingAuth(false);
-      }
-    });
-
-    timeoutId = setTimeout(() => setCheckingAuth(false), 5000);
-    return () => {
-      clearTimeout(timeoutId);
-      unsubscribe();
-    };
-  }, [router, setUser]);
-
-  useEffect(() => {
-    if (user && user.role !== 'publik') {
-      redirectAfterLogin(user.role);
-    }
-  }, [user, router]);
+  }, [user, callbackUrl, router]);
 
   async function handleGoogleLogin() {
     if (!auth || !db) {
@@ -107,45 +36,8 @@ export default function LoginPage() {
     setError('');
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const firebaseUser = result.user;
-
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      let profile: UserProfile;
-
-      if (userDoc.exists()) {
-        profile = userDoc.data() as UserProfile;
-        await setDoc(userDocRef, { lastLogin: Date.now() }, { merge: true });
-      } else {
-       const email = firebaseUser.email || '';
-         const SUPER_ADMIN_EMAILS = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS
-           ? process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS.split(',').map(email => email.trim())
-           : [];
-         const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(email);
-         const role: UserRole = isSuperAdmin ? 'super_admin' : 'publik';
-
-        if (!isSuperAdmin) {
-          setError('Email Anda tidak terdaftar. Hubungi administrator.');
-          setLoading(false);
-          return;
-        }
-
-        profile = {
-          uid: firebaseUser.uid,
-          email,
-          displayName: firebaseUser.displayName || '',
-          role,
-          isActive: true,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        };
-        await setDoc(userDocRef, profile);
-      }
-
-      setUser(profile);
-      redirectAfterLogin(profile.role);
+      await signInWithPopup(auth, provider);
+      // AuthProvider handle user profile + cookie
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Login dibatalkan');
@@ -157,10 +49,10 @@ export default function LoginPage() {
     }
   }
 
-  if (checkingAuth) {
+  if (!auth || !db) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Memeriksa sesi...</p>
+        <p className="text-muted-foreground">Firebase tidak dikonfigurasi. Hubungi administrator.</p>
       </div>
     );
   }
