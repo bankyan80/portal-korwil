@@ -6,14 +6,19 @@ import { AdminSidebar } from './AdminSidebar';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
-import { Menu, Sun, Moon } from 'lucide-react';
+import { Menu, Sun, Moon, ArrowLeft } from 'lucide-react';
 import { VIEW_TITLES } from '@/lib/navigation';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { currentView } = useAppStore();
+  const { currentView, setCurrentView } = useAppStore();
   const { theme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleBack = () => {
+    setCurrentView('portal');
+    window.location.assign('/');
+  };
 
    return (
      <div className="h-screen flex bg-slate-50 dark:bg-gray-900 overflow-hidden">
@@ -36,7 +41,20 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                    <AdminSidebar onNavigate={() => setMobileOpen(false)} />
                  </SheetContent>
                </Sheet>
-                <h1 className="text-lg font-semibold text-white">
+               
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleBack}
+                  className="text-white/80 hover:text-white hover:bg-white/10 gap-2 px-2 h-9"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline text-xs font-medium">Portal</span>
+                </Button>
+
+                <div className="w-px h-6 bg-white/20 hidden sm:block mx-1" />
+
+                <h1 className="text-sm sm:text-base font-semibold text-white truncate max-w-[150px] sm:max-w-none">
                   {VIEW_TITLES[currentView] || 'Admin Panel'}
                 </h1>
              </div>
