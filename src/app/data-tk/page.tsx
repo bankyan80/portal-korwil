@@ -5,6 +5,7 @@ import { ArrowLeft, Search, Baby, Building2, MapPin, Loader2 } from 'lucide-reac
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
 import { getAllDocs, listenToCollection } from '@/lib/firestore';
+import { sekolahTK } from '@/data/sekolah';
 
 interface SchoolItem {
   name: string;
@@ -15,16 +16,14 @@ interface SchoolItem {
   desa: string;
 }
 
-const fallbackTK: SchoolItem[] = [
-  { name: 'TK NEGERI LEMAHABANG', npsn: '20270605', status: 'NEGERI', akreditasi: 'B', address: 'Jl. KH. Wakhid Hasyim, Cipeujeuh Wetan', desa: 'CIPEUJEUH WETAN' },
-  { name: 'TK AISYIYAH LEMAHABANG', npsn: '20254372', status: 'SWASTA', akreditasi: 'B', address: 'Jl. Ki Hajar Dewantoro No. 25, Lemahabang', desa: 'LEMAHABANG' },
-  { name: 'TK AL-AQSO', npsn: '20254376', status: 'SWASTA', akreditasi: 'A', address: 'Jl. Desa Tuk Karangsuwung, Tuk Karangsuwung', desa: 'TUK KARANGSUWUNG' },
-  { name: 'TK AL-IRSYAD AL-ISLAMIYYAH', npsn: '20254373', status: 'SWASTA', akreditasi: 'B', address: 'Jl. Syekh Lemahabang No. 54, Lemahabang Kulon', desa: 'LEMAHABANG KULON' },
-  { name: 'TK BPP KENANGA', npsn: '20254374', status: 'SWASTA', akreditasi: 'B', address: 'Jl. Abdurahman Saleh No. 24, Asem', desa: 'ASEM' },
-  { name: 'TK GELATIK', npsn: '20254370', status: 'SWASTA', akreditasi: 'B', address: 'Jl. Raya Dr. Wahidin No. 57A, Cipeujeuh Wetan', desa: 'CIPEUJEUH WETAN' },
-  { name: 'TK MELATI', npsn: '20254378', status: 'SWASTA', akreditasi: 'B', address: 'Jl. Desa Wangkelang, Wangkelang', desa: 'WANGKELANG' },
-  { name: 'TK MUSLIMAT NU', npsn: '20254375', status: 'SWASTA', akreditasi: 'B', address: 'Jl. R.A. Kartini No. 5, Lemahabang', desa: 'LEMAHABANG' },
-];
+const fallbackTK: SchoolItem[] = sekolahTK.map(s => ({
+  name: s.nama,
+  npsn: s.npsn,
+  status: s.status,
+  akreditasi: s.akreditasi,
+  address: s.address,
+  desa: s.desa,
+}));
 
 export default function DataTKPage() {
   const [schools, setSchools] = useState<SchoolItem[]>(fallbackTK);

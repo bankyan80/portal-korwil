@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
@@ -28,6 +29,7 @@ export const metadata: Metadata = {
     icon: "/portalnew.png",
     apple: "/portalnew.png",
   },
+  manifest: "/manifest.json",
   description:
     "Portal resmi pendidikan Kecamatan Lemahabang, Tim Kerja Kecamatan Lemahabang, Dinas Pendidikan Kabupaten Cirebon. Media informasi dan komunikasi stakeholder pendidikan.",
   keywords: [
@@ -82,6 +84,34 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
+      <Script
+        id="schema-org"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "GovernmentOrganization",
+            name: "Tim Kerja Kecamatan Lemahabang - Dinas Pendidikan Kabupaten Cirebon",
+            description: "Portal resmi pendidikan Kecamatan Lemahabang",
+            url: "https://www.portalkorwil.online",
+            areaServed: "Kecamatan Lemahabang, Kabupaten Cirebon, Jawa Barat",
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: "Jl. MT. Haryono No. 05",
+              addressLocality: "Kecamatan Lemahabang",
+              addressRegion: "Jawa Barat",
+              postalCode: "45183",
+              addressCountry: "ID",
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              telephone: "+62-231-635521",
+              email: "timkerja.lemahabang@gmail.com",
+              contactType: "customer service",
+            },
+          }),
+        }}
+      />
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground`}
       >

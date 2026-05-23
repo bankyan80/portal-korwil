@@ -1,0 +1,18 @@
+{
+  "name": "Portal Pendidikan Kecamatan Lemahabang",
+  "short_name": "Portal Lemahabang",
+  "description": "Portal resmi pendidikan Kecamatan Lemahabang, Dinas Pendidikan Kabupaten Cirebon",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d3b66",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/portalnew.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

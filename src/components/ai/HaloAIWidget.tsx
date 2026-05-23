@@ -66,6 +66,8 @@ export default function HaloAIWidget() {
     setAiStatus(status)
   }, [])
 
+  if (pathname?.startsWith('/login')) return null;
+
   return (
     <>
       {isDesktop ? (

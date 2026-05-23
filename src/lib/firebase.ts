@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+
 
 // Read from environment variables (server-provided in Vercel, .env.local locally).
 // The platform SDK requires these exact variable names — they are injected at build
@@ -23,7 +23,6 @@ const configReady =
 let app: ReturnType<typeof initializeApp> | null = null;
 let authInstance: ReturnType<typeof getAuth> | null = null;
 let firestoreInstance: ReturnType<typeof initializeFirestore> | null = null;
-let storageInstance: ReturnType<typeof getStorage> | null = null;
 
 if (configReady) {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
@@ -37,9 +36,7 @@ if (configReady) {
   } catch {
     firestoreInstance = getFirestore(app);
   }
-  storageInstance = getStorage(app);
 }
 
 export const auth = authInstance;
 export const db = firestoreInstance;
-export const storage = storageInstance;

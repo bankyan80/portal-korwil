@@ -75,7 +75,7 @@ export function ManageYatimPiatu() {
         const newItem: YatimPiatuData = { id: Date.now().toString(), nik: s.nik, nama: s.nama, sekolah: s.sekolah, desa: s.desa, kategori, createdAt: Date.now() };
         setData(prev => [newItem, ...prev]);
       } else {
-        await addDoc(collection(db, 'yatim_piatu'), { nik: s.nik, nama: s.nama, sekolah: s.sekolah, desa: s.desa, kategori, createdAt: Date.now() });
+        await addDoc(collection(db, 'yatim_piatu'), { nik: s.nik, nama: s.nama, sekolah: s.sekolah, schoolId: user?.schoolId || '', desa: s.desa, kategori, createdAt: Date.now() });
       }
       setAddStatus({ ok: true, msg: `${s.nama} ditambahkan sebagai ${kategoriLabel[kategori]}` });
       setNikInput('');

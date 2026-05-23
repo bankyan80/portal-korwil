@@ -70,6 +70,8 @@ export default function MobileBottomNav() {
     return pathname?.startsWith(item.path) || false
   }
 
+  if (pathname?.startsWith('/login')) return null;
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden">
       <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-slate-700/50 safe-area-bottom">

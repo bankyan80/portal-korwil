@@ -16,7 +16,7 @@ export default function Home() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const view = getViewFromPath(window.location.pathname);
+    const view = getViewFromPath(pathname);
     if (view !== 'portal') setCurrentView(view);
   }, [setCurrentView, pathname]);
 
@@ -24,11 +24,11 @@ export default function Home() {
     const isAdminView = ADMIN_VIEW_PREFIXES.some(p => currentView.startsWith(p));
     if (isAdminView) {
       const target = getPathFromView(currentView);
-      if (window.location.pathname !== target) {
+      if (pathname !== target) {
         window.history.replaceState(null, '', target);
       }
     }
-  }, [currentView]);
+  }, [currentView, pathname]);
 
   if (currentView === 'login') return <LoginForm />;
   if (currentView === 'admin-manage-kip-sd') return <KipSdPage />;

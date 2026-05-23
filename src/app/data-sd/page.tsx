@@ -5,6 +5,7 @@ import { ArrowLeft, Search, School, Building2, MapPin, Loader2 } from 'lucide-re
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
 import { getAllDocs, listenToCollection } from '@/lib/firestore';
+import { sekolahSD } from '@/data/sekolah';
 
 interface SchoolItem {
   name: string;
@@ -15,30 +16,14 @@ interface SchoolItem {
   desa: string;
 }
 
-const fallbackSD: SchoolItem[] = [
-  { name: 'SD NEGERI 1 ASEM', npsn: '20215216', status: 'NEGERI', akreditasi: 'B', address: 'Jl. Abdurachman Saleh No. 328, Asem', desa: 'ASEM' },
-  { name: 'SD NEGERI 1 BELAWA', npsn: '20215230', status: 'NEGERI', akreditasi: 'B', address: 'Jl. Cikuya 1, Belawa', desa: 'BELAWA' },
-  { name: 'SD NEGERI 2 BELAWA', npsn: '20215564', status: 'NEGERI', akreditasi: 'A', address: 'Jl. Inpres Blok A, Belawa', desa: 'BELAWA' },
-  { name: 'SD NEGERI 1 CIPEUJEUH KULON', npsn: '20215287', status: 'NEGERI', akreditasi: 'B', address: 'Jl. K.H. Hasyim Asyari No. 07, Cipeujeuh Kulon', desa: 'CIPEUJEUH KULON' },
-  { name: 'SD NEGERI 2 CIPEUJEUH KULON', npsn: '20215381', status: 'NEGERI', akreditasi: 'A', address: 'Jl. KH. Hasyim Asyari No. 500, Cipeujeuh Kulon', desa: 'CIPEUJEUH KULON' },
-  { name: 'SD NEGERI 1 CIPEUJEUH WETAN', npsn: '20215286', status: 'NEGERI', akreditasi: 'A', address: 'Jl. MT. Haryono No. 62, Cipeujeuh Wetan', desa: 'CIPEUJEUH WETAN' },
-  { name: 'SD NEGERI 2 CIPEUJEUH WETAN', npsn: '20215380', status: 'NEGERI', akreditasi: 'A', address: 'Jl. MT. Haryono No. 3B, Cipeujeuh Wetan', desa: 'CIPEUJEUH WETAN' },
-  { name: 'SD NEGERI 3 CIPEUJEUH WETAN', npsn: '20214479', status: 'NEGERI', akreditasi: 'B', address: 'Jl. KH. Wahid Hasyim No. 66, Cipeujeuh Wetan', desa: 'CIPEUJEUH WETAN' },
-  { name: 'SD NEGERI 1 LEMAHABANG', npsn: '20215162', status: 'NEGERI', akreditasi: 'B', address: 'Jl. Ki Hajar Dewantoro No. 35, Lemahabang', desa: 'LEMAHABANG' },
-  { name: 'SD NEGERI 2 LEMAHABANG', npsn: '20214656', status: 'NEGERI', akreditasi: 'A', address: 'Jl. R.A. Kartini No. 26, Lemahabang', desa: 'LEMAHABANG' },
-  { name: 'SD NEGERI 1 LEMAHABANG KULON', npsn: '20215161', status: 'NEGERI', akreditasi: 'B', address: 'Jl. Syech Lemahabang No. 5, Lemahabang Kulon', desa: 'LEMAHABANG KULON' },
-  { name: 'SD NEGERI 1 LEUWIDINGDING', npsn: '20215164', status: 'NEGERI', akreditasi: 'A', address: 'Jl. Abdurahman Saleh, Leuwidingding', desa: 'LEUWIDINGDING' },
-  { name: 'SD NEGERI 1 PICUNGPUGUR', npsn: '20246442', status: 'NEGERI', akreditasi: 'A', address: 'Jl. Raya Desa Picungpugur, Picungpugur', desa: 'PICUNGPUGUR' },
-  { name: 'SD NEGERI 1 SARAJAYA', npsn: '20215517', status: 'NEGERI', akreditasi: 'B', address: 'Jl. Raya Sarajaya No. 63, Sarajaya', desa: 'SARAJAYA' },
-  { name: 'SD NEGERI 2 SARAJAYA', npsn: '20214726', status: 'NEGERI', akreditasi: 'B', address: 'Jl. Raya Sarajaya Subur No. 1, Sarajaya', desa: 'SARAJAYA' },
-  { name: 'SD NEGERI 1 SIGONG', npsn: '20215506', status: 'NEGERI', akreditasi: 'A', address: 'Jl. Pelita No. 101, Sigong', desa: 'SIGONG' },
-  { name: 'SD NEGERI 3 SIGONG', npsn: '20214570', status: 'NEGERI', akreditasi: 'B', address: 'Jl. Raya Sigong, Sigong', desa: 'SIGONG' },
-  { name: 'SD NEGERI 4 SIGONG', npsn: '20244513', status: 'NEGERI', akreditasi: 'B', address: 'Jl. Cantilan, Sigong', desa: 'SIGONG' },
-  { name: 'SD NEGERI 1 SINDANGLAUT', npsn: '20215464', status: 'NEGERI', akreditasi: 'A', address: 'Jl. Arief Rahman Hakim No. 24, Sindanglaut', desa: 'SINDANGLAUT' },
-  { name: 'SD NEGERI 1 TUK KARANGSUWUNG', npsn: '20246445', status: 'NEGERI', akreditasi: 'A', address: 'Jl. Pulo Undrus Ujung, Tuk Karangsuwung', desa: 'TUK KARANGSUWUNG' },
-  { name: 'SD NEGERI 1 WANGKELANG', npsn: '20215584', status: 'NEGERI', akreditasi: 'A', address: 'Jl. Raya Wangkelang No. 40, Wangkelang', desa: 'WANGKELANG' },
-  { name: 'SD IT AL IRSYAD AL ISLAMIYYAH', npsn: '20215221', status: 'SWASTA', akreditasi: 'A', address: 'Jl. Syech Lemahabang No. 54, Lemahabang Kulon', desa: 'LEMAHABANG KULON' },
-];
+const fallbackSD: SchoolItem[] = sekolahSD.map(s => ({
+  name: s.nama,
+  npsn: s.npsn,
+  status: s.status,
+  akreditasi: s.akreditasi,
+  address: s.address,
+  desa: s.desa,
+}));
 
 export default function DataSDPage() {
   const [schools, setSchools] = useState<SchoolItem[]>(fallbackSD);

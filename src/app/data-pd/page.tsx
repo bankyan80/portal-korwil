@@ -113,21 +113,25 @@ export default function DataPDPage() {
   const [sekolahData, setSekolahData] = useState<SekolahKelas[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const schoolsRef = useRef(schools);
+  schoolsRef.current = schools;
+
   const refreshInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   useEffect(() => {
+    const currentSchools = schoolsRef.current;
     async function load() {
       try {
         const res = await fetch('/api/siswa/per-kelas');
         const json = await res.json();
         if (json.data) {
-          setSekolahData(buildSekolahData(schools, json.data as SekolahKelas[]));
+          setSekolahData(buildSekolahData(currentSchools, json.data as SekolahKelas[]));
         } else {
-          setSekolahData(buildSekolahData(schools));
+          setSekolahData(buildSekolahData(currentSchools));
         }
       } catch (e) {
         console.error('Gagal memuat data PD:', e);
-        setSekolahData(buildSekolahData(schools));
+        setSekolahData(buildSekolahData(currentSchools));
       } finally {
         setLoading(false);
       }
@@ -135,10 +139,11 @@ export default function DataPDPage() {
     load();
 
     refreshInterval.current = setInterval(() => {
+      const s = schoolsRef.current;
       fetch('/api/siswa/per-kelas')
         .then(r => r.ok ? r.json() : null)
         .then(json => {
-          if (json?.data) setSekolahData(buildSekolahData(schools, json.data as SekolahKelas[]));
+          if (json?.data) setSekolahData(buildSekolahData(s, json.data as SekolahKelas[]));
         })
         .catch(() => {});
     }, 30000);

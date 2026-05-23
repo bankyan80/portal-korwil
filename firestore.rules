@@ -15,10 +15,6 @@ service cloud.firestore {
       return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'operator_sekolah';
     }
     
-    function isKetuaOrganisasi() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ketua_organisasi';
-    }
-    
     function getOperatorSchoolId() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId;
     }
@@ -27,10 +23,6 @@ service cloud.firestore {
       return data.schoolId == getOperatorSchoolId() ||
              data.sekolahId == getOperatorSchoolId() ||
              data.sekolah_id == getOperatorSchoolId();
-    }
-    
-    function getOperatorOrganizationId() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId;
     }
     
     // Users collection

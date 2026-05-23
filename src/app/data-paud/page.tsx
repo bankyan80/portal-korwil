@@ -5,6 +5,7 @@ import { ArrowLeft, Search, GraduationCap, Building2, MapPin, Loader2 } from 'lu
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
 import { getAllDocs, listenToCollection } from '@/lib/firestore';
+import { sekolahKB } from '@/data/sekolah';
 
 interface SchoolItem {
   name: string;
@@ -16,23 +17,21 @@ interface SchoolItem {
   desa: string;
 }
 
-const fallbackPAUD: SchoolItem[] = [
-  { name: 'KB A.H. PLUS', npsn: '70039880', status: 'SWASTA', akreditasi: '-', jenis: 'KB', address: 'Jl. Pelita Dusun 4, Sigong', desa: 'SIGONG' },
-  { name: 'KB AMALIA SALSABILA', npsn: '69804039', status: 'SWASTA', akreditasi: 'B', jenis: 'KB', address: 'Jl. K.H. Hasyim Asyari No. 112, Cipeujeuh Kulon', desa: 'CIPEUJEUH KULON' },
-  { name: 'KB AZ-ZAHRA', npsn: '69804068', status: 'SWASTA', akreditasi: 'B', jenis: 'KB', address: 'Jl. Pelita Dusun 02, Sigong', desa: 'SIGONG' },
-  { name: 'KB MUTIARA', npsn: '70044538', status: 'SWASTA', akreditasi: '-', jenis: 'KB', address: 'Jl. KH. Hasyim Asyari No. 48, Cipeujeuh Wetan', desa: 'CIPEUJEUH WETAN' },
-  { name: 'KB PALAPA', npsn: '69870486', status: 'SWASTA', akreditasi: '-', jenis: 'KB', address: 'Jl. Syech Lemahabang, Lemahabang Kulon', desa: 'LEMAHABANG KULON' },
-  { name: 'KB PERMATA BUNDA', npsn: '70024652', status: 'SWASTA', akreditasi: 'C', jenis: 'KB', address: 'Jl. Palasah Nunggal, Picungpugur', desa: 'PICUNGPUGUR' },
-  { name: 'PAUD AL HAMBRA', npsn: '69947715', status: 'SWASTA', akreditasi: 'C', jenis: 'KB', address: 'Desa Lemahabang, Lemahabang', desa: 'LEMAHABANG' },
-  { name: 'PAUD AL-HIDAYAH', npsn: '69870488', status: 'SWASTA', akreditasi: 'C', jenis: 'KB', address: 'Jl. Cantilan, Sigong', desa: 'SIGONG' },
-  { name: 'PAUD AL-HUSNA', npsn: '69870479', status: 'SWASTA', akreditasi: 'B', jenis: 'KB', address: 'Jl. Mbah Ardisela Desa Asem, Asem', desa: 'ASEM' },
-  { name: 'PAUD AMANAH', npsn: '69870482', status: 'SWASTA', akreditasi: 'B', jenis: 'KB', address: 'Jl. Sidaresmi No. 1, Lemahabang Kulon', desa: 'LEMAHABANG KULON' },
-  { name: 'PAUD AN NAIM', npsn: '69870484', status: 'SWASTA', akreditasi: 'C', jenis: 'KB', address: 'Blok Kliwon, Sindanglaut', desa: 'SINDANGLAUT' },
-  { name: 'PAUD ASY-SYAFIIYAH', npsn: '69870485', status: 'SWASTA', akreditasi: 'C', jenis: 'KB', address: 'Jl. Stasiun No. 15, Lemahabang Kulon', desa: 'LEMAHABANG KULON' },
-  { name: 'PAUD BUDGENVIL', npsn: '69870489', status: 'SWASTA', akreditasi: 'B', jenis: 'KB', address: 'Jl. Inpres, Belawa', desa: 'BELAWA' },
-  { name: 'PAUD TUNAS HARAPAN', npsn: '69870490', status: 'SWASTA', akreditasi: 'C', jenis: 'KB', address: 'Blok Pahing, Wangkelang', desa: 'WANGKELANG' },
-  { name: 'PAUD SPS MELATI', npsn: '69804044', status: 'SWASTA', akreditasi: 'C', jenis: 'SPS', address: 'Dusun 02, Sarajaya', desa: 'SARAJAYA' },
-];
+function deriveJenis(nama: string): string {
+  if (nama.startsWith('KB ')) return 'KB';
+  if (nama.includes('SPS')) return 'SPS';
+  return 'KB';
+}
+
+const fallbackPAUD: SchoolItem[] = sekolahKB.map(s => ({
+  name: s.nama,
+  npsn: s.npsn,
+  status: s.status,
+  akreditasi: s.akreditasi,
+  jenis: deriveJenis(s.nama),
+  address: s.address,
+  desa: s.desa,
+}));
 
 export default function DataPAUDPage() {
   const [schools, setSchools] = useState<SchoolItem[]>(fallbackPAUD);
