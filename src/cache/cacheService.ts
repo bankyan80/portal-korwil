@@ -32,6 +32,9 @@ export async function getCache<T>(collection: string, ...parts: string[]): Promi
       await localforage.removeItem(cacheKey(collection, ...parts));
       return null;
     }
+    if (Date.now() > entry.expiresAt) {
+      return null;
+    }
     return entry.data;
   } catch {
     return null;

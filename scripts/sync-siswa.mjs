@@ -1,3 +1,16 @@
+/**
+ * ⚠️  QUOTA WARNING  ⚠️
+ * With --skip-unchanged (default), this script does db.getAll() which reads
+ * EVERY document in the collection (~6991 reads). This alone can consume
+ * ~14% of the daily Firestore Spark Plan read quota (50K).
+ *
+ * If you only need to write new data, use --no-skip-unchanged to avoid
+ * the read-all step.
+ *
+ * If sync fails with RESOURCE_EXHAUSTED, wait a few hours for quota to
+ * reset, then retry with --resume or --no-skip-unchanged.
+ */
+
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { readFileSync, existsSync, readdirSync, unlinkSync, writeFileSync } from 'fs';

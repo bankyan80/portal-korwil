@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { ArrowLeft, Search, Users, Download, Printer, Loader2, AlertTriangle } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, getDocs, query } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { rombelData } from '@/data/rombel';
 import { useSekolah } from '@/hooks/useSekolah';
 
@@ -511,8 +511,7 @@ export default function MappingPegawaiPage() {
     let empReady = false;
     let stuReady = false;
 
-    const unsubEmp = onSnapshot(
-      query(collection(db, 'employees')),
+    getDocs(query(collection(db, 'employees'))).then(
       (snap) => {
         latestEmployees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         empReady = true;
@@ -521,8 +520,7 @@ export default function MappingPegawaiPage() {
       () => { setFirebaseStatus('error'); setLoading(false); }
     );
 
-    const unsubStu = onSnapshot(
-      query(collection(db, 'students')),
+    getDocs(query(collection(db, 'students'))).then(
       (snap) => {
         latestStudents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         stuReady = true;
@@ -533,8 +531,6 @@ export default function MappingPegawaiPage() {
 
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      unsubEmp();
-      unsubStu();
     };
   }, []);
 

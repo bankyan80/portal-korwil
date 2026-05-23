@@ -21,13 +21,13 @@ export function SuperMonitoring() {
     collectionName: 'schools', realtime: true, enabled: !!user,
   });
   const { data: students, loading: studentsLoading } = useCachedFirestore({
-    collectionName: 'students', realtime: true, enabled: !!user,
+    collectionName: 'students', realtime: false, ttl: 120_000, enabled: !!user,
   });
   const { data: reports, loading: reportsLoading } = useCachedFirestore({
     collectionName: 'reports', realtime: true, enabled: !!user,
   });
   const { data: employees, loading: employeesLoading } = useCachedFirestore({
-    collectionName: 'employees', realtime: true, enabled: !!user,
+    collectionName: 'employees', realtime: false, ttl: 120_000, enabled: !!user,
   });
 
   const loading = usersLoading || schoolsLoading || studentsLoading || reportsLoading || employeesLoading;

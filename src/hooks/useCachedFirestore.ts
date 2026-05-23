@@ -68,6 +68,7 @@ export function useCachedFirestore<T extends { id?: string }>(
       if (cached && mountedRef.current) {
         setData(cached);
         setLoading(false);
+        if (cached.length > 0) return;
       }
 
       const fresh = await fetchData();
