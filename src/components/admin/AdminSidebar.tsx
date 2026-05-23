@@ -57,6 +57,18 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    title: 'Operator Sekolah',
+    items: [
+      { label: 'Laporan Bulanan', icon: FileBarChart, view: 'admin-manage-laporan-bulanan', permission: 'manage-laporan-bulanan' },
+      { label: 'Data Siswa (PD)', icon: Users, view: 'admin-manage-data-pd', permission: 'manage-data-pd' },
+      { label: 'Data Guru (GTK)', icon: Users, view: 'admin-manage-data-gtk', permission: 'manage-data-gtk' },
+      { label: 'SPMB SD', icon: GraduationCap, view: 'admin-manage-spmb-sd', permission: 'manage-spmb-sd' },
+      { label: 'TKA SD', icon: Activity, view: 'admin-manage-tka-sd', permission: 'manage-tka-sd' },
+      { label: 'KIP SD', icon: BadgeCheck, view: 'admin-manage-kip-sd', permission: 'manage-kip-sd' },
+      { label: 'Yatim Piatu', icon: BadgeCheck, view: 'admin-manage-yatim-piatu', permission: 'manage-yatim-piatu' },
+    ],
+  },
+  {
     title: 'Pengaturan',
     items: [
       { label: 'Kelola Organisasi', icon: Building2, view: 'admin-manage-organizations', permission: 'manage-organizations' },
