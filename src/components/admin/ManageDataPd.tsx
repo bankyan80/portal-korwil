@@ -91,7 +91,7 @@ export function ManageDataPd() {
     if (isOperator) return;
     async function fetchDb() {
       try {
-        const res = await fetch('/api/siswa/list');
+        const res = await fetch('/api/siswa/list?limit=1000'); // Batasi admin view
         const json = await res.json();
         const siswa: any[] = json.siswa || [];
         const grouped: Record<string, SchoolSummary> = {};
@@ -119,11 +119,9 @@ export function ManageDataPd() {
       // Load API data (one-shot)
       let dbSiswa: SiswaRecord[] = [];
       try {
-        const res = await fetch('/api/siswa/list');
+        const res = await fetch(`/api/siswa/list?sekolah=${encodeURIComponent(userSchool)}`);
         const json = await res.json();
-        const q = normalizeSchool(userSchool);
         dbSiswa = (json.siswa || [])
-          .filter((s: any) => normalizeSchool(s.sekolah || '') === q)
           .map((s: any) => ({
             nik: s.nik, nama: s.nama, jk: s.jk, nisn: s.nisn || '',
             tanggal_lahir: s.tanggal_lahir || '', sekolah: s.sekolah || userSchool,
@@ -132,7 +130,7 @@ export function ManageDataPd() {
           }));
       } catch (e) { console.error('Error fetching siswa API:', e); }
 
-      // Load Firestore overlay (realtime)
+      // Load Firestore overlay (one-time fetch instead of onSnapshot to save quota)
       const schoolFilter = normalizeSchool(userSchool);
 
       const computeMerged = (fsSiswa: SiswaRecord[]) => {
@@ -144,36 +142,20 @@ export function ManageDataPd() {
         try {
           const siswaQuery = user?.schoolId
             ? query(collection(db, 'students'), where('schoolId', '==', user.schoolId))
-            : collection(db, 'students');
-          unsubscribe = onSnapshot(
-            siswaQuery,
-            (snap) => {
-              const fsSiswa: SiswaRecord[] = [];
-              snap.forEach((d) => {
-                const s = d.data() as SiswaRecord;
-                const normSekolah = normalizeSchool(s.sekolah || '');
-                if (normSekolah === schoolFilter && s.status !== 'lulus') {
-                  fsSiswa.push({ id: d.id, ...s });
-                }
-              });
-              if (!loadingDone) {
-                setAllSiswa(computeMerged(fsSiswa));
-                setLoading(false);
-                loadingDone = true;
-              } else {
-                setAllSiswa(computeMerged(fsSiswa));
-              }
-            },
-            (err) => {
-              console.error('Error in students realtime listener:', err);
-              toast.error('Gagal memuat data siswa');
-              if (!loadingDone) {
-                setAllSiswa(computeMerged([]));
-                setLoading(false);
-                loadingDone = true;
-              }
+            : query(collection(db, 'students'), where('sekolah', '==', userSchool));
+          
+          const snap = await getDocs(siswaQuery);
+          const fsSiswa: SiswaRecord[] = [];
+          snap.forEach((d) => {
+            const s = d.data() as SiswaRecord;
+            if (s.status !== 'lulus') {
+              fsSiswa.push({ id: d.id, ...s });
             }
-          );
+          });
+          
+          setAllSiswa(computeMerged(fsSiswa));
+          setLoading(false);
+          loadingDone = true;
         } catch (e) {
           console.error('Error loading Firestore students:', e);
           setAllSiswa(dbSiswa);
@@ -188,11 +170,7 @@ export function ManageDataPd() {
     }
 
     load();
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [isOperator, userSchool]);
+  }, [isOperator, userSchool, user?.schoolId]);
 
   const [page, setPage] = useState(1);
   const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
