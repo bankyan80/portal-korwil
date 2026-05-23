@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, School, Users, ClipboardList, FileText, CheckCircle, Home, ShieldCheck, Truck } from 'lucide-react';
+import { ArrowLeft, School, Users, ClipboardList, FileText, CheckCircle, Home, ShieldCheck, Truck, Bell, UserCheck } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 
 export default function SPMBSD() {
@@ -51,6 +51,20 @@ export default function SPMBSD() {
             <h2 className="text-xl font-semibold mt-4 text-[#0d3b66] dark:text-white">Sekolah SD</h2>
             <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">Seluruh SD Kecamatan Lemahabang.</p>
           </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <Link href="/spmb-sd/pengumuman" className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow hover:shadow-xl transition border dark:border-slate-700">
+            <Bell className="w-10 h-10 text-orange-600 dark:text-orange-400" />
+            <h2 className="text-xl font-semibold mt-4 text-[#0d3b66] dark:text-white">Pengumuman Hasil</h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">Cek hasil seleksi pendaftaran SPMB SD.</p>
+          </Link>
+
+          <Link href="/spmb-sd/daftar-ulang" className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow hover:shadow-xl transition border dark:border-slate-700">
+            <UserCheck className="w-10 h-10 text-green-600 dark:text-green-400" />
+            <h2 className="text-xl font-semibold mt-4 text-[#0d3b66] dark:text-white">Daftar Ulang</h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">Daftar ulang bagi calon siswa yang diterima.</p>
+          </Link>
         </div>
 
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow border dark:border-slate-700">
