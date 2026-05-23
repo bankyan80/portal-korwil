@@ -28,15 +28,15 @@ const INTERNAL_DATA_KEYWORDS: string[] = [
 
 const LOCAL_KB: Record<string, LocalAnswer> = {
   'cara lapor': {
-    answer: 'Untuk mengisi laporan bulanan:\n\n1. Login sebagai operator sekolah\n2. Buka menu [📋 Laporan Bulanan](/admin/operator/laporan-bulanan)\n3. Pilih bulan dan tahun\n4. Isi data siswa, GTK, sarpras, dan absen\n5. Klik "Kirim Laporan Bulanan"\n\nStatus laporan: Belum Lapor → Sudah Dikirim → Diverifikasi',
+    answer: 'Untuk mengisi laporan bulanan:\n\n1. Login sebagai operator sekolah\n2. Buka menu Laporan Bulanan di dashboard operator\n3. Pilih bulan dan tahun\n4. Isi data siswa, GTK, sarpras, dan absen\n5. Klik "Kirim Laporan Bulanan"\n\nStatus laporan: Belum Lapor → Sudah Dikirim → Diverifikasi\n\nLihat rekap laporan publik di [📊 Rekap Laporan](/rekap-laporan).',
     confidence: 'exact',
   },
   'laporan bulanan': {
-    answer: 'Laporan bulanan bisa diakses di:\n\n[📋 Isi Laporan](/admin/operator/laporan-bulanan) — untuk operator\n[📊 Rekap Laporan](/rekap-laporan) — untuk monitoring\n\nLaporan diisi per bulan (Januari–Desember) dan mencakup data siswa, GTK, sarpras, dan absensi.',
+    answer: 'Laporan bulanan bisa diakses di:\n\n[📊 Rekap Laporan](/rekap-laporan) — untuk melihat rekap semua sekolah\n\nUntuk mengisi laporan, login sebagai operator sekolah.',
     confidence: 'exact',
   },
   'cara spmb': {
-    answer: 'SPMB SD (Sistem Penerimaan Murid Baru) bisa diakses di:\n\n[🎓 SPMB SD](/spmb-sd)\n\nHalaman ini berisi informasi pendaftaran murid baru SD di Kecamatan Lemahabang.',
+    answer: 'SPMB SD (Sistem Penerimaan Murid Baru) bisa diakses di:\n\n[🎓 SPMB SD](/spmb-sd)\n\nAlur pendaftaran:\n1. [📋 Cek NIK & Usia](/spmb-sd/cek) — cek syarat usia\n2. [📝 Daftar](/spmb-sd/daftar) — isi formulir pendaftaran\n3. [📢 Pengumuman](/spmb-sd/pengumuman) — lihat hasil seleksi\n4. [✅ Daftar Ulang](/spmb-sd/daftar-ulang) — konfirmasi bagi yang diterima',
     confidence: 'exact',
   },
   'cara tka': {
@@ -44,19 +44,19 @@ const LOCAL_KB: Record<string, LocalAnswer> = {
     confidence: 'exact',
   },
   'cara upload': {
-    answer: 'Untuk upload dokumen:\n\n1. Buka menu [📁 Dokumen Bersama](/dokumen-bersama)\n2. Klik tombol "Tambah Dokumen"\n3. Pilih file (PDF, Word, Excel, JPG, PNG, WEBP, maks 10MB)\n4. Isi keterangan dokumen\n5. Klik "Upload"\n\nFile disimpan di Supabase Storage.',
+    answer: 'Upload dokumen bisa dilakukan di:\n\n[📁 Dokumen Bersama](/dokumen-bersama) — upload & unduh dokumen publik\n\nKlik "Tambah Dokumen", pilih file (PDF, Word, Excel, JPG, PNG, WEBP, maks 10MB), isi keterangan, lalu klik "Upload".',
     confidence: 'exact',
   },
   'cara cetak': {
-    answer: 'Untuk mencetak laporan:\n\n1. Buka halaman yang ingin dicetak\n2. Klik tombol "Cetak" atau "Print"\n3. Pilih printer di dialog browser\n4. Klik "Print"\n\nAtau gunakan shortcut Ctrl+P (Windows) / Cmd+P (Mac).',
+    answer: 'Untuk mencetak:\n\n1. Buka halaman yang ingin dicetak\n2. Klik tombol "Cetak" atau gunakan Ctrl+P (Windows) / Cmd+P (Mac)\n3. Pilih printer\n4. Klik "Print"',
     confidence: 'exact',
   },
   'cara export': {
-    answer: 'Export data tersedia di beberapa halaman:\n\n- [📊 Rekap Laporan](/rekap-laporan) — Export Excel, PDF, Print\n- [👥 Data Siswa](/admin/operator/data-siswa) — Export data siswa\n\nKlik tombol export yang tersedia di masing-masing halaman.',
+    answer: 'Export data tersedia di:\n\n- [📊 Rekap Laporan](/rekap-laporan) — Export Excel, PDF, Print\n\nKlik tombol export yang tersedia di halaman tersebut.',
     confidence: 'exact',
   },
   'rekap sekolah': {
-    answer: 'Rekap data sekolah bisa dilihat di:\n\n[📊 Rekap Laporan](/rekap-laporan) — monitoring semua sekolah\n[🏫 Data Sekolah](/data-sekolah) — daftar lengkap sekolah\n\nRekap menampilkan status laporan bulanan per sekolah (Januari–Desember).',
+    answer: 'Data sekolah bisa dilihat di:\n\n[🏫 Data Sekolah](/data-sekolah) — daftar lengkap sekolah\n[📊 Rekap Laporan](/rekap-laporan) — rekap data sekolah',
     confidence: 'exact',
   },
   'cara login': {
@@ -64,15 +64,15 @@ const LOCAL_KB: Record<string, LocalAnswer> = {
     confidence: 'exact',
   },
   'cara tambah siswa': {
-    answer: 'Untuk menambah data siswa:\n\n1. Login sebagai operator\n2. Buka [👤 Tambah Siswa](/admin/operator/tambah-siswa)\n3. Isi data lengkap siswa (NIK, nama, kelas, jenis kelamin, dll)\n4. Klik "Simpan"\n\nData siswa juga bisa diimpor dari Dapodik melalui API.',
+    answer: 'Untuk menambah data siswa, login sebagai operator sekolah.\n\nData siswa publik bisa dilihat di [🏫 Data Sekolah](/data-sekolah).',
     confidence: 'exact',
   },
   'cara tambah guru': {
-    answer: 'Untuk menambah data guru:\n\n1. Login sebagai operator\n2. Buka [👥 Data Guru](/admin/operator/data-guru)\n3. Klik "Tambah Guru"\n4. Isi data lengkap (NIK, NIP, nama, jenis PTK, dll)\n5. Klik "Simpan"',
+    answer: 'Untuk menambah data guru, login sebagai operator sekolah.\n\nData guru publik bisa dilihat di [🗺️ Mapping Pegawai](/mapping-pegawai).',
     confidence: 'exact',
   },
   'sarpras': {
-    answer: 'Data sarana prasarana bisa dikelola di:\n\n[🏗️ Sarpras](/admin/operator/sarpras)\n\nMencakup: ruang kelas, perpustakaan, UKS, toilet, mushola, gudang, tanah, dan perkakas.',
+    answer: 'Data sarana prasarana sekolah bisa dikelola oleh operator sekolah.\n\nMencakup: ruang kelas, perpustakaan, UKS, toilet, mushola, gudang, tanah, dan perkakas.',
     confidence: 'exact',
   },
   'kip sd': {
@@ -104,19 +104,19 @@ const LOCAL_KB: Record<string, LocalAnswer> = {
     confidence: 'exact',
   },
   'profil sekolah': {
-    answer: 'Profil sekolah bisa dikelola di:\n\n[🏫 Profil Sekolah](/admin/operator/profil-sekolah)\n\nBerisi data NPSN, NSS, alamat, kepala sekolah, dan informasi sekolah lainnya.',
+    answer: 'Data sekolah bisa dilihat di:\n\n[🏫 Data Sekolah](/data-sekolah) — daftar lengkap sekolah & profil\n[🏫 Profil](/profil) — profil korwil',
     confidence: 'exact',
   },
   'dashboard operator': {
-    answer: 'Dashboard operator bisa diakses di:\n\n[📊 Dashboard Operator](/admin/operator)\n\nBerisi ringkasan data sekolah, siswa, guru, dan laporan bulanan.',
+    answer: 'Dashboard operator digunakan oleh operator sekolah yang sudah login.\n\nUntuk publik, lihat [📊 Rekap Laporan](/rekap-laporan) atau [🏫 Data Sekolah](/data-sekolah).',
     confidence: 'exact',
   },
   'dashboard admin': {
-    answer: 'Dashboard admin bisa diakses di:\n\n[📊 Dashboard Admin](/admin)\n\nBerisi manajemen konten, user, dan monitoring portal.',
+    answer: 'Dashboard admin digunakan oleh admin yang sudah login.\n\nUntuk publik, lihat [📊 Rekap Laporan](/rekap-laporan) atau [🏫 Data Sekolah](/data-sekolah).',
     confidence: 'exact',
   },
   'super admin': {
-    answer: 'Dashboard super admin bisa diakses di:\n\n[📊 Super Dashboard](/admin/super)\n\nBerisi monitoring semua sekolah, manajemen user, dan pengaturan portal.',
+    answer: 'Super admin adalah pengelola utama portal.\n\nUntuk publik, lihat [📊 Rekap Laporan](/rekap-laporan) atau [🏫 Data Sekolah](/data-sekolah).',
     confidence: 'exact',
   },
   'siapa kamu': {
@@ -132,19 +132,19 @@ const LOCAL_KB: Record<string, LocalAnswer> = {
     confidence: 'exact',
   },
   'daftar menu': {
-    answer: 'Berikut menu utama Portal Pendidikan Kecamatan Lemahabang:\n\n**Publik:**\n[🏠 Beranda](/) | [🏫 Profil](/profil) | [🎓 SPMB SD](/spmb-sd) | [📝 TKA SD](/tka-sd) | [📅 Agenda](/agenda-kegiatan) | [📂 Administrasi](/administrasi) | [🗺️ Mapping Pegawai](/mapping-pegawai) | [📊 Rekap Laporan](/rekap-laporan) | [🏫 Data Sekolah](/data-sekolah) | [💳 KIP SD](/kip-sd) | [🤝 Yatim Piatu](/yatim-piatu) | [💰 BOS ARKAS](/bos-arkas) | [📁 Dokumen Bersama](/dokumen-bersama)\n\n**Operator:** [📊 Dashboard](/admin/operator) | [🏫 Profil Sekolah](/admin/operator/profil-sekolah) | [👤 Data Siswa](/admin/operator/data-siswa) | [👥 Data Guru](/admin/operator/data-guru) | [🏗️ Sarpras](/admin/operator/sarpras) | [📋 Laporan Bulanan](/admin/operator/laporan-bulanan)\n\n**Admin:** [📊 Dashboard](/admin) | [📢 Pengumuman](/admin/manage-announcements) | [🖼️ Galeri](/admin/manage-gallery) | [👥 User](/admin/manage-users) | [📁 Dokumen](/admin/manage-documents)\n\n**Super Admin:** [📊 Dashboard](/admin/super) | [🏫 Sekolah](/admin/super/sekolah) | [📈 Monitoring](/admin/super/monitoring) | [⚙️ Settings](/admin/super/settings)',
+    answer: 'Berikut menu publik Portal Pendidikan Kecamatan Lemahabang:\n\n[🏠 Beranda](/) | [🏫 Profil](/profil) | [🎓 SPMB SD](/spmb-sd) | [📝 TKA SD](/tka-sd) | [📅 Agenda](/agenda-kegiatan) | [📂 Administrasi](/administrasi) | [🗺️ Mapping Pegawai](/mapping-pegawai) | [📊 Rekap Laporan](/rekap-laporan) | [🏫 Data Sekolah](/data-sekolah) | [💳 KIP SD](/kip-sd) | [🤝 Yatim Piatu](/yatim-piatu) | [💰 BOS ARKAS](/bos-arkas) | [📁 Dokumen Bersama](/dokumen-bersama) | [📰 Berita](/berita) | [🖼️ Galeri](/galeri)\n\nUntuk menu operator/admin, login terlebih dahulu.',
     confidence: 'exact',
   },
   'lokasi halaman': {
-    answer: 'Tentukan halaman yang ingin Anda cari. Contoh:\n- "Dimana halaman SPMB?" → 🎓 [SPMB SD](/spmb-sd)\n- "Cari menu laporan" → [📊 Rekap Laporan](/rekap-laporan)\n- "Halaman profil sekolah" → [🏫 Profil Sekolah](/admin/operator/profil-sekolah)\n\nAtau ketik **"daftar menu"** untuk melihat semua menu.',
+    answer: 'Tentukan halaman yang ingin Anda cari. Contoh:\n- "Dimana halaman SPMB?" → 🎓 [SPMB SD](/spmb-sd)\n- "Cari menu laporan" → [📊 Rekap Laporan](/rekap-laporan)\n- "Halaman data sekolah" → [🏫 Data Sekolah](/data-sekolah)\n\nAtau ketik **"daftar menu"** untuk melihat semua menu.',
     confidence: 'exact',
   },
   'data siswa': {
-    answer: 'Data siswa bisa diakses melalui:\n\n**Operator:**\n- [👤 Tambah Siswa](/admin/operator/tambah-siswa) — input data baru\n- [👥 Data Siswa](/admin/operator/data-siswa) — lihat & kelola\n\n**Publik:**\n- Data siswa bisa dilihat di menu masing-masing sekolah',
+    answer: 'Data siswa bisa dilihat di:\n\n- [🏫 Data Sekolah](/data-sekolah) — lihat data per sekolah\n- [📊 Rekap Laporan](/rekap-laporan) — rekap jumlah siswa\n\nUntuk mengelola data siswa, login sebagai operator sekolah.',
     confidence: 'exact',
   },
   'data guru': {
-    answer: 'Data guru & tendik bisa diakses melalui:\n\n**Operator:**\n- [👥 Data Guru](/admin/operator/data-guru) — lihat, tambah, edit\n\n**Publik:**\n- [🗺️ Mapping Pegawai](/mapping-pegawai) — lihat pemetaan pegawai',
+    answer: 'Data guru & tendik bisa dilihat di:\n\n- [🗺️ Mapping Pegawai](/mapping-pegawai) — pemetaan pegawai\n- [📊 Rekap Laporan](/rekap-laporan) — rekap jumlah guru\n\nUntuk mengelola data guru, login sebagai operator sekolah.',
     confidence: 'exact',
   },
   'cara ganti password': {

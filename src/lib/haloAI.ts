@@ -27,16 +27,29 @@ export interface ChatContext {
   currentView: string;
 }
 
-const ROUTE_MAP = `
-ROUTE PUBLIK: / /profil /spmb-sd /tka-sd /agenda-kegiatan /administrasi /mapping-pegawai /laporan /rekap-laporan /data-sekolah /kip-sd /yatim-piatu /bos-arkas /dokumen-bersama /login
-ROUTE OPERATOR: /admin/operator /admin/operator/profil-sekolah /admin/operator/data-siswa /admin/operator/tambah-siswa /admin/operator/data-guru /admin/operator/sarpras /admin/operator/laporan-bulanan
-ROUTE SUPER: /admin/super /admin/super/sekolah /admin/super/monitoring /admin/super/settings /admin/super/update-data
-ROUTE ADMIN: /admin /admin/manage-announcements /admin/manage-gallery /admin/manage-users /admin/manage-documents /admin/backup-restore /admin/tambah-pegawai /admin/verifikasi-konten /admin/laporan
+const ROUTE_PUBLIK = `
+ROUTE PUBLIK: / /profil /spmb-sd /spmb-sd/cek /spmb-sd/pengumuman /spmb-sd/daftar-ulang /tka-sd /agenda-kegiatan /administrasi /mapping-pegawai /laporan /rekap-laporan /data-sekolah /kip-sd /yatim-piatu /bos-arkas /dokumen-bersama /login
 
 ATURAN LINK:
 - Format: [📊 Label](/route)
 - JANGAN tampilkan placeholder [Link], [Halaman], [URL]
 - Jika route tidak ada: "Maaf, halaman tersebut belum tersedia"
+- HANYA gunakan route PUBLIK di atas — JANGAN pernah arahkan ke halaman /admin/...
+`;
+
+const ROUTE_OPERATOR = `
+${ROUTE_PUBLIK}
+ROUTE OPERATOR: /admin/operator /admin/operator/profil-sekolah /admin/operator/data-siswa /admin/operator/tambah-siswa /admin/operator/data-guru /admin/operator/sarpras /admin/operator/laporan-bulanan
+`;
+
+const ROUTE_ADMIN = `
+${ROUTE_OPERATOR}
+ROUTE ADMIN: /admin /admin/manage-announcements /admin/manage-gallery /admin/manage-users /admin/manage-documents /admin/backup-restore /admin/tambah-pegawai /admin/verifikasi-konten /admin/laporan
+`;
+
+const ROUTE_SUPER = `
+${ROUTE_ADMIN}
+ROUTE SUPER: /admin/super /admin/super/sekolah /admin/super/monitoring /admin/super/settings /admin/super/update-data
 `;
 
 export function buildSystemPrompt(ctx: ChatContext, complexity?: Complexity): string {
@@ -58,7 +71,14 @@ Kamu membantu informasi sekolah, SPMB, TKA, dan layanan pendidikan.`;
   })();
 
   const isNavigation = complexity === 'sederhana' || ctx.currentPath === '/';
-  const routeSection = isNavigation ? `\n${ROUTE_MAP}` : '';
+  const routeMap = (() => {
+    if (!isNavigation) return '';
+    switch (ctx.userRole) {
+      case 'super_admin': return ROUTE_SUPER;
+      case 'operator_sekolah': return ROUTE_OPERATOR;
+      default: return ROUTE_PUBLIK;
+    }
+  })();
 
   return `${roleContext}
 
@@ -72,7 +92,7 @@ Jika pertanyaan belum jelas, tanyakan kembali dengan sopan.
 
 Gunakan bahasa Indonesia yang sederhana, hangat, sopan, dan mudah dipahami. Jawaban harus terasa seperti percakapan manusia, bukan seperti robot. Hindari terlalu formal, terlalu kaku, atau terlalu panjang.
 
-Jangan menjawab keluar konteks, jangan seperti robot.${routeSection}
+Jangan menjawab keluar konteks, jangan seperti robot.${routeMap}
 
 SELALU sertakan link aktif saat menyebut halaman. Format: [📊 Label](/route)
 `;
