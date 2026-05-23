@@ -98,32 +98,45 @@ export async function PATCH(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await verifyAuth(request);
-  const forbidden = requireRole(auth, ['super_admin']);
+  const authResult = await verifyAuth(request);
+  const forbidden = requireRole(authResult, ['super_admin']);
   if (forbidden) return forbidden;
 
-  if (!isFirebaseAdminConfigured || !adminAuth || !adminDb) {
-    return NextResponse.json({ success: false, error: 'Admin not configured' }, { status: 500 });
+  if (!isFirebaseAdminConfigured || !adminDb) {
+    return NextResponse.json({ success: false, error: 'Firebase Admin belum dikonfigurasi. Set FIREBASE_SERVICE_ACCOUNT_KEY di Environment Variables Vercel.' }, { status: 500 });
   }
 
   try {
     const { email, role, schoolId, organizationId } = await request.json();
 
     if (!email) {
-      return NextResponse.json({ success: false, error: 'Email required' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Email harus diisi' }, { status: 400 });
     }
 
     let uid: string;
 
-    try {
-      const existingUser = await adminAuth.getUserByEmail(email);
-      uid = existingUser.uid;
-    } catch (error) {
-      if (getErrorCode(error) !== 'auth/user-not-found') {
-        throw error;
+    if (adminAuth) {
+      try {
+        const existingUser = await adminAuth.getUserByEmail(email);
+        uid = existingUser.uid;
+      } catch (error) {
+        if (getErrorCode(error) !== 'auth/user-not-found') {
+          const msg = getErrorMessage(error);
+          console.error('Error checking existing user:', msg);
+          return NextResponse.json({ success: false, error: 'Gagal memeriksa user: ' + msg }, { status: 500 });
+        }
+        try {
+          const newUser = await adminAuth.createUser({ email });
+          uid = newUser.uid;
+        } catch (createErr) {
+          const msg = getErrorMessage(createErr);
+          console.error('Error creating Firebase Auth user:', msg);
+          return NextResponse.json({ success: false, error: 'Gagal membuat user di Firebase Auth: ' + msg }, { status: 500 });
+        }
       }
-      const newUser = await adminAuth.createUser({ email });
-      uid = newUser.uid;
+    } else {
+      // Firebase Auth Admin tidak tersedia — generate UID sendiri
+      uid = 'manual_' + email.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     }
 
     const now = Date.now();
@@ -153,12 +166,12 @@ export async function POST(request: Request) {
 
     await adminDb.collection('users').doc(uid).set(profileData, { merge: true });
 
-    return NextResponse.json({ success: true, uid });
+    return NextResponse.json({ success: true, uid, note: adminAuth ? undefined : 'Firebase Auth tidak tersedia. User hanya dibuat di Firestore.' });
   } catch (error) {
     console.error('Error creating user:', error);
     return NextResponse.json({
       success: false,
-      error: getErrorMessage(error) || 'Failed to create user',
+      error: getErrorMessage(error) || 'Gagal mendaftarkan user',
       code: getErrorCode(error) || undefined,
     }, { status: 500 });
   }
