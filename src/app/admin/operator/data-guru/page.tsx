@@ -15,7 +15,7 @@ import {
 import { ArrowLeft, Search, Loader2, Save, Pencil, Loader2 as LoaderIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { QueryProvider } from '@/contexts/QueryProvider';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export const dynamic = 'force-dynamic';
 
@@ -298,10 +298,11 @@ function GuruContent() {
 
 export default function DataGuruV2Page() {
   return (
-    <AdminLayout>
+    <SimpleAdminLayout>
       <QueryProvider>
         <GuruContent />
       </QueryProvider>
-    </AdminLayout>
+    </SimpleAdminLayout>
   );
 }
+

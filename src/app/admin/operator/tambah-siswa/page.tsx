@@ -16,7 +16,7 @@ import {
   ArrowLeft, Save, Loader2, Users, School,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,12 +82,13 @@ export default function TambahSiswaPage() {
   }
 
   return (
-    <AdminLayout>
+    <SimpleAdminLayout>
     <div className="p-0 sm:p-2">
       <div className="flex items-center gap-3 mb-6 px-4">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">Daftarkan Siswa Baru</h1>
       </div>
     </div>
-    </AdminLayout>
+    </SimpleAdminLayout>
   );
 }
+

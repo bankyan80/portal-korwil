@@ -14,7 +14,7 @@ import { saveDraft, loadDraft, removeDraft } from '@/lib/local/draftStorage';
 import { enqueue } from '@/lib/local/offlineQueue';
 import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
 import type { AutoSaveStatus } from '@/hooks/useAutoSaveForm';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 const bulanList = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
@@ -545,7 +545,7 @@ export default function LaporBulananPage() {
 
   return (
     <AuthGuard requiredRoles={['operator_sekolah', 'super_admin']} requireActive requireSchool featureName="Laporan Bulanan">
-    <AdminLayout>
+    <SimpleAdminLayout>
     {showLoading ? (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -1003,7 +1003,8 @@ export default function LaporBulananPage() {
       `}</style>
     </div>
     )}
-    </AdminLayout>
+    </SimpleAdminLayout>
     </AuthGuard>
   );
 }
+

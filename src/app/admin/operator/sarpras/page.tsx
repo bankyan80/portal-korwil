@@ -1,12 +1,13 @@
 'use client';
 
 import { ManageSarpras } from '@/components/admin/ManageSarpras';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function SarprasPage() {
   return (
-    <AdminLayout>
+    <SimpleAdminLayout>
       <ManageSarpras />
-    </AdminLayout>
+    </SimpleAdminLayout>
   );
 }
+

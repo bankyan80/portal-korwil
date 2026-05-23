@@ -1,12 +1,13 @@
 'use client';
 
 import { ManageYatimPiatu } from '@/components/admin/ManageYatimPiatu';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function YatimPiatuPage() {
   return (
-    <AdminLayout>
+    <SimpleAdminLayout>
       <ManageYatimPiatu />
-    </AdminLayout>
+    </SimpleAdminLayout>
   );
 }
+

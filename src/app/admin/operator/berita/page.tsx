@@ -1,12 +1,13 @@
 'use client';
 
 import { ManageBerita } from '@/components/admin/ManageBerita';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function BeritaPage() {
   return (
-    <AdminLayout>
+    <SimpleAdminLayout>
       <ManageBerita />
-    </AdminLayout>
+    </SimpleAdminLayout>
   );
 }
+

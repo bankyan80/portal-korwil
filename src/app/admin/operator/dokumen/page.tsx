@@ -1,12 +1,13 @@
 'use client';
 
 import InputDokumen from '@/components/admin/InputDokumen';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function DokumenPage() {
   return (
-    <AdminLayout>
+    <SimpleAdminLayout>
       <InputDokumen />
-    </AdminLayout>
+    </SimpleAdminLayout>
   );
 }
+

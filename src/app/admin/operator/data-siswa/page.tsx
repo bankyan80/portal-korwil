@@ -1,12 +1,13 @@
 'use client';
 
 import { ManageDataPd } from '@/components/admin/ManageDataPd';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function DataSiswaPage() {
   return (
-    <AdminLayout>
+    <SimpleAdminLayout>
       <ManageDataPd />
-    </AdminLayout>
+    </SimpleAdminLayout>
   );
 }
+

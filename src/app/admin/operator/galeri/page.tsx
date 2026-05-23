@@ -1,12 +1,13 @@
 'use client';
 
 import { ManageGallery } from '@/components/admin/ManageGallery';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function GaleriPage() {
   return (
-    <AdminLayout>
+    <SimpleAdminLayout>
       <ManageGallery />
-    </AdminLayout>
+    </SimpleAdminLayout>
   );
 }
+

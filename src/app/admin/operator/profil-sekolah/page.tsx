@@ -1,12 +1,13 @@
 'use client';
 
 import { SuperSekolah } from '@/components/admin/SuperSekolah';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function ProfilSekolahPage() {
   return (
-    <AdminLayout>
+    <SimpleAdminLayout>
       <SuperSekolah />
-    </AdminLayout>
+    </SimpleAdminLayout>
   );
 }
+

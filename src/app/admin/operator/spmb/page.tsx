@@ -1,12 +1,13 @@
 'use client';
 
 import { ManageSpmbSd } from '@/components/admin/ManageSpmbSd';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function SpmbPage() {
   return (
-    <AdminLayout>
+    <SimpleAdminLayout>
       <ManageSpmbSd />
-    </AdminLayout>
+    </SimpleAdminLayout>
   );
 }
+
