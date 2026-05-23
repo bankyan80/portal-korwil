@@ -71,35 +71,27 @@ export async function GET() {
 
     const sekolahMap = new Map<string, PerKelasSekolah>();
 
-    const snapPd = await adminDb.collection('data_pd_siswa').where('status', '!=', 'lulus').get();
-    for (const doc of snapPd.docs) {
-      const s = doc.data();
-      if (!s.sekolah) continue;
-      const jenjang = s.jenjang || 'SD';
-      const rawKelas = jenjang === 'TK' ? (s.kelas ? String(s.kelas) : 'A') : (jenjang === 'KB' ? (s.rombel || s.kelas ? String(s.kelas) : 'A') : (s.kelas ? String(s.kelas) : '-'));
-      addToMap(sekolahMap, s.sekolah, jenjang, rawKelas, s.jk || 'L');
-    }
-
-    const snapSiswa = await adminDb.collection('siswa').get();
-    for (const doc of snapSiswa.docs) {
-      const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; tanggal_lahir?: string; kelas?: string };
-      if (!s.sekolah) continue;
-      const jenjang = s.jenjang || 'SD';
-      const key = `${s.sekolah}||${jenjang}`;
-      if (sekolahMap.has(key)) continue;
-      const rawKelas = s.kelas ? String(s.kelas) : (jenjang !== 'SD' ? 'A' : inferKelas(s.tanggal_lahir));
-      addToMap(sekolahMap, s.sekolah, jenjang, rawKelas, s.jk || 'L');
-    }
-
+    // Prioritas UTAMA: Koleksi 'students'
     const snapStudents = await adminDb.collection('students').get();
     for (const doc of snapStudents.docs) {
       const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; kelas?: number; status?: string };
       if (!s.sekolah || s.status === 'lulus') continue;
       const jenjang = s.jenjang || 'SD';
-      const key = `${s.sekolah}||${jenjang}`;
-      if (sekolahMap.has(key)) continue;
       const rawKelas = s.kelas ? String(s.kelas) : (jenjang !== 'SD' ? 'A' : '1');
       addToMap(sekolahMap, s.sekolah, jenjang, rawKelas, s.jk || 'L');
+    }
+
+    // Hanya jika 'students' kosong, fallback ke koleksi lama (untuk masa transisi)
+    if (sekolahMap.size === 0) {
+      console.log('[Firestore] Collection students empty, falling back to legacy collections');
+      const snapSiswa = await adminDb.collection('siswa').limit(500).get();
+      for (const doc of snapSiswa.docs) {
+        const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; tanggal_lahir?: string; kelas?: string };
+        if (!s.sekolah) continue;
+        const jenjang = s.jenjang || 'SD';
+        const rawKelas = s.kelas ? String(s.kelas) : (jenjang !== 'SD' ? 'A' : inferKelas(s.tanggal_lahir));
+        addToMap(sekolahMap, s.sekolah, jenjang, rawKelas, s.jk || 'L');
+      }
     }
 
     const data = Array.from(sekolahMap.values()).sort((a, b) =>

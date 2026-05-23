@@ -63,12 +63,22 @@ export function useCachedFirestore<T extends { id?: string }>(
 
     try {
       const cached = await getCache<T[]>(collectionName, cacheKeyStr);
+      
+      // Jika ada cache, gunakan itu dulu
       if (cached && mountedRef.current) {
         setData(cached);
         setLoading(false);
-        if (cached.length > 0) return;
+        
+        // Strategi penghematan: Jika sudah ada cache, jangan fetch lagi ke server 
+        // kecuali data cache-nya kosong. 
+        // Di masa depan bisa ditambah pengecekan Timestamp/TTL di cacheService.
+        if (cached.length > 0) {
+          console.log(`[FirestoreCache] Using cached data for ${collectionName}`);
+          return; 
+        }
       }
 
+      // Hanya fetch ke server jika cache kosong atau tidak ada
       const fresh = await fetchData();
       if (!mountedRef.current) return;
 
@@ -93,8 +103,9 @@ export function useCachedFirestore<T extends { id?: string }>(
       });
     }
 
-    if (realtime && db) {
+    if (realtime && db && enabled) {
       try {
+        console.log(`[Firestore] Starting realtime listener for ${collectionName}`);
         const q = query(collection(db, collectionName), ...constraints);
         const unsub = onSnapshot(q, (snap) => {
           if (!mountedRef.current) return;
@@ -105,7 +116,15 @@ export function useCachedFirestore<T extends { id?: string }>(
           if (mountedRef.current) setError(err.message);
         });
         unsubscribeRef.current = unsub;
-      } catch {}
+      } catch (err) {
+        console.error("Failed to start onSnapshot:", err);
+      }
+    } else {
+      // Jika tidak realtime, pastikan listener lama dimatikan
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
     }
 
     return () => {

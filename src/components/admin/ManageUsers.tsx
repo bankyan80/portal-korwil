@@ -80,38 +80,24 @@ export function ManageUsers() {
 
   useEffect(() => {
     if (!db) return;
-    const schoolsUnsub = onSnapshot(collection(db, 'schools'), (snap) => {
-      setSchools(snap.docs.map(d => ({ id: d.id, name: d.data().name || '' })));
-    }, (err) => { console.error('Error loading schools:', err); });
-    const orgsUnsub = onSnapshot(collection(db, 'organizations'), (snap) => {
-      setOrgs(snap.docs.map(d => ({ id: d.id, name: d.data().name || '' })));
-    }, (err) => { console.error('Error loading organizations:', err); });
-
-    return () => {
-      schoolsUnsub();
-      orgsUnsub();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!db) return;
-    const unsubscribe = onSnapshot(
-      collection(db, 'users'),
-      (snap) => {
-        const list = snap.docs.map(d => ({ ...d.data(), uid: d.id } as UserProfile));
-        setUsers(list);
+    async function fetchData() {
+      try {
+        const [usersSnap, schoolsSnap, orgsSnap] = await Promise.all([
+          getDocs(collection(db!, 'users')),
+          getDocs(collection(db!, 'schools')),
+          getDocs(collection(db!, 'organizations'))
+        ]);
+        
+        setUsers(usersSnap.docs.map(d => ({ ...d.data(), uid: d.id } as UserProfile)));
+        setSchools(schoolsSnap.docs.map(d => ({ id: d.id, name: d.data().name || '' })));
+        setOrgs(snap => orgsSnap.docs.map(d => ({ id: d.id, name: d.data().name || '' })));
         setLoading(false);
-      },
-      (err) => {
-        console.error('Error in users realtime listener:', err);
-        toast.error('Gagal memuat data user');
+      } catch (err) {
+        console.error('Error fetching manage users data:', err);
         setLoading(false);
       }
-    );
-
-    return () => {
-      unsubscribe();
-    };
+    }
+    fetchData();
   }, []);
 
   const handleChangeRole = useCallback(async (uid: string, newRole: UserRole) => {

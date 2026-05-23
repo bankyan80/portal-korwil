@@ -347,6 +347,8 @@ export function UpdateDataSiswaPegawai() {
         createdAt: Date.now(),
       };
 
+      // Disabled logs and import history to save Firestore capacity
+      /*
       try {
         await addDoc(collection(db!, 'import_history'), importRecord);
       } catch { }
@@ -362,6 +364,7 @@ export function UpdateDataSiswaPegawai() {
           timestamp: Date.now(),
         });
       } catch { }
+      */
 
       setStatus('DONE');
       setResult({

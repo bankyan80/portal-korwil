@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, FileText, Home, ShieldCheck, Truck, CheckCircle, AlertTriangle, MapPin, School, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { useSekolah } from '@/hooks/useSekolah';
+import { db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { toast } from 'sonner';
 
 function hitungUsia(tanggalLahir: string): number {
   if (!tanggalLahir) return 0;
@@ -32,6 +35,7 @@ const colorMap: Record<string, string> = {
 };
 
 function FormPendaftaranContent() {
+  const router = useRouter();
   const { schools } = useSekolah();
   const sdSekolah = useMemo(() => schools.filter(s => s.jenjang === 'SD'), [schools]);
   const searchParams = useSearchParams();
@@ -49,6 +53,7 @@ function FormPendaftaranContent() {
   const [pekerjaan, setPekerjaan] = useState('');
   const [fromDb, setFromDb] = useState(false);
   const [sekolahId, setSekolahId] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const selectedSekolah = sdSekolah.find((s) => s.npsn === sekolahId);
 
   useEffect(() => {
@@ -71,6 +76,43 @@ function FormPendaftaranContent() {
   }, [searchParams]);
 
   const selectedJalur = jalurList.find((j) => j.value === jalur);
+
+  async function handleSubmit() {
+    if (!nik || !nama || !tanggalLahir || !sekolahId || !namaAyah || !namaIbu || !hpOrtu) {
+      toast.error('Mohon lengkapi semua data wajib (*)');
+      return;
+    }
+
+    const usia = hitungUsia(tanggalLahir);
+    if (usia < MIN_USIA) {
+      toast.error(`Usia belum memenuhi syarat minimal ${MIN_USIA} tahun`);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      if (!db) throw new Error('Database not initialized');
+      // Gunakan NIK sebagai ID atau prefix agar tidak double
+      const id = `spmb-${nik}`;
+      const payload = {
+        id,
+        nik, nisn, nama, tempatLahir, tanggalLahir, jenisKelamin, desa,
+        jalur, sekolah: selectedSekolah?.nama || '', sekolahId,
+        namaAyah, namaIbu, hpOrtu, pekerjaan,
+        status: 'Menunggu Verifikasi',
+        tglDaftar: new Date().toISOString().split('T')[0],
+        createdAt: Date.now()
+      };
+      await setDoc(doc(db, 'spmb_sd', id), payload, { merge: true });
+      toast.success('Pendaftaran berhasil dikirim!');
+      router.push(`/spmb-sd/pengumuman?nik=${nik}`);
+    } catch (e) {
+      console.error('Error submit spmb:', e);
+      toast.error('Gagal mengirim pendaftaran. Silakan coba lagi.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 dark:bg-slate-900">
@@ -277,9 +319,11 @@ function FormPendaftaranContent() {
           </div>
 
           <button
-            disabled={!!(fromDb && tanggalLahir && hitungUsia(tanggalLahir) < MIN_USIA)}
-            className="mt-8 w-full bg-blue-700 hover:bg-blue-800 text-white font-medium px-8 py-3 rounded-xl transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+            onClick={handleSubmit}
+            disabled={submitting || !!(fromDb && tanggalLahir && hitungUsia(tanggalLahir) < MIN_USIA)}
+            className="mt-8 w-full bg-blue-700 hover:bg-blue-800 text-white font-medium px-8 py-3 rounded-xl transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
+            {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
             Submit Pendaftaran
           </button>
         </div>

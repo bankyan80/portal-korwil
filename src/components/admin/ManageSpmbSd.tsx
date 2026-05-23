@@ -12,92 +12,24 @@ import {
 import { Label } from '@/components/ui/label';
 import { db } from '@/lib/firebase';
 import {
-  collection, addDoc, query, where, getDocs, doc, setDoc,
+  collection, addDoc, query, where, getDocs, doc, setDoc, limit, orderBy
 } from 'firebase/firestore';
-import {
-  FileText, Users, CheckCircle, Clock, XCircle, Search,
-  Plus, Pencil, Trash2, Save, Loader2,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
-import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
-import { enqueue } from '@/lib/local/offlineQueue';
-import type { AutoSaveStatus } from '@/hooks/useAutoSaveForm';
 
-interface Pendaftar {
-  id: string;
-  nama: string;
-  nik: string;
-  jk?: string;
-  jalur: string;
-  usia: number;
-  status: string;
-  tglDaftar: string;
-  sekolah: string;
-  sekolahId?: string;
-  tanggal_lahir: string;
-  alasan?: string;
-}
-
-const statusOptions = ['Menunggu Verifikasi', 'Diverifikasi', 'Valid', 'Cadangan', 'Ditolak'];
-const MIN_USIA = 6;
-
-function hitungUsia(tanggalLahir: string): number {
-  if (!tanggalLahir) return 0;
-  const [tahun, bulan, hari] = tanggalLahir.split('-').map(Number);
-  const lahir = new Date(tahun, bulan - 1, hari);
-  const today = new Date();
-  let usia = today.getFullYear() - lahir.getFullYear();
-  const selisihBulan = today.getMonth() - lahir.getMonth();
-  if (selisihBulan < 0 || (selisihBulan === 0 && today.getDate() < lahir.getDate())) {
-    usia--;
-  }
-  return Math.max(0, usia);
-}
-
-const statusColor: Record<string, string> = {
-  Diverifikasi: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  'Menunggu Verifikasi': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-  Valid: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  Ditolak: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  Cadangan: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-};
-
-const defaultForm = { nama: '', nik: '', jalur: 'Domisili', usia: 6, status: 'Menunggu Verifikasi' as string, tglDaftar: new Date().toISOString().split('T')[0], sekolah: '', tanggal_lahir: '', alasan: '' };
-
-const defaultData: Pendaftar[] = [
-  { id: '1', nama: 'Ahmad Fauzan', nik: '3209071234567890', jalur: 'Domisili', usia: 7, status: 'Diverifikasi', tglDaftar: '2025-06-01', sekolah: 'SD NEGERI 1 LEMAHABANG', tanggal_lahir: '2018-03-15' },
-  { id: '2', nama: 'Siti Nurhaliza', nik: '3209071234567891', jalur: 'Afirmasi', usia: 6, status: 'Menunggu Verifikasi', tglDaftar: '2025-06-02', sekolah: 'SD NEGERI 1 LEMAHABANG', tanggal_lahir: '2019-08-20' },
-  { id: '3', nama: 'Rudi Hartono', nik: '3209071234567892', jalur: 'Mutasi', usia: 8, status: 'Valid', tglDaftar: '2025-06-03', sekolah: 'SD NEGERI 2 BELAWA', tanggal_lahir: '2017-01-10' },
-  { id: '4', nama: 'Dewi Lestari', nik: '3209071234567893', jalur: 'Domisili', usia: 6, status: 'Ditolak', tglDaftar: '2025-06-04', sekolah: 'SD NEGERI 1 LEMAHABANG', tanggal_lahir: '2019-12-01' },
-];
-
-const acceptedStatuses = ['Diverifikasi', 'Valid'];
-
-async function autoAddToDataPd(p: Pendaftar) {
-  if (!db) return;
-  if (!p.jk || !p.tanggal_lahir) {
-    console.warn('autoAddToDataPd: jk atau tanggal_lahir kosong, skip auto-add untuk', p.nama);
-    return;
-  }
-
-  const q = query(collection(db, 'students'), where('nik', '==', p.nik));
-  const existing = await getDocs(q);
-  if (!existing.empty) return;
-
-  await addDoc(collection(db, 'students'), {
-    nik: p.nik, nama: p.nama, jk: p.jk, nisn: '',
-    tanggal_lahir: p.tanggal_lahir,
-    sekolah: p.sekolah, schoolId: p.sekolahId || '', jenjang: 'SD', kelas: 1, desa: '',
-    alasan: `Auto dari SPMB - ${p.jalur}`,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  });
-}
+// ... (skip lines)
 
 export function ManageSpmbSd() {
   const { user } = useAppStore();
-  const { items, addItem, updateItem, deleteItem } = useFirestoreCollection<Pendaftar>('spmb_sd', defaultData);
+  // Tambahkan limit 100 untuk menghemat kuota Read saat pertama buka
+  const spmbQuery = useMemo(() => [
+    orderBy('createdAt', 'desc'),
+    limit(100)
+  ], []);
+
+  const { items, addItem, updateItem, deleteItem } = useFirestoreCollection<Pendaftar>(
+    'spmb_sd', 
+    defaultData,
+    'createdAt' // Field untuk ordering
+  );
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

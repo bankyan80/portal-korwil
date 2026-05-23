@@ -190,12 +190,19 @@ export default function SuperAdminDashboard() {
   // Realtime listener for laporan bulanan
   useEffect(() => {
     if (!db) return;
-    const unsub = onSnapshot(collection(db, 'laporan_bulanan'), (snap) => {
-      const items: any[] = [];
-      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
-      setLaporanData(items);
-    }, (err) => { console.error('Error in laporan listener:', err); });
-    return () => unsub();
+    
+    async function fetchLaporan() {
+      try {
+        const snap = await getDocs(collection(db!, 'laporan_bulanan'));
+        const list: any[] = [];
+        snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+        setLaporan(list);
+      } catch (err) {
+        console.error("Error fetching laporan:", err);
+      }
+    }
+    
+    fetchLaporan();
   }, []);
 
   // Build report matrix: rows = schools, columns = months

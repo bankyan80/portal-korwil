@@ -21,6 +21,7 @@ import { ManageKipSd } from './ManageKipSd';
 import { ManageYatimPiatu } from './ManageYatimPiatu';
 import { ManageAgendaKegiatan } from './ManageAgendaKegiatan';
 import { ManageDataGtk } from './ManageDataGtk';
+import { ManageTkaSd } from './ManageTkaSd';
 import { SuperAdminDashboard } from './SuperAdminDashboard';
 import { SuperSekolah } from './SuperSekolah';
 import { SuperMonitoring } from './SuperMonitoring';
@@ -55,6 +56,7 @@ function AdminContent() {
     case 'admin-manage-yatim-piatu': return <ManageYatimPiatu />;
     case 'admin-manage-agenda-kegiatan': return <ManageAgendaKegiatan />;
     case 'admin-manage-data-gtk': return <ManageDataGtk />;
+    case 'admin-manage-tka-sd': return <ManageTkaSd />;
     case 'super-dashboard': return <SuperAdminDashboard />;
     case 'super-schools': return <SuperSekolah />;
     case 'super-monitoring': return <SuperMonitoring />;
