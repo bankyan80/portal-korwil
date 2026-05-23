@@ -163,22 +163,27 @@ export function ManageUsers() {
     if (!db || !auth?.currentUser) { toast.error('Koneksi database tidak tersedia'); return; }
     setAdding(true);
     try {
-      const token = await auth.currentUser.getIdToken();
-      const res = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(addForm),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('User berhasil didaftarkan');
-        setAddOpen(false);
-        setAddForm({ email: '', role: 'operator_sekolah', schoolId: '', organizationId: '' });
-      } else {
-        toast.error(data.error || 'Gagal mendaftarkan user');
-      }
-    } catch {
-      toast.error('Gagal mendaftarkan user');
+      const email = addForm.email.trim().toLowerCase();
+      const uid = 'manual_' + email.replace(/[^a-zA-Z0-9]/g, '_');
+      const now = Date.now();
+      const profile: Record<string, any> = {
+        uid,
+        email,
+        displayName: email.split('@')[0],
+        role: addForm.role,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      };
+      if (addForm.schoolId) profile.schoolId = addForm.schoolId;
+      if (addForm.organizationId) profile.organizationId = addForm.organizationId;
+
+      await setDoc(doc(db, 'users', uid), profile);
+      toast.success('User berhasil didaftarkan');
+      setAddOpen(false);
+      setAddForm({ email: '', role: 'operator_sekolah', schoolId: '', organizationId: '' });
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal mendaftarkan user');
     } finally {
       setAdding(false);
     }
