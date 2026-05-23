@@ -12,7 +12,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  collection, addDoc, deleteDoc, doc, setDoc, writeBatch, onSnapshot, query, where,
+  collection, addDoc, deleteDoc, doc, setDoc, writeBatch, onSnapshot, query, where, getDocs
 } from 'firebase/firestore';
 import {
   School, Users, BarChart3, Search, Loader2, Plus, Pencil, Trash2, Save, ArrowUp, Upload,
