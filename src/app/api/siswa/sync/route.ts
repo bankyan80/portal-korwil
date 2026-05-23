@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const collection = adminDb.collection('siswa');
+    const collection = adminDb.collection('students');
     let committed = 0;
 
     for (let i = 0; i < allSiswa.length; i += 500) {
