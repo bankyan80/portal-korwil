@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -75,6 +76,7 @@ async function getOrCreateUserProfile(uid: string, email: string, displayName: s
 
 export function LoginForm() {
   const { setUser, setCurrentView } = useAppStore();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -103,6 +105,7 @@ export function LoginForm() {
         setUser(profile);
         toast.success('Login berhasil!', { description: `Selamat datang, ${profile.displayName}` });
         setCurrentView('portal');
+        router.replace('/');
       }
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
@@ -138,6 +141,7 @@ export function LoginForm() {
         setUser(profile);
         toast.success('Login Google berhasil!', { description: `Selamat datang, ${profile.displayName}` });
         setCurrentView('portal');
+        router.replace('/');
       }
      } catch (err: unknown) {
        const fbErr = err as { code?: string; message?: string };

@@ -1,23 +1,11 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const user = useAppStore((s) => s.user);
   const isLoadingAuth = useAppStore((s) => s.isLoadingAuth);
-  const redirected = useRef(false);
-
-  useEffect(() => {
-    if (redirected.current || isLoadingAuth) return;
-    if (!user) return;
-    redirected.current = true;
-    router.replace('/');
-  }, [user, isLoadingAuth, router]);
 
   if (isLoadingAuth) {
     return (
