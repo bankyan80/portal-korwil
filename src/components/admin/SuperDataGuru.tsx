@@ -280,32 +280,50 @@ export default function SuperDataGuru() {
                               Guru — {guruRecords.length}
                           </span>
                         </div>
-                        <table className="w-full">
-                          <thead>
-                            <tr className="text-[11px] text-muted-foreground border-t">
-                              <th className="text-left font-medium px-5 py-2">Nama</th>
-                              <th className="text-left font-medium px-5 py-2">NIP</th>
-                              <th className="text-left font-medium px-5 py-2 hidden sm:table-cell">NUPTK</th>
-                              <th className="text-left font-medium px-5 py-2">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {guruRecords.map((r, i) => (
-                              <tr key={r.nik || r.nip || i} className="border-t hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors">
-                                <td className="px-5 py-2 text-[13px] font-medium">
-                                  {canEditRecord(r) ? (
-                                    <button onClick={() => openEdit(r)} className="text-blue-700 hover:underline dark:text-blue-300">{r.nama}</button>
-                                  ) : (
-                                    <span>{r.nama}</span>
-                                  )}
-                                </td>
-                                <td className="px-5 py-2 text-[13px] font-mono text-gray-500">{r.nip || <span className="text-gray-400">-</span>}</td>
-                                <td className="px-5 py-2 text-[13px] hidden sm:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
-                                <td className="px-5 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="text-[11px] text-muted-foreground border-t">
+                                <th className="text-left font-medium px-3 py-2">Nama</th>
+                                <th className="text-left font-medium px-3 py-2 hidden sm:table-cell">NIK</th>
+                                <th className="text-left font-medium px-3 py-2">JK</th>
+                                <th className="text-left font-medium px-3 py-2 hidden sm:table-cell">Tgl Lahir</th>
+                                <th className="text-left font-medium px-3 py-2">Usia</th>
+                                <th className="text-left font-medium px-3 py-2 hidden sm:table-cell">NIP</th>
+                                <th className="text-left font-medium px-3 py-2 hidden md:table-cell">NUPTK</th>
+                                <th className="text-left font-medium px-3 py-2">Status</th>
+                                <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">Tugas Tambahan</th>
+                                <th className="text-left font-medium px-3 py-2 hidden md:table-cell">Sertifikasi</th>
+                                <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">Masa Kerja</th>
+                                <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">BUP</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {guruRecords.map((r, i) => (
+                                <tr key={r.nik || r.nip || i} className="border-t hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors">
+                                  <td className="px-3 py-2 text-[13px] font-medium whitespace-nowrap">
+                                    {canEditRecord(r) ? (
+                                      <button onClick={() => openEdit(r)} className="text-blue-700 hover:underline dark:text-blue-300">{r.nama}</button>
+                                    ) : (
+                                      <span>{r.nama}</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2 text-[13px] font-mono text-gray-500 hidden sm:table-cell">{r.nik || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px]">{r.jk || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] text-gray-500 hidden sm:table-cell">{r.tanggal_lahir || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px]">{r.usia ? `${r.usia} thn` : <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] font-mono text-gray-500 hidden sm:table-cell">{r.nip || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] hidden md:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
+                                  <td className="px-3 py-2 text-[13px] text-gray-500 hidden lg:table-cell">{r.tugas_tambahan || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] text-gray-500 hidden md:table-cell">{r.sertifikasi || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.masaKerja ? `${r.masaKerja} thn` : <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.statusBup || <span className="text-gray-400">-</span>}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     )}
                     {tendikRecords.length > 0 && (
@@ -315,32 +333,50 @@ export default function SuperDataGuru() {
                             Tenaga Kependidikan &mdash; {tendikRecords.length}
                           </span>
                         </div>
-                        <table className="w-full">
-                          <thead>
-                            <tr className="text-[11px] text-muted-foreground border-t">
-                              <th className="text-left font-medium px-5 py-2">Nama</th>
-                              <th className="text-left font-medium px-5 py-2">NIP</th>
-                              <th className="text-left font-medium px-5 py-2 hidden sm:table-cell">NUPTK</th>
-                              <th className="text-left font-medium px-5 py-2">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {tendikRecords.map((r, i) => (
-                              <tr key={r.nik || r.nip || i} className="border-t hover:bg-purple-50/40 dark:hover:bg-purple-900/10 transition-colors">
-                                <td className="px-5 py-2 text-[13px] font-medium">
-                                  {canEditRecord(r) ? (
-                                    <button onClick={() => openEdit(r)} className="text-blue-700 hover:underline dark:text-blue-300">{r.nama}</button>
-                                  ) : (
-                                    <span>{r.nama}</span>
-                                  )}
-                                </td>
-                                <td className="px-5 py-2 text-[13px] font-mono text-gray-500">{r.nip || <span className="text-gray-400">-</span>}</td>
-                                <td className="px-5 py-2 text-[13px] hidden sm:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
-                                <td className="px-5 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="text-[11px] text-muted-foreground border-t">
+                                <th className="text-left font-medium px-3 py-2">Nama</th>
+                                <th className="text-left font-medium px-3 py-2 hidden sm:table-cell">NIK</th>
+                                <th className="text-left font-medium px-3 py-2">JK</th>
+                                <th className="text-left font-medium px-3 py-2 hidden sm:table-cell">Tgl Lahir</th>
+                                <th className="text-left font-medium px-3 py-2">Usia</th>
+                                <th className="text-left font-medium px-3 py-2 hidden sm:table-cell">NIP</th>
+                                <th className="text-left font-medium px-3 py-2 hidden md:table-cell">NUPTK</th>
+                                <th className="text-left font-medium px-3 py-2">Status</th>
+                                <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">Tugas Tambahan</th>
+                                <th className="text-left font-medium px-3 py-2 hidden md:table-cell">Sertifikasi</th>
+                                <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">Masa Kerja</th>
+                                <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">BUP</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {tendikRecords.map((r, i) => (
+                                <tr key={r.nik || r.nip || i} className="border-t hover:bg-purple-50/40 dark:hover:bg-purple-900/10 transition-colors">
+                                  <td className="px-3 py-2 text-[13px] font-medium whitespace-nowrap">
+                                    {canEditRecord(r) ? (
+                                      <button onClick={() => openEdit(r)} className="text-blue-700 hover:underline dark:text-blue-300">{r.nama}</button>
+                                    ) : (
+                                      <span>{r.nama}</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2 text-[13px] font-mono text-gray-500 hidden sm:table-cell">{r.nik || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px]">{r.jk || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] text-gray-500 hidden sm:table-cell">{r.tanggal_lahir || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px]">{r.usia ? `${r.usia} thn` : <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] font-mono text-gray-500 hidden sm:table-cell">{r.nip || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] hidden md:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
+                                  <td className="px-3 py-2 text-[13px] text-gray-500 hidden lg:table-cell">{r.tugas_tambahan || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] text-gray-500 hidden md:table-cell">{r.sertifikasi || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.masaKerja ? `${r.masaKerja} thn` : <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.statusBup || <span className="text-gray-400">-</span>}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     )}
                   </div>
