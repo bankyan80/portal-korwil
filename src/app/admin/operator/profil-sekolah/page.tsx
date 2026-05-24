@@ -6,7 +6,7 @@ import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 export default function ProfilSekolahPage() {
   return (
     <SimpleAdminLayout>
-      <SuperSekolah />
+      <SuperSekolah mode="operator" />
     </SimpleAdminLayout>
   );
 }

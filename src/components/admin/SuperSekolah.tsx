@@ -31,7 +31,7 @@ const defaultForm: SekolahForm = {
   alamat: '', kepalaSekolah: '', kontak: '', akreditasi: '', website: '',
 };
 
-export function SuperSekolah() {
+export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
   const { user, setCurrentView } = useAppStore();
   const [schools, setSchools] = useState<any[]>([]);
   const [loading, setLoading] = useState(db ? true : false);
@@ -40,13 +40,36 @@ export function SuperSekolah() {
   const [form, setForm] = useState<SekolahForm>(defaultForm);
   const [saving, setSaving] = useState(false);
 
+  const isOperator = mode === 'operator';
+
   useEffect(() => {
     if (!db) return;
     const unsubscribe = onSnapshot(
       collection(db, 'schools'),
       (snap) => {
-        setSchools(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        let all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (isOperator && user) {
+          const matchId = user.schoolId;
+          const matchName = user.schoolName?.toLowerCase().trim();
+          all = all.filter(s =>
+            s.npsn === matchId ||
+            (s.name || '').toLowerCase().trim() === matchName ||
+            (s.nama || '').toLowerCase().trim() === matchName
+          );
+        }
+        setSchools(all);
         setLoading(false);
+
+        if (isOperator && all.length === 1 && !formOpen) {
+          const s = all[0];
+          setEditingId(s.id);
+          setForm({
+            name: s.name || '', npsn: s.npsn || '', jenjang: s.jenjang || '',
+            status: s.status || '', desa: s.desa || '', alamat: s.alamat || '',
+            kepalaSekolah: s.kepalaSekolah || '', kontak: s.kontak || '',
+            akreditasi: s.akreditasi || '', website: s.website || '',
+          });
+        }
       },
       (err) => {
         console.error('Error in schools realtime listener:', err);
@@ -55,7 +78,7 @@ export function SuperSekolah() {
       }
     );
     return () => { unsubscribe(); };
-  }, []);
+  }, [isOperator, user?.schoolId, user?.schoolName]);
 
   function openAdd() {
     setEditingId(null);
@@ -80,11 +103,149 @@ export function SuperSekolah() {
     try {
       const id = editingId || `school-${Date.now()}`;
       await setDoc(doc(db, 'schools', id), { ...form, updatedAt: Date.now() }, { merge: true });
-      toast.success(editingId ? 'Sekolah berhasil diperbarui' : 'Sekolah berhasil ditambahkan');
+      toast.success(editingId ? 'Profil sekolah berhasil diperbarui' : 'Sekolah berhasil ditambahkan');
       setFormOpen(false);
     } catch {
       toast.error('Gagal menyimpan');
     } finally { setSaving(false); }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (isOperator) {
+    const mySchool = schools[0];
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <School className="w-5 h-5 text-blue-700" />
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Profil Sekolah</h1>
+        </div>
+
+        {!mySchool ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center">
+            <School className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+            <p className="text-sm text-muted-foreground mb-4">Data sekolah belum ditemukan di database.</p>
+            <Button onClick={openAdd} className="bg-blue-800 hover:bg-blue-900 text-white gap-2">
+              <Plus className="w-4 h-4" /> Tambah Data Sekolah
+            </Button>
+          </div>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6 space-y-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{mySchool.name || mySchool.nama}</h2>
+                {mySchool.npsn && <p className="text-sm text-muted-foreground mt-1">NPSN: {mySchool.npsn}</p>}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => openEdit(mySchool)} className="gap-2">
+                <Pencil className="w-4 h-4" /> Edit
+              </Button>
+            </div>
+
+            <div className="border-t dark:border-gray-700 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              {[
+                ['Jenjang', mySchool.jenjang],
+                ['Status', mySchool.status],
+                ['Desa', mySchool.desa],
+                ['Alamat', mySchool.alamat],
+                ['Kepala Sekolah', mySchool.kepalaSekolah],
+                ['Akreditasi', mySchool.akreditasi],
+                ['Kontak', mySchool.kontak],
+                ['Website', mySchool.website],
+              ].map(([label, value]) => (
+                <div key={label as string}>
+                  <span className="text-muted-foreground block mb-0.5">{label}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{value || '-'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {formOpen && (
+          <Dialog open={formOpen} onOpenChange={setFormOpen}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{editingId ? 'Edit Profil Sekolah' : 'Tambah Data Sekolah'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label>Nama Sekolah</Label>
+                  <Input value={form.name} onChange={(e: any) => setForm(f => ({ ...f, name: e.target.value }))} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>NPSN</Label>
+                    <Input value={form.npsn} onChange={(e: any) => setForm(f => ({ ...f, npsn: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Jenjang</Label>
+                    <select value={form.jenjang} onChange={(e: any) => setForm(f => ({ ...f, jenjang: e.target.value }))}
+                      className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground">
+                      <option value="">Pilih</option>
+                      <option value="SD">SD</option>
+                      <option value="TK">TK</option>
+                      <option value="KB">KB</option>
+                      <option value="PAUD">PAUD</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <select value={form.status} onChange={(e: any) => setForm(f => ({ ...f, status: e.target.value }))}
+                      className="w-full text-sm border rounded-lg px-3 py-2 bg-background text-foreground">
+                      <option value="">Pilih</option>
+                      <option value="NEGERI">NEGERI</option>
+                      <option value="SWASTA">SWASTA</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Desa</Label>
+                    <Input value={form.desa} onChange={(e: any) => setForm(f => ({ ...f, desa: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Alamat</Label>
+                  <Input value={form.alamat} onChange={(e: any) => setForm(f => ({ ...f, alamat: e.target.value }))} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Kepala Sekolah</Label>
+                    <Input value={form.kepalaSekolah} onChange={(e: any) => setForm(f => ({ ...f, kepalaSekolah: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Akreditasi</Label>
+                    <Input value={form.akreditasi} onChange={(e: any) => setForm(f => ({ ...f, akreditasi: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Kontak</Label>
+                    <Input value={form.kontak} onChange={(e: any) => setForm(f => ({ ...f, kontak: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Website</Label>
+                    <Input value={form.website} onChange={(e: any) => setForm(f => ({ ...f, website: e.target.value }))} />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setFormOpen(false)}>Batal</Button>
+                <Button onClick={handleSave} className="bg-blue-800 hover:bg-blue-900 text-white" disabled={saving}>
+                  {saving ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -101,37 +262,35 @@ export function SuperSekolah() {
         </Button>
       </div>
 
-      {loading ? <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div> : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead><tr className="bg-muted/50">
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Nama Sekolah</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Jenjang</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">NPSN</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Desa</th>
-                <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Aksi</th>
-              </tr></thead>
-              <tbody className="divide-y">
-                {schools.map(s => (
-                  <tr key={s.id} className="hover:bg-muted/50">
-                    <td className="px-4 py-3 font-medium text-foreground">{s.name || s.nama}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{s.jenjang}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{s.npsn || '-'}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{s.desa || s.alamat || '-'}</td>
-                    <td className="px-4 py-3 text-center">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openEdit(s)}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-                {schools.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Belum ada data sekolah</td></tr>}
-              </tbody>
-            </table>
-          </div>
+      <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="bg-muted/50">
+              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Nama Sekolah</th>
+              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Jenjang</th>
+              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">NPSN</th>
+              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Desa</th>
+              <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Aksi</th>
+            </tr></thead>
+            <tbody className="divide-y">
+              {schools.map(s => (
+                <tr key={s.id} className="hover:bg-muted/50">
+                  <td className="px-4 py-3 font-medium text-foreground">{s.name || s.nama}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{s.jenjang}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{s.npsn || '-'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{s.desa || s.alamat || '-'}</td>
+                  <td className="px-4 py-3 text-center">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openEdit(s)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+              {schools.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Belum ada data sekolah</td></tr>}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-lg">
