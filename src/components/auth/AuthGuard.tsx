@@ -29,6 +29,25 @@ export default function AuthGuard({
   const isLoadingAuth = useAppStore((s) => s.isLoadingAuth)
   const [validated, setValidated] = useState(false)
   const [accessStatus, setAccessStatus] = useState<'checking' | 'granted' | 'not-logged-in' | 'no-access' | 'not-activated' | 'wrong-role'>('checking')
+  const [authTimedOut, setAuthTimedOut] = useState(false)
+
+  useEffect(() => {
+    if (!isLoadingAuth) return;
+    const timer = setTimeout(() => setAuthTimedOut(true), 8000);
+    return () => clearTimeout(timer);
+  }, [isLoadingAuth])
+
+  if (authTimedOut && isLoadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900">
+        <div className="text-center max-w-md px-4">
+          <p className="text-sm text-red-600 dark:text-red-400 mb-2">Gagal memeriksa akses. Silakan coba lagi.</p>
+          <button onClick={() => { setAuthTimedOut(false); window.location.reload(); }}
+            className="text-sm text-blue-600 hover:underline">Muat ulang</button>
+        </div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     if (isLoadingAuth) return

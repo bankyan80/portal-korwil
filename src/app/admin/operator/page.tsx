@@ -20,12 +20,12 @@ export default function OperatorDashboard() {
   const router = useRouter();
   const { isLoadingAuth } = useAppStore();
 
-  const { data: allStudents } = useCachedFirestore<Record<string, any>>({
+  const { data: allStudents, loading: studentsLoading } = useCachedFirestore<Record<string, any>>({
     collectionName: 'students',
     realtime: true,
     enabled: !!user?.schoolName,
   });
-  const { data: allEmployees } = useCachedFirestore<Record<string, any>>({
+  const { data: allEmployees, loading: employeesLoading } = useCachedFirestore<Record<string, any>>({
     collectionName: 'employees',
     realtime: true,
     enabled: !!user?.schoolName,
@@ -118,7 +118,7 @@ export default function OperatorDashboard() {
     } catch (e) { console.error(e); }
   }, [user?.schoolId, user?.schoolName, fetchTugas]);
 
-  const isStatsLoading = !allStudents || !allEmployees;
+  const isStatsLoading = studentsLoading || employeesLoading;
 
   if (isLoadingAuth) {
     return (
@@ -131,7 +131,10 @@ export default function OperatorDashboard() {
     );
   }
 
-  if (!user || user.role === 'publik') return null;
+  if (!user || user.role === 'publik') {
+    router.replace('/login');
+    return null;
+  }
 
   function handleLogout() {
     if (auth) auth.signOut();

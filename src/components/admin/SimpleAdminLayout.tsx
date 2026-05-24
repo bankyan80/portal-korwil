@@ -54,8 +54,6 @@ export function SimpleAdminLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 p-4 lg:p-6 overflow-y-auto w-full max-w-7xl mx-auto">
         {children}
       </main>
-      
-      <FirebaseLED />
     </div>
   );
 }
