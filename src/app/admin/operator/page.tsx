@@ -135,10 +135,12 @@ export default function OperatorDashboard() {
     return null;
   }
 
-  function handleLogout() {
-    if (auth) auth.signOut();
+  async function handleLogout() {
+    if (auth) {
+      try { await auth.signOut(); } catch {}
+    }
     setUser(null);
-    router.push('/');
+    window.location.href = '/login';
   }
 
   const menu = [

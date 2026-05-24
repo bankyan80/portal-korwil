@@ -24,10 +24,12 @@ export default function SuperPageShell({ title, subtitle, children, maxWidth = '
     }
   }, [user, router]);
 
-  function handleLogout() {
-    if (auth) auth.signOut();
+  async function handleLogout() {
+    if (auth) {
+      try { await auth.signOut(); } catch {}
+    }
     setUser(null);
-    router.push('/');
+    window.location.href = '/login';
   }
 
   if (!user || user.role !== 'super_admin') return null;

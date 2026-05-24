@@ -44,10 +44,11 @@ export default function GuruDetailPage() {
     if (nik) queueMicrotask(() => { fetchDetail(); });
   }, [user, router, nik]);
 
-  function handleLogout() {
-    if (auth) auth.signOut();
-    setUser(null);
-    router.push('/');
+  async function handleLogout() {
+    if (auth) {
+      try { await auth.signOut(); } catch {}
+    }
+    window.location.href = '/login';
   }
 
   if (!user) return null;

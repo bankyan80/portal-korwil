@@ -231,10 +231,11 @@ export default function SuperAdminDashboard() {
 
   if (!user) return null;
 
-  function handleLogout() {
-    if (auth) auth.signOut();
-    setUser(null);
-    router.push('/');
+  async function handleLogout() {
+    if (auth) {
+      try { await auth.signOut(); } catch {}
+    }
+    window.location.href = '/login';
   }
 
   const menu = [

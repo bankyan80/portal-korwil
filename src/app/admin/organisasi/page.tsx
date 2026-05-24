@@ -32,10 +32,11 @@ export default function OrganisasiDashboard() {
     { label: 'Galeri', icon: Image, desc: 'Dokumentasi kegiatan', href: '/admin/organisasi/galeri' },
   ];
 
-  function handleLogout() {
-    if (auth) { auth.signOut(); }
-    setUser(null);
-    router.push('/');
+  async function handleLogout() {
+    if (auth) {
+      try { await auth.signOut(); } catch {}
+    }
+    window.location.href = '/login';
   }
 
   return (
