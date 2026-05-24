@@ -33,18 +33,6 @@ function computeUsia(tanggalLahir: string): number {
   return age;
 }
 
-function computeMasaKerja(tmt: string): number {
-  if (!tmt) return 0;
-  const parts = tmt.split('-');
-  if (parts.length !== 3) return 0;
-  const start = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-  const today = new Date();
-  let years = today.getFullYear() - start.getFullYear();
-  const m = today.getMonth() - start.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < start.getDate())) years--;
-  return years;
-}
-
 function isPns(status: string): boolean {
   return status === 'PNS' || status === 'PPPK';
 }
@@ -335,7 +323,6 @@ export default function SuperDataGuru() {
                                 <th className="text-left font-medium px-3 py-2">Status</th>
                                 <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">Tugas Tambahan</th>
                                 <th className="text-left font-medium px-3 py-2 hidden md:table-cell">Sertifikasi</th>
-                                <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">Masa Kerja</th>
                                 <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">BUP</th>
                               </tr>
                             </thead>
@@ -358,7 +345,7 @@ export default function SuperDataGuru() {
                                   <td className="px-3 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
                                   <td className="px-3 py-2 text-[13px] text-gray-500 hidden lg:table-cell">{r.tugas_tambahan || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px] text-gray-500 hidden md:table-cell">{r.sertifikasi || <span className="text-gray-400">-</span>}</td>
-                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.masaKerja ? `${r.masaKerja} thn` : computeMasaKerja(r.tmt) ? `${computeMasaKerja(r.tmt)} thn` : <span className="text-gray-400">-</span>}</td>
+                                  
                                   <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.statusBup || computeStatusBup(r.tanggal_lahir, r.status_kepegawaian) || <span className="text-gray-400">-</span>}</td>
                                 </tr>
                               ))}
@@ -388,7 +375,6 @@ export default function SuperDataGuru() {
                                 <th className="text-left font-medium px-3 py-2">Status</th>
                                 <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">Tugas Tambahan</th>
                                 <th className="text-left font-medium px-3 py-2 hidden md:table-cell">Sertifikasi</th>
-                                <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">Masa Kerja</th>
                                 <th className="text-left font-medium px-3 py-2 hidden lg:table-cell">BUP</th>
                               </tr>
                             </thead>
@@ -411,7 +397,7 @@ export default function SuperDataGuru() {
                                   <td className="px-3 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
                                   <td className="px-3 py-2 text-[13px] text-gray-500 hidden lg:table-cell">{r.tugas_tambahan || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px] text-gray-500 hidden md:table-cell">{r.sertifikasi || <span className="text-gray-400">-</span>}</td>
-                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.masaKerja ? `${r.masaKerja} thn` : computeMasaKerja(r.tmt) ? `${computeMasaKerja(r.tmt)} thn` : <span className="text-gray-400">-</span>}</td>
+                                  
                                   <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.statusBup || computeStatusBup(r.tanggal_lahir, r.status_kepegawaian) || <span className="text-gray-400">-</span>}</td>
                                 </tr>
                               ))}
