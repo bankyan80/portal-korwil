@@ -1,16 +1,21 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Sun, Moon, ArrowLeft } from 'lucide-react';
 
 export function SimpleAdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
   const handleBack = () => {
-    router.push('/admin/operator');
+    if (pathname === '/admin/operator') {
+      router.push('/');
+    } else {
+      router.push('/admin/operator');
+    }
   };
 
   return (
