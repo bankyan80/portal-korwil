@@ -10,10 +10,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2001-01-01",
     "sekolah": "SD NEGERI 1 PICUNGPUGUR",
-    "role": "guru",
-    "npsn": "20246442",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209080401830006",
@@ -26,10 +25,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2016-07-18",
     "sekolah": "SD NEGERI 1 PICUNGPUGUR",
-    "role": "guru",
-    "npsn": "20246442",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209062111990001",
@@ -42,10 +40,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-11-10",
     "sekolah": "SD NEGERI 1 PICUNGPUGUR",
-    "role": "guru",
-    "npsn": "20246442",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076608920003",
@@ -58,10 +55,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-15",
     "sekolah": "SD NEGERI 1 PICUNGPUGUR",
-    "role": "guru",
-    "npsn": "20246442",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075108960002",
@@ -74,10 +70,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-15",
     "sekolah": "SD NEGERI 1 PICUNGPUGUR",
-    "role": "guru",
-    "npsn": "20246442",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209247010870009",
@@ -90,10 +85,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-01-03",
     "sekolah": "SD NEGERI 1 PICUNGPUGUR",
-    "role": "guru",
-    "npsn": "20246442",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209084404950003",
@@ -106,10 +100,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2018-09-01",
     "sekolah": "SD NEGERI 1 PICUNGPUGUR",
-    "role": "guru",
-    "npsn": "20246442",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209010103840008",
@@ -122,10 +115,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2007-06-01",
     "sekolah": "SD NEGERI 1 PICUNGPUGUR",
-    "role": "guru",
-    "npsn": "20246442",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071410630001",
@@ -134,18 +126,17 @@
     "nuptk": "4346753654200003",
     "tanggal_lahir": "1975-10-14",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2004-07-19",
     "sekolah": "SD NEGERI 1 PICUNGPUGUR",
-    "role": "tendik",
-    "npsn": "20246442",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209070711670005",
-    "nama": "CASDI, S.Pd.SD",
+    "nama": "Casdi",
     "jk": "L",
     "nuptk": "9439745648200013",
     "tanggal_lahir": "1967-11-07",
@@ -154,10 +145,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "1995-09-01",
     "sekolah": "SD NEGERI 1 PICUNGPUGUR",
-    "role": "tendik",
-    "npsn": "20246442",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209070206910001",
@@ -170,10 +160,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2015-07-01",
     "sekolah": "SD NEGERI 2 SARAJAYA",
-    "role": "guru",
-    "npsn": "20214726",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076403990006",
@@ -182,14 +171,13 @@
     "nuptk": "6656777678230082",
     "tanggal_lahir": "1999-03-24",
     "nip": "199903242025212046",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Honor Daerah TK.II Kab/Kota",
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-03-07",
     "sekolah": "SD NEGERI 2 SARAJAYA",
-    "role": "guru",
-    "npsn": "20214726",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074202930007",
@@ -202,10 +190,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2015-07-27",
     "sekolah": "SD NEGERI 2 SARAJAYA",
-    "role": "guru",
-    "npsn": "20214726",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209077003850011",
@@ -218,10 +205,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2006-01-02",
     "sekolah": "SD NEGERI 2 SARAJAYA",
-    "role": "guru",
-    "npsn": "20214726",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209105908760010",
@@ -234,10 +220,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-07-16",
     "sekolah": "SD NEGERI 2 SARAJAYA",
-    "role": "guru",
-    "npsn": "20214726",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209060204950014",
@@ -250,10 +235,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2018-11-01",
     "sekolah": "SD NEGERI 2 SARAJAYA",
-    "role": "guru",
-    "npsn": "20214726",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074602850005",
@@ -266,14 +250,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2014-09-01",
     "sekolah": "SD NEGERI 2 SARAJAYA",
-    "role": "guru",
-    "npsn": "20214726",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076202700003",
-    "nama": "MARLINAH FEBRIASARI, S.Pd",
+    "nama": "Marlinah Febriasari",
     "jk": "P",
     "nuptk": "4554748650300032",
     "tanggal_lahir": "1970-02-22",
@@ -282,10 +265,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "2001-04-01",
     "sekolah": "SD NEGERI 2 SARAJAYA",
-    "role": "tendik",
-    "npsn": "20214726",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209071511990006",
@@ -294,14 +276,13 @@
     "nuptk": "1447777678130033",
     "tanggal_lahir": "1999-11-15",
     "nip": "199911152025211031",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-02-11",
     "sekolah": "SD NEGERI 2 SARAJAYA",
-    "role": "tendik",
-    "npsn": "20214726",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209070305750011",
@@ -310,14 +291,88 @@
     "nuptk": "7835753654130112",
     "tanggal_lahir": "1975-05-03",
     "nip": "197505032025211057",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2014-07-01",
     "sekolah": "SD NEGERI 2 SARAJAYA",
-    "role": "tendik",
-    "npsn": "20214726",
-    "jenjang": "SD"
+    "role": "tendik"
+  },
+  {
+    "nik": "3209195105890011",
+    "nama": "CORI TRIWAHYUNI",
+    "jk": "P",
+    "nuptk": "2843767668300002",
+    "tanggal_lahir": "1989-05-11",
+    "nip": "",
+    "status_kepegawaian": "GTY/PTY",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "Bendahara BOS/BOP",
+    "sertifikasi": "",
+    "tmt": "2007-07-16",
+    "sekolah": "TK AL-AQSO",
+    "role": "guru"
+  },
+  {
+    "nik": "3209075210790008",
+    "nama": "NURHAYATI",
+    "jk": "P",
+    "nuptk": "6344757659300073",
+    "tanggal_lahir": "1979-10-12",
+    "nip": "",
+    "status_kepegawaian": "GTY/PTY",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2005-07-01",
+    "sekolah": "TK AL-AQSO",
+    "role": "guru"
+  },
+  {
+    "nik": "3209076908930002",
+    "nama": "SUISTI WAHYUNI",
+    "jk": "P",
+    "nuptk": "",
+    "tanggal_lahir": "1993-08-29",
+    "nip": "",
+    "status_kepegawaian": "GTY/PTY",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2023-01-02",
+    "sekolah": "TK AL-AQSO",
+    "role": "guru"
+  },
+  {
+    "nik": "3209072807780002",
+    "nama": "ADITYA ABIWAHYU",
+    "jk": "L",
+    "nuptk": "8060756657130083",
+    "tanggal_lahir": "1978-07-28",
+    "nip": "",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
+    "jenis_ptk": "Tenaga Kependidikan",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2010-01-02",
+    "sekolah": "TK AL-AQSO",
+    "role": "tendik"
+  },
+  {
+    "nik": "3209106006890004",
+    "nama": "YAYAH HURRIYYAH",
+    "jk": "P",
+    "nuptk": "5952767670130162",
+    "tanggal_lahir": "1989-06-20",
+    "nip": "",
+    "status_kepegawaian": "GTY/PTY",
+    "jenis_ptk": "Kepala Sekolah",
+    "tugas_tambahan": "Kepala Sekolah",
+    "sertifikasi": "",
+    "tmt": "2011-07-01",
+    "sekolah": "TK AL-AQSO",
+    "role": "tendik"
   },
   {
     "nik": "3209074512940007",
@@ -330,10 +385,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-01-25",
     "sekolah": "SD NEGERI 1 LEUWIDINGDING",
-    "role": "guru",
-    "npsn": "20215164",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075607780016",
@@ -346,10 +400,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2010-07-12",
     "sekolah": "SD NEGERI 1 LEUWIDINGDING",
-    "role": "guru",
-    "npsn": "20215164",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076004670001",
@@ -362,10 +415,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2005-01-03",
     "sekolah": "SD NEGERI 1 LEUWIDINGDING",
-    "role": "guru",
-    "npsn": "20215164",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209085903980007",
@@ -378,10 +430,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-08-02",
     "sekolah": "SD NEGERI 1 LEUWIDINGDING",
-    "role": "guru",
-    "npsn": "20215164",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075404740003",
@@ -394,10 +445,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2003-07-18",
     "sekolah": "SD NEGERI 1 LEUWIDINGDING",
-    "role": "guru",
-    "npsn": "20215164",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076308950003",
@@ -410,14 +460,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2017-07-17",
     "sekolah": "SD NEGERI 1 LEUWIDINGDING",
-    "role": "guru",
-    "npsn": "20215164",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074110870005",
-    "nama": "FITRI LESTARI, M.Pd",
+    "nama": "FITRI LESTARI",
     "jk": "P",
     "nuptk": "1333765666300033",
     "tanggal_lahir": "1987-10-01",
@@ -426,10 +475,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "2006-09-01",
     "sekolah": "SD NEGERI 1 LEUWIDINGDING",
-    "role": "tendik",
-    "npsn": "20215164",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209024903880003",
@@ -438,14 +486,13 @@
     "nuptk": "2641766667231142",
     "tanggal_lahir": "1988-03-09",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "tendik",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "tmt": "2013-01-02",
+    "sekolah": "SD NEGERI 1 LEUWIDINGDING",
+    "role": "tendik"
   },
   {
     "nik": "3209071310760006",
@@ -454,14 +501,13 @@
     "nuptk": "",
     "tanggal_lahir": "1976-10-13",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-08-12",
     "sekolah": "SD NEGERI 1 LEUWIDINGDING",
-    "role": "tendik",
-    "npsn": "20215164",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209076705870005",
@@ -474,10 +520,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-07-14",
     "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "guru",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209087007870006",
@@ -490,10 +535,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-07-14",
     "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "guru",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209084802860001",
@@ -506,10 +550,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2006-11-01",
     "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "guru",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075012980002",
@@ -522,10 +565,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2021-01-02",
     "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "guru",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076102700003",
@@ -538,10 +580,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2000-10-01",
     "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "guru",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075808950002",
@@ -554,10 +595,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-15",
     "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "guru",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075804770004",
@@ -570,10 +610,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2012-10-04",
     "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "guru",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3274031307910012",
@@ -586,10 +625,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2018-02-26",
     "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "tendik",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209071210730008",
@@ -598,18 +636,17 @@
     "nuptk": "1344751652130113",
     "tanggal_lahir": "1973-10-12",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-01-02",
     "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "tendik",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209070901670002",
-    "nama": "SUKRA, S.Pd.",
+    "nama": "Sukra",
     "jk": "L",
     "nuptk": "8441745647200012",
     "tanggal_lahir": "1967-01-09",
@@ -618,10 +655,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "1989-04-01",
     "sekolah": "SD NEGERI 1 WANGKELANG",
-    "role": "tendik",
-    "npsn": "20215584",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209071504660004",
@@ -634,10 +670,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2012-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209084206950004",
@@ -650,10 +685,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209101209850013",
@@ -666,10 +700,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2006-07-17",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3302164205940001",
@@ -682,10 +715,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2018-07-11",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209155011910012",
@@ -698,10 +730,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2017-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209060607930005",
@@ -714,10 +745,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-01-29",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074103760006",
@@ -730,10 +760,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2004-07-20",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209064905810009",
@@ -746,10 +775,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2014-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209202407960004",
@@ -762,10 +790,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209345909730002",
@@ -778,10 +805,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2010-07-12",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209070704880005",
@@ -794,10 +820,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Kepala Laboratorium",
     "sertifikasi": "",
+    "tmt": "2025-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209104203860011",
@@ -810,10 +835,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074303850001",
@@ -826,10 +850,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-07-14",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209306104850005",
@@ -842,10 +865,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2012-07-02",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209080910780001",
@@ -858,10 +880,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2016-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209062602950007",
@@ -874,10 +895,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pembina Pramuka Putra",
     "sertifikasi": "",
+    "tmt": "2021-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209115310850006",
@@ -890,10 +910,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209066102840003",
@@ -906,10 +925,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2006-07-18",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209385410960001",
@@ -922,10 +940,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Kepala Perpustakaan",
     "sertifikasi": "",
+    "tmt": "2025-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076801780002",
@@ -938,10 +955,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076410950002",
@@ -954,10 +970,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209101803950008",
@@ -970,10 +985,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209085709020002",
@@ -986,10 +1000,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2025-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209066602790001",
@@ -1002,10 +1015,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209105302940007",
@@ -1018,10 +1030,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209072603770001",
@@ -1034,10 +1045,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2000-07-15",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "1271134905890004",
@@ -1050,10 +1060,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-06-12",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076807860008",
@@ -1066,14 +1075,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2009-07-13",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "guru",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209061801850005",
-    "nama": "Ust. ABDUL HANAN, S.Pd",
+    "nama": "Abdul Hanan",
     "jk": "L",
     "nuptk": "7450763664110032",
     "tanggal_lahir": "1985-01-18",
@@ -1082,10 +1090,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "2010-07-12",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "tendik",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209075403860003",
@@ -1098,10 +1105,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-07-14",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "tendik",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209086108970002",
@@ -1114,10 +1120,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2025-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "tendik",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209102107870004",
@@ -1130,10 +1135,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-07-01",
     "sekolah": "SD IT AL IRSYAD AL ISLAMIYYAH",
-    "role": "tendik",
-    "npsn": "20215221",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209072303880010",
@@ -1146,10 +1150,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2010-09-01",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076103820001",
@@ -1162,10 +1165,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2016-03-01",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209094202790008",
@@ -1178,10 +1180,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-09-01",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074110840003",
@@ -1194,10 +1195,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2005-12-02",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209072306960008",
@@ -1210,10 +1210,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2018-10-08",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071205990004",
@@ -1226,10 +1225,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-01-10",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074611790001",
@@ -1242,10 +1240,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2006-07-01",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209092107000005",
@@ -1258,10 +1255,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2023-01-02",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076702980009",
@@ -1274,10 +1270,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-15",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075402700002",
@@ -1290,10 +1285,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2000-10-01",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076605930003",
@@ -1306,10 +1300,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2015-10-26",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075701860001",
@@ -1322,10 +1315,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pelaksana PBJ",
     "sertifikasi": "",
+    "tmt": "2006-01-02",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075708710007",
@@ -1338,10 +1330,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2001-07-01",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076506740005",
@@ -1354,10 +1345,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2002-07-01",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074307970004",
@@ -1370,14 +1360,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-15",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "guru",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209062809710001",
-    "nama": "IKIN, S.Pd.",
+    "nama": "Ikin",
     "jk": "L",
     "nuptk": "6260749652200003",
     "tanggal_lahir": "1971-09-28",
@@ -1386,10 +1375,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "2002-07-01",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "tendik",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209072908780003",
@@ -1402,10 +1390,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2024-03-19",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "tendik",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209091705960011",
@@ -1418,10 +1405,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2016-07-17",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "tendik",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209071509730007",
@@ -1430,14 +1416,13 @@
     "nuptk": "3247751652130103",
     "tanggal_lahir": "1973-09-15",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-11-01",
     "sekolah": "SD NEGERI 1 SINDANGLAUT",
-    "role": "tendik",
-    "npsn": "20215464",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209081909930004",
@@ -1450,10 +1435,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2015-07-27",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3208095804950006",
@@ -1466,10 +1450,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2018-07-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3215062606000001",
@@ -1482,10 +1465,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2025-07-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075212770004",
@@ -1498,10 +1480,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2002-07-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209072307950004",
@@ -1514,10 +1495,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2015-01-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076406950009",
@@ -1530,10 +1510,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2018-01-02",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075702870002",
@@ -1546,10 +1525,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-07-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076311910007",
@@ -1562,10 +1540,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-02-02",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071410890009",
@@ -1578,10 +1555,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2014-07-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075903760004",
@@ -1594,10 +1570,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2002-07-17",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075201720010",
@@ -1610,10 +1585,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2002-08-19",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076303800011",
@@ -1626,10 +1600,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2009-02-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076206840011",
@@ -1642,10 +1615,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2005-07-19",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071603670001",
@@ -1658,10 +1630,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-11-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "tendik",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209064112850005",
@@ -1674,14 +1645,13 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2012-08-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "tendik",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209071803710003",
-    "nama": "MOHAMAD SAMA, S.Pd.SD",
+    "nama": "Mohamad Sama",
     "jk": "L",
     "nuptk": "6650749651200012",
     "tanggal_lahir": "1971-03-18",
@@ -1690,10 +1660,174 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "2001-04-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH KULON",
-    "role": "tendik",
-    "npsn": "20215381",
-    "jenjang": "SD"
+    "role": "tendik"
+  },
+  {
+    "nik": "3329126009910004",
+    "nama": "Aeni Asfi Hani",
+    "jk": "P",
+    "nuptk": "2255766668130093",
+    "tanggal_lahir": "1988-09-23",
+    "nip": "198809232022212008",
+    "status_kepegawaian": "PPPK",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2014-07-01",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "guru"
+  },
+  {
+    "nik": "3209080610950005",
+    "nama": "FAJAR DEDI MIFTAKHUDDIN",
+    "jk": "L",
+    "nuptk": "9338773674130233",
+    "tanggal_lahir": "1995-10-06",
+    "nip": "199510062025211079",
+    "status_kepegawaian": "PPPK Paruh Waktu",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2022-03-07",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "guru"
+  },
+  {
+    "nik": "3209076205860007",
+    "nama": "Fitri Wardhani",
+    "jk": "P",
+    "nuptk": "3854764667210002",
+    "tanggal_lahir": "1986-05-22",
+    "nip": "198605222022212015",
+    "status_kepegawaian": "PPPK",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2008-07-14",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "guru"
+  },
+  {
+    "nik": "3209064909970001",
+    "nama": "ICA ANISAH",
+    "jk": "P",
+    "nuptk": "4248775676230103",
+    "tanggal_lahir": "1997-09-16",
+    "nip": "199709162025212054",
+    "status_kepegawaian": "PPPK Paruh Waktu",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2021-01-11",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "guru"
+  },
+  {
+    "nik": "3209075406710003",
+    "nama": "Imayah",
+    "jk": "P",
+    "nuptk": "3047749651300063",
+    "tanggal_lahir": "1971-07-15",
+    "nip": "197107152000032002",
+    "status_kepegawaian": "PNS",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2000-03-01",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "guru"
+  },
+  {
+    "nik": "3209071508670010",
+    "nama": "Jamhuri",
+    "jk": "L",
+    "nuptk": "7147745648200023",
+    "tanggal_lahir": "1967-08-15",
+    "nip": "196708152007011017",
+    "status_kepegawaian": "PNS",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2007-01-01",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "guru"
+  },
+  {
+    "nik": "3209075812960003",
+    "nama": "Loka Winda Siti Pratiwi",
+    "jk": "P",
+    "nuptk": "7550774675230133",
+    "tanggal_lahir": "1996-12-18",
+    "nip": "199612182024212037",
+    "status_kepegawaian": "PPPK",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2017-07-17",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "guru"
+  },
+  {
+    "nik": "3209074101850025",
+    "nama": "Vivi Siti Roviqoh",
+    "jk": "P",
+    "nuptk": "9433763663300042",
+    "tanggal_lahir": "1985-01-01",
+    "nip": "198501012022212007",
+    "status_kepegawaian": "PPPK",
+    "jenis_ptk": "Guru",
+    "tugas_tambahan": "Bendahara BOS/BOP",
+    "sertifikasi": "",
+    "tmt": "2007-07-17",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "guru"
+  },
+  {
+    "nik": "3273244711940001",
+    "nama": "GARNIS NURUL FATHONAH",
+    "jk": "P",
+    "nuptk": "2439772673230213",
+    "tanggal_lahir": "1994-11-07",
+    "nip": "199411072025212060",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
+    "jenis_ptk": "Tenaga Kependidikan",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2022-01-02",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "tendik"
+  },
+  {
+    "nik": "3209072401030012",
+    "nama": "PUTRA JAYADI",
+    "jk": "L",
+    "nuptk": "3456781682130002",
+    "tanggal_lahir": "2003-01-24",
+    "nip": "200301242025211008",
+    "status_kepegawaian": "PPPK Paruh Waktu",
+    "jenis_ptk": "Tenaga Kependidikan",
+    "tugas_tambahan": "",
+    "sertifikasi": "",
+    "tmt": "2022-07-18",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "tendik"
+  },
+  {
+    "nik": "3209074609670005",
+    "nama": "Sukirah",
+    "jk": "P",
+    "nuptk": "8238745649300003",
+    "tanggal_lahir": "1967-09-06",
+    "nip": "196709062007012012",
+    "status_kepegawaian": "PNS",
+    "jenis_ptk": "Kepala Sekolah",
+    "tugas_tambahan": "Kepala Sekolah",
+    "sertifikasi": "",
+    "tmt": "2007-01-01",
+    "sekolah": "SD NEGERI 1 ASEM",
+    "role": "tendik"
   },
   {
     "nik": "3209075102680005",
@@ -1706,10 +1840,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "1992-03-01",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209280302920001",
@@ -1722,10 +1855,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-10-01",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071401970006",
@@ -1738,10 +1870,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-18",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075007650010",
@@ -1754,10 +1885,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "1988-12-01",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074812820005",
@@ -1770,10 +1900,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2005-01-01",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209070105930011",
@@ -1786,10 +1915,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2017-07-01",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209072307970007",
@@ -1802,10 +1930,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pelaksana PBJ",
     "sertifikasi": "",
+    "tmt": "2019-07-18",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076604860006",
@@ -1818,10 +1945,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-03-01",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209106210930003",
@@ -1834,10 +1960,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-02-28",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075204680014",
@@ -1850,10 +1975,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2003-06-01",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209345602830002",
@@ -1866,14 +1990,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2015-07-01",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "guru",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209082204770005",
-    "nama": "APUD SYIHABUDIN, S.Pd.",
+    "nama": "Apud Syihabudin",
     "jk": "L",
     "nuptk": "2753755659200002",
     "tanggal_lahir": "1977-04-22",
@@ -1882,10 +2005,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "2009-02-01",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "tendik",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209070706980005",
@@ -1898,10 +2020,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2024-03-18",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "tendik",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209071703900004",
@@ -1910,14 +2031,13 @@
     "nuptk": "3949748662130122",
     "tanggal_lahir": "1970-06-17",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-04-01",
     "sekolah": "SD NEGERI 1 BELAWA",
-    "role": "tendik",
-    "npsn": "20215230",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209075504920005",
@@ -1930,10 +2050,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-01-15",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209082403840002",
@@ -1946,10 +2065,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2009-07-01",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075004850009",
@@ -1962,10 +2080,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2013-07-15",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076010770008",
@@ -1978,10 +2095,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2005-01-01",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209070603890009",
@@ -1994,10 +2110,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2012-01-02",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209070406850005",
@@ -2010,10 +2125,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-07-15",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3207104912890002",
@@ -2026,10 +2140,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-07-18",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209070910820005",
@@ -2042,10 +2155,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2009-07-01",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076107840021",
@@ -2058,10 +2170,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2007-07-01",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075607900009",
@@ -2074,10 +2185,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2016-07-18",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209104401000010",
@@ -2090,10 +2200,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-07-18",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209077107930003",
@@ -2106,10 +2215,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2017-09-23",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209101010690007",
@@ -2122,10 +2230,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "1991-06-01",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3275045906870008",
@@ -2138,14 +2245,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2013-07-01",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071207660005",
-    "nama": "H. GUFRON, S.Pd.I.,M.M",
+    "nama": "Gufron",
     "jk": "L",
     "nuptk": "1044744646200043",
     "tanggal_lahir": "1966-07-12",
@@ -2154,10 +2260,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "1986-04-01",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209071010730020",
@@ -2166,14 +2271,13 @@
     "nuptk": "0342751652130173",
     "tanggal_lahir": "1973-10-10",
     "nip": "197310102025211056",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-01-02",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209073011010006",
@@ -2186,10 +2290,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-12-01",
     "sekolah": "SD NEGERI 1 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20215286",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209076709780005",
@@ -2202,10 +2305,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-08-01",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209070611980012",
@@ -2218,10 +2320,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-03-22",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074504820001",
@@ -2234,10 +2335,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-07-17",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209077107980010",
@@ -2250,10 +2350,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-10-01",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209106606920007",
@@ -2266,10 +2365,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2015-07-27",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074702950007",
@@ -2282,10 +2380,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2017-07-17",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075904750003",
@@ -2298,10 +2395,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-02-01",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209064611970007",
@@ -2314,10 +2410,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-01-11",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3603180905770012",
@@ -2326,14 +2421,13 @@
     "nuptk": "8841755656130122",
     "tanggal_lahir": "1977-05-09",
     "nip": "197705092025211048",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-01-02",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "tendik",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209075106760002",
@@ -2342,18 +2436,17 @@
     "nuptk": "",
     "tanggal_lahir": "1976-06-11",
     "nip": "197606112025212028",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-03-02",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "tendik",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209081410660002",
-    "nama": "MULUS, S.Pd",
+    "nama": "Mulus",
     "jk": "L",
     "nuptk": "8346744647200023",
     "tanggal_lahir": "1966-10-14",
@@ -2362,10 +2455,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "1992-04-01",
     "sekolah": "SD NEGERI 1 LEMAHABANG",
-    "role": "tendik",
-    "npsn": "20215162",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209075906830006",
@@ -2378,10 +2470,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2012-02-01",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "guru",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074407000001",
@@ -2394,10 +2485,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2017-07-17",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "guru",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074210940006",
@@ -2410,10 +2500,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pembina Pramuka Putri",
     "sertifikasi": "",
+    "tmt": "2016-07-18",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "guru",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209102511910006",
@@ -2426,10 +2515,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pembina Pramuka Putra",
     "sertifikasi": "",
+    "tmt": "2014-07-14",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "guru",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209070903710005",
@@ -2442,10 +2530,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2010-01-01",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "guru",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071008720005",
@@ -2458,10 +2545,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pelaksana PBJ",
     "sertifikasi": "",
+    "tmt": "2014-06-01",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "guru",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071005690007",
@@ -2474,10 +2560,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2006-04-01",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "guru",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076907970004",
@@ -2490,10 +2575,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-12-01",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "guru",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075012710004",
@@ -2506,10 +2590,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2001-12-01",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "guru",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075503830006",
@@ -2518,14 +2601,13 @@
     "nuptk": "6647761662230302",
     "tanggal_lahir": "1983-03-15",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-09-20",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "tendik",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209071406040004",
@@ -2538,10 +2620,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2024-04-02",
     "sekolah": "SD NEGERI 1 LEMAHABANG KULON",
-    "role": "tendik",
-    "npsn": "20215161",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209074909870005",
@@ -2554,10 +2635,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-07-16",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "guru",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209064502820009",
@@ -2570,10 +2650,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2010-01-01",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "guru",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209070209910006",
@@ -2586,10 +2665,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2014-07-01",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "guru",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076408870004",
@@ -2602,10 +2680,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2019-03-01",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "guru",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075507920008",
@@ -2618,10 +2695,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2015-09-30",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "guru",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209065006710012",
@@ -2634,10 +2710,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2000-07-17",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "guru",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209085207980004",
@@ -2650,10 +2725,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-11-01",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "guru",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209077011670006",
@@ -2666,14 +2740,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2007-01-01",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "guru",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209072707820018",
-    "nama": "ANDI AGGASI, S.Pd.",
+    "nama": "Andi Aggasi",
     "jk": "L",
     "nuptk": "3059760662200023",
     "tanggal_lahir": "1982-07-27",
@@ -2682,10 +2755,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "2014-10-13",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "tendik",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209070902930007",
@@ -2694,14 +2766,13 @@
     "nuptk": "6541771672130232",
     "tanggal_lahir": "1993-02-09",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-16",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "tendik",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209075805760004",
@@ -2710,14 +2781,13 @@
     "nuptk": "7850754655230092",
     "tanggal_lahir": "1976-05-18",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-07-19",
     "sekolah": "SD NEGERI 1 SARAJAYA",
-    "role": "tendik",
-    "npsn": "20215517",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209100809780016",
@@ -2730,10 +2800,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-07-01",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209106802920001",
@@ -2746,10 +2815,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2016-07-26",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071006790012",
@@ -2762,10 +2830,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pembina Pramuka Putra",
     "sertifikasi": "",
+    "tmt": "2005-07-18",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074512720001",
@@ -2778,10 +2845,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2001-12-01",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071010910009",
@@ -2794,10 +2860,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2015-07-01",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209070809910006",
@@ -2810,10 +2875,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2023-01-24",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209072407930014",
@@ -2822,14 +2886,13 @@
     "nuptk": "9056771672130283",
     "tanggal_lahir": "1993-07-24",
     "nip": "199307242025211075",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Honor Daerah TK.II Kab/Kota",
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-01-12",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074611980007",
@@ -2842,10 +2905,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-08-08",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075211690004",
@@ -2858,10 +2920,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2010-01-01",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209106104010015",
@@ -2874,10 +2935,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2025-07-23",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074512860011",
@@ -2890,10 +2950,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pembina Pramuka Putri",
     "sertifikasi": "",
+    "tmt": "2009-01-23",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3174051809870003",
@@ -2906,10 +2965,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-07-19",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075901880004",
@@ -2922,10 +2980,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2010-07-12",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076112000004",
@@ -2938,10 +2995,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-01-02",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209086206950003",
@@ -2954,14 +3010,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2019-03-01",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "guru",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209070211680002",
-    "nama": "DEDI JUNAEDI, S.Pd.SD",
+    "nama": "Dedi Junaedi",
     "jk": "L",
     "nuptk": "3434746648200013",
     "tanggal_lahir": "1968-11-02",
@@ -2970,10 +3025,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "1992-12-01",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "tendik",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209072108660002",
@@ -2986,10 +3040,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2016-01-04",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "tendik",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209105005860009",
@@ -2998,14 +3051,13 @@
     "nuptk": "9842765666300022",
     "tanggal_lahir": "1987-05-10",
     "nip": "198705102025212104",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2006-01-02",
     "sekolah": "SD NEGERI 1 SIGONG",
-    "role": "tendik",
-    "npsn": "20215506",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209070303790011",
@@ -3018,10 +3070,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2006-07-01",
     "sekolah": "SD NEGERI 1 TUK KARANGSUWUNG",
-    "role": "guru",
-    "npsn": "20246445",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074204850001",
@@ -3034,14 +3085,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2007-07-15",
     "sekolah": "SD NEGERI 1 TUK KARANGSUWUNG",
-    "role": "guru",
-    "npsn": "20246445",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209085402690004",
-    "nama": "Hj. IIS ISTIQOMAH, S.Pd.SD.",
+    "nama": "Iis Istiqomah",
     "jk": "P",
     "nuptk": "5546747648300012",
     "tanggal_lahir": "1969-02-14",
@@ -3050,10 +3100,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "1991-03-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "tendik",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209075605950014",
@@ -3066,10 +3115,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-08-01",
     "sekolah": "SD NEGERI 1 TUK KARANGSUWUNG",
-    "role": "guru",
-    "npsn": "20246445",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209065503920007",
@@ -3082,10 +3130,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2021-10-04",
     "sekolah": "SD NEGERI 1 TUK KARANGSUWUNG",
-    "role": "guru",
-    "npsn": "20246445",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074801680004",
@@ -3098,10 +3145,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2008-01-01",
     "sekolah": "SD NEGERI 1 TUK KARANGSUWUNG",
-    "role": "guru",
-    "npsn": "20246445",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075112970004",
@@ -3114,10 +3160,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-07-01",
     "sekolah": "SD NEGERI 1 TUK KARANGSUWUNG",
-    "role": "guru",
-    "npsn": "20246445",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209344805840010",
@@ -3130,10 +3175,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2009-03-12",
     "sekolah": "SD NEGERI 1 TUK KARANGSUWUNG",
-    "role": "guru",
-    "npsn": "20246445",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209065811980001",
@@ -3146,10 +3190,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-15",
     "sekolah": "SD NEGERI 1 TUK KARANGSUWUNG",
-    "role": "guru",
-    "npsn": "20246445",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071011880004",
@@ -3158,18 +3201,17 @@
     "nuptk": "0442766667130253",
     "tanggal_lahir": "1988-11-10",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2010-01-01",
     "sekolah": "SD NEGERI 1 TUK KARANGSUWUNG",
-    "role": "tendik",
-    "npsn": "20246445",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209074511860003",
-    "nama": "SITI TRISTIANINGSIH, S.Pd.SD",
+    "nama": "Siti Tristianingsih",
     "jk": "P",
     "nuptk": "1437764668300003",
     "tanggal_lahir": "1986-11-05",
@@ -3178,10 +3220,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "2009-02-01",
     "sekolah": "SD NEGERI 1 TUK KARANGSUWUNG",
-    "role": "tendik",
-    "npsn": "20246445",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209071103720002",
@@ -3194,10 +3235,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2007-07-18",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "guru",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075806010007",
@@ -3210,10 +3250,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2025-07-14",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "guru",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076012800009",
@@ -3226,10 +3265,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2003-06-01",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "guru",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3303012704940001",
@@ -3242,10 +3280,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-07-02",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "guru",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209080708800008",
@@ -3258,10 +3295,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2003-07-01",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "guru",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074201680014",
@@ -3274,10 +3310,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "1990-11-01",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "guru",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075908850004",
@@ -3290,10 +3325,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-07-14",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "guru",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074105700010",
@@ -3306,10 +3340,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pelaksana PBJ",
     "sertifikasi": "",
+    "tmt": "2007-01-01",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "guru",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075304660006",
@@ -3319,13 +3352,12 @@
     "tanggal_lahir": "1966-04-13",
     "nip": "196604131988032010",
     "status_kepegawaian": "PNS",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
+    "jenis_ptk": "Kepala Sekolah",
+    "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "1988-03-01",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "guru",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209071111890006",
@@ -3334,14 +3366,13 @@
     "nuptk": "8443767668130253",
     "tanggal_lahir": "1989-11-11",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2018-01-02",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "tendik",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209070609710004",
@@ -3350,14 +3381,13 @@
     "nuptk": "1238749651200023",
     "tanggal_lahir": "1971-09-06",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2006-07-17",
     "sekolah": "SD NEGERI 2 BELAWA",
-    "role": "tendik",
-    "npsn": "20215564",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209382612860001",
@@ -3370,10 +3400,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2009-02-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076310660002",
@@ -3386,10 +3415,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2003-07-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209101107870008",
@@ -3402,10 +3430,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2010-07-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209161712960004",
@@ -3418,10 +3445,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-10-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209065705680001",
@@ -3434,10 +3460,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "1993-04-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071905780013",
@@ -3450,10 +3475,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2011-07-18",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075102850003",
@@ -3466,10 +3490,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-01-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209104709940010",
@@ -3482,10 +3505,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2017-07-17",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209073107800002",
@@ -3494,14 +3516,13 @@
     "nuptk": "8063758659130113",
     "tanggal_lahir": "1980-07-31",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2012-07-16",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209072708910005",
@@ -3510,18 +3531,17 @@
     "nuptk": "",
     "tanggal_lahir": "1991-08-27",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-07-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209076909660003",
-    "nama": "SRI MELINA, S.Pd.SD",
+    "nama": "Sri Melina",
     "jk": "P",
     "nuptk": "0261744647300043",
     "tanggal_lahir": "1966-09-29",
@@ -3530,10 +3550,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "1991-06-01",
     "sekolah": "SD NEGERI 2 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20215380",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209072811930003",
@@ -3546,10 +3565,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2016-08-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075007980004",
@@ -3562,10 +3580,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-02-21",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075206710005",
@@ -3578,10 +3595,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2008-10-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075401840011",
@@ -3594,10 +3610,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2006-07-19",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076911800007",
@@ -3610,10 +3625,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "1999-01-10",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209072706870004",
@@ -3626,10 +3640,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2007-07-18",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075506720008",
@@ -3642,10 +3655,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pelaksana PBJ",
     "sertifikasi": "",
+    "tmt": "2006-07-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075310980009",
@@ -3658,10 +3670,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-11-24",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209105603940012",
@@ -3674,10 +3685,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2018-07-16",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076110800006",
@@ -3690,10 +3700,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-07-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075106930005",
@@ -3706,10 +3715,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-07-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076204960006",
@@ -3722,10 +3730,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-07-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071407690004",
@@ -3738,10 +3745,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2002-07-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209105506960012",
@@ -3754,10 +3760,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-07-23",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209072710900002",
@@ -3770,10 +3775,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2016-07-18",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "guru",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071105750006",
@@ -3782,14 +3786,13 @@
     "nuptk": "4843753654130102",
     "tanggal_lahir": "1975-05-11",
     "nip": "197505112025211053",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2017-07-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "tendik",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209070708940005",
@@ -3802,10 +3805,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2014-07-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "tendik",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209072511970004",
@@ -3818,10 +3820,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2020-10-01",
     "sekolah": "SD NEGERI 2 LEMAHABANG",
-    "role": "tendik",
-    "npsn": "20214656",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209076507970004",
@@ -3834,10 +3835,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "2019-07-15",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075405980005",
@@ -3850,10 +3850,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Pendidikan Matematika",
+    "tmt": "2025-10-01",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071301900010",
@@ -3866,10 +3865,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Pendidikan Agama Islam",
+    "tmt": "2015-07-27",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071108980003",
@@ -3882,10 +3880,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Pendidikan Jasmani dan Kesehatan",
+    "tmt": "2021-11-01",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209104910910005",
@@ -3898,10 +3895,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "2022-05-01",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209114111700005",
@@ -3914,10 +3910,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Pendidikan Agama Islam",
+    "tmt": "2016-07-01",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209344804020001",
@@ -3930,10 +3925,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "2025-10-01",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076303810005",
@@ -3946,10 +3940,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "2006-07-19",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076307960001",
@@ -3962,10 +3955,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "2016-07-18",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209076305980002",
@@ -3978,10 +3970,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "2021-01-04",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071108910008",
@@ -3994,10 +3985,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "2014-10-01",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209064807860007",
@@ -4010,10 +4000,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "2009-09-01",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209064412820003",
@@ -4026,10 +4015,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "2007-07-16",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075701730007",
@@ -4042,14 +4030,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "1999-06-01",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "guru",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209205812850006",
-    "nama": "LISA ANDRIYANI, S.Pd.",
+    "nama": "Lisa Andriyani",
     "jk": "P",
     "nuptk": "2550763665300033",
     "tanggal_lahir": "1985-12-18",
@@ -4058,10 +4045,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "Guru Kelas SD/MI",
+    "tmt": "2005-01-02",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209070304740013",
@@ -4074,10 +4060,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2001-01-01",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209100811870007",
@@ -4090,10 +4075,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2024-01-07",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209346401870003",
@@ -4102,14 +4086,13 @@
     "nuptk": "",
     "tanggal_lahir": "1987-01-24",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2012-07-16",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209072302690002",
@@ -4122,10 +4105,9 @@
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2009-07-16",
     "sekolah": "SD NEGERI 3 CIPEUJEUH WETAN",
-    "role": "tendik",
-    "npsn": "20214479",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209072906980015",
@@ -4134,14 +4116,13 @@
     "nuptk": "4961777678130002",
     "tanggal_lahir": "1999-06-29",
     "nip": "199906292025211051",
-    "status_kepegawaian": "PPPK Paruh Waktu",
+    "status_kepegawaian": "Honor Daerah TK.II Kab/Kota",
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Kepala Perpustakaan",
     "sertifikasi": "",
+    "tmt": "2018-07-16",
     "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "guru",
-    "npsn": "20244513",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209064206780005",
@@ -4154,10 +4135,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Pelaksana PBJ",
     "sertifikasi": "",
+    "tmt": "2008-01-01",
     "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "guru",
-    "npsn": "20244513",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209084703970006",
@@ -4170,10 +4150,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2019-10-01",
     "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "guru",
-    "npsn": "20244513",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074311850002",
@@ -4186,10 +4165,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2006-01-02",
     "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "guru",
-    "npsn": "20244513",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075708710004",
@@ -4202,10 +4180,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2001-03-23",
     "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "guru",
-    "npsn": "20244513",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209106408990006",
@@ -4218,10 +4195,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2022-10-01",
     "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "guru",
-    "npsn": "20244513",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075603910003",
@@ -4234,10 +4210,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2014-07-14",
     "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "guru",
-    "npsn": "20244513",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209071506680042",
@@ -4250,10 +4225,9 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "",
     "sertifikasi": "",
+    "tmt": "2003-07-07",
     "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "guru",
-    "npsn": "20244513",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209074208900005",
@@ -4266,14 +4240,13 @@
     "jenis_ptk": "Guru",
     "tugas_tambahan": "Bendahara BOS/BOP",
     "sertifikasi": "",
+    "tmt": "2014-01-02",
     "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "guru",
-    "npsn": "20244513",
-    "jenjang": "SD"
+    "role": "guru"
   },
   {
     "nik": "3209075708690010",
-    "nama": "MANISAH, S.Ag.",
+    "nama": "Manisah",
     "jk": "P",
     "nuptk": "0149747650300063",
     "tanggal_lahir": "1969-08-17",
@@ -4282,10 +4255,9 @@
     "jenis_ptk": "Kepala Sekolah",
     "tugas_tambahan": "Kepala Sekolah",
     "sertifikasi": "",
+    "tmt": "1990-05-01",
     "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "tendik",
-    "npsn": "20244513",
-    "jenjang": "SD"
+    "role": "tendik"
   },
   {
     "nik": "3209104204840012",
@@ -4294,598 +4266,12 @@
     "nuptk": "7734762663237122",
     "tanggal_lahir": "1984-04-02",
     "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Tenaga Kependidikan",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 4 SIGONG",
-    "role": "tendik",
-    "npsn": "20244513",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209074904680007",
-    "nama": "CUCU SUHATI",
-    "jk": "P",
-    "nuptk": "8741746648300032",
-    "tanggal_lahir": "1968-04-09",
-    "nip": "196804092007012010",
-    "status_kepegawaian": "PNS",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209075801830005",
-    "nama": "Eri Ernawati",
-    "jk": "P",
-    "nuptk": "1450761663300012",
-    "tanggal_lahir": "1983-01-18",
-    "nip": "198301182014092002",
-    "status_kepegawaian": "PNS",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "Bendahara BOS/BOP",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209076107800003",
-    "nama": "Etin Rohayatin",
-    "jk": "P",
-    "nuptk": "3053758659300053",
-    "tanggal_lahir": "1980-07-21",
-    "nip": "198007212014062003",
-    "status_kepegawaian": "PNS",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209080101920007",
-    "nama": "HERI KUSWANTO",
-    "jk": "L",
-    "nuptk": "6433770671130722",
-    "tanggal_lahir": "1992-01-01",
-    "nip": "199201012025211199",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209076212900006",
-    "nama": "HIKMATUL MAULA",
-    "jk": "P",
-    "nuptk": "4554768669230213",
-    "tanggal_lahir": "1990-12-22",
-    "nip": "199012222024212034",
-    "status_kepegawaian": "PPPK",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209086405960001",
-    "nama": "ISLAMIATI ISTIQOMAH",
-    "jk": "P",
-    "nuptk": "0856774675230182",
-    "tanggal_lahir": "1996-05-24",
-    "nip": "199605242025212064",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209075312960005",
-    "nama": "ISMAWATI",
-    "jk": "P",
-    "nuptk": "1545774675230203",
-    "tanggal_lahir": "1996-12-13",
-    "nip": "199612132025212054",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3325052709880001",
-    "nama": "MARZUKI",
-    "jk": "L",
-    "nuptk": "3259766667130233",
-    "tanggal_lahir": "1988-09-27",
-    "nip": "198809272025211017",
-    "status_kepegawaian": "PPPK",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209076105990003",
-    "nama": "MEIGY IRMA OKTAVERINA",
-    "jk": "P",
-    "nuptk": "8854777678230092",
-    "tanggal_lahir": "1999-05-22",
-    "nip": "199905222025212039",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209071507680009",
-    "nama": "Muhammad Muti",
-    "jk": "L",
-    "nuptk": "6047746649200033",
-    "tanggal_lahir": "1968-07-15",
-    "nip": "196807151990091001",
-    "status_kepegawaian": "PNS",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "Pelaksana PBJ",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209070903680004",
-    "nama": "Muhammad Naim",
-    "jk": "L",
-    "nuptk": "1641746647200012",
-    "tanggal_lahir": "1968-03-09",
-    "nip": "196803092007011010",
-    "status_kepegawaian": "PNS",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209085410890002",
-    "nama": "Purnamawati Utami",
-    "jk": "P",
-    "nuptk": "6346767669130063",
-    "tanggal_lahir": "1989-10-14",
-    "nip": "198910142022212002",
-    "status_kepegawaian": "PPPK",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209075809990003",
-    "nama": "RIZKI AMALIA",
-    "jk": "P",
-    "nuptk": "5250777678230083",
-    "tanggal_lahir": "1999-09-18",
-    "nip": "",
-    "status_kepegawaian": "Honor Daerah TK.II Kab/Kota",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209075112970005",
-    "nama": "SUPRIHATIN",
-    "jk": "P",
-    "nuptk": "3543775676230163",
-    "tanggal_lahir": "1997-12-11",
-    "nip": "199712112025212060",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209076803960008",
-    "nama": "TSAQILLAH MUMTAJH",
-    "jk": "P",
-    "nuptk": "0660774675130012",
-    "tanggal_lahir": "1996-03-28",
-    "nip": "199603282019032005",
-    "status_kepegawaian": "PNS",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "guru",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209072003850006",
-    "nama": "GOFUR",
-    "jk": "L",
-    "nuptk": "4652763664130262",
-    "tanggal_lahir": "1985-03-20",
-    "nip": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Tenaga Kependidikan",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "tendik",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209072508840006",
-    "nama": "JAMALUDIN, M.Pd.",
-    "jk": "L",
-    "nuptk": "3157762664200023",
-    "tanggal_lahir": "1984-08-25",
-    "nip": "198408252009021002",
-    "status_kepegawaian": "PNS",
-    "jenis_ptk": "Kepala Sekolah",
-    "tugas_tambahan": "Kepala Sekolah",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "tendik",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209071304660003",
-    "nama": "KARTONI",
-    "jk": "L",
-    "nuptk": "0745744645130092",
-    "tanggal_lahir": "1966-04-13",
-    "nip": "",
     "status_kepegawaian": "Tenaga Honor Sekolah",
     "jenis_ptk": "Tenaga Kependidikan",
     "tugas_tambahan": "",
     "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "tendik",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209070901990003",
-    "nama": "MOCHAMAD RAMDHANI",
-    "jk": "L",
-    "nuptk": "8441777678130092",
-    "tanggal_lahir": "1999-01-09",
-    "nip": "199901092025211041",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Tenaga Kependidikan",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 CIPEUJEUH KULON",
-    "role": "tendik",
-    "npsn": "20215287",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "32092512066594",
-    "nama": "SUKIRAH, S.Pd.SD",
-    "jk": "L",
-    "nuptk": "6783944266805207",
-    "tanggal_lahir": "1973-09-21",
-    "nip": "",
-    "status_kepegawaian": "CPNS",
-    "jenis_ptk": "Kepala Sekolah",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "guru",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "32091708149511",
-    "nama": "RITA ANDAYA KURNIAWATI, M.Pd",
-    "jk": "L",
-    "nuptk": "2831210104012233",
-    "tanggal_lahir": "1991-08-05",
-    "nip": "",
-    "status_kepegawaian": "PPPK",
-    "jenis_ptk": "Kepala Sekolah",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 3 SIGONG",
-    "role": "guru",
-    "npsn": "20214570",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3329126009910004",
-    "nama": "Aeni Asfi Hani",
-    "jk": "P",
-    "nuptk": "2255766668130093",
-    "nip": "198809232022212008",
-    "tanggal_lahir": "1988-09-23",
-    "status_kepegawaian": "PPPK",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "guru",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209080610950005",
-    "nama": "FAJAR DEDI MIFTAKHUDDIN",
-    "jk": "L",
-    "nuptk": "9338773674130233",
-    "nip": "199510062025211079",
-    "tanggal_lahir": "1995-10-06",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "guru",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209076205860007",
-    "nama": "Fitri Wardhani",
-    "jk": "P",
-    "nuptk": "3854764667210002",
-    "nip": "198605222022212015",
-    "tanggal_lahir": "1986-05-22",
-    "status_kepegawaian": "PPPK",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "guru",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209064909970001",
-    "nama": "ICA ANISAH",
-    "jk": "P",
-    "nuptk": "4248775676230103",
-    "nip": "199709162025212054",
-    "tanggal_lahir": "1997-09-16",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "guru",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209075406710003",
-    "nama": "Imayah",
-    "jk": "P",
-    "nuptk": "3047749651300063",
-    "nip": "197107152000032002",
-    "tanggal_lahir": "1971-07-15",
-    "status_kepegawaian": "PNS",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "guru",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209071508670010",
-    "nama": "Jamhuri",
-    "jk": "L",
-    "nuptk": "7147745648200023",
-    "nip": "196708152007011017",
-    "tanggal_lahir": "1967-08-15",
-    "status_kepegawaian": "PNS",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "guru",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209075812960003",
-    "nama": "Loka Winda Siti Pratiwi",
-    "jk": "P",
-    "nuptk": "7550774675230133",
-    "nip": "199612182024212037",
-    "tanggal_lahir": "1996-12-18",
-    "status_kepegawaian": "PPPK",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "guru",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209074101850025",
-    "nama": "Vivi Siti Roviqoh",
-    "jk": "P",
-    "nuptk": "9433763663300042",
-    "nip": "198501012022212007",
-    "tanggal_lahir": "1985-01-01",
-    "status_kepegawaian": "PPPK",
-    "jenis_ptk": "Guru",
-    "tugas_tambahan": "Bendahara BOS/BOP",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "guru",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3273244711940001",
-    "nama": "GARNIS NURUL FATHONAH",
-    "jk": "P",
-    "nuptk": "2439772673230213",
-    "nip": "199411072025212060",
-    "tanggal_lahir": "1994-11-07",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Tenaga Kependidikan",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "tendik",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209072401030012",
-    "nama": "PUTRA JAYADI",
-    "jk": "L",
-    "nuptk": "3456781682130002",
-    "nip": "200301242025211008",
-    "tanggal_lahir": "2003-01-24",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "jenis_ptk": "Tenaga Kependidikan",
-    "tugas_tambahan": "",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "tendik",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209074609670005",
-    "nama": "Sukirah",
-    "jk": "P",
-    "nuptk": "8238745649300003",
-    "nip": "196709062007012012",
-    "tanggal_lahir": "1967-09-06",
-    "status_kepegawaian": "PNS",
-    "jenis_ptk": "Kepala Sekolah",
-    "tugas_tambahan": "Kepala Sekolah",
-    "sertifikasi": "",
-    "sekolah": "SD NEGERI 1 ASEM",
-    "role": "kepsek",
-    "npsn": "20215216",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209070604010004",
-    "nama": "FAJAR SIDIK",
-    "nuptk": "4738779680130002",
-    "nip": "200104062025211027",
-    "jk": "L",
-    "jenis_ptk": "Tenaga Kependidikan",
-    "tugas_tambahan": "",
-    "status_kepegawaian": "PPPK Paruh Waktu",
-    "sekolah": "SD NEGERI 3 SIGONG",
-    "npsn": "20214570",
-    "jenjang": "SD"
-  },
-  {
-    "nik": "3209076806880004",
-    "nama": "ANA ROSLIANA",
-    "nuptk": "",
-    "jk": "P",
-    "jenis_ptk": "Guru",
-    "status_kepegawaian": "GTY/PTY",
-    "tugas_tambahan": "",
-    "sekolah": "KB MUTIARA",
-    "npsn": "70044538",
-    "jenjang": "KB"
-  },
-  {
-    "nik": "3522154903930003",
-    "nama": "FITROH FITRI LESTARI",
-    "nuptk": "0641771672230392",
-    "jk": "P",
-    "jenis_ptk": "Guru",
-    "status_kepegawaian": "GTY/PTY",
-    "tugas_tambahan": "",
-    "sekolah": "KB MUTIARA",
-    "npsn": "70044538",
-    "jenjang": "KB"
-  },
-  {
-    "nik": "3209084407770007",
-    "nama": "SITI AMELAH",
-    "nuptk": "1036755656230163",
-    "jk": "P",
-    "jenis_ptk": "Guru",
-    "status_kepegawaian": "GTY/PTY",
-    "tugas_tambahan": "Kepala Sekolah",
-    "sekolah": "KB MUTIARA",
-    "npsn": "70044538",
-    "jenjang": "KB"
-  },
-  {
-    "nik": "3209100412800007",
-    "nama": "DEDI ZUBAIDI",
-    "nuptk": "1536758659120003",
-    "jk": "L",
-    "jenis_ptk": "Tenaga Kependidikan",
-    "status_kepegawaian": "PPPK",
-    "tugas_tambahan": "",
-    "sekolah": "KB MUTIARA",
-    "npsn": "70044538",
-    "jenjang": "KB"
-  },
-  {
-    "nik": "3209076904790003",
-    "nama": "DIANA RAHMAWATI, S.Sos",
-    "nuptk": "0761757658230132",
-    "jk": "P",
-    "jenis_ptk": "Kepala Sekolah",
-    "status_kepegawaian": "GTY/PTY",
-    "tugas_tambahan": "Kepala Sekolah",
-    "sekolah": "KB MUTIARA",
-    "npsn": "70044538",
-    "jenjang": "KB"
+    "tmt": "2022-07-18",
+    "sekolah": "SD NEGERI 4 SIGONG",
+    "role": "tendik"
   }
 ]
