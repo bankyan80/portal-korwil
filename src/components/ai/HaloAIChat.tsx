@@ -40,14 +40,14 @@ interface HaloAIChatProps {
   onAiStatusChange: (status: 'online' | 'slow' | 'error' | 'checking') => void;
 }
 
+type SearchMode = 'idle' | 'siswa' | 'pegawai';
+
 const chatStore = localforage.createInstance({ name: 'haloai', storeName: 'messages' });
 const cacheStore = localforage.createInstance({ name: 'haloai', storeName: 'cache' });
 const CACHE_TTL = 60 * 60 * 1000;
 const COOLDOWN_MS = 5000;
 
 const quickMenuPrompts: Record<string, string> = {
-  'cari-siswa': 'Bagaimana cara mencari data siswa di portal ini?',
-  'cari-guru': 'Bagaimana cara mencari data guru dan tendik?',
   'rekap-sekolah': 'Bagaimana cara melihat rekap data sekolah?',
   'laporan-bulanan': 'Bagaimana cara mengisi dan melihat laporan bulanan?',
   'spmb-sd': 'Informasi tentang SPMB SD di Kecamatan Lemahabang',
@@ -83,6 +83,33 @@ function normalizeQuestion(q: string): string {
   return q.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+function formatSiswaDetail(s: any): string {
+  return `**Data Siswa Ditemukan** 🎯\n\n` +
+    `- **Nama:** ${s.nama}\n` +
+    `- **NIK:** ${s.nik || '-'}\n` +
+    `- **NISN:** ${s.nisn || '-'}\n` +
+    `- **JK:** ${s.jk || '-'}\n` +
+    `- **Tanggal Lahir:** ${s.tanggal_lahir || '-'}\n` +
+    `- **Jenjang:** ${s.jenjang || '-'}\n` +
+    `- **Kelas:** ${s.kelas ?? '-'}\n` +
+    `- **Sekolah:** ${s.sekolah || '-'}\n` +
+    `- **Desa:** ${s.desa || '-'}`;
+}
+
+function formatPegawaiDetail(p: any): string {
+  return `**Data Pegawai Ditemukan** 🎯\n\n` +
+    `- **Nama:** ${p.nama}\n` +
+    `- **NIK:** ${p.nik || '-'}\n` +
+    `- **NUPTK:** ${p.nuptk || '-'}\n` +
+    `- **NIP:** ${p.nip || '-'}\n` +
+    `- **JK:** ${p.jk || '-'}\n` +
+    `- **Tanggal Lahir:** ${p.tanggal_lahir || '-'}\n` +
+    `- **Status:** ${p.status_kepegawaian || '-'}\n` +
+    `- **Jenis PTK:** ${p.jenis_ptk || '-'}\n` +
+    `- **Sertifikasi:** ${p.sertifikasi || '-'}\n` +
+    `- **Sekolah:** ${p.sekolah || '-'}`;
+}
+
 export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChange }: HaloAIChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -90,6 +117,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
   const [history, setHistory] = useState<HistoryMessage[]>([]);
   const [lastRequestTime, setLastRequestTime] = useState(0);
   const [quota, setQuota] = useState<{ remaining: number; total: number } | null>(null);
+  const [searchMode, setSearchMode] = useState<SearchMode>('idle');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -157,6 +185,53 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
     const trimmed = text.trim();
     if (!trimmed) return;
     if (isTyping) return;
+
+    // Check for NIK input when in search mode
+    const cleanNik = trimmed.replace(/\D/g, '');
+    if (searchMode !== 'idle' && cleanNik.length === 16) {
+      const mode = searchMode;
+      setSearchMode('idle');
+      const userMsg: ChatMessage = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        from: 'user',
+        text: trimmed,
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setInput('');
+
+      const searchingMsg: ChatMessage = {
+        id: `msg-${Date.now()}-searching`,
+        from: 'bot',
+        text: `🔍 Mencari data ${mode === 'siswa' ? 'siswa' : 'pegawai'} dengan NIK **${cleanNik}**...`,
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, searchingMsg]);
+
+      try {
+        const endpoint = mode === 'siswa'
+          ? `/api/siswa/lookup?nik=${cleanNik}`
+          : `/api/pegawai/detail?nik=${cleanNik}`;
+        const res = await fetch(endpoint);
+        const data = await res.json();
+
+        if (mode === 'siswa' && data.found) {
+          addBotMessage(formatSiswaDetail(data.siswa), 'result');
+        } else if (mode === 'pegawai' && data.found) {
+          addBotMessage(formatPegawaiDetail(data), 'result');
+        } else {
+          addBotMessage(`Data ${mode === 'siswa' ? 'siswa' : 'pegawai'} dengan NIK **${cleanNik}** tidak ditemukan.`, 'nf');
+        }
+      } catch {
+        addBotMessage('Terjadi kesalahan saat mencari data. Silakan coba lagi.', 'err');
+      }
+      return;
+    }
+
+    if (searchMode !== 'idle') {
+      addBotMessage('Masukkan **NIK 16 digit** (angka saja) untuk mencari data.', 'invalid');
+      return;
+    }
 
     const now = Date.now();
     const timeSinceLastRequest = now - lastRequestTime;
@@ -253,7 +328,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
     } finally {
       setIsTyping(false);
     }
-  }, [history, context, onAiStatusChange, isTyping, lastRequestTime]);
+  }, [history, context, onAiStatusChange, isTyping, lastRequestTime, searchMode]);
 
   const handleSend = () => {
     if (!input.trim() || isTyping) return;
@@ -274,9 +349,28 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
     }
   };
 
-  const handleQuickMenu = (id: string) => {
+  const handleQuickMenu = async (id: string) => {
+    if (isTyping) return;
+
+    if (id === 'cari-siswa' || id === 'cari-guru') {
+      const mode = id === 'cari-siswa' ? 'siswa' : 'pegawai';
+      setSearchMode(mode);
+      const label = mode === 'siswa' ? 'siswa' : 'pegawai';
+      const msg: ChatMessage = {
+        id: `msg-${Date.now()}-search`,
+        from: 'bot',
+        text: `🔍 Cari ${label}\n\nSilahkan masukkan **NIK ${label}** (16 digit) untuk mencari data ${label}.`,
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, msg]);
+      await chatStore.setItem('chat-history', [...messages, msg]).catch(() => {});
+      setInput('');
+      inputRef.current?.focus();
+      return;
+    }
+
     const prompt = quickMenuPrompts[id];
-    if (prompt && !isTyping) {
+    if (prompt) {
       sendMessage(prompt);
     }
   };
@@ -287,6 +381,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
       await cacheStore.clear();
     } catch {}
     lastQuestionRef.current = '';
+    setSearchMode('idle');
     setLastRequestTime(0);
     const greeting: ChatMessage = {
       id: `msg-${Date.now()}-reset`,
@@ -332,7 +427,7 @@ export default function HaloAIChat({ onClose, context, aiStatus, onAiStatusChang
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={isTyping ? 'Menunggu jawaban AI...' : 'Ketik pertanyaan...'}
+              placeholder={isTyping ? 'Menunggu jawaban AI...' : searchMode !== 'idle' ? `Masukkan NIK ${searchMode === 'siswa' ? 'siswa' : 'pegawai'}...` : 'Ketik pertanyaan...'}
               disabled={isTyping}
               className="w-full text-sm text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-slate-600 rounded-xl px-3 sm:px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50 dark:bg-slate-700 placeholder-gray-500 dark:placeholder-gray-400 disabled:opacity-60 disabled:cursor-not-allowed"
             />
