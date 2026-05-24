@@ -1,19 +1,16 @@
 'use client';
 
-import { useAppStore } from '@/store/app-store';
+import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Sun, Moon, ArrowLeft } from 'lucide-react';
-import { VIEW_TITLES } from '@/lib/navigation';
-import { FirebaseLED } from '@/components/portal/FirebaseLED';
 
 export function SimpleAdminLayout({ children }: { children: React.ReactNode }) {
-  const { currentView, setCurrentView } = useAppStore();
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
 
   const handleBack = () => {
-    setCurrentView('portal');
-    window.location.assign('/');
+    router.push('/admin/operator');
   };
 
   return (
@@ -34,7 +31,7 @@ export function SimpleAdminLayout({ children }: { children: React.ReactNode }) {
             <div className="w-px h-6 bg-white/20 hidden sm:block mx-1" />
 
             <h1 className="text-sm sm:text-base font-semibold text-white truncate max-w-[200px] sm:max-w-none">
-              {VIEW_TITLES[currentView] || 'Admin Panel'}
+              Admin Panel
             </h1>
           </div>
 
