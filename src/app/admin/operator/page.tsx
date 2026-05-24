@@ -12,7 +12,7 @@ import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { db } from '@/lib/firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function OperatorDashboard() {
@@ -88,18 +88,17 @@ export default function OperatorDashboard() {
     fetchTugas();
   }, [fetchTugas]);
 
-  // Realtime listener for laporan bulanan history
+  // Fetch laporan bulanan history
   useEffect(() => {
     if (!db || (!user?.schoolId && !user?.schoolName)) return;
     const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
     const q = query(collection(db, 'laporan_bulanan'), where('sekolahId', '==', schoolId));
-    const unsub = onSnapshot(q, (snap) => {
+    getDocs(q).then((snap) => {
       const items: any[] = [];
       snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
       items.sort((a, b) => (b.tahun || 0) - (a.tahun || 0) || (bulanList.indexOf(a.bulan || '') - bulanList.indexOf(b.bulan || '')));
       setLaporanHistory(items);
-    }, (err) => { console.error('Error in laporan history listener:', err); });
-    return () => unsub();
+    }).catch((err) => { console.error('Error fetching laporan history:', err); });
   }, [user?.schoolId, user?.schoolName]);
 
   const handleCompleteTask = useCallback(async (taskId: string) => {

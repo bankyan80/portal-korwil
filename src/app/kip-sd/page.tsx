@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { ArrowLeft, WalletMinimal, Loader2, School } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 
@@ -38,38 +38,28 @@ export default function KipSdPage() {
   useEffect(() => {
     if (!db) return;
 
-    const q = collection(db, 'kip_sd');
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        let siswa: any[] = [];
-        if (!snapshot.empty) {
-          siswa = snapshot.docs.map(d => d.data());
-        }
-
-        if (siswa.length === 0) {
-          fetch('/api/siswa/list?jenjang=SD&layak_pip=Ya')
-            .then(r => r.json())
-            .then(json => {
-              siswa = json.siswa || [];
-              processSiswa(siswa);
-            })
-            .catch(() => { setData([]); setLoading(false); });
-          return;
-        }
-
-        processSiswa(siswa);
-      },
-      (err) => {
-        console.error('Error in kip_sd realtime listener:', err);
-        setLoading(false);
+    getDocs(collection(db, 'kip_sd')).then((snapshot) => {
+      let siswa: any[] = [];
+      if (!snapshot.empty) {
+        siswa = snapshot.docs.map(d => d.data());
       }
-    );
 
-    return () => {
-      unsubscribe();
-    };
+      if (siswa.length === 0) {
+        fetch('/api/siswa/list?jenjang=SD&layak_pip=Ya')
+          .then(r => r.json())
+          .then(json => {
+            siswa = json.siswa || [];
+            processSiswa(siswa);
+          })
+          .catch(() => { setData([]); setLoading(false); });
+        return;
+      }
+
+      processSiswa(siswa);
+    }).catch((err) => {
+      console.error('Error fetching kip_sd:', err);
+      setLoading(false);
+    });
   }, []);
 
   const totalPenerima = data.reduce((a, s) => a + s.total, 0);

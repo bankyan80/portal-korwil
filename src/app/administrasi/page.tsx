@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { FileText, Download, Loader2, FolderOpen } from 'lucide-react';
 
 interface DocItem {
@@ -19,31 +19,23 @@ export default function AdministrasiPage() {
   useEffect(() => {
     if (!db) return;
 
-    const unsubscribe = onSnapshot(
-      collection(db, 'dokumen'),
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const fb: DocItem[] = snapshot.docs.map(d => ({
-            id: d.id,
-            title: d.data().title || d.data().nama || 'Dokumen',
-            type: d.data().type || d.data().jenis || 'PDF',
-            url: d.data().url || d.data().fileUrl || '',
-          }));
-          setDocs(fb);
-        } else {
-          setDocs([]);
-        }
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error in dokumen realtime listener:', err);
-        setLoading(false);
+    getDocs(collection(db, 'dokumen')).then((snapshot) => {
+      if (!snapshot.empty) {
+        const fb: DocItem[] = snapshot.docs.map(d => ({
+          id: d.id,
+          title: d.data().title || d.data().nama || 'Dokumen',
+          type: d.data().type || d.data().jenis || 'PDF',
+          url: d.data().url || d.data().fileUrl || '',
+        }));
+        setDocs(fb);
+      } else {
+        setDocs([]);
       }
-    );
-
-    return () => {
-      unsubscribe();
-    };
+      setLoading(false);
+    }).catch((err) => {
+      console.error('Error fetching dokumen:', err);
+      setLoading(false);
+    });
   }, []);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;

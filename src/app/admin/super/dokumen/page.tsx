@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Search, Trash2, Loader2, FolderOpen, FileText } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import AuthGuard from '@/components/auth/AuthGuard';
 import type { DokumenBersama } from '@/types';
 
@@ -28,13 +28,12 @@ export default function SuperAdminDokumenPage() {
   useEffect(() => {
     if (!db) { queueMicrotask(() => setLoading(false)); return; }
     const q = query(collection(db, 'dokumen'), orderBy('uploadedAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
+    getDocs(q).then((snap) => {
       const list: DokumenBersama[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...d.data() } as DokumenBersama));
       setAllDocs(list);
       setLoading(false);
-    }, () => setLoading(false));
-    return () => unsub();
+    }).catch(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {

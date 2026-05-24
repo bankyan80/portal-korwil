@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { allSekolah as staticSekolah } from '@/data/sekolah';
 
 export interface SekolahItem {
@@ -53,23 +53,18 @@ export function useSekolah() {
 
   useEffect(() => {
     if (!db) { setLoading(false); return; }
-    const unsub = onSnapshot(
-      collection(db, 'schools'),
-      (snap) => {
-        const list: SekolahItem[] = [];
-        snap.forEach((d) => {
-          list.push(mapDoc(d.data()));
-        });
-        list.sort((a, b) => a.nama.localeCompare(b.nama));
-        setSchools(list);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error loading schools:', err);
-        setLoading(false);
-      }
-    );
-    return unsub;
+    getDocs(collection(db, 'schools')).then((snap) => {
+      const list: SekolahItem[] = [];
+      snap.forEach((d) => {
+        list.push(mapDoc(d.data()));
+      });
+      list.sort((a, b) => a.nama.localeCompare(b.nama));
+      if (list.length > 0) setSchools(list);
+      setLoading(false);
+    }).catch((err) => {
+      console.error('Error loading schools:', err);
+      setLoading(false);
+    });
   }, []);
 
   return { schools, loading };

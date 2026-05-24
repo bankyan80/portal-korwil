@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { db } from '@/lib/firebase';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import {
   ArrowLeft, Building2, Phone, Save, Loader2,
 } from 'lucide-react';
@@ -33,15 +33,14 @@ export default function OrganisasiProfilPage() {
   useEffect(() => {
     if (!db || !user?.organizationId) return;
     setLoading(true);
-    const unsub = onSnapshot(doc(db, 'organizations', user.organizationId), (snap) => {
+    getDoc(doc(db, 'organizations', user.organizationId)).then((snap) => {
       if (snap.exists()) setOrg(snap.data());
       setLoading(false);
-    }, (err) => {
+    }).catch((err) => {
       console.error('Error loading organisasi profil:', err);
       toast.error('Gagal memuat data organisasi');
       setLoading(false);
     });
-    return () => unsub();
   }, [user?.organizationId]);
 
   function openEdit() {

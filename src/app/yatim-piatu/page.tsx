@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowLeft, Heart, Loader2, FileDown, Printer } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 import type { YatimPiatuData, YatimCategory } from '@/types';
 
@@ -33,13 +33,12 @@ export default function YatimPiatuPage() {
   useEffect(() => {
     if (!db) return;
     const q = query(collection(db, 'yatim_piatu'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
+    getDocs(q).then((snap) => {
       const list: YatimPiatuData[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...d.data() } as YatimPiatuData));
       setData(list);
       setLoading(false);
-    }, () => setLoading(false));
-    return () => unsub();
+    }).catch(() => setLoading(false));
   }, []);
 
   const counts = useMemo(() => ({

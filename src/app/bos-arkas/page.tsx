@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import type { BosSchoolData, StatusValidasi } from '@/types';
 
 const statusLabel: Record<StatusValidasi, string> = {
@@ -44,19 +44,17 @@ export default function BosArkasPage() {
     if (!db) return;
 
     const q = query(collection(db, 'bos_arkas'), orderBy('nama'));
-    const unsub = onSnapshot(q, (snapshot) => {
+    getDocs(q).then((snapshot) => {
       const list: BosSchoolData[] = [];
       snapshot.forEach((doc) => {
         list.push({ id: doc.id, ...doc.data() } as BosSchoolData);
       });
       setData(list);
       setLoading(false);
-    }, (err) => {
+    }).catch((err) => {
       console.error('Firestore error:', err);
       setLoading(false);
     });
-
-    return () => unsub();
   }, []);
 
   const totalDana = useMemo(() => data.reduce((sum, s) => sum + s.alokasiDana, 0), [data]);

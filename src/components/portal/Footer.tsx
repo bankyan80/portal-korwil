@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Mail, Phone } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { mockFooterData } from '@/lib/mock-data';
 
 const socialLinks = [
@@ -19,26 +19,18 @@ export default function Footer() {
   useEffect(() => {
     if (!db) return;
 
-    const unsubscribe = onSnapshot(
-      doc(db, 'settings', 'profile'),
-      (snap) => {
-        if (snap.exists()) {
-          const data = snap.data();
-          setFooter({
-            address: data.alamat || data.address || mockFooterData.address,
-            email: data.email || mockFooterData.email,
-            phone: data.telepon || data.phone || mockFooterData.phone,
-          });
-        }
-      },
-      (err) => {
-        console.error('Error in settings/profile realtime listener:', err);
+    getDoc(doc(db, 'settings', 'profile')).then((snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setFooter({
+          address: data.alamat || data.address || mockFooterData.address,
+          email: data.email || mockFooterData.email,
+          phone: data.telepon || data.phone || mockFooterData.phone,
+        });
       }
-    );
-
-    return () => {
-      unsubscribe();
-    };
+    }).catch((err) => {
+      console.error('Error fetching settings/profile:', err);
+    });
   }, []);
 
   return (
