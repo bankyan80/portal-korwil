@@ -505,7 +505,7 @@ export function ManageDataPd() {
                       ) : '-'}
                     </td>
                     <td className="px-4 py-3 text-center"><span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${jenjangColors[s.jenjang]}`}>{s.jenjang}</span></td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{s.desa}</td>
+                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{s.desa || '-'}</td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openEdit(s)}><Pencil className="w-3.5 h-3.5" /></Button>

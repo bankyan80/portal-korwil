@@ -144,10 +144,10 @@ export function ManageTkaSd() {
                 {filtered.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="px-4 py-3">
-                      <p className="font-bold text-[#0d3b66] dark:text-white">{item.nama}</p>
+                      <p className="font-bold text-[#0d3b66] dark:text-white">{item.nama || '-'}</p>
                       <p className="text-[10px] text-gray-400 font-mono">{item.nik}</p>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">{item.sekolah}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">{item.sekolah || '-'}</td>
                     <td className="px-4 py-3 text-center font-semibold text-blue-600">{item.nilaiMatematika}</td>
                     <td className="px-4 py-3 text-center font-semibold text-green-600">{item.nilaiIndo}</td>
                     <td className="px-4 py-3 text-center font-semibold text-purple-600">{item.nilaiIpa}</td>

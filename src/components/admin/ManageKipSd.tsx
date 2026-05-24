@@ -210,8 +210,8 @@ export function ManageKipSd() {
                     <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{d.nik}</td>
                     <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{d.nama}</td>
-                    <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">{d.sekolah}</td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{d.desa}</td>
+                    <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">{d.sekolah || '-'}</td>
+                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{d.desa || '-'}</td>
                     <td className="px-4 py-3 text-center">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleDelete(d.id!)}>
                         <Trash2 className="w-3.5 h-3.5" />

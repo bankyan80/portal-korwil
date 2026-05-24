@@ -21,6 +21,47 @@ import type { UserRole } from '@/types';
 
 type JenjangFilter = 'ALL' | 'SD' | 'TK' | 'KB';
 
+function computeUsia(tanggalLahir: string): number {
+  if (!tanggalLahir) return 0;
+  const parts = tanggalLahir.split('-');
+  if (parts.length !== 3) return 0;
+  const birth = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function computeMasaKerja(tmt: string): number {
+  if (!tmt) return 0;
+  const parts = tmt.split('-');
+  if (parts.length !== 3) return 0;
+  const start = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  const today = new Date();
+  let years = today.getFullYear() - start.getFullYear();
+  const m = today.getMonth() - start.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < start.getDate())) years--;
+  return years;
+}
+
+function isPns(status: string): boolean {
+  return status === 'PNS' || status === 'PPPK';
+}
+
+function computeStatusBup(tanggalLahir: string, statusKepegawaian: string): string {
+  if (!isPns(statusKepegawaian)) return 'Non-PNS';
+  if (!tanggalLahir) return '-';
+  const parts = tanggalLahir.split('-');
+  if (parts.length !== 3) return '-';
+  const bupTimestamp = new Date(parseInt(parts[0], 10) + 60, parseInt(parts[1], 10) - 1, 1).getTime();
+  const now = Date.now();
+  if (bupTimestamp <= now) return 'Sudah BUP';
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const bupDate = `${months[parseInt(parts[1], 10) - 1] || ''} ${parseInt(parts[0], 10) + 60}`;
+  return `BUP: ${bupDate}`;
+}
+
 export default function SuperDataGuru() {
   const { schools: allSekolah } = useSekolah();
 
@@ -311,14 +352,14 @@ export default function SuperDataGuru() {
                                   <td className="px-3 py-2 text-[13px] font-mono text-gray-500 hidden sm:table-cell">{r.nik || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px]">{r.jk || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px] text-gray-500 hidden sm:table-cell">{r.tanggal_lahir || <span className="text-gray-400">-</span>}</td>
-                                  <td className="px-3 py-2 text-[13px]">{r.usia ? `${r.usia} thn` : <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px]">{r.usia ? `${r.usia} thn` : computeUsia(r.tanggal_lahir) ? `${computeUsia(r.tanggal_lahir)} thn` : <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px] font-mono text-gray-500 hidden sm:table-cell">{r.nip || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px] hidden md:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
                                   <td className="px-3 py-2 text-[13px] text-gray-500 hidden lg:table-cell">{r.tugas_tambahan || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px] text-gray-500 hidden md:table-cell">{r.sertifikasi || <span className="text-gray-400">-</span>}</td>
-                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.masaKerja ? `${r.masaKerja} thn` : <span className="text-gray-400">-</span>}</td>
-                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.statusBup || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.masaKerja ? `${r.masaKerja} thn` : computeMasaKerja(r.tmt) ? `${computeMasaKerja(r.tmt)} thn` : <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.statusBup || computeStatusBup(r.tanggal_lahir, r.status_kepegawaian) || <span className="text-gray-400">-</span>}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -364,14 +405,14 @@ export default function SuperDataGuru() {
                                   <td className="px-3 py-2 text-[13px] font-mono text-gray-500 hidden sm:table-cell">{r.nik || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px]">{r.jk || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px] text-gray-500 hidden sm:table-cell">{r.tanggal_lahir || <span className="text-gray-400">-</span>}</td>
-                                  <td className="px-3 py-2 text-[13px]">{r.usia ? `${r.usia} thn` : <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px]">{r.usia ? `${r.usia} thn` : computeUsia(r.tanggal_lahir) ? `${computeUsia(r.tanggal_lahir)} thn` : <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px] font-mono text-gray-500 hidden sm:table-cell">{r.nip || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px] hidden md:table-cell">{r.nuptk || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2"><Badge variant="outline" className="text-[10px] h-5 px-2">{r.status_kepegawaian}</Badge></td>
                                   <td className="px-3 py-2 text-[13px] text-gray-500 hidden lg:table-cell">{r.tugas_tambahan || <span className="text-gray-400">-</span>}</td>
                                   <td className="px-3 py-2 text-[13px] text-gray-500 hidden md:table-cell">{r.sertifikasi || <span className="text-gray-400">-</span>}</td>
-                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.masaKerja ? `${r.masaKerja} thn` : <span className="text-gray-400">-</span>}</td>
-                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.statusBup || <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.masaKerja ? `${r.masaKerja} thn` : computeMasaKerja(r.tmt) ? `${computeMasaKerja(r.tmt)} thn` : <span className="text-gray-400">-</span>}</td>
+                                  <td className="px-3 py-2 text-[13px] hidden lg:table-cell">{r.statusBup || computeStatusBup(r.tanggal_lahir, r.status_kepegawaian) || <span className="text-gray-400">-</span>}</td>
                                 </tr>
                               ))}
                             </tbody>

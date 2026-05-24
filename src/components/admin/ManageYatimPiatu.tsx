@@ -179,10 +179,10 @@ export function ManageYatimPiatu() {
                     <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{d.nik}</td>
                     <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{d.nama}</td>
-                    <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">{d.sekolah}</td>
+                    <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">{d.sekolah || '-'}</td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${kategoriColors[d.kategori]}`}>
-                        {kategoriLabel[d.kategori]}
+                      <span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${kategoriColors[d.kategori] || 'bg-gray-100 text-gray-600'}`}>
+                        {kategoriLabel[d.kategori] || '-'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">

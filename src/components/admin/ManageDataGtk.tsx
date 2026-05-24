@@ -263,7 +263,7 @@ export function ManageDataGtk() {
                       <td className="px-4 py-3 text-center text-xs font-medium text-blue-600">{item.staff_l}</td>
                       <td className="px-4 py-3 text-center text-xs font-medium text-pink-600">{item.staff_p}</td>
                       <td className="px-4 py-3 text-center"><span className="text-xs font-medium text-amber-700 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-300 px-2 py-0.5 rounded-full">{item.certified}</span></td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{item.headmaster}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{item.headmaster || '-'}</td>
                     </tr>
                   ))}
                 </tbody>

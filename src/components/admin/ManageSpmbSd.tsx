@@ -307,7 +307,7 @@ export function ManageSpmbSd() {
                     <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                     <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{d.nama}</td>
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground hidden md:table-cell">{d.nik}</td>
-                    <td className="px-4 py-3 text-center text-muted-foreground">{d.usia} thn</td>
+                    <td className="px-4 py-3 text-center text-muted-foreground">{d.usia ? `${d.usia} thn` : '-'}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`px-2 py-1 text-[11px] font-medium rounded-full ${statusColor[d.status] || 'bg-gray-100 text-gray-600'}`}>{d.status}</span>
                     </td>
