@@ -1,17 +1,17 @@
 'use client'
 
-import { Home, Sparkles, type LucideIcon } from 'lucide-react'
+import { Home, School, Baby, GraduationCap, BarChart3, FileText, Users, WalletMinimal, Database, BookOpen, Target, CalendarDays, FolderOpen, Mail, Send, Globe, Phone, Clock, HeartHandshake, Megaphone, Sparkles, type LucideIcon } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAppStore } from '@/store/app-store'
 import { useDataStore } from '@/store/data-store'
 import { cn } from '@/lib/utils'
 
 const iconMap: Record<string, LucideIcon> = {
-  Home, School: Home, Baby: Home, GraduationCap: Home, BarChart3: Home,
-  FileText: Home, Users: Home, WalletMinimal: Home, Database: Home,
-  BookOpen: Home, Target: Home, CalendarDays: Home, FolderOpen: Home,
-  Mail: Home, Send: Home, Globe: Home, Phone: Home, Clock: Home,
-  HeartHandshake: Home, Megaphone: Home,
+  Home, School, Baby, GraduationCap, BarChart3,
+  FileText, Users, WalletMinimal, Database,
+  BookOpen, Target, CalendarDays, FolderOpen,
+  Mail, Send, Globe, Phone, Clock,
+  HeartHandshake, Megaphone,
 }
 
 const FALLBACK_ITEMS = [
@@ -60,7 +60,7 @@ export default function MobileBottomNav() {
       return
     }
 
-    setCurrentView(item.path.replace('/', '') as any)
+    setCurrentView('portal')
     router.push(item.path)
   }
 

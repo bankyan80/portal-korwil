@@ -16,7 +16,7 @@ import {
   Image, Link2, ArrowLeft, Clock, CheckCircle, XCircle, FolderOpen
 } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, getDocs } from 'firebase/firestore';
 import { useSekolah } from '@/hooks/useSekolah';
 import { normalizeSchool } from '@/lib/normalize';
 import type { StatusLaporan } from '@/components/laporan/types';
@@ -26,12 +26,12 @@ export default function SuperAdminDashboard() {
   const router = useRouter();
   const { schools: semuaSekolah } = useSekolah();
 
-  const { data: allStudents } = useCachedFirestore<Record<string, any>>({
+  const { data: allStudents, loading: studentsLoading } = useCachedFirestore<Record<string, any>>({
     collectionName: 'students',
     realtime: false,
     enabled: true,
   });
-  const { data: allEmployees } = useCachedFirestore<Record<string, any>>({
+  const { data: allEmployees, loading: employeesLoading } = useCachedFirestore<Record<string, any>>({
     collectionName: 'employees',
     realtime: false,
     enabled: true,
@@ -196,7 +196,7 @@ export default function SuperAdminDashboard() {
         const snap = await getDocs(collection(db!, 'laporan_bulanan'));
         const list: any[] = [];
         snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-        setLaporan(list);
+        setLaporanData(list);
       } catch (err) {
         console.error("Error fetching laporan:", err);
       }
@@ -252,7 +252,7 @@ export default function SuperAdminDashboard() {
 
   ];
 
-  const isStatsLoading = !allStudents || !allEmployees;
+  const isStatsLoading = studentsLoading || employeesLoading;
 
   return (
     <AuthGuard requiredRoles={['super_admin']} requireActive featureName="Dashboard Super Admin">

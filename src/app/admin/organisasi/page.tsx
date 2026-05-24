@@ -4,17 +4,23 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
-import { Building2, Calendar, FileText, Image, Megaphone, LogOut } from 'lucide-react';
+import { Loader2, Building2, Calendar, FileText, Image, Megaphone, LogOut } from 'lucide-react';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 export default function OrganisasiDashboard() {
-  const { user, setUser } = useAppStore();
+  const { user, setUser, isLoadingAuth } = useAppStore();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!user || !['ketua_organisasi'].includes(user.role)) {
-      router.push('/login');
-    }
-  }, [user, router]);
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex items-center gap-3 text-gray-500">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+          <span>Memuat...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) return null;
 
@@ -33,6 +39,7 @@ export default function OrganisasiDashboard() {
   }
 
   return (
+    <AuthGuard requiredRoles={['ketua_organisasi', 'super_admin']} requireActive featureName="Dashboard Organisasi">
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-6 py-4 flex items-center justify-between">
         <div>
@@ -55,7 +62,7 @@ export default function OrganisasiDashboard() {
                 </div>
                 <p className="font-semibold text-gray-900 dark:text-white">{item.label}</p>
               </div>
-              <p className="text-xs text-muted-foreground ml-13">{item.desc}</p>
+              <p className="text-xs text-muted-foreground ml-14">{item.desc}</p>
             </a>
           ))}
         </div>
@@ -68,5 +75,6 @@ export default function OrganisasiDashboard() {
         </div>
       </main>
     </div>
+    </AuthGuard>
   );
 }
