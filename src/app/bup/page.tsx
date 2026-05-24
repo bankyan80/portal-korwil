@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { ArrowLeft, Clock, Search, Loader2, ChevronLeft, ChevronRight, Users, BadgeCheck, UserCheck, Calendar } from 'lucide-react';
+import { ArrowLeft, Clock, Search, Loader2, ChevronLeft, ChevronRight, Users, BadgeCheck, UserCheck, Calendar, ChevronUp, ChevronDown } from 'lucide-react';
+import { useSort } from '@/hooks/useSort';
+import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
 
 interface Pegawai {
@@ -150,18 +152,20 @@ export default function BupPage() {
     return items;
      }, [allData, search]);
 
-  const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const { sorted, sortKey, sortDir, toggle } = useSort(filtered, 'nama');
+
+  const totalPages = Math.ceil(sorted.length / PER_PAGE);
+  const paginated = sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   const summary = useMemo(() => {
     return {
-      total: filtered.length,
-      pns: filtered.filter((p) => p.status_kepegawaian === 'PNS').length,
-      pppk: filtered.filter((p) => p.status_kepegawaian === 'PPPK').length,
-      honor: filtered.filter((p) => p.status_kepegawaian.includes('Honor') || p.status_kepegawaian === 'GTY/PTY' || p.status_kepegawaian === 'Non ASN').length,
-      guru: filtered.filter((p) => p.jenis_ptk === 'Guru').length,
+      total: sorted.length,
+      pns: sorted.filter((p) => p.status_kepegawaian === 'PNS').length,
+      pppk: sorted.filter((p) => p.status_kepegawaian === 'PPPK').length,
+      honor: sorted.filter((p) => p.status_kepegawaian.includes('Honor') || p.status_kepegawaian === 'GTY/PTY' || p.status_kepegawaian === 'Non ASN').length,
+      guru: sorted.filter((p) => p.jenis_ptk === 'Guru').length,
     };
-  }, [filtered]);
+  }, [sorted]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -254,12 +258,12 @@ export default function BupPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 text-left">
+                    <tr className="bg-gray-50 text-left group">
                       <th className="px-3 py-3 font-semibold text-gray-600 w-10">No</th>
-                      <th className="px-3 py-3 font-semibold text-gray-600">Nama</th>
-                      <th className="px-3 py-3 font-semibold text-gray-600 hidden sm:table-cell">Status</th>
-                      <th className="px-3 py-3 font-semibold text-gray-600 hidden md:table-cell max-w-[180px]">Sekolah</th>
-                      <th className="px-3 py-3 font-semibold text-gray-600 whitespace-nowrap hidden md:table-cell">BUP</th>
+                      <SortableHeader label="Nama" sortKey="nama" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="px-3 py-3" />
+                      <SortableHeader label="Status" sortKey="status_kepegawaian" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="px-3 py-3" hideBelow="sm" />
+                      <SortableHeader label="Sekolah" sortKey="sekolah" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="px-3 py-3 max-w-[180px]" hideBelow="md" />
+                      <SortableHeader label="BUP" sortKey="bup_tanggal" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="px-3 py-3 whitespace-nowrap" hideBelow="md" />
                       <th className="px-3 py-3 font-semibold text-gray-600 whitespace-nowrap">Sisa</th>
                     </tr>
                   </thead>

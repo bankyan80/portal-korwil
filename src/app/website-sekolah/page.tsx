@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { ArrowLeft, Globe, Search, ExternalLink, School, MapPin } from 'lucide-react';
+import { useSort } from '@/hooks/useSort';
+import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
 
 interface SekolahWebsite {
@@ -52,6 +54,8 @@ export default function WebsiteSekolahPage() {
       return matchSearch && matchJenjang;
     });
   }, [search, filterJenjang]);
+
+  const { sorted, sortKey, sortDir, toggle } = useSort(filtered, 'nama');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -146,18 +150,18 @@ export default function WebsiteSekolahPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-left">
+                <tr className="bg-gray-50 text-left group">
                   <th className="px-5 py-3 font-semibold text-gray-600">No</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600">Nama Sekolah</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600">NPSN</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600 hidden sm:table-cell">Jenjang</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600 hidden md:table-cell">Desa</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600">Website</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600">Status</th>
+                  <SortableHeader label="Nama Sekolah" sortKey="nama" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="NPSN" sortKey="npsn" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="Jenjang" sortKey="jenjang" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="sm" />
+                  <SortableHeader label="Desa" sortKey="desa" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="md" />
+                  <SortableHeader label="Website" sortKey="url" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="Status" sortKey="status" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filtered.map((s, i) => (
+                {sorted.map((s, i) => (
                   <tr key={s.npsn} className="hover:bg-blue-50/50 transition-colors">
                     <td className="px-5 py-3 text-gray-500">{i + 1}</td>
                     <td className="px-5 py-3 font-medium text-[#0d3b66] whitespace-nowrap">{s.nama}</td>

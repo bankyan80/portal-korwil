@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, School, Building2, MapPin, Loader2 } from 'lucide-react';
+import { useSort } from '@/hooks/useSort';
+import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
 import { getAllDocs, listenToCollection } from '@/lib/firestore';
@@ -75,6 +77,8 @@ export default function DataSDPage() {
   const filtered = schools.filter(s =>
     !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.npsn.includes(search) || s.desa.toLowerCase().includes(search.toLowerCase())
   );
+
+  const { sorted, sortKey, sortDir, toggle } = useSort(filtered, 'name');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -158,20 +162,20 @@ export default function DataSDPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-left">
+                <tr className="bg-gray-50 text-left group">
                   <th className="px-5 py-3 font-semibold text-gray-600">No</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600">Nama Sekolah</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600">NPSN</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600">Status</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600">Akreditasi</th>
-                  <th className="px-5 py-3 font-semibold text-gray-600 hidden md:table-cell">Alamat</th>
+                  <SortableHeader label="Nama Sekolah" sortKey="name" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="NPSN" sortKey="npsn" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="Status" sortKey="status" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="Akreditasi" sortKey="akreditasi" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="Alamat" sortKey="address" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="md" />
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {(() => {
                   if (loading) return <tr><td colSpan={6} className="px-5 py-12 text-center text-gray-400"><Loader2 className="w-5 h-5 animate-spin inline mr-2" />Memuat data...</td></tr>;
                   if (filtered.length === 0) return <tr><td colSpan={6} className="px-5 py-12 text-center text-gray-400">Tidak ada data</td></tr>;
-                  return filtered.map((school, i) => (
+                  return sorted.map((school, i) => (
                   <tr key={school.npsn} className="hover:bg-blue-50/50 transition-colors">
                     <td className="px-5 py-3 text-gray-500">{i + 1}</td>
                     <td className="px-5 py-3 font-medium text-[#0d3b66]">{school.name}</td>

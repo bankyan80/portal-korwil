@@ -5,6 +5,8 @@ import {
   ArrowLeft, WalletMinimal, School, Search, Download, CheckCircle2, XCircle,
   AlertTriangle, Building2, Users, Banknote, Filter, ChevronDown, Loader2
 } from 'lucide-react';
+import { useSort } from '@/hooks/useSort';
+import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
@@ -71,6 +73,8 @@ export default function BosArkasPage() {
       return matchSearch && matchStatus && matchJenjang;
     });
   }, [search, filterStatus, filterJenjang, data]);
+
+  const { sorted, sortKey, sortDir, toggle } = useSort(filtered, 'nama');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -242,19 +246,19 @@ export default function BosArkasPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 text-left">
-                      <th className="px-5 py-3 font-semibold text-gray-600">No</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600">Nama Sekolah</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600">NPSN</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600 hidden sm:table-cell">Jenjang</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600 hidden md:table-cell">Siswa</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600">Alokasi Dana</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600">Status</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600 hidden xl:table-cell">Catatan</th>
-                    </tr>
+                <tr className="bg-gray-50 text-left group">
+                  <th className="px-5 py-3 font-semibold text-gray-600">No</th>
+                  <SortableHeader label="Nama Sekolah" sortKey="nama" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="NPSN" sortKey="npsn" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="Jenjang" sortKey="jenjang" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="sm" />
+                  <SortableHeader label="Siswa" sortKey="jumlahSiswa" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="md" />
+                  <SortableHeader label="Alokasi Dana" sortKey="alokasiDana" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="Status" sortKey="statusValidasi" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="Catatan" sortKey="catatan" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="xl" />
+                </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {filtered.map((s, i) => {
+                    {sorted.map((s, i) => {
                       const Icon = statusIcon[s.statusValidasi];
                       return (
                         <tr key={s.npsn} className="hover:bg-blue-50/50 transition-colors">

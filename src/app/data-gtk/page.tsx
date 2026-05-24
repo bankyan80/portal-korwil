@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Search, Users, BookOpen, BadgeCheck, Download, GraduationCap, Loader2, X, MapPin, Briefcase, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Search, Users, BookOpen, BadgeCheck, Download, GraduationCap, Loader2, X, MapPin, Briefcase, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { useSort } from '@/hooks/useSort';
+import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
 
 interface SchoolGtk {
@@ -114,6 +116,8 @@ export default function DataGTKPage() {
     const q = search.toLowerCase();
     return item.name.toLowerCase().includes(q) || (item.npsn || '').includes(search);
   });
+
+  const { sorted, sortKey, sortDir, toggle } = useSort(filteredData, 'name');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -246,26 +250,53 @@ export default function DataGTKPage() {
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 text-left">
+                  <tr className="bg-gray-50 text-left group">
                     <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600 w-10 text-center">No</th>
-                    <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600">Sekolah / Unit</th>
-                    <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600">NPSN</th>
+                    <th rowSpan={2} onClick={() => toggle('name')} className="px-5 py-3 font-semibold text-gray-600 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <span className="inline-flex items-center gap-1">
+                        Sekolah / Unit
+                        {sortKey === 'name' ? (
+                          sortDir === 'asc' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronUp className="w-3.5 h-3.5 opacity-0 group-hover:opacity-30" />
+                        )}
+                      </span>
+                    </th>
+                    <th rowSpan={2} onClick={() => toggle('npsn')} className="px-5 py-3 font-semibold text-gray-600 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <span className="inline-flex items-center gap-1">
+                        NPSN
+                        {sortKey === 'npsn' ? (
+                          sortDir === 'asc' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronUp className="w-3.5 h-3.5 opacity-0 group-hover:opacity-30" />
+                        )}
+                      </span>
+                    </th>
                     <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Guru</th>
                     <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Tendik</th>
                     <th colSpan={2} className="px-5 py-3 font-semibold text-gray-600 text-center border-b border-gray-200">Total</th>
-                    <th rowSpan={2} className="px-5 py-3 font-semibold text-gray-600">Kepala Sekolah</th>
+                    <th rowSpan={2} onClick={() => toggle('headmaster')} className="px-5 py-3 font-semibold text-gray-600 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <span className="inline-flex items-center gap-1">
+                        Kepala Sekolah
+                        {sortKey === 'headmaster' ? (
+                          sortDir === 'asc' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronUp className="w-3.5 h-3.5 opacity-0 group-hover:opacity-30" />
+                        )}
+                      </span>
+                    </th>
                   </tr>
                   <tr className="bg-gray-50">
-                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">L</th>
-                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">P</th>
-                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">L</th>
-                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">P</th>
-                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">L</th>
-                    <th className="px-3 py-2 font-semibold text-gray-500 text-center text-xs">P</th>
+                    <SortableHeader label="L" sortKey="teachers_l" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center text-xs px-3 py-2" />
+                    <SortableHeader label="P" sortKey="teachers_p" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center text-xs px-3 py-2" />
+                    <SortableHeader label="L" sortKey="staff_l" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center text-xs px-3 py-2" />
+                    <SortableHeader label="P" sortKey="staff_p" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center text-xs px-3 py-2" />
+                    <SortableHeader label="L" sortKey="l" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center text-xs px-3 py-2" />
+                    <SortableHeader label="P" sortKey="p" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center text-xs px-3 py-2" />
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {filteredData.map((item, i) => (
+                  {sorted.map((item, i) => (
                     <tr key={item.name} className="hover:bg-blue-50/50 transition-colors">
                       <td className="px-5 py-3 text-gray-500 text-center">{i + 1}</td>
                       <td className="px-5 py-3 font-medium text-[#0d3b66]">

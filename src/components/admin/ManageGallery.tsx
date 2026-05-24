@@ -19,6 +19,8 @@ import {
 import {
   Search, Plus, Pencil, Trash2, Camera, CheckCircle, XCircle, Clock, ImagePlus, Loader2, FileImage,
 } from 'lucide-react';
+import { useSort } from '@/hooks/useSort';
+import { SortableHeader } from '@/components/ui/SortableHeader';
 import { toast } from 'sonner';
 import type { GalleryItem, GalleryCategory, GalleryStatus, GalleryImageFile } from '@/types';
 import { useGalleryCrud } from '@/hooks/use-firestore-crud';
@@ -243,6 +245,8 @@ export function ManageGallery() {
      return matchesSearch && matchesTab;
    });
 
+   const { sorted, sortKey, sortDir, toggle } = useSort(filtered, 'title');
+
    const tabCounts = {
      semua: crud.items.length,
      pending: crud.items.filter((g) => g.status === 'pending').length,
@@ -288,18 +292,18 @@ export function ManageGallery() {
             <div className="rounded-xl border bg-card overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
+                  <TableRow className="bg-muted/50 group">
                     <TableHead className="w-12 text-center">No</TableHead>
-                    <TableHead>Judul</TableHead>
-                    <TableHead className="hidden sm:table-cell">Kategori</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Penulis</TableHead>
-                    <TableHead className="hidden lg:table-cell">Tanggal</TableHead>
+                    <SortableHeader label="Judul" sortKey="title" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                    <SortableHeader label="Kategori" sortKey="category" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="sm" />
+                    <SortableHeader label="Status" sortKey="status" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center" />
+                    <SortableHeader label="Penulis" sortKey="authorName" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="md" />
+                    <SortableHeader label="Tanggal" sortKey="createdAt" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="lg" />
                     <TableHead className="text-center">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((item, idx) => {
+                  {sorted.map((item, idx) => {
                     const sc = statusConfig[item.status];
                     return (
                       <TableRow key={item.id}>

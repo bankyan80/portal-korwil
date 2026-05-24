@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Search, Plus, Pencil, Trash2, Megaphone, CheckCircle, XCircle, Clock, Loader2, AlertCircle } from 'lucide-react';
+import { useSort } from '@/hooks/useSort';
+import { SortableHeader } from '@/components/ui/SortableHeader';
 import { toast } from 'sonner';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
 import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTable';
@@ -57,6 +59,8 @@ export function ManageBerita() {
     const q = search.toLowerCase();
     return !search.trim() || item.title.toLowerCase().includes(q) || item.authorName.toLowerCase().includes(q);
   });
+
+  const { sorted, sortKey, sortDir, toggle } = useSort(filtered, 'title');
 
   const openAdd = useCallback(async () => {
     setEditingId(null);
@@ -170,17 +174,17 @@ export function ManageBerita() {
         <div className="rounded-xl border bg-card overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
+              <TableRow className="bg-muted/50 group">
                 <TableHead className="w-12 text-center">No</TableHead>
-                <TableHead>Judul</TableHead>
-                <TableHead className="hidden sm:table-cell">Status</TableHead>
-                <TableHead className="hidden md:table-cell">Penulis</TableHead>
-                <TableHead className="hidden lg:table-cell">Tanggal</TableHead>
+                <SortableHeader label="Judul" sortKey="title" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                <SortableHeader label="Status" sortKey="status" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="sm" />
+                <SortableHeader label="Penulis" sortKey="authorName" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="md" />
+                <SortableHeader label="Tanggal" sortKey="createdAt" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="lg" />
                 <TableHead className="text-center">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((item, idx) => {
+              {sorted.map((item, idx) => {
                 const sc = statusConfig[item.status] || statusConfig.draft;
                 return (
                   <TableRow key={item.id}>

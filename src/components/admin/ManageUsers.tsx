@@ -15,6 +15,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Users, Mail, Shield, Search, RefreshCw, Building2, School, Pencil, Save, Plus, Loader2 } from 'lucide-react';
+import { useSort } from '@/hooks/useSort';
+import { SortableHeader } from '@/components/ui/SortableHeader';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { UserProfile, UserRole } from '@/types';
@@ -186,8 +188,10 @@ export function ManageUsers() {
     );
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const { sorted, sortKey, sortDir, toggle } = useSort(filtered, 'displayName');
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (loading) return <AdminTableSkeleton />;
 
@@ -221,13 +225,13 @@ export function ManageUsers() {
         <div className="rounded-xl border bg-card overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
+              <TableRow className="bg-muted/50 group">
                 <TableHead className="w-12 text-center">No</TableHead>
-                <TableHead>Nama</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead className="text-center">Role</TableHead>
-                <TableHead className="hidden md:table-cell">Sekolah/Organisasi</TableHead>
-                <TableHead className="hidden xl:table-cell">Terdaftar</TableHead>
+                <SortableHeader label="Nama" sortKey="displayName" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                <SortableHeader label="Email" sortKey="email" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="md" />
+                <SortableHeader label="Role" sortKey="role" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center" />
+                <SortableHeader label="Sekolah/Organisasi" sortKey="schoolName" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="md" />
+                <SortableHeader label="Terdaftar" sortKey="createdAt" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="xl" />
               </TableRow>
             </TableHeader>
             <TableBody>

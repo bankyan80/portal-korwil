@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowLeft, Heart, Loader2, FileDown, Printer } from 'lucide-react';
+import { useSort } from '@/hooks/useSort';
+import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
@@ -46,6 +48,8 @@ export default function YatimPiatuPage() {
     yatim: data.filter(d => d.kategori === 'yatim').length,
     piatu: data.filter(d => d.kategori === 'piatu').length,
   }), [data]);
+
+  const { sorted, sortKey, sortDir, toggle } = useSort(data, 'nama');
 
   const exportExcel = useCallback(() => {
     const rows = data.map((d, i) => ({
@@ -136,13 +140,13 @@ export default function YatimPiatuPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm" id="yatim-piatu-table">
                   <thead>
-                    <tr className="bg-gray-50 text-left">
+                    <tr className="bg-gray-50 text-left group">
                       <th className="px-5 py-3 font-semibold text-gray-600">No</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600">NIK</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600">Nama</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600">Sekolah</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600 hidden md:table-cell">Desa</th>
-                      <th className="px-5 py-3 font-semibold text-gray-600">Kategori</th>
+                      <SortableHeader label="NIK" sortKey="nik" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                      <SortableHeader label="Nama" sortKey="nama" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                      <SortableHeader label="Sekolah" sortKey="sekolah" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                      <SortableHeader label="Desa" sortKey="desa" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="md" />
+                      <SortableHeader label="Kategori" sortKey="kategori" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -153,7 +157,7 @@ export default function YatimPiatuPage() {
                         </td>
                       </tr>
                     ) : (
-                      data.map((d, i) => (
+                      sorted.map((d, i) => (
                         <tr key={d.id || d.nik} className="hover:bg-blue-50/50 transition-colors">
                           <td className="px-5 py-3 text-gray-500">{i + 1}</td>
                           <td className="px-5 py-3 font-mono text-xs text-gray-500">{d.nik}</td>

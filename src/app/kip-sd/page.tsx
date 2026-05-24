@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { ArrowLeft, WalletMinimal, Loader2, School } from 'lucide-react';
+import { useSort } from '@/hooks/useSort';
+import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
 
 interface SekolahSummary {
@@ -66,6 +68,8 @@ export default function KipSdPage() {
   const totalL = data.reduce((a, s) => a + s.l, 0);
   const totalP = data.reduce((a, s) => a + s.p, 0);
 
+  const { sorted, sortKey, sortDir, toggle } = useSort(data, 'sekolah');
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="sticky top-0 z-50 bg-gradient-to-b from-[#1a5276] to-[#0d3b66]">
@@ -117,19 +121,19 @@ export default function KipSdPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 text-left">
-                    <th className="px-5 py-3 font-semibold text-gray-600 w-12">No</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600">Sekolah</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">L</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">P</th>
-                    <th className="px-5 py-3 font-semibold text-gray-600 text-center">Total</th>
-                  </tr>
+                <tr className="bg-gray-50 text-left group">
+                  <th className="px-5 py-3 font-semibold text-gray-600 w-12">No</th>
+                  <SortableHeader label="Sekolah" sortKey="sekolah" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                  <SortableHeader label="L" sortKey="l" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center" />
+                  <SortableHeader label="P" sortKey="p" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center" />
+                  <SortableHeader label="Total" sortKey="total" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="text-center" />
+                </tr>
                 </thead>
                 <tbody className="divide-y">
                   {data.length === 0 ? (
                     <tr><td colSpan={5} className="px-5 py-10 text-center text-gray-400 text-sm">Tidak ada data penerima PIP</td></tr>
                   ) : (
-                    data.map((s, i) => (
+                    sorted.map((s, i) => (
                       <tr key={s.sekolah} className="hover:bg-blue-50/50 transition-colors">
                         <td className="px-5 py-3 text-gray-500">{i + 1}</td>
                         <td className="px-5 py-3 font-medium text-[#0d3b66]">{s.sekolah}</td>
