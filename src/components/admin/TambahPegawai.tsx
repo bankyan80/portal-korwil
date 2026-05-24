@@ -95,8 +95,10 @@ export default function TambahPegawai() {
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
+        toast.success(`${nama.trim()} ditambahkan`);
+      } else {
+        toast.error('Database tidak tersedia, coba lagi');
       }
-      toast.success(`${nama.trim()} ditambahkan`);
       resetForm();
     } catch (e) {
       console.error('Error adding pegawai:', e);

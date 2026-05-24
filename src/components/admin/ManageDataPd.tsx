@@ -227,9 +227,11 @@ export function ManageDataPd() {
 
   async function handleSave() {
     if (!form.nama.trim() || !form.nik.trim()) { toast.error('Nama dan NIK harus diisi'); return; }
+    const cleanNik = form.nik.replace(/\D/g, '');
+    if (cleanNik.length !== 16) { toast.error('NIK harus 16 digit angka'); return; }
     setSaving(true);
     try {
-      const data = { ...form, schoolId: user?.schoolId || '', nisn: form.nisn || '', createdAt: Date.now(), updatedAt: Date.now() };
+      const data = { ...form, nik: cleanNik, schoolId: user?.schoolId || '', nisn: form.nisn || '', createdAt: Date.now(), updatedAt: Date.now() };
       if (!db) {
         if (editingId) setAllSiswa(prev => prev.map(s => s.id === editingId ? { ...s, ...data } : s));
         else setAllSiswa(prev => [{ id: Date.now().toString(), ...data }, ...prev]);
@@ -539,7 +541,7 @@ export function ManageDataPd() {
           <DialogHeader><DialogTitle>{editingId ? 'Edit Data Siswa' : 'Tambah Data Siswa'}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>NIK *</Label><Input value={form.nik} onChange={(e) => setForm(f => ({ ...f, nik: e.target.value }))} maxLength={16} /></div>
+              <div className="space-y-2"><Label>NIK *</Label><Input value={form.nik} onChange={(e) => setForm(f => ({ ...f, nik: e.target.value.replace(/\D/g, '').slice(0, 16) }))} maxLength={16} /></div>
               <div className="space-y-2"><Label>NISN</Label><Input value={form.nisn} onChange={(e) => setForm(f => ({ ...f, nisn: e.target.value }))} /></div>
             </div>
             <div className="space-y-2"><Label>Nama Lengkap *</Label><Input value={form.nama} onChange={(e) => setForm(f => ({ ...f, nama: e.target.value }))} /></div>

@@ -82,6 +82,7 @@ function FormPendaftaranContent() {
       toast.error('Mohon lengkapi semua data wajib (*)');
       return;
     }
+    if (nik.length !== 16) { toast.error('NIK harus 16 digit'); return; }
 
     const usia = hitungUsia(tanggalLahir);
     if (usia < MIN_USIA) {
