@@ -513,11 +513,6 @@ export default function MappingPegawaiPage() {
       if (!cachedRows) setFirebaseStatus('error');
       setLoading(false);
     }
-    load(); {
-      if (!cachedRows) setDataStatus('error');
-        setLoading(false);
-      }
-    }
     load();
     return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
   }, []);

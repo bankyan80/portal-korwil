@@ -111,7 +111,7 @@ export default function DokumenBersamaPage() {
       formData.append('sekolahId', user?.schoolId || pegawai.schoolId || '');
 
       setUploadProgress('uploading');
-      const uploadRes = await fetch('/api/supabase/upload', {
+      const uploadRes = await fetch('/api/drive/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -123,7 +123,7 @@ export default function DokumenBersamaPage() {
       }
 
       const uploadData = await uploadRes.json();
-      const supabaseData = uploadData.data;
+      const driveData = uploadData.data;
 
       setUploadProgress('saving');
       await addDoc(collection(db!, 'dokumen'), {
@@ -136,16 +136,16 @@ export default function DokumenBersamaPage() {
         fileType: file.type,
         fileSize: file.size,
         file: {
-          provider: 'supabase',
-          bucket: supabaseData.bucket,
-          fileName: supabaseData.fileName,
-          originalName: supabaseData.originalName,
-          storagePath: supabaseData.storagePath,
-          fileUrl: supabaseData.fileUrl,
-          mimeType: supabaseData.mimeType,
-          size: supabaseData.size,
-          uploadedAt: supabaseData.uploadedAt,
-          uploadedBy: supabaseData.uploadedBy,
+          provider: 'google_drive',
+          driveFileId: driveData.driveFileId,
+          fileName: driveData.fileName,
+          originalName: file.name,
+          fileUrl: driveData.webViewLink,
+          webContentLink: driveData.webContentLink,
+          mimeType: driveData.mimeType,
+          size: driveData.size,
+          uploadedAt: driveData.uploadedAt,
+          uploadedBy: driveData.uploadedBy,
         },
         uploadedAt: serverTimestamp(),
       });

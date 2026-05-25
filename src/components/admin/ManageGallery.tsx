@@ -110,7 +110,7 @@ export function ManageGallery() {
      setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
    }, []);
 
-  async function uploadImageToSupabase(file: File): Promise<{ url: string; metadata: GalleryImageFile }> {
+  async function uploadImageToDrive(file: File): Promise<{ url: string; metadata: GalleryImageFile }> {
     let fileToUpload: File | Blob = file;
     if (file.size > 3 * 1024 * 1024) {
       fileToUpload = await compressImage(file, 1200, 0.7);
@@ -125,7 +125,7 @@ export function ManageGallery() {
     formData.append('kategori', 'galeri');
     if (user?.schoolId) formData.append('sekolahId', user.schoolId);
 
-    const res = await fetch('/api/supabase/upload', {
+    const res = await fetch('/api/drive/upload', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -137,16 +137,17 @@ export function ManageGallery() {
     }
 
     const data = await res.json();
+    const d = data.data;
     return {
-      url: data.data.fileUrl,
+      url: d.webViewLink,
       metadata: {
-        driveFileId: data.data.fileName,
-        fileName: data.data.fileName,
-        mimeType: data.data.mimeType,
-        size: data.data.size,
-        webViewLink: data.data.fileUrl,
-        webContentLink: data.data.fileUrl,
-        uploadedAt: data.data.uploadedAt,
+        driveFileId: d.driveFileId,
+        fileName: d.fileName,
+        mimeType: d.mimeType,
+        size: d.size,
+        webViewLink: d.webViewLink,
+        webContentLink: d.webContentLink || d.webViewLink,
+        uploadedAt: d.uploadedAt,
       },
     };
   }
@@ -172,7 +173,7 @@ export function ManageGallery() {
             setUploadPhase('uploading');
             setUploadProgress(Math.round(((i) / selectedFiles.length) * 100));
 
-            const result = await uploadImageToSupabase(file);
+            const result = await uploadImageToDrive(file);
             imageUrls.push(result.url);
             imageFiles.push(result.metadata);
           }

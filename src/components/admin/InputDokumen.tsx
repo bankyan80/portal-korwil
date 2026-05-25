@@ -160,7 +160,7 @@ export default function InputDokumenPage() {
           formData.append('sekolahId', pegawai.sekolah?.toLowerCase().replace(/\s+/g, '-') || '');
           formData.append('uploadedBy', currentUser.uid);
 
-          const uploadRes = await fetch('/api/supabase/upload', {
+          const uploadRes = await fetch('/api/drive/upload', {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
             body: formData,
@@ -172,7 +172,7 @@ export default function InputDokumenPage() {
           }
 
           const uploadData = await uploadRes.json();
-          const supabaseData = uploadData.data;
+          const driveData = uploadData.data;
 
          setUploadProgress(50 + Math.round(((i + 1) / files.length) * 50));
          setUploadPhase('saving');
@@ -185,16 +185,16 @@ export default function InputDokumenPage() {
             fileType: fileToUpload.type || file.type,
             fileSize: fileToUpload.size,
             file: {
-              provider: 'supabase',
-              bucket: supabaseData.bucket,
-              fileName: supabaseData.fileName,
-              originalName: supabaseData.originalName,
-              storagePath: supabaseData.storagePath,
-              fileUrl: supabaseData.fileUrl,
-              mimeType: supabaseData.mimeType,
-              size: supabaseData.size,
-              uploadedAt: supabaseData.uploadedAt,
-              uploadedBy: supabaseData.uploadedBy,
+              provider: 'google_drive',
+              driveFileId: driveData.driveFileId,
+              fileName: driveData.fileName,
+              originalName: file.name,
+              fileUrl: driveData.webViewLink,
+              webContentLink: driveData.webContentLink,
+              mimeType: driveData.mimeType,
+              size: driveData.size,
+              uploadedAt: driveData.uploadedAt,
+              uploadedBy: driveData.uploadedBy,
             },
             uploadedAt: Date.now(),
           });
@@ -208,16 +208,16 @@ export default function InputDokumenPage() {
             fileType: fileToUpload.type || file.type,
             fileSize: fileToUpload.size,
             file: {
-              provider: 'supabase',
-              bucket: supabaseData.bucket,
-              fileName: supabaseData.fileName,
-              originalName: supabaseData.originalName,
-              storagePath: supabaseData.storagePath,
-              fileUrl: supabaseData.fileUrl,
-              mimeType: supabaseData.mimeType,
-              size: supabaseData.size,
-              uploadedAt: supabaseData.uploadedAt,
-              uploadedBy: supabaseData.uploadedBy,
+              provider: 'google_drive',
+              driveFileId: driveData.driveFileId,
+              fileName: driveData.fileName,
+              originalName: file.name,
+              fileUrl: driveData.webViewLink,
+              webContentLink: driveData.webContentLink,
+              mimeType: driveData.mimeType,
+              size: driveData.size,
+              uploadedAt: driveData.uploadedAt,
+              uploadedBy: driveData.uploadedBy,
             },
             uploadedAt: Date.now(),
           });
