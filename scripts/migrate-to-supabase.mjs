@@ -59,11 +59,22 @@ async function migrate(table, jsonFile) {
   let inserted = 0, skipped = 0, errors = 0;
 
   // Batch upsert (50 per batch)
+  // Kolom yang valid per tabel (sesuai schema)
+  const ALLOWED_COLUMNS = {
+    employees: new Set(['nik','nama','nuptk','jk','tempat_lahir','tanggal_lahir','nip','status_kepegawaian','jenis_ptk','agama','tugas_tambahan','sertifikasi','tmt','sekolah','role','file_pdf_url','verified','created_at','updated_at']),
+    students: new Set(['nik','nama','nisn','jk','tempat_lahir','tanggal_lahir','agama','alamat','sekolah','kelas','rombel','file_pdf_url','verified','created_at','updated_at']),
+  };
+  const allowed = ALLOWED_COLUMNS[table] || null;
+
   const BATCH = 50;
   for (let i = 0; i < data.length; i += BATCH) {
     const batch = data.slice(i, i + BATCH).map(row => {
-      const record = { ...row, updated_at: new Date().toISOString() };
+      let record = { ...row, updated_at: new Date().toISOString() };
       delete record.id; // tidak ada field id di JSON
+      if (allowed) {
+        // Hanya ambil kolom yang diizinkan
+        record = Object.fromEntries(Object.entries(record).filter(([k]) => allowed.has(k)));
+      }
       return record;
     });
 
