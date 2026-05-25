@@ -38,7 +38,8 @@ export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) 
       !institutionLinksHook.loading;
 
     if (allLoaded) {
-      const useMock = !db && allEmpty(
+      const mockEnabled = process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false';
+      const useMock = mockEnabled && !db && allEmpty(
         menusHook.items,
         announcementsHook.items,
         galleryHook.items,

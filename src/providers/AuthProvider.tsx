@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, getIdToken } from 'firebase/auth';
+import { onAuthStateChanged, onIdTokenChanged, getIdToken } from 'firebase/auth';
 import {
   doc, getDoc, setDoc, collection, query, limit, getDocs,
   getCountFromServer,
@@ -27,6 +27,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const firestore = db as Firestore;
     const firebaseAuth = auth as Auth;
+
+    const unsubscribeToken = onIdTokenChanged(firebaseAuth, async (user) => {
+      if (user) {
+        const token = await getIdToken(user);
+        document.cookie = `auth-token=${token}; path=/; max-age=3600; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+      }
+    });
 
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -108,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoadingAuth(false);
     });
 
-    return () => unsubscribe();
+    return () => { unsubscribe(); unsubscribeToken(); };
   }, [setUser, setLoadingAuth]);
 
   return <>{children}</>;

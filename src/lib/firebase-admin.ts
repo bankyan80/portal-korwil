@@ -1,4 +1,4 @@
-import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { cert, getApps, getApp, initializeApp } from 'firebase-admin/app';
 import type { ServiceAccount } from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -95,8 +95,8 @@ export const isFirebaseAdminConfigured = Boolean(
   serviceAccount?.projectId
 );
 
-const app = isFirebaseAdminConfigured && !getApps().length && serviceAccount
-  ? initializeApp({ credential: cert(serviceAccount) })
+const app = isFirebaseAdminConfigured && serviceAccount
+  ? (getApps().length ? getApp() : initializeApp({ credential: cert(serviceAccount) }))
   : null;
 
 export const adminAuth = app ? getAuth(app) : null;

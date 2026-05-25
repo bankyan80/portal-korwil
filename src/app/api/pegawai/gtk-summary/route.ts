@@ -7,7 +7,7 @@ import { allSekolah } from '@/data/sekolah';
 import { getAllPegawai } from '@/services/pegawai.service';
 import { getCanonicalSchoolName, getNpsnBySchool } from '@/lib/normalize';
 
-const SHEETS = [
+const HARDCODED_SHEETS: { url: string; sekolah: string }[] = [
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR4PhpkeqQjr9cbHrEoGwgQW9CvqVBA1D0--o1ZhXv_OaBqNPddwAHs_PZCsgXP-g/pub?gid=296347908&single=true&output=csv', sekolah: 'SD NEGERI 1 ASEM' },
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vThPc1fGt2M1KTJmm6X2eJvSEMQIIgNn8QBCtcwLQN9zGjc0TLZDJTwREBOYzX0qQ/pub?gid=430985553&single=true&output=csv', sekolah: 'SD NEGERI 1 ASEM' },
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTtIJapNJgcZ2Z0GR83o916wOHGwt-W0KiQtaC0-mtvL8KpUVBOKWJCaD1TK8DMAA/pub?gid=1187748548&single=true&output=csv', sekolah: 'TK GELATIK' },
@@ -18,6 +18,17 @@ const SHEETS = [
   { url: 'https://docs.google.com/spreadsheets/d/1HD28oILkZ5X-wZn7bSYNeWQgucS1cFVp/export?format=csv', sekolah: 'KB MUTIARA' },
   { url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ202X-T9rAo8Lq3x6WVGyJkPfd9x4q69CFFu-I16OHQ20KtmVRTCWxznuuFgLiyA/pub?gid=1329436018&single=true&output=csv', sekolah: 'KB MUTIARA' },
 ];
+
+const SHEETS = (() => {
+  try {
+    const env = process.env.GTK_SHEET_URLS;
+    if (env) {
+      const parsed = JSON.parse(env) as { url: string; sekolah: string }[];
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  } catch {}
+  return HARDCODED_SHEETS;
+})();
 
 let dataCache: any[] = [];
 let cacheTime = 0;
