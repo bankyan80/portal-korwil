@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
 import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
+import { getAllPegawai } from '@/services/pegawai.service';
 
 function isPns(status: string): boolean {
   return status === 'PNS' || status === 'PPPK';
@@ -25,19 +23,6 @@ function getBupDate(tanggalLahir: string): string {
   return `${months[month - 1] || ''} ${year}`;
 }
 
-function loadStaticData(): any[] {
-  const p = path.join(process.cwd(), 'src', 'data', 'data-pegawai.json');
-  return JSON.parse(fs.readFileSync(p, 'utf-8'));
-}
-
-async function loadFromFirestore(): Promise<any[]> {
-  if (!isFirebaseAdminConfigured || !adminDb) return [];
-  try {
-    const snap = await adminDb.collection('employees').get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch { return []; }
-}
-
 export async function GET(req: NextRequest) {
   try {
     const token = req.cookies.get('auth-token')?.value;
@@ -52,10 +37,7 @@ export async function GET(req: NextRequest) {
 
     const cleanNik = nik.replace(/\D/g, '');
 
-    const employees = await loadFromFirestore();
-    const allData = employees.length > 0 ? employees : loadStaticData();
-
-    const pegawai = allData.find((p: any) => p.nik === cleanNik);
+    const pegawai = (await getAllPegawai()).find((p: any) => p.nik === cleanNik);
     if (!pegawai) {
       return NextResponse.json({ found: false, error: 'Pegawai tidak ditemukan' });
     }

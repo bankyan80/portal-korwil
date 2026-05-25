@@ -1,36 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
 import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
-
-let dataCache: any[] | null = null;
-
-function loadStaticData() {
-  if (dataCache) return dataCache;
-  const p = path.join(process.cwd(), 'src', 'data', 'data-pegawai.json');
-  const raw = fs.readFileSync(p, 'utf-8');
-  dataCache = JSON.parse(raw);
-  return dataCache;
-}
-
-async function loadAllFromFirestore(): Promise<any[]> {
-  if (!isFirebaseAdminConfigured || !adminDb) return [];
-  try {
-    const snap = await adminDb.collection('employees').get();
-    const items: any[] = [];
-    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-    return items;
-  } catch {
-    return [];
-  }
-}
-
-async function loadAllData(): Promise<any[]> {
-  const employees = await loadAllFromFirestore();
-  if (employees.length > 0) return employees;
-  return loadStaticData() || [];
-}
+import { getAllPegawai } from '@/services/pegawai.service';
 
 export async function GET(req: NextRequest) {
   // Verify auth - only authenticated users can lookup employees
@@ -44,7 +14,7 @@ export async function GET(req: NextRequest) {
   const search = req.nextUrl.searchParams.get('search')?.toLowerCase();
   const sekolah = req.nextUrl.searchParams.get('sekolah');
 
-  const all = await loadAllData();
+  const all = await getAllPegawai();
 
   if (nik) {
     const match = all.find((s: any) => s.nik === nik);
