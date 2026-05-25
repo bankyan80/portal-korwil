@@ -78,6 +78,63 @@ export async function PUT(
     updateData.updatedAt = Date.now();
     await docRef.set(updateData, { merge: true });
 
+    // Sync ke Google Sheets
+    try {
+      const { google } = await import('googleapis');
+      const { readFileSync, readdirSync, existsSync } = await import('fs');
+      const { join } = await import('path');
+
+      function loadSA() {
+        const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+        if (envVal && envVal !== '""') {
+          try { return JSON.parse(envVal); } catch {}
+          try { return JSON.parse(Buffer.from(envVal, 'base64').toString('utf-8')); } catch {}
+        }
+        const saDir = join(process.cwd(), 'service-account');
+        if (existsSync(saDir)) {
+          const files = readdirSync(saDir).filter(f => f.endsWith('.json'));
+          if (files.length) return JSON.parse(readFileSync(join(saDir, files[0]), 'utf-8'));
+        }
+        return null;
+      }
+
+      const creds = loadSA();
+      const sheetId = process.env.GOOGLE_SHEET_ID;
+      if (creds && sheetId) {
+        const auth = new google.auth.GoogleAuth({ credentials: creds, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const res = await sheets.spreadsheets.values.get({
+          spreadsheetId: sheetId,
+          range: 'data_pegawai!A:Z',
+          majorDimension: 'ROWS',
+        });
+        const values = res.data.values || [];
+        if (values.length >= 2) {
+          const headers = values[0].map((h: string) => h.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
+          const nikCol = headers.findIndex((h: string) => h.includes('nik'));
+          if (nikCol >= 0) {
+            const rowIdx = values.findIndex((row: string[], i: number) => i > 0 && row[nikCol]?.toString().trim() === nik);
+            if (rowIdx >= 0) {
+              const row = headers.map((h: string) => {
+                if (h === 'updated_at') return new Date().toISOString();
+                if (h === 'nik' && renamedNik) return renamedNik;
+                return body[h] !== undefined ? String(body[h]) : (values[rowIdx][headers.indexOf(h)] || '');
+              });
+              await sheets.spreadsheets.values.update({
+                spreadsheetId: sheetId,
+                range: `data_pegawai!A${rowIdx + 1}`,
+                valueInputOption: 'USER_ENTERED',
+                requestBody: { values: [row] },
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.log('[sync-to-sheets] non-fatal:', e);
+    }
+
     // If NIK changed, copy to new document and delete old
     if (renamedNik && renamedNik !== nik) {
       const fullData = (await docRef.get()).data();
