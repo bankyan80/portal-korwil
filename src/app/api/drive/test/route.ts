@@ -48,13 +48,13 @@ export async function GET() {
 
     // Get root folder or list files
     const driveRes = await drive.files.list({
-      q: `'1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ' in parents and trashed=false`,
+      q: `'${process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ'}' in parents and trashed=false`,
       fields: 'files(id, name, mimeType, createdTime)',
       pageSize: 10,
     });
 
     results.driveApiConnected = true;
-    results.folderId = '1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ';
+    results.folderId = process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ';
     results.filesInFolder = driveRes.data.files?.length || 0;
     results.files = driveRes.data.files?.map(f => ({
       name: f.name,
@@ -75,7 +75,7 @@ export async function GET() {
       requestBody: {
         name: 'Test Connection - Portal Korwil',
         mimeType: 'application/vnd.google-apps.spreadsheet',
-        parents: ['1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ'],
+        parents: [process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ'],
       },
       fields: 'id, name, webViewLink',
     });

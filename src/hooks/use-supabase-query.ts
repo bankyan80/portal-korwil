@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 
 export interface SupabaseQueryResult<T> {
@@ -21,7 +21,55 @@ export function useSupabaseQuery<T extends Record<string, unknown>>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const optionsRef = useRef(options);
+  useEffect(() => { optionsRef.current = options; }, [options]);
+
+  useEffect(() => {
+    const currentOptions = optionsRef.current;
+
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+
+      if (!isSupabaseConfigured()) {
+        setItems([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        let query = supabase.from(table).select('*');
+
+        if (currentOptions?.filters) {
+          for (const f of currentOptions.filters) {
+            query = query.eq(f.column, f.value);
+          }
+        }
+
+        if (currentOptions?.orderBy) {
+          query = query.order(currentOptions.orderBy.column, {
+            ascending: currentOptions.orderBy.ascending ?? true,
+          });
+        }
+
+        const { data, error: fetchError } = await query;
+
+        if (fetchError) throw fetchError;
+        setItems((data as T[]) || []);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Gagal memuat data';
+        setError(msg);
+        console.error(`[useSupabaseQuery] ${table}:`, err);
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [table]);
+
+  const refresh = async () => {
     setLoading(true);
     setError(null);
 
@@ -33,16 +81,17 @@ export function useSupabaseQuery<T extends Record<string, unknown>>(
 
     try {
       let query = supabase.from(table).select('*');
+      const currentOptions = optionsRef.current;
 
-      if (options?.filters) {
-        for (const f of options.filters) {
+      if (currentOptions?.filters) {
+        for (const f of currentOptions.filters) {
           query = query.eq(f.column, f.value);
         }
       }
 
-      if (options?.orderBy) {
-        query = query.order(options.orderBy.column, {
-          ascending: options.orderBy.ascending ?? true,
+      if (currentOptions?.orderBy) {
+        query = query.order(currentOptions.orderBy.column, {
+          ascending: currentOptions.orderBy.ascending ?? true,
         });
       }
 
@@ -58,13 +107,9 @@ export function useSupabaseQuery<T extends Record<string, unknown>>(
     } finally {
       setLoading(false);
     }
-  }, [table, JSON.stringify(options)]);
+  };
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return { items, loading, error, refresh: fetchData };
+  return { items, loading, error, refresh };
 }
 
 export function useSupabaseEmployees(options?: {

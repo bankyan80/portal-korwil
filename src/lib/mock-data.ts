@@ -1,6 +1,7 @@
 // ============================================================
 // Portal Pendidikan Kecamatan Lemahabang - Mock Data
 // ============================================================
+// DEVELOPMENT-ONLY: Synthetic data for local testing.
 // Comprehensive mock data used when Firebase is not configured.
 // All text is in Indonesian (Bahasa Indonesia) to match the
 // government education portal context.

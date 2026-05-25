@@ -51,7 +51,6 @@ export function useCachedFirestore<T extends { id?: string }>(
     const q = query(collection(db, collectionName), ...constraints);
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as T));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collectionName, constraintsKey]);
 
   const loadFromCacheThenRefresh = useCallback(async () => {
@@ -134,7 +133,6 @@ export function useCachedFirestore<T extends { id?: string }>(
         unsubscribeRef.current = null;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collectionName, constraintsKey, realtime, enabled, cacheKeyStr]);
 
   const refresh = useCallback(async () => {

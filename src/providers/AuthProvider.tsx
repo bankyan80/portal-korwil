@@ -75,10 +75,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Try to write back to Firestore only when NOT offline
             if (!isOffline) {
               try {
-                const q = query(collection(firestore, 'users'), limit(1));
-                const allUsersSnapshot = await getDocs(q);
-                if (userProfile?.role !== 'super_admin' && allUsersSnapshot.empty) {
-                  userProfile = { ...userProfile, role: 'super_admin' as const };
+                if (process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production') {
+                  const q = query(collection(firestore, 'users'), limit(1));
+                  const allUsersSnapshot = await getDocs(q);
+                  if (userProfile?.role !== 'super_admin' && allUsersSnapshot.empty) {
+                    userProfile = { ...userProfile, role: 'super_admin' as const };
+                  }
                 }
                 await setDoc(doc(firestore, 'users', firebaseUser.uid), userProfile as UserProfile);
               } catch {}

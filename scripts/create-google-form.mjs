@@ -146,7 +146,6 @@ async function main() {
     requestBody: {
       info: {
         title: TITLE,
-        description: DESCRIPTION,
       },
     },
   });

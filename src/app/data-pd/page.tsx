@@ -114,7 +114,8 @@ export default function DataPDPage() {
   const [loading, setLoading] = useState(true);
 
   const schoolsRef = useRef(schools);
-  schoolsRef.current = schools;
+
+  useEffect(() => { schoolsRef.current = schools; }, [schools]);
 
   const refreshInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 

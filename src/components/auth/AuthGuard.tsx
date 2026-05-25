@@ -37,18 +37,6 @@ export default function AuthGuard({
     return () => clearTimeout(timer);
   }, [isLoadingAuth])
 
-  if (authTimedOut && isLoadingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900">
-        <div className="text-center max-w-md px-4">
-          <p className="text-sm text-red-600 dark:text-red-400 mb-2">Gagal memeriksa akses. Silakan coba lagi.</p>
-          <button onClick={() => { setAuthTimedOut(false); window.location.reload(); }}
-            className="text-sm text-blue-600 hover:underline">Muat ulang</button>
-        </div>
-      </div>
-    )
-  }
-
   useEffect(() => {
     if (isLoadingAuth) return
 
@@ -79,6 +67,18 @@ export default function AuthGuard({
     setAccessStatus('granted')
     setValidated(true)
   }, [user, isLoadingAuth, requiredRoles, requireActive, requireSchool, router, pathname])
+
+  if (authTimedOut && isLoadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900">
+        <div className="text-center max-w-md px-4">
+          <p className="text-sm text-red-600 dark:text-red-400 mb-2">Gagal memeriksa akses. Silakan coba lagi.</p>
+          <button onClick={() => { setAuthTimedOut(false); window.location.reload(); }}
+            className="text-sm text-blue-600 hover:underline">Muat ulang</button>
+        </div>
+      </div>
+    )
+  }
 
   if (accessStatus === 'checking' || !validated) {
     return (

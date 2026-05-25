@@ -82,7 +82,7 @@ export default function OperatorDashboard() {
       const json = await res.json();
       if (json.success) setTugasList(json.tasks);
     } catch (e) { console.error(e); } finally { setTugasLoading(false); }
-  }, [user?.schoolId, user?.schoolName]);
+  }, [user]);
 
   useEffect(() => {
     fetchTugas();
@@ -115,7 +115,7 @@ export default function OperatorDashboard() {
       });
       await fetchTugas();
     } catch (e) { console.error(e); }
-  }, [user?.schoolId, user?.schoolName, fetchTugas]);
+  }, [user, fetchTugas]);
 
   const isStatsLoading = studentsLoading || employeesLoading;
 

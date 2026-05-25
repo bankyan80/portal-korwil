@@ -16,7 +16,7 @@ interface AccessValidationProps {
   className?: string
 }
 
-const WA_ADMIN = 'https://wa.me/6281321592990?text=Halo%20Admin,%20email%20saya%20belum%20memiliki%20akses%20Laporan%20Bulanan.'
+const WA_NUMBER = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || '6281321592990'
 
 export default function AccessValidation({
   status,
@@ -28,6 +28,8 @@ export default function AccessValidation({
   className,
 }: AccessValidationProps) {
   const router = useRouter()
+
+  const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Halo Admin, email saya belum memiliki akses ${featureName}.`)}`
 
   const config = {
     'not-logged-in': {
@@ -133,7 +135,7 @@ export default function AccessValidation({
 
               {c.action === 'contact' && (
                 <a
-                  href={WA_ADMIN}
+                  href={waUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium hover:from-green-600 hover:to-green-700 transition-all shadow-md shadow-green-500/20 active:scale-[0.98]"

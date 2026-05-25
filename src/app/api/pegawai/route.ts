@@ -30,6 +30,13 @@ export async function POST(req: NextRequest) {
     if (!nik || !nama) {
       return NextResponse.json({ error: 'NIK dan Nama wajib diisi' }, { status: 400 });
     }
+    if (nik.length !== 16 || !/^\d+$/.test(nik)) {
+      return NextResponse.json({ error: 'NIK harus 16 digit angka' }, { status: 400 });
+    }
+    const validJenisPtk = ['Guru Mapel', 'Guru Kelas', 'Guru BK', 'Kepala Sekolah', 'Operator Sekolah', 'Staff TU', 'Pustakawan', 'Laboran'];
+    if (body.jenis_ptk && !validJenisPtk.includes(body.jenis_ptk)) {
+      return NextResponse.json({ error: `Jenis PTK tidak valid. Harus salah satu: ${validJenisPtk.join(', ')}` }, { status: 400 });
+    }
 
     const creds = loadSA();
     if (!creds || !SHEET_ID) {
