@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Building2 } from 'lucide-react';
 import { BlueBarHeader } from '@/components/shared/SectionTitle';
 import { useDataStore } from '@/store/data-store';
 
@@ -22,6 +23,13 @@ export default function Organizations() {
       <div className="rounded-lg shadow-md overflow-hidden">
         <BlueBarHeader title="ORGANISASI PENDIDIKAN" />
         <div className="bg-white px-4 py-6">
+          {organizations.filter((o) => o.active).length === 0 ? (
+            <div className="p-8 text-center">
+              <Building2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm text-gray-400">Belum ada organisasi</p>
+              <p className="text-xs text-gray-400 mt-1">Data organisasi akan muncul di sini</p>
+            </div>
+          ) : (
           <div className="flex lg:justify-center gap-6 overflow-x-auto pb-2 scrollbar-thin snap-x snap-mandatory">
             {organizations.filter((o) => o.active).map((org, index) => (
               <Link
@@ -49,6 +57,7 @@ export default function Organizations() {
               </Link>
             ))}
           </div>
+          )}
         </div>
       </div>
     </section>

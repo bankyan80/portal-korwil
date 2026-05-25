@@ -91,7 +91,10 @@ export function useFirestoreCollection<T extends { id: string }>(
 
   // Realtime listener: use onSnapshot directly (no setState in effect guards)
   useEffect(() => {
-    if (!db) return;
+    if (!db) {
+      setLoading(false);
+      return;
+    }
     const firestore = db;
     let q;
     if (orderField) {

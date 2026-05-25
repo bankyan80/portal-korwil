@@ -16,10 +16,10 @@ const iconMap: Record<string, LucideIcon> = {
 
 const FALLBACK_ITEMS = [
   { id: 'home', label: 'Home', icon: Home, path: '/' },
-  { id: 'data', label: 'Data', icon: Home, path: '/data-gtk' },
-  { id: 'rekap', label: 'Rekap', icon: Home, path: '/rekap-laporan' },
+  { id: 'data', label: 'Data', icon: Database, path: '/data-gtk' },
+  { id: 'rekap', label: 'Rekap', icon: BarChart3, path: '/rekap-laporan' },
   { id: 'haloai', label: 'HaloAI', icon: Sparkles, path: '' },
-  { id: 'profil', label: 'Profil', icon: Home, path: '/profil' },
+  { id: 'profil', label: 'Profil', icon: Users, path: '/profil' },
 ]
 
 export default function MobileBottomNav() {

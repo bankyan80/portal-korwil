@@ -3,10 +3,16 @@
 import { useEffect } from 'react';
 import { useDataStore } from '@/store/data-store';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
+import { db } from '@/lib/firebase';
+import { mockMenus, mockAnnouncements, mockGalleryItems, mockOrganizations, mockInstitutionLinks } from '@/lib/mock-data';
 import type { MenuItem, Announcement, GalleryItem, Organization, InstitutionLink } from '@/types';
 
 interface FirestoreDataProviderProps {
   children: React.ReactNode;
+}
+
+function allEmpty(...items: unknown[][]): boolean {
+  return items.every((arr) => arr.length === 0);
 }
 
 export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) {
@@ -32,11 +38,19 @@ export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) 
       !institutionLinksHook.loading;
 
     if (allLoaded) {
-      setMenus(menusHook.items);
-      setAnnouncements(announcementsHook.items);
-      setGalleryItems(galleryHook.items);
-      setOrganizations(organizationsHook.items);
-      setInstitutionLinks(institutionLinksHook.items);
+      const useMock = !db && allEmpty(
+        menusHook.items,
+        announcementsHook.items,
+        galleryHook.items,
+        organizationsHook.items,
+        institutionLinksHook.items
+      );
+
+      setMenus(useMock ? mockMenus : menusHook.items);
+      setAnnouncements(useMock ? mockAnnouncements : announcementsHook.items);
+      setGalleryItems(useMock ? mockGalleryItems : galleryHook.items);
+      setOrganizations(useMock ? mockOrganizations : organizationsHook.items);
+      setInstitutionLinks(useMock ? mockInstitutionLinks : institutionLinksHook.items);
       setReady(true);
     }
   }, [

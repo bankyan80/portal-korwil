@@ -69,7 +69,7 @@ export function FirebaseLED({
       return;
     }
     if (!db) {
-      setStatus('connecting');
+      setStatus('disconnected');
       return;
     }
     try {
