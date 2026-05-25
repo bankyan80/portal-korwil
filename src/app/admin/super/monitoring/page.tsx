@@ -5,23 +5,23 @@ import SuperPageShell from '@/components/admin/SuperPageShell';
 import { Users, School, GraduationCap, FileText, Loader2, UserCheck } from 'lucide-react';
 
 export default function SuperMonitoringPage() {
-  const { data: users } = useCachedFirestore<{ id: string }>({
+  const { data: users, loading: usersLoading } = useCachedFirestore<{ id: string }>({
     collectionName: 'users', realtime: true, enabled: true,
   });
-  const { data: schools } = useCachedFirestore<{ id: string }>({
+  const { data: schools, loading: schoolsLoading } = useCachedFirestore<{ id: string }>({
     collectionName: 'schools', realtime: true, enabled: true,
   });
-  const { data: students } = useCachedFirestore<Record<string, any>>({
+  const { data: students, loading: studentsLoading } = useCachedFirestore<Record<string, any>>({
     collectionName: 'students', realtime: true, enabled: true,
   });
-  const { data: reports } = useCachedFirestore<{ id: string }>({
+  const { data: reports, loading: reportsLoading } = useCachedFirestore<{ id: string }>({
     collectionName: 'reports', realtime: true, enabled: true,
   });
-  const { data: employees } = useCachedFirestore<Record<string, any>>({
+  const { data: employees, loading: employeesLoading } = useCachedFirestore<Record<string, any>>({
     collectionName: 'employees', realtime: true, enabled: true,
   });
 
-  const loading = !users.length && !schools.length && !students.length && !reports.length && !employees.length;
+  const loading = usersLoading || schoolsLoading || studentsLoading || reportsLoading || employeesLoading;
 
   const stats = [
     { label: 'Total User', value: users.length, icon: Users, color: 'bg-blue-500' },
