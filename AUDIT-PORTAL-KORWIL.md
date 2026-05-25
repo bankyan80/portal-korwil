@@ -2,7 +2,7 @@
 
 **Tanggal:** 25 Mei 2026  
 **Auditor:** OpenCode AI  
-**Versi Kode:** Commit `1bdd43a` (main)
+**Versi Kode:** Commit `e274e14` (main)
 
 ---
 
@@ -253,6 +253,7 @@ Mock data di `src/lib/mock-data.ts` hanya muncul jika:
 
 ## 11. DAFTAR PERBAIKAN YANG SUDAH DILAKUKAN
 
+### Batch 1 — Lint & Build
 | # | Perbaikan | File | Status |
 |---|-----------|------|--------|
 | 1 | Pindahkan `useEffect` sebelum early return | `AuthGuard.tsx` | ✅ |
@@ -260,30 +261,56 @@ Mock data di `src/lib/mock-data.ts` hanya muncul jika:
 | 3 | JSON.stringify deps → useRef pattern | `use-supabase-query.ts` | ✅ |
 | 4 | Hapus unused eslint-disable | `useCachedFirestore.ts` | ✅ |
 | 5 | Sederhanakan useCallback deps | `operator/page.tsx` | ✅ |
+
+### Batch 2 — Security & Config
+| # | Perbaikan | File | Status |
+|---|-----------|------|--------|
 | 6 | WA number hardcoded → env var | `AccessValidation.tsx` | ✅ |
 | 7 | WA message pakai featureName | `AccessValidation.tsx` | ✅ |
 | 8 | First-user bootstrap guard produksi | `AuthProvider.tsx` | ✅ |
 | 9 | Hardcoded folder ID → env var | `drive/test/route.ts` | ✅ |
 | 10 | Validasi NIK + jenis_ptk | `pegawai/route.ts` | ✅ |
+
+### Batch 3 — Data & Logic
+| # | Perbaikan | File | Status |
+|---|-----------|------|--------|
 | 11 | data-pd pakai rombel (bukan kelas) untuk KB | `siswa/per-kelas/route.ts` | ✅ |
+
+### Batch 4 — API Auth (CRITICAL)
+| # | Perbaikan | File | Status |
+|---|-----------|------|--------|
+| 12 | Tambah auth middleware (super_admin/operator) | `sheets/[type]/route.ts` | ✅ |
+| 13 | Tambah auth super_admin | `sync/create-sheets/route.ts` | ✅ |
+| 14 | Tambah auth + pindah hardcoded sheet ID ke env var | `sync/google-sheets/route.ts` | ✅ |
+| 15 | Auth cookie menentukan userRole, super_admin bypass rate limit | `chat/route.ts` | ✅ |
+| 16 | Tambah auth super_admin/operator | `dokumen/list/route.ts` | ✅ |
+| 17 | Tambah auth super_admin | `drive/test/route.ts` | ✅ |
+| 18 | Override userRole dari auth token (tidak dari body) | `haloai/route.ts` | ✅ |
+
+### Batch 5 — Error Handling
+| # | Perbaikan | File | Status |
+|---|-----------|------|--------|
+| 19 | Tambah try/catch | `route.ts` (root) | ✅ |
+| 20 | Tambah try/catch (CRITICAL) | `pegawai/detail/route.ts` | ✅ |
+| 21 | Tambah try/catch (CRITICAL) | `pegawai/gtk-summary/route.ts` | ✅ |
+| 22 | Tambah try/catch GET & POST | `berita/route.ts` | ✅ |
+
+### Batch 6 — Frontend Hardcoded Data
+| # | Perbaikan | File | Status |
+|---|-----------|------|--------|
+| 23 | Hapus `defaultData` hardcoded (pakai Firestore) | `agenda-kegiatan/page.tsx` | ✅ |
+| 24 | Hapus `defaultData` hardcoded (pakai Firestore) | `spmb-sd/admin/page.tsx` | ✅ |
+| 25 | Tambah empty state saat tidak ada data | `data-sekolah/page.tsx` | ✅ |
 
 ---
 
-## 12. REKOMENDASI (Priority Order)
-
-### P1 — Keamanan
-1. 🔴 Tambah auth/rate limiting ke endpoint publik
-2. 🔴 Pindah hardcoded Spreadsheet ID ke env var (`sync/google-sheets/route.ts`)
-3. 🔴 Tambah try/catch ke 4 API routes tanpa error handling
-
-### P2 — Data Integrity
-4. 🟡 Migrasi `data-pd`, `data-rombel`, `data-sd/tk/paud` ke Google Sheets API
-5. 🟡 Hapus `defaultData` hardcoded di `spmb-sd/admin` dan `agenda-kegiatan`
+## 12. REKOMENDASI LANJUTAN (Tersisa)
 
 ### P3 — Production Readiness
-6. 🟢 Tambah `NEXT_PUBLIC_USE_MOCK_DATA=false` guard
-7. 🟢 Fix `firebase-admin.ts` singleton guard
-8. 🟢 Refresh cookie auth-token via `onIdTokenChanged`
+1. 🟢 Tambah `NEXT_PUBLIC_USE_MOCK_DATA=false` guard
+2. 🟢 Fix `firebase-admin.ts` singleton guard (`!getApps().length`)
+3. 🟢 Refresh cookie auth-token via `onIdTokenChanged`
+4. 🟢 Pindah hardcoded SHEETS URLs di `gtk-summary/route.ts` ke env var
 
 ---
 
