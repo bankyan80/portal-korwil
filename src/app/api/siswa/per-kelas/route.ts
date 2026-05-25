@@ -30,7 +30,7 @@ function buildFromStatic(): PerKelasSekolah[] {
       map.set(key, { name, jenjang, perKelas: {}, totalL: 0, totalP: 0 });
     }
     const entry = map.get(key)!;
-    const rawKelas = s.kelas ? String(s.kelas) : (s.rombel || '-');
+    const rawKelas = (jenjang !== 'SD' && s.rombel) ? s.rombel : (s.kelas ? String(s.kelas) : (s.rombel || '-'));
     const kelas = normalizeKelas(rawKelas, jenjang);
     if (!entry.perKelas[kelas]) entry.perKelas[kelas] = { l: 0, p: 0 };
     if (s.jk === 'L') { entry.perKelas[kelas].l++; entry.totalL++; }
@@ -74,10 +74,10 @@ export async function GET() {
     // Prioritas UTAMA: Koleksi 'students'
     const snapStudents = await adminDb.collection('students').get();
     for (const doc of snapStudents.docs) {
-      const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; kelas?: number; status?: string };
+      const s = doc.data() as { sekolah?: string; jenjang?: string; jk?: string; kelas?: number; rombel?: string; status?: string };
       if (!s.sekolah || s.status === 'lulus') continue;
       const jenjang = s.jenjang || 'SD';
-      const rawKelas = s.kelas ? String(s.kelas) : (jenjang !== 'SD' ? 'A' : '1');
+      const rawKelas = (jenjang !== 'SD' && s.rombel) ? s.rombel : (s.kelas ? String(s.kelas) : (jenjang !== 'SD' ? 'A' : '1'));
       addToMap(sekolahMap, s.sekolah, jenjang, rawKelas, s.jk || 'L');
     }
 
