@@ -146,6 +146,7 @@ export default function OperatorDashboard() {
   const menu = [
     { label: 'Profil Sekolah', icon: School, desc: 'Kelola data sekolah', count: null, href: '/admin/operator/profil-sekolah' },
     { label: 'Data Guru', icon: Users, desc: 'Kelola data pendidik dan tenaga kependidikan', count: calculatedCounts.eCount, href: '/admin/operator/data-guru' },
+    { label: 'Tambah Pegawai', icon: School, desc: 'Input data pegawai baru + upload SK', count: null, href: '/admin/operator/tambah-pegawai' },
     { label: 'Data Siswa', icon: Users, desc: 'Kelola data peserta didik', count: calculatedCounts.sCount, href: '/admin/operator/data-siswa' },
     { label: 'Tambah Siswa', icon: School, desc: 'Daftarkan siswa baru', count: null, href: '/admin/operator/tambah-siswa' },
     { label: 'SPMB', icon: FileText, desc: 'Penerimaan peserta didik baru', count: null, href: '/admin/operator/spmb' },
