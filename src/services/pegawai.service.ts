@@ -1,4 +1,5 @@
 import { adminDb } from '@/lib/firebase-admin';
+import { getRows } from '@/lib/googleSheets';
 import { getCanonicalSchoolName, getNpsnBySchool } from '@/lib/normalize';
 import fs from 'fs';
 import path from 'path';
@@ -7,6 +8,31 @@ function normalizeRecord(d: any) {
   if (d.sekolah) d.sekolah = getCanonicalSchoolName(d.sekolah);
   if (!d.npsn && d.sekolah) d.npsn = getNpsnBySchool(d.sekolah);
   return d;
+}
+
+/** Map Sheets column names to internal field names */
+function mapSheetRow(r: Record<string, string>): any {
+  return {
+    nik: r.nik || '',
+    nama: r.nama || '',
+    nuptk: r.nuptk || '',
+    jk: r.jk || '',
+    tempat_lahir: r.tempat_lahir || '',
+    tanggal_lahir: r.tanggal_lahir || '',
+    nip: r.nip || '',
+    status_kepegawaian: r.status_kepegawaian || '',
+    jenis_ptk: r.jenis_ptk || '',
+    agama: r.agama || '',
+    tugas_tambahan: r.tugas_tambahan || '',
+    sertifikasi: r.sertifikasi || '',
+    tmt: r.tmt || '',
+    sekolah: r.sekolah || '',
+    role: r.role || '',
+    dapodik: r.dapodik || '',
+    aktif: r.aktif || '',
+    mapel: r.mapel || '',
+    kategori_guru: r.kategori_guru || r.kategoriguru || '',
+  };
 }
 
 function loadFromStatic() {
@@ -24,61 +50,74 @@ function loadFromStatic() {
   return result;
 }
 
-function unionAll(firestoreRecords: any[], staticRecords: any[]): any[] {
+function unionByNik(base: any[], override: any[]): any[] {
   const map = new Map<string, any>();
-  // Static first (base data)
-  for (const r of staticRecords) {
-    map.set(r.nik || r.id, { ...r, _source: 'static' });
+  for (const r of base) {
+    map.set(r.nik || r.id, r);
   }
-  // Firestore overrides static by NIK
-  for (const r of firestoreRecords) {
+  for (const r of override) {
     const key = r.nik || r.id;
-    if (map.has(key)) {
-      map.set(key, { ...map.get(key), ...r, _source: 'merged' });
+    if (!key) continue;
+    const existing = map.get(key);
+    if (existing) {
+      // Only override truthy values from the override record
+      const merged = { ...existing };
+      for (const [k, v] of Object.entries(r)) {
+        if (v !== undefined && v !== null && v !== '') {
+          (merged as any)[k] = v;
+        }
+      }
+      merged._source = 'merged';
+      map.set(key, merged);
     } else {
-      map.set(key, { ...r, _source: 'firestore' });
+      map.set(key, { ...r, _source: 'override' });
     }
   }
   return [...map.values()];
 }
 
+function loadFromFirestore() {
+  return adminDb
+    ? Promise.all([
+        adminDb.collection('employees').get(),
+        adminDb.collection('pegawai_tambahan').get(),
+      ]).then(([empSnap, tambahanSnap]) => {
+        const combined: any[] = [];
+        if (!empSnap.empty) {
+          combined.push(...empSnap.docs.map(doc => normalizeRecord({ id: doc.id, ...doc.data() })));
+        }
+        if (!tambahanSnap.empty) {
+          combined.push(...tambahanSnap.docs.map(doc => normalizeRecord({ id: doc.id, ...doc.data() })));
+        }
+        return combined;
+      })
+    : Promise.resolve([]);
+}
+
+function loadFromSheet(): Promise<any[]> {
+  return getRows('data_pegawai')
+    .then(rows => rows.length > 50 ? rows.map(mapSheetRow).map(normalizeRecord) : [])
+    .catch(() => []);
+}
+
 export async function getAllPegawai() {
-  if (!adminDb) return loadFromStatic();
-  try {
-    const [empSnap, tambahanSnap] = await Promise.all([
-      adminDb.collection('employees').get(),
-      adminDb.collection('pegawai_tambahan').get(),
-    ]);
-    let combined: any[] = [];
-    if (!empSnap.empty) {
-      combined = empSnap.docs.map(doc => normalizeRecord({ id: doc.id, ...doc.data() }));
-    }
-    if (!tambahanSnap.empty) {
-      const tambahan = tambahanSnap.docs.map(doc => normalizeRecord({ id: doc.id, ...doc.data() }));
-      combined = [...combined, ...tambahan];
-    }
-    if (combined.length === 0) return loadFromStatic();
-    const staticRecords = loadFromStatic();
-    return unionAll(combined, staticRecords);
-  } catch {
-    return loadFromStatic();
+  // Priority: Sheets (most complete) > Firestore > Static JSON
+  const [sheetRecords, firestoreRecords] = await Promise.all([
+    loadFromSheet(),
+    loadFromFirestore(),
+  ]);
+  const staticRecords = loadFromStatic();
+
+  // Merge: static → firestore → sheets (each overrides with truthy values only)
+  let result = unionByNik(staticRecords, firestoreRecords);
+  if (sheetRecords.length > 0) {
+    result = unionByNik(result, sheetRecords);
   }
+
+  return result;
 }
 
 export async function getPegawaiByNik(nik: string) {
-  if (!adminDb) {
-    const all = loadFromStatic();
-    return all.find((d: any) => d.nik === nik) || null;
-  }
-  try {
-    const doc = await adminDb.collection('employees').doc(nik).get();
-    if (doc.exists) return normalizeRecord({ id: doc.id, ...doc.data() });
-    const docTambahan = await adminDb.collection('pegawai_tambahan').doc(nik).get();
-    if (docTambahan.exists) return normalizeRecord({ id: docTambahan.id, ...docTambahan.data() });
-    const all = loadFromStatic();
-    return all.find((d: any) => d.nik === nik) || null;
-  } catch {
-    const all = loadFromStatic();
-    return all.find((d: any) => d.nik === nik) || null;
-  }
+  const all = await getAllPegawai();
+  return all.find((d: any) => d.nik === nik) || null;
 }
