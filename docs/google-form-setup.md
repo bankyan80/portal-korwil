@@ -27,30 +27,30 @@
    - ⚙️ → **Batasi ke 1 tanggapan** → MATIKAN
    - ⚙️ → **Izinkan pengeditan tanggapan** → NYALAKAN
 
-## 2. Buat Google Sheet untuk menampung respon
+## 2. Link Form ke Google Sheet Respon
 
 1. Di form, buka tab **Responses**
 2. Klik ikon **Google Sheets** 🟢 (Link to Sheets)
-3. Pilih **Buat spreadsheet baru** → beri nama: `Data Pegawai - Form`
+3. Pilih **Buat spreadsheet baru** → beri nama: `Data Pegawai - Form Responses`
 4. Klik **Buat**
 
 ## 3. Siapkan Google Drive Folder
 
-1. Buka https://drive.google.com
-2. Buat folder baru: `SK Pegawai - Portal Korwil`
-3. **Share folder:**
-   - Klik kanan folder → **Share** → **General access** → `Anyone with the link`
-   - Set ke **Viewer**
-   - Salin link folder
+1. Folder root sudah ada: `Portal Korwil` (ID: `1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ`)
+2. Service account sudah di-share sebagai editor ke folder tsb
+3. Jika perlu folder khusus untuk dokumen pegawai, buat subfolder: `Dokumen Pegawai`
 
 ## 4. Setup Apps Script
 
-1. Di Google Sheet, klik **Extensions → Apps Script**
+1. Di **Google Sheet respon** (bukan sheet utama), klik **Extensions → Apps Script**
 2. Hapus konten default, paste isi file `scripts/apps-script-template.gs`
-3. **Sesuaikan variable `SUPABASE_URL` dan `SUPABASE_ANON_KEY`** di bagian atas file
+3. **Ganti `MAIN_SHEET_ID`** di baris 11 dengan ID sheet utama:
+   ```
+   const MAIN_SHEET_ID = '1v4jy1VNM9xNCLMa_B3xr-jOlayBNBDILptN_nxKT2sc';
+   ```
 4. Klik 💾 **Save** → beri nama project: `Portal Korwil - Sync`
 5. Klik **Run** ▶️ (pilih `testConnection`) → **Review permissions** → pilih akun Google kamu → **Allow**
-6. Cek **Executions** → harus sukses
+6. Cek **Executions** → harus sukses (muncul jumlah baris data)
 
 ## 5. Setup Trigger Otomatis
 
@@ -65,18 +65,18 @@
 ## 6. Test
 
 1. Buka Google Form kamu
-2. Isi data dummy (misal NIK: `3209070000000001`)
-3. Submit
+2. Isi data dummy (NIK: `3209070000000001`, Nama: `TEST`)
+3. Submit — upload file SK jika mau
 4. Cek di Apps Script **Executions** → harus sukses
-5. Cek di Supabase **Table Editor** → `employees` → harus ada data baru
-
----
+5. Cek di **Google Sheet utama** → tab `data_pegawai` → baris baru muncul
+6. Hapus data test dari sheet setelah verifikasi
 
 ## Troubleshooting
 
 | Masalah | Solusi |
 |---|---|
-| `Could not find the column` | Field di Apps Script tidak cocok dengan nama kolom di Supabase. Cek mapping. |
-| `401 Unauthorized` | SUPABASE_ANON_KEY salah atau RLS policy belum diset. |
+| `Sheet data_pegawai tidak ditemukan` | Pastikan MAIN_SHEET_ID benar. Cek nama tab di sheet utama. |
+| `401 Unauthorized` | Service account tidak punya akses. Share sheet utama ke email service account sbg Editor. |
 | Trigger tidak jalan | Buka Apps Script → Triggers → pastikan trigger aktif. |
-| File upload tidak muncul | Form → ⚙️ → upload file harus diizinkan. |
+| File upload gagal | Pastikan service account punya akses Write ke Drive folder root. |
+| Data tidak muncul di sheet | Cek Apps Script **Executions** → lihat error log. |

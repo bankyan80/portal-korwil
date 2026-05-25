@@ -1,31 +1,32 @@
 /**
  * Apps Script — Portal Korwil
- * Trigger: Google Form Submit → Supabase upsert
+ * Trigger: Google Form Submit → Google Sheet (data_pegawai)
  *
  * Cara setup:
  * 1. Buka https://script.google.com
  * 2. Buat project baru, paste kode ini
- * 3. Ganti SUPABASE_URL dan SUPABASE_ANON_KEY sesuai project
+ * 3. Ganti MAIN_SHEET_ID dengan ID spreadsheet utama (data portal)
  * 4. Simpan → Triggers → Tambah trigger:
  *    - Function: onFormSubmit
  *    - Event: From spreadsheet → On form submit
  * 5. Hubungkan ke Google Sheet yang terima respon form
  */
 
-const SUPABASE_URL = 'https://xyouvellfcqhsbkclfbk.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5b3V2ZWxsZmNxaHNia2NsZmJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxOTY1MzEsImV4cCI6MjA5NDc3MjUzMX0.HMt6pVTk8z3ioGEvcmneBuP2d-XEj_5WXEeldz6fp04';
+const MAIN_SHEET_ID = '1v4jy1VNM9xNCLMa_B3xr-jOlayBNBDILptN_nxKT2sc';
+const MAIN_SHEET_TAB = 'data_pegawai';
+const DRIVE_FOLDER_ID = '1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ';
 
 /**
  * Main trigger: dipanggil otomatis setiap ada submit form
- * JANGAN klik Run langsung — itu tidak akan jalan karena e (event) hanya dikirim oleh trigger.
- * Untuk test manual, gunakan fungsi testUpsert() di bagian bawah.
  */
 function onFormSubmit(e) {
   if (!e || !e.namedValues) {
-    console.log('Skip: event kosong. Jangan klik Run — submit form dulu.');
+    console.log('Skip: event kosong. Submit form dulu.');
     return;
   }
   const formData = e.namedValues;
+
+  const fileUrl = getUploadedFileUrl(e);
 
   const record = {
     nik: formData['NIK']?.[0]?.trim() || '',
@@ -40,122 +41,108 @@ function onFormSubmit(e) {
     tugas_tambahan: formData['Tugas Tambahan']?.[0]?.trim() || '',
     tmt: formData['TMT Pengangkatan']?.[0]?.trim() || '',
     sekolah: formData['Sekolah']?.[0]?.trim() || '',
-    // file_pdf_url akan diisi dari Drive
-    file_pdf_url: formData['URL Berkas']?.[0]?.trim() || '',
-    verified: false,
+    file_pdf_url: fileUrl,
   };
 
-  if (!record.nik || !record.nama) {
-    console.log('Skip: NIK atau Nama kosong');
+  if (!record.nik && !record.nama) {
+    console.log('Skip: NIK dan Nama kosong');
     return;
   }
 
-  upsertToSupabase('employees', record);
+  writeToMainSheet(record);
 }
 
 /**
- * Juga handle upload file ke Drive dan simpan URL-nya
- * Panggil ini dari form jika ada field upload file
+ * Ambil URL file upload dari form response
  */
-function onFormSubmitWithFile(e) {
-  const formData = e.namedValues;
-  const itemResponses = e.response?.getItemResponses();
+function getUploadedFileUrl(e) {
+  try {
+    const itemResponses = e.response?.getItemResponses();
+    if (!itemResponses) return '';
 
-  // Cari jawaban upload file
-  let fileUrl = '';
-  if (itemResponses) {
     for (const itemResponse of itemResponses) {
       const item = itemResponse.getItem();
       if (item.getType() === 'FILE_UPLOAD') {
         const uploadedFiles = itemResponse.getResponse();
         if (uploadedFiles && uploadedFiles.length > 0) {
-          // File sudah otomatis tersimpan di Drive form
-          // Ambil URL dari kolom yang berisi link Drive
-          fileUrl = uploadedFiles[0].getUrl();
+          // Pindahkan file ke folder terstruktur
+          const file = uploadedFiles[0];
+          const folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+          const destFolder = getOrCreateSubfolder(folder, 'Dokumen Pegawai');
+          const newFile = file.moveTo(destFolder);
+          return newFile.getUrl();
         }
       }
     }
-  }
-
-  const record = {
-    nik: formData['NIK']?.[0]?.trim() || '',
-    nama: formData['Nama']?.[0]?.trim()?.toUpperCase() || '',
-    // ... field lainnya sama seperti di atas
-    file_pdf_url: fileUrl || formData['URL Berkas']?.[0]?.trim() || '',
-    verified: false,
-  };
-
-  if (!record.nik || !record.nama) return;
-  upsertToSupabase('employees', record);
-}
-
-/**
- * Kirim data ke Supabase via REST API
- */
-function upsertToSupabase(table, record) {
-  const url = `${SUPABASE_URL}/rest/v1/${table}?on_conflict=nik`;
-
-  const payload = {
-    ...record,
-    updated_at: new Date().toISOString(),
-  };
-
-  const options = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Prefer': 'return=minimal, resolution=merge-duplicates',
-    },
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true,
-  };
-
-  try {
-    const response = UrlFetchApp.fetch(url, options);
-    const code = response.getResponseCode();
-    console.log(`[${table}] ${record.nama} (${record.nik}) → ${code}`);
-    if (code >= 400) {
-      console.error('Error body:', response.getContentText());
-    }
   } catch (err) {
-    console.error(`[${table}] Gagal upsert ${record.nama}:`, err.toString());
+    console.error('Gagal proses file upload:', err.toString());
+  }
+  return '';
+}
+
+function getOrCreateSubfolder(parent, name) {
+  const folders = parent.getFoldersByName(name);
+  if (folders.hasNext()) return folders.next();
+  return parent.createFolder(name);
+}
+
+/**
+ * Tulis/update data ke sheet utama (data_pegawai)
+ */
+function writeToMainSheet(record) {
+  const ss = SpreadsheetApp.openById(MAIN_SHEET_ID);
+  const sheet = ss.getSheetByName(MAIN_SHEET_TAB);
+  if (!sheet) throw new Error(`Sheet "${MAIN_SHEET_TAB}" tidak ditemukan di sheet utama`);
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const data = sheet.getDataRange().getValues();
+
+  const nikCol = headers.findIndex(h => h.toString().toLowerCase().includes('nik'));
+  const existingRow = data.findIndex((row, i) => i > 0 && row[nikCol]?.toString().trim() === record.nik);
+
+  const row = headers.map(h => {
+    const key = h.toString().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    return record[key] || '';
+  });
+
+  if (existingRow >= 0) {
+    // Update baris yang sudah ada (tidak timpa file_pdf_url jika kosong)
+    const existingData = data[existingRow];
+    if (!record.file_pdf_url && existingData) {
+      const fileUrlCol = headers.findIndex(h => h.toString().toLowerCase().includes('file_pdf_url'));
+      if (fileUrlCol >= 0 && existingData[fileUrlCol]) {
+        row[fileUrlCol] = existingData[fileUrlCol]; // pertahankan URL lama
+      }
+    }
+    sheet.getRange(existingRow + 1, 1, 1, row.length).setValues([row]);
+    console.log(`UPDATE: ${record.nama} (${record.nik})`);
+  } else {
+    // Append baris baru
+    sheet.appendRow(row);
+    console.log(`INSERT: ${record.nama} (${record.nik})`);
   }
 }
 
 /**
- * Test fungsi — jalankan manual untuk verifikasi
+ * Test fungsi — kirim data dummy ke sheet utama
  */
-function testUpsert() {
+function testWrite() {
   const testRecord = {
     nik: '3209070000000001',
     nama: 'TEST (HAPUS)',
     sekolah: 'SD NEGERI 1 LEMAHABANG',
-    verified: false,
   };
-  upsertToSupabase('employees', testRecord);
-  console.log('Test selesai. Cek di Supabase.');
+  writeToMainSheet(testRecord);
+  console.log('Test selesai. Cek di Google Sheet.');
 }
 
 /**
- * Utility: test koneksi
+ * Utility: test koneksi ke sheet utama
  */
 function testConnection() {
-  const url = `${SUPABASE_URL}/rest/v1/employees?limit=1`;
-  const options = {
-    method: 'GET',
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    muteHttpExceptions: true,
-  };
-  try {
-    const response = UrlFetchApp.fetch(url, options);
-    console.log('Status:', response.getResponseCode());
-    console.log('Body:', response.getContentText());
-  } catch (err) {
-    console.error('Gagal:', err.toString());
-  }
+  const ss = SpreadsheetApp.openById(MAIN_SHEET_ID);
+  const sheet = ss.getSheetByName(MAIN_SHEET_TAB);
+  if (!sheet) throw new Error(`Sheet "${MAIN_SHEET_TAB}" tidak ditemukan`);
+  const rowCount = sheet.getLastRow() - 1;
+  console.log(`Terhubung! data_pegawai memiliki ${rowCount} baris data.`);
 }
