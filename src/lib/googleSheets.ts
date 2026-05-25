@@ -1,16 +1,30 @@
 import { google } from 'googleapis';
+import { readFileSync, readdirSync, existsSync } from 'fs';
+import { join } from 'path';
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID || '';
 type SheetName = 'data_pegawai' | 'data_siswa' | 'data_sekolah';
 
+/** Coba baca service account dari env var, lalu fallback ke file lokal */
+function loadServiceAccount(): any {
+  const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (envVal && envVal !== '""') {
+    try { return JSON.parse(envVal); } catch {}
+    try { return JSON.parse(Buffer.from(envVal, 'base64').toString('utf-8')); } catch {}
+  }
+  // Fallback: baca dari service-account/ folder
+  const saDir = join(process.cwd(), 'service-account');
+  if (existsSync(saDir)) {
+    const files = readdirSync(saDir).filter(f => f.endsWith('.json'));
+    if (files.length) return JSON.parse(readFileSync(join(saDir, files[0]), 'utf-8'));
+  }
+  throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY tidak ditemukan di env maupun file lokal');
+}
+
 let cachedAuth: any = null;
 function getAuth() {
   if (cachedAuth) return cachedAuth;
-  const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-  if (!envVal) throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY not set');
-  let creds;
-  try { creds = JSON.parse(envVal); }
-  catch { creds = JSON.parse(Buffer.from(envVal, 'base64').toString('utf-8')); }
+  const creds = loadServiceAccount();
   cachedAuth = new google.auth.GoogleAuth({
     credentials: creds,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
