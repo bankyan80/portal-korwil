@@ -131,58 +131,63 @@ interface SchoolGtk {
 }
 
 export async function GET() {
-  const sheetData = await loadFromSheets();
-  const staticData = loadStaticData();
-  const firestoreData = await getAllPegawai();
-  const merged = unionAll(sheetData, unionAll(staticData, firestoreData));
+  try {
+    const sheetData = await loadFromSheets();
+    const staticData = loadStaticData();
+    const firestoreData = await getAllPegawai();
+    const merged = unionAll(sheetData, unionAll(staticData, firestoreData));
 
-  // Seed with all schools from master data (keyed by NPSN)
-  const schools: Record<string, SchoolGtk> = {};
-  for (const s of allSekolah) {
-    const name = getCanonicalSchoolName(s.nama);
-    schools[s.npsn] = {
-      npsn: s.npsn, name, teachers: 0, staff: 0, total: 0, certified: 0,
-      headmaster: '', teachers_l: 0, teachers_p: 0,
-      staff_l: 0, staff_p: 0, l: 0, p: 0,
-    };
-  }
-
-  // Overlay GTK data from merged pegawai records
-  for (const p of merged) {
-    if (!p.sekolah) continue;
-    const npsn = p.npsn || getNpsnBySchool(p.sekolah);
-    if (!npsn || !schools[npsn]) continue;
-    const s = schools[npsn];
-    const isGuru = p.jenis_ptk === 'Guru';
-    const isStaff = p.jenis_ptk === 'Tenaga Kependidikan' || p.jenis_ptk === 'Kepala Sekolah';
-    if (isGuru) {
-      s.teachers++;
-      if (p.jk === 'L') s.teachers_l++; else s.teachers_p++;
-      s.certified++;
-    } else if (isStaff) {
-      s.staff++;
-      if (p.jk === 'L') s.staff_l++; else s.staff_p++;
+    // Seed with all schools from master data (keyed by NPSN)
+    const schools: Record<string, SchoolGtk> = {};
+    for (const s of allSekolah) {
+      const name = getCanonicalSchoolName(s.nama);
+      schools[s.npsn] = {
+        npsn: s.npsn, name, teachers: 0, staff: 0, total: 0, certified: 0,
+        headmaster: '', teachers_l: 0, teachers_p: 0,
+        staff_l: 0, staff_p: 0, l: 0, p: 0,
+      };
     }
-    s.total++;
-    if (p.jenis_ptk === 'Kepala Sekolah' || p.tugas_tambahan === 'Kepala Sekolah') {
-      s.headmaster = p.nama;
+
+    // Overlay GTK data from merged pegawai records
+    for (const p of merged) {
+      if (!p.sekolah) continue;
+      const npsn = p.npsn || getNpsnBySchool(p.sekolah);
+      if (!npsn || !schools[npsn]) continue;
+      const s = schools[npsn];
+      const isGuru = p.jenis_ptk === 'Guru';
+      const isStaff = p.jenis_ptk === 'Tenaga Kependidikan' || p.jenis_ptk === 'Kepala Sekolah';
+      if (isGuru) {
+        s.teachers++;
+        if (p.jk === 'L') s.teachers_l++; else s.teachers_p++;
+        s.certified++;
+      } else if (isStaff) {
+        s.staff++;
+        if (p.jk === 'L') s.staff_l++; else s.staff_p++;
+      }
+      s.total++;
+      if (p.jenis_ptk === 'Kepala Sekolah' || p.tugas_tambahan === 'Kepala Sekolah') {
+        s.headmaster = p.nama;
+      }
     }
-  }
 
-  // PLT fallback – lookup by canonical name
-  for (const plt of pltData) {
-    const pltSchool = getCanonicalSchoolName(plt.sekolah);
-    const npsn = getNpsnBySchool(pltSchool);
-    if (npsn && schools[npsn] && !schools[npsn].headmaster) {
-      schools[npsn].headmaster = `plt. ${plt.plt_nama}`;
+    // PLT fallback – lookup by canonical name
+    for (const plt of pltData) {
+      const pltSchool = getCanonicalSchoolName(plt.sekolah);
+      const npsn = getNpsnBySchool(pltSchool);
+      if (npsn && schools[npsn] && !schools[npsn].headmaster) {
+        schools[npsn].headmaster = `plt. ${plt.plt_nama}`;
+      }
     }
+
+    const result = Object.values(schools).map(school => {
+      school.l = school.teachers_l + school.staff_l;
+      school.p = school.teachers_p + school.staff_p;
+      return school;
+    }).sort((a, b) => a.name.localeCompare(b.name));
+
+    return NextResponse.json({ schools: result, total: result.length });
+  } catch (error: any) {
+    console.error('GTK Summary error:', error);
+    return NextResponse.json({ error: error.message || 'Gagal memuat data GTK' }, { status: 500 });
   }
-
-  const result = Object.values(schools).map(school => {
-    school.l = school.teachers_l + school.staff_l;
-    school.p = school.teachers_p + school.staff_p;
-    return school;
-  }).sort((a, b) => a.name.localeCompare(b.name));
-
-  return NextResponse.json({ schools: result, total: result.length });
 }

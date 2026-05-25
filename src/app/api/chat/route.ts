@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from '@google/genai';
 
 type ChatMessage = {
@@ -26,7 +26,7 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-function getIp(req: Request): string {
+function getIp(req: NextRequest): string {
   return req.headers.get('x-forwarded-for') || 
          req.headers.get('x-real-ip') || 
          'unknown';
@@ -126,15 +126,28 @@ tanggapi dengan empati dan nyaman.
 Jangan terlalu kaku seperti robot.
 `;
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    // Rate limiting
-    const ip = getIp(req);
-    if (!checkRateLimit(ip)) {
-      return NextResponse.json(
-        { success: false, reply: "Terlalu banyak permintaan. Silakan tunggu sebentar." },
-        { status: 429 }
-      );
+    // Check auth
+    const token = req.cookies.get('auth-token')?.value;
+    let userRole = 'publik';
+    if (token) {
+      try {
+        const { verifyCookieAuth } = await import('@/lib/server-auth');
+        const auth = await verifyCookieAuth(token);
+        if (auth?.role) userRole = auth.role;
+      } catch {}
+    }
+
+    // Apply rate limiting based on role
+    if (userRole !== 'super_admin') {
+      const ip = getIp(req);
+      if (!checkRateLimit(ip)) {
+        return NextResponse.json(
+          { success: false, reply: "Terlalu banyak permintaan. Silakan tunggu sebentar." },
+          { status: 429 }
+        );
+      }
     }
 
     const body = await req.json();

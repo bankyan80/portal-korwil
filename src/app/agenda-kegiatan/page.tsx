@@ -8,18 +8,7 @@ import { useAppStore } from '@/store/app-store';
 import { CalendarDays, Search, Loader2, Clock, MapPin, ArrowLeft, Plus, Pencil, Trash2, X } from 'lucide-react';
 import type { CalendarEvent } from '@/types';
 
-const defaultData: CalendarEvent[] = [
-  { id: 'agenda-1', title: 'Hari Pertama Masuk Sekolah', description: 'Hari pertama masuk sekolah TP 2025/2026', tanggal: '14 Juli 2025', lokasi: 'Seluruh Sekolah', type: 'academic', organizerName: 'Admin', createdAt: Date.now() },
-  { id: 'agenda-2', title: 'MPLS', description: 'Masa Pengenalan Lingkungan Sekolah', tanggal: '14-18 Juli 2025', lokasi: 'Seluruh Sekolah', type: 'academic', organizerName: 'Admin', createdAt: Date.now() - 86400000 },
-  { id: 'agenda-3', title: 'HUT Kemerdekaan RI', description: 'Libur Nasional', tanggal: '17 Agustus 2025', lokasi: '-', type: 'holiday', organizerName: 'Admin', createdAt: Date.now() - 172800000 },
-  { id: 'agenda-4', title: 'Asesmen Nasional SMP', description: 'Pelaksanaan AN SMP/Paket B', tanggal: '25-28 Agustus 2025', lokasi: 'SMP', type: 'exam', organizerName: 'Admin', createdAt: Date.now() - 259200000 },
-  { id: 'agenda-5', title: 'Maulid Nabi Muhammad SAW', description: 'Libur Nasional', tanggal: '5 September 2025', lokasi: '-', type: 'holiday', organizerName: 'Admin', createdAt: Date.now() - 345600000 },
-  { id: 'agenda-6', title: 'Tes Kompetensi Akademik', description: 'Prakiraan Tes Kompetensi Akademik Paket C', tanggal: '1-19 November 2025', lokasi: 'Sekolah', type: 'exam', organizerName: 'Admin', createdAt: Date.now() - 432000000 },
-  { id: 'agenda-7', title: 'Hari Pertama Masuk Sekolah Semester 2', description: 'Prakiraan Hari pertama masuk sekolah semester 2', tanggal: '12 Januari 2026', lokasi: 'Seluruh Sekolah', type: 'academic', organizerName: 'Admin', createdAt: Date.now() - 518400000 },
-  { id: 'agenda-8', title: 'Pembagian Rapor', description: 'Prakiraan Pembagian rapor semester 2 dan kenaikan kelas', tanggal: '24-26 Juni 2026', lokasi: 'Seluruh Sekolah', type: 'academic', organizerName: 'Admin', createdAt: Date.now() - 604800000 },
-  { id: 'agenda-9', title: 'Libur Akhir Tahun Pelajaran', description: 'Prakiraan Libur akhir tahun pelajaran', tanggal: '29 Juni - 11 Juli 2026', lokasi: '-', type: 'holiday', organizerName: 'Admin', createdAt: Date.now() - 691200000 },
-  { id: 'agenda-10', title: 'Hari Pertama Masuk Sekolah TP 2026/2027', description: 'Prakiraan Hari Pertama Masuk Sekolah Tahun Pelajaran 2026/2027', tanggal: '13 Juli 2026', lokasi: 'Seluruh Sekolah', type: 'academic', organizerName: 'Admin', createdAt: Date.now() - 777600000 },
-];
+const defaultData: CalendarEvent[] = [];
 
 const typeOptions = [
   { value: 'academic', label: 'Akademik' },

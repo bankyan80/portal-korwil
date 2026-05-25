@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import type { ServiceAccount } from 'firebase-admin';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
-const SPREADSHEET_ID = '14v0ykMflGpnb-m-FbhG-GvNieMTFs_t_u3v4KOMxijQ';
+const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID || '';
 
 function getServiceAccount(): ServiceAccount | null {
   const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
@@ -56,7 +57,12 @@ function fmtDate(ts: any) {
   catch { return String(ts); }
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  const forbidden = requireRole(auth, ['super_admin']);
+  if (forbidden) return forbidden;
+
   console.log('[sheets-sync] Starting sync...');
   const db = getAdminDb();
   const sheets = getSheetsClient();

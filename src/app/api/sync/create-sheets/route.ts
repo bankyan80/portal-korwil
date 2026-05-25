@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import type { ServiceAccount } from 'firebase-admin';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ';
 
@@ -42,7 +43,12 @@ function getAuthClient() {
   });
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const token = req.cookies.get('auth-token')?.value;
+  const authUser = await verifyCookieAuth(token || '');
+  const forbidden = requireRole(authUser, ['super_admin']);
+  if (forbidden) return forbidden;
+
   const db = getAdminDb();
   const auth = getAuthClient();
 

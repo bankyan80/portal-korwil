@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 export async function GET(req: NextRequest) {
   if (!isFirebaseAdminConfigured || !adminDb) {
@@ -10,6 +11,11 @@ export async function GET(req: NextRequest) {
   if (!nip) {
     return NextResponse.json({ error: 'NIP wajib diisi' }, { status: 400 });
   }
+
+  const token = req.cookies.get('auth-token')?.value;
+  const authUser = await verifyCookieAuth(token || '');
+  const forbidden = requireRole(authUser, ['super_admin', 'operator_sekolah']);
+  if (forbidden) return forbidden;
 
   try {
     const byNip = await adminDb.collection('dokumen').where('nip', '==', nip).get();

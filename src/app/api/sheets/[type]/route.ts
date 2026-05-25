@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRows, appendRow, updateRow, deleteRow } from '@/lib/googleSheets';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 type SheetName = 'data_pegawai' | 'data_siswa' | 'data_sekolah';
 
@@ -18,6 +19,11 @@ function getSheet(req: NextRequest): SheetName {
 
 export async function GET(req: NextRequest) {
   try {
+    const token = req.cookies.get('auth-token')?.value;
+    const auth = await verifyCookieAuth(token || '');
+    const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+    if (forbidden) return forbidden;
+
     const data = await getRows(getSheet(req));
     return NextResponse.json({ success: true, data, total: data.length });
   } catch (err: any) {
@@ -27,6 +33,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const token = req.cookies.get('auth-token')?.value;
+    const auth = await verifyCookieAuth(token || '');
+    const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+    if (forbidden) return forbidden;
+
     const body = await req.json();
     await appendRow(getSheet(req), body);
     return NextResponse.json({ success: true });
@@ -37,6 +48,11 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const token = req.cookies.get('auth-token')?.value;
+    const auth = await verifyCookieAuth(token || '');
+    const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+    if (forbidden) return forbidden;
+
     const { rowIndex, ...data } = await req.json();
     if (rowIndex === undefined) throw new Error('rowIndex required');
     await updateRow(getSheet(req), rowIndex, data);
@@ -48,6 +64,11 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const token = req.cookies.get('auth-token')?.value;
+    const auth = await verifyCookieAuth(token || '');
+    const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+    if (forbidden) return forbidden;
+
     const { rowIndex } = await req.json();
     if (rowIndex === undefined) throw new Error('rowIndex required');
     await deleteRow(getSheet(req), rowIndex);

@@ -39,63 +39,68 @@ async function loadFromFirestore(): Promise<any[]> {
 }
 
 export async function GET(req: NextRequest) {
-  const token = req.cookies.get('auth-token')?.value;
-  const auth = await verifyCookieAuth(token || '');
-  const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
-  if (forbidden) return forbidden;
+  try {
+    const token = req.cookies.get('auth-token')?.value;
+    const auth = await verifyCookieAuth(token || '');
+    const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+    if (forbidden) return forbidden;
 
-  const nik = req.nextUrl.searchParams.get('nik');
-  if (!nik) {
-    return NextResponse.json({ found: false, error: 'Parameter NIK diperlukan' }, { status: 400 });
+    const nik = req.nextUrl.searchParams.get('nik');
+    if (!nik) {
+      return NextResponse.json({ found: false, error: 'Parameter NIK diperlukan' }, { status: 400 });
+    }
+
+    const cleanNik = nik.replace(/\D/g, '');
+
+    const employees = await loadFromFirestore();
+    const allData = employees.length > 0 ? employees : loadStaticData();
+
+    const pegawai = allData.find((p: any) => p.nik === cleanNik);
+    if (!pegawai) {
+      return NextResponse.json({ found: false, error: 'Pegawai tidak ditemukan' });
+    }
+
+    const bupTimestamp = getBupTimestamp(pegawai.tanggal_lahir);
+    const now = Date.now();
+    const bupDate = getBupDate(pegawai.tanggal_lahir);
+
+    const usia = pegawai.tanggal_lahir ? (() => {
+      const parts = pegawai.tanggal_lahir.split('-');
+      if (parts.length !== 3) return 0;
+      const birth = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+      return age;
+    })() : 0;
+
+    const masaKerja = pegawai.tmt ? (() => {
+      const parts = pegawai.tmt.split('-');
+      if (parts.length !== 3) return 0;
+      const start = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      const today = new Date();
+      let years = today.getFullYear() - start.getFullYear();
+      const m = today.getMonth() - start.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < start.getDate())) years--;
+      return years;
+    })() : 0;
+
+    const isBup = isPns(pegawai.status_kepegawaian) && bupTimestamp <= now;
+
+    return NextResponse.json({
+      found: true,
+      pegawai: {
+        ...pegawai,
+        usia,
+        masaKerja,
+        bupDate,
+        isBup,
+        statusBup: isBup ? 'Sudah BUP' : (isPns(pegawai.status_kepegawaian) ? `BUP: ${bupDate}` : 'Non-PNS'),
+      },
+    });
+  } catch (error: any) {
+    console.error('Pegawai detail error:', error);
+    return NextResponse.json({ found: false, error: 'Gagal memuat data pegawai' }, { status: 500 });
   }
-
-  const cleanNik = nik.replace(/\D/g, '');
-
-  const employees = await loadFromFirestore();
-  const allData = employees.length > 0 ? employees : loadStaticData();
-
-  const pegawai = allData.find((p: any) => p.nik === cleanNik);
-  if (!pegawai) {
-    return NextResponse.json({ found: false, error: 'Pegawai tidak ditemukan' });
-  }
-
-  const bupTimestamp = getBupTimestamp(pegawai.tanggal_lahir);
-  const now = Date.now();
-  const bupDate = getBupDate(pegawai.tanggal_lahir);
-
-  const usia = pegawai.tanggal_lahir ? (() => {
-    const parts = pegawai.tanggal_lahir.split('-');
-    if (parts.length !== 3) return 0;
-    const birth = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-    return age;
-  })() : 0;
-
-  const masaKerja = pegawai.tmt ? (() => {
-    const parts = pegawai.tmt.split('-');
-    if (parts.length !== 3) return 0;
-    const start = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-    const today = new Date();
-    let years = today.getFullYear() - start.getFullYear();
-    const m = today.getMonth() - start.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < start.getDate())) years--;
-    return years;
-  })() : 0;
-
-  const isBup = isPns(pegawai.status_kepegawaian) && bupTimestamp <= now;
-
-  return NextResponse.json({
-    found: true,
-    pegawai: {
-      ...pegawai,
-      usia,
-      masaKerja,
-      bupDate,
-      isBup,
-      statusBup: isBup ? 'Sudah BUP' : (isPns(pegawai.status_kepegawaian) ? `BUP: ${bupDate}` : 'Non-PNS'),
-    },
-  });
 }

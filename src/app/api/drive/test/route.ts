@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 function getServiceAccount() {
   const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
@@ -15,7 +16,12 @@ function getServiceAccount() {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  const forbidden = requireRole(auth, ['super_admin']);
+  if (forbidden) return forbidden;
+
   const results: Record<string, any> = {};
 
   // 1. Check env var

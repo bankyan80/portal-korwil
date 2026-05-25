@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { buildSystemPrompt, ChatContext, checkGeminiHealth } from '@/lib/haloAI';
 import { findLocalAnswer, classifyComplexity, classifyQueryType, getSmartRoutingReply, hasSearchIntent, type Complexity } from '@/lib/haloAI-knowledge';
+import { verifyCookieAuth } from '@/lib/server-auth';
 
 const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash')
   .split(',')
@@ -150,6 +151,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+
+    // Verify auth for elevated roles
+    const cookToken = req.cookies.get('auth-token')?.value;
+    if (cookToken) {
+      try {
+        const authUser = await verifyCookieAuth(cookToken);
+        if (authUser?.role) {
+          body.context = body.context || {};
+          body.context.userRole = authUser.role;
+        }
+      } catch {}
+    }
+
     const { message, history, context: ctx }: { message: string; history: { role: string; content: string }[]; context: ChatContext } = body;
 
     if (!message || !message.trim()) {

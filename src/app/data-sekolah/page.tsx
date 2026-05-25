@@ -20,7 +20,19 @@ export default function DataSekolahPage() {
   const counts = { SD: 0, TK: 0, KB: 0 };
   schools.forEach(s => { if (s.jenjang in counts) counts[s.jenjang as keyof typeof counts]++; });
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+    </div>
+  );
+
+  if (!loading && schools.length === 0) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="text-center">
+        <p className="text-gray-500">Tidak ada data sekolah</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

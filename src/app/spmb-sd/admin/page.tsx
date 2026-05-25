@@ -29,12 +29,7 @@ interface Pendaftar {
   tglDaftarUlang?: string;
 }
 
-const defaultData: Pendaftar[] = [
-  { id: 'spmb-1', nama: 'Ahmad Fauzan', nik: '3209071234567890', jalur: 'Domisili', usia: 7, status: 'Diverifikasi', tglDaftar: '2025-06-01', sekolah: 'SD NEGERI 1 LEMAHABANG' },
-  { id: 'spmb-2', nama: 'Siti Nurhaliza', nik: '3209071234567891', jalur: 'Afirmasi', usia: 6, status: 'Menunggu Verifikasi', tglDaftar: '2025-06-02', sekolah: 'SD NEGERI 1 LEMAHABANG' },
-  { id: 'spmb-3', nama: 'Rudi Hartono', nik: '3209071234567892', jalur: 'Mutasi', usia: 8, status: 'Valid', tglDaftar: '2025-06-03', sekolah: 'SD NEGERI 2 BELAWA' },
-  { id: 'spmb-4', nama: 'Dewi Lestari', nik: '3209071234567893', jalur: 'Domisili', usia: 6, status: 'Ditolak', tglDaftar: '2025-06-04', sekolah: 'SD NEGERI 1 LEMAHABANG' },
-];
+const defaultData: Pendaftar[] = [];
 
 const statusColor: Record<string, string> = {
   Diverifikasi: 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/30',
