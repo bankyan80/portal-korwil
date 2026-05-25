@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { ArrowLeft, Search, Users, Download, Printer, Loader2, AlertTriangle } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
+import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { rombelData } from '@/data/rombel';
@@ -480,16 +481,8 @@ export default function MappingPegawaiPage() {
   const tableRef = useRef<HTMLTableElement>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // ---------- DATA FETCH (REALTIME) ----------
+  // ---------- DATA FETCH (Supabase first, fallback Firebase, fallback cache) ----------
   useEffect(() => {
-    if (!db) {
-      const cached = loadCache();
-      if (cached) { setRows(cached); setFirebaseStatus('cache'); }
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
     const cachedRows = loadCache();
     if (cachedRows) { setRows(cachedRows); setFirebaseStatus('cache'); }
 
@@ -508,30 +501,51 @@ export default function MappingPegawaiPage() {
 
     let latestEmployees: Record<string, any>[] = [];
     let latestStudents: Record<string, any>[] = [];
-    let empReady = false;
-    let stuReady = false;
 
-    getDocs(query(collection(db, 'employees'))).then(
-      (snap) => {
-        latestEmployees = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        empReady = true;
-        if (stuReady) processData(latestEmployees, latestStudents);
-      },
-      () => { setFirebaseStatus('error'); setLoading(false); }
-    );
+    async function fetchFromSupabase() {
+      if (!isSupabaseConfigured()) return false;
+      try {
+        const [empRes, stuRes] = await Promise.all([
+          supabase.from('employees').select('*'),
+          supabase.from('students').select('*'),
+        ]);
+        if (empRes.error) throw empRes.error;
+        if (stuRes.error) throw stuRes.error;
+        latestEmployees = empRes.data || [];
+        latestStudents = stuRes.data || [];
+        processData(latestEmployees, latestStudents);
+        return true;
+      } catch (e) {
+        console.log('Supabase read failed, trying Firebase:', e);
+        return false;
+      }
+    }
 
-    getDocs(query(collection(db, 'students'))).then(
-      (snap) => {
-        latestStudents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        stuReady = true;
-        if (empReady) processData(latestEmployees, latestStudents);
-      },
-      () => { setFirebaseStatus('error'); setLoading(false); }
-    );
-
-    return () => {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    };
+    async function load() {
+      setLoading(true);
+      const supabaseOk = await fetchFromSupabase();
+      if (supabaseOk) return;
+      // Fallback ke Firebase
+      if (!db) {
+        if (!cachedRows) setFirebaseStatus('error');
+        setLoading(false);
+        return;
+      }
+      try {
+        const [empSnap, stuSnap] = await Promise.all([
+          getDocs(query(collection(db, 'employees'))),
+          getDocs(query(collection(db, 'students'))),
+        ]);
+        latestEmployees = empSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        latestStudents = stuSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        processData(latestEmployees, latestStudents);
+      } catch {
+        if (!cachedRows) setFirebaseStatus('error');
+        setLoading(false);
+      }
+    }
+    load();
+    return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
   }, []);
 
   // ---------- SEARCH ----------
