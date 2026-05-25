@@ -3,9 +3,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { ArrowLeft, Search, Users, Download, Printer, Loader2, AlertTriangle } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
-import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, query } from 'firebase/firestore';
 import { rombelData } from '@/data/rombel';
 import { useSekolah } from '@/hooks/useSekolah';
 
@@ -475,16 +472,16 @@ export default function MappingPegawaiPage() {
   const [rows, setRows] = useState<SchoolRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMsg, setLoadingMsg] = useState('Memuat data pegawai...');
-  const [firebaseStatus, setFirebaseStatus] = useState<'connected' | 'cache' | 'error'>('connected');
+  const [dataStatus, setDataStatus] = useState<'connected' | 'cache' | 'error'>('connected');
   const [search, setSearch] = useState('');
 
   const tableRef = useRef<HTMLTableElement>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // ---------- DATA FETCH (Supabase first, fallback Firebase, fallback cache) ----------
+  // ---------- DATA FETCH (Google Sheets API, fallback cache) ----------
   useEffect(() => {
     const cachedRows = loadCache();
-    if (cachedRows) { setRows(cachedRows); setFirebaseStatus('cache'); }
+    if (cachedRows) { setRows(cachedRows); setDataStatus('cache'); }
 
     function processData(employees: Record<string, any>[], students: Record<string, any>[]) {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -493,54 +490,31 @@ export default function MappingPegawaiPage() {
         const sekolahList = orderSchools(sekolahListRaw);
         const aggregated = aggregate(employees, sekolahList, students);
         setRows(aggregated);
-        setFirebaseStatus('connected');
+        setDataStatus('connected');
         setLoading(false);
         saveCache(aggregated);
       }, 500);
     }
 
-    let latestEmployees: Record<string, any>[] = [];
-    let latestStudents: Record<string, any>[] = [];
-
-    async function fetchFromSupabase() {
-      if (!isSupabaseConfigured()) return false;
-      try {
-        const [empRes, stuRes] = await Promise.all([
-          supabase.from('employees').select('*'),
-          supabase.from('students').select('*'),
-        ]);
-        if (empRes.error) throw empRes.error;
-        if (stuRes.error) throw stuRes.error;
-        latestEmployees = empRes.data || [];
-        latestStudents = stuRes.data || [];
-        processData(latestEmployees, latestStudents);
-        return true;
-      } catch (e) {
-        console.log('Supabase read failed, trying Firebase:', e);
-        return false;
-      }
-    }
-
     async function load() {
       setLoading(true);
-      const supabaseOk = await fetchFromSupabase();
-      if (supabaseOk) return;
-      // Fallback ke Firebase
-      if (!db) {
-        if (!cachedRows) setFirebaseStatus('error');
-        setLoading(false);
-        return;
-      }
       try {
-        const [empSnap, stuSnap] = await Promise.all([
-          getDocs(query(collection(db, 'employees'))),
-          getDocs(query(collection(db, 'students'))),
+        const [empRes, stuRes] = await Promise.all([
+          fetch('/api/sheets/pegawai').then(r => r.json()),
+          fetch('/api/sheets/siswa').then(r => r.json()),
         ]);
-        latestEmployees = empSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        latestStudents = stuSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        processData(latestEmployees, latestStudents);
-      } catch {
-        if (!cachedRows) setFirebaseStatus('error');
+        if (empRes.success && stuRes.success) {
+          processData(empRes.data, stuRes.data);
+          return;
+        }
+      } catch (e) {
+        console.log('Sheets API failed, using cache if available:', e);
+      }
+      if (!cachedRows) setFirebaseStatus('error');
+      setLoading(false);
+    }
+    load(); {
+      if (!cachedRows) setDataStatus('error');
         setLoading(false);
       }
     }
@@ -692,20 +666,20 @@ export default function MappingPegawaiPage() {
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-gray-500">Status Firebase:</span>
-            {firebaseStatus === 'connected' && (
+            <span className="text-gray-500">Status Data:</span>
+            {dataStatus === 'connected' && (
               <span className="inline-flex items-center gap-1.5 text-emerald-600">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 Tersambung
               </span>
             )}
-            {firebaseStatus === 'cache' && (
+            {dataStatus === 'cache' && (
               <span className="inline-flex items-center gap-1.5 text-amber-600">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                 Cache Lokal
               </span>
             )}
-            {firebaseStatus === 'error' && (
+            {dataStatus === 'error' && (
               <span className="inline-flex items-center gap-1.5 text-red-600">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
                 Tidak Tersambung
@@ -725,11 +699,11 @@ export default function MappingPegawaiPage() {
             <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-2" />
             <span className="text-sm text-gray-500">Memuat data...</span>
           </div>
-        ) : firebaseStatus === 'error' && rows.length === 0 ? (
+        ) : dataStatus === 'error' && rows.length === 0 ? (
           <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl p-6 text-sm">
             <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
             <div>
-              <p className="font-semibold text-red-700">Firebase Tidak Tersambung</p>
+              <p className="font-semibold text-red-700">Data Tidak Tersambung</p>
               <p className="text-red-600 mt-0.5">Tidak dapat memuat data dari server. Periksa koneksi internet atau hubungi administrator.</p>
             </div>
           </div>
