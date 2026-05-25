@@ -17,8 +17,14 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 /**
  * Main trigger: dipanggil otomatis setiap ada submit form
+ * JANGAN klik Run langsung — itu tidak akan jalan karena e (event) hanya dikirim oleh trigger.
+ * Untuk test manual, gunakan fungsi testUpsert() di bagian bawah.
  */
 function onFormSubmit(e) {
+  if (!e || !e.namedValues) {
+    console.log('Skip: event kosong. Jangan klik Run — submit form dulu.');
+    return;
+  }
   const formData = e.namedValues;
 
   const record = {
