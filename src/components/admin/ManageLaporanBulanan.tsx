@@ -99,10 +99,15 @@ export function ManageLaporanBulanan() {
     return items;
   }, [search, filterJenjang, isOperator, userSchool, schools]);
 
-  const allSekolahCount = schools.length;
-  const totalLaporanTahunIni = data.filter(d => d.tahun === tahun && d.status !== 'belum_lapor').length;
-  const sekolahDenganLaporan = new Set(data.filter(d => d.tahun === tahun && d.status !== 'belum_lapor').map(d => d.sekolahId)).size;
-  const progressBulanIni = data.filter(d => d.bulan === String(new Date().getMonth() + 1).padStart(2, '0') && d.tahun === tahun && d.status !== 'belum_lapor').length;
+  const filteredData = useMemo(() => {
+    if (!filterBulan) return data;
+    return data.filter(d => d.bulan === filterBulan || d.bulan === bulanList[parseInt(filterBulan) - 1]);
+  }, [data, filterBulan]);
+
+  const allSekolahCount = filtered.length;
+  const totalLaporanTahunIni = filteredData.filter(d => d.tahun === tahun && d.status !== 'belum_lapor').length;
+  const sekolahDenganLaporan = new Set(filteredData.filter(d => d.tahun === tahun && d.status !== 'belum_lapor').map(d => d.sekolahId)).size;
+  const progressBulanIni = filteredData.filter(d => d.bulan === String(new Date().getMonth() + 1).padStart(2, '0') && d.tahun === tahun && d.status !== 'belum_lapor').length;
 
   function openDetail(school: SekolahItem) {
     setSelectedSchool(school);
@@ -110,7 +115,7 @@ export function ManageLaporanBulanan() {
   }
 
   function getSchoolReports(school: SekolahItem) {
-    return data
+    return filteredData
       .filter(d => d.sekolahId === school.npsn || d.sekolah?.toLowerCase().includes(school.nama.toLowerCase()))
       .sort((a, b) => (b.tahun || 0) - (a.tahun || 0) || bulanList.indexOf(a.bulan || '') - bulanList.indexOf(b.bulan || ''));
   }
@@ -190,7 +195,7 @@ export function ManageLaporanBulanan() {
               </thead>
               <tbody className="divide-y">
                 {filtered.map((s, i) => {
-                  const laporanSekolah = data.filter(d => d.sekolahId === s.npsn);
+                  const laporanSekolah = filteredData.filter(d => d.sekolahId === s.npsn);
                   const latestStatus: StatusLaporan = laporanSekolah.length > 0 ? laporanSekolah[0].status : 'belum_lapor';
                   const sc = statusConfig[latestStatus];
                   const reportsThisYear = laporanSekolah.filter(d => d.tahun === tahun && d.status !== 'belum_lapor');
