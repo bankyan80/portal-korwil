@@ -12,7 +12,6 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { usePegawaiAll } from '@/hooks/usePegawai';
 import { normalizeSchool } from '@/lib/normalize';
 
 interface SekolahForm {
@@ -42,13 +41,18 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SekolahForm>(defaultForm);
   const [saving, setSaving] = useState(false);
+  const [pegawaiItems, setPegawaiItems] = useState<any[]>([]);
 
-  const { data: pegawaiAll } = usePegawaiAll();
+  useEffect(() => {
+    fetch('/api/pegawai/all?all=true')
+      .then(r => r.json())
+      .then(d => { if (d?.items) setPegawaiItems(d.items); })
+      .catch(() => {});
+  }, []);
 
   const kepalaSekolahMap = useMemo(() => {
     const map = new Map<string, { nama: string; nip: string }>();
-    const items = pegawaiAll?.items || [];
-    for (const r of items) {
+    for (const r of pegawaiItems) {
       if ((r.tugas_tambahan || '').toLowerCase() !== 'kepala sekolah') continue;
       const key = normalizeSchool(r.sekolah || '');
       if (key && !map.has(key)) {
@@ -56,7 +60,7 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
       }
     }
     return map;
-  }, [pegawaiAll]);
+  }, [pegawaiItems]);
 
   const isOperator = mode === 'operator';
 
