@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
-import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
 import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
@@ -26,16 +25,19 @@ export default function SuperAdminDashboard() {
   const router = useRouter();
   const { schools: semuaSekolah } = useSekolah();
 
-  const { data: allStudents, loading: studentsLoading } = useCachedFirestore<Record<string, any>>({
-    collectionName: 'students',
-    realtime: false,
-    enabled: true,
-  });
-  const { data: allEmployees, loading: employeesLoading } = useCachedFirestore<Record<string, any>>({
-    collectionName: 'employees',
-    realtime: false,
-    enabled: true,
-  });
+  const [pegawaiCount, setPegawaiCount] = useState<number | null>(null);
+  const [siswaCount, setSiswaCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/pegawai/all?all=true')
+      .then(r => r.json())
+      .then(d => setPegawaiCount(d?.items?.length ?? null))
+      .catch(() => {});
+    fetch('/api/siswa/list')
+      .then(r => r.json())
+      .then(d => setSiswaCount(d?.siswa?.length ?? null))
+      .catch(() => {});
+  }, []);
 
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState('');
@@ -171,21 +173,8 @@ export default function SuperAdminDashboard() {
   }, [fetchAutoSyncStatus]);
 
   const schools = useMemo(() => {
-    const set = new Set<string>();
-    if (allStudents) {
-      for (const s of allStudents) {
-        const name = s.sekolah || s.schoolName || '';
-        if (name) set.add(name);
-      }
-    }
-    if (allEmployees) {
-      for (const e of allEmployees) {
-        const name = e.sekolah || e.schoolName || '';
-        if (name) set.add(name);
-      }
-    }
-    return Array.from(set).sort();
-  }, [allStudents, allEmployees]);
+    return semuaSekolah.map(s => s.nama).sort();
+  }, [semuaSekolah]);
 
   // Realtime listener for laporan bulanan
   useEffect(() => {
@@ -239,8 +228,8 @@ export default function SuperAdminDashboard() {
   }
 
   const menu = [
-    { label: 'Data GTK', icon: Users, desc: 'Seluruh data PTK & tendik', count: allEmployees?.length, href: '/admin/super/data-guru', color: 'bg-emerald-100 text-emerald-700' },
-    { label: 'Data Siswa', icon: Users, desc: 'Seluruh data peserta didik', count: allStudents?.length, href: '/admin/super/data-siswa', color: 'bg-violet-100 text-violet-700' },
+    { label: 'Data GTK', icon: Users, desc: 'Seluruh data PTK & tendik', count: pegawaiCount, href: '/admin/super/data-guru', color: 'bg-emerald-100 text-emerald-700' },
+    { label: 'Data Siswa', icon: Users, desc: 'Seluruh data peserta didik', count: siswaCount, href: '/admin/super/data-siswa', color: 'bg-violet-100 text-violet-700' },
     { label: 'Data Sekolah', icon: GraduationCap, desc: 'Profil & informasi sekolah', href: '/admin/super/sekolah', color: 'bg-blue-100 text-blue-700' },
     { label: 'Laporan Bulanan', icon: FileText, desc: 'Monitoring laporan bulanan sekolah', href: '/admin/super/laporan-bulanan', color: 'bg-orange-100 text-orange-700' },
     { label: 'Tugas', icon: ListTodo, desc: 'Buat & monitor tugas sekolah', href: '/admin/super/tugas', color: 'bg-indigo-100 text-indigo-700' },
@@ -253,7 +242,7 @@ export default function SuperAdminDashboard() {
 
   ];
 
-  const isStatsLoading = studentsLoading || employeesLoading;
+  const isStatsLoading = pegawaiCount === null || siswaCount === null;
 
   return (
     <AuthGuard requiredRoles={['super_admin']} requireActive featureName="Dashboard Super Admin">
@@ -331,7 +320,7 @@ export default function SuperAdminDashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Sekolah</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {isStatsLoading ? <Loader2 className="w-5 h-5 animate-spin inline" /> : schools.length}
+                  {semuaSekolah.length}
                 </p>
               </div>
             </div>
@@ -344,7 +333,7 @@ export default function SuperAdminDashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Pegawai</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {isStatsLoading ? <Loader2 className="w-5 h-5 animate-spin inline" /> : allEmployees?.length ?? 0}
+                  {pegawaiCount === null ? <Loader2 className="w-5 h-5 animate-spin inline" /> : pegawaiCount}
                 </p>
               </div>
             </div>
@@ -357,7 +346,7 @@ export default function SuperAdminDashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Siswa</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {isStatsLoading ? <Loader2 className="w-5 h-5 animate-spin inline" /> : allStudents?.length ?? 0}
+                  {siswaCount === null ? <Loader2 className="w-5 h-5 animate-spin inline" /> : siswaCount}
                 </p>
               </div>
             </div>
@@ -369,7 +358,8 @@ export default function SuperAdminDashboard() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Data Tersinkron</p>
-                <p className="text-2xl font-bold text-green-600">Ya</p>
+                <p className="text-2xl font-bold" style={{ color: autoSyncStatus?.lastSynced ? '#16a34a' : '#d97706' }}>
+                  {autoSyncStatus?.lastSynced ? 'Ya' : 'Tidak'}
               </div>
             </div>
           </div>
@@ -483,7 +473,7 @@ export default function SuperAdminDashboard() {
             Selamat datang, Super Admin
           </h2>
           <p className="text-sm text-muted-foreground">
-            Mengelola {schools.length} sekolah dengan total {allStudents?.length ?? 0} siswa dan {allEmployees?.length ?? 0} pegawai.
+            Mengelola {semuaSekolah.length} sekolah dengan total {siswaCount ?? 0} siswa dan {pegawaiCount ?? 0} pegawai.
             Gunakan tombol <strong>Sinkronisasi Data</strong> untuk memperbarui data dari file statis ke Firestore.
           </p>
           {schools.length > 0 && (
