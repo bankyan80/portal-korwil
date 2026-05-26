@@ -49,6 +49,7 @@ async function canReadFullData(req: NextRequest): Promise<boolean> {
 
 function toPublicSiswa(s: any) {
   return {
+    nama: s.nama || '',
     jk: s.jk || s.jenis_kelamin || '',
     sekolah: s.sekolah || s.nama_sekolah || '',
     jenjang: s.jenjang || '',

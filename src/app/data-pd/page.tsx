@@ -109,9 +109,11 @@ function buildSekolahData(allSekolah: SekolahItem[], firestoreSd?: SekolahKelas[
 export default function DataPDPage() {
   const { schools } = useSekolah();
   const [search, setSearch] = useState('');
+  const [siswaSearch, setSiswaSearch] = useState('');
   const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
   const [sekolahData, setSekolahData] = useState<SekolahKelas[]>([]);
   const [loading, setLoading] = useState(true);
+  const [allSiswa, setAllSiswa] = useState<any[] | null>(null);
 
   const schoolsRef = useRef(schools);
 
@@ -123,12 +125,19 @@ export default function DataPDPage() {
     const currentSchools = schoolsRef.current;
     async function load() {
       try {
-        const res = await fetch('/api/siswa/per-kelas');
-        const json = await res.json();
+        const [pdRes, siswaRes] = await Promise.all([
+          fetch('/api/siswa/per-kelas'),
+          fetch('/api/siswa/list?limit=10000'),
+        ]);
+        const json = await pdRes.json();
         if (json.data) {
           setSekolahData(buildSekolahData(currentSchools, json.data as SekolahKelas[]));
         } else {
           setSekolahData(buildSekolahData(currentSchools));
+        }
+        if (siswaRes.ok) {
+          const sJson = await siswaRes.json();
+          setAllSiswa(sJson.siswa || []);
         }
       } catch (e) {
         console.error('Gagal memuat data PD:', e);
@@ -235,12 +244,21 @@ export default function DataPDPage() {
               })}
             </div>
 
-            <div className="relative max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input type="text" placeholder="Cari sekolah..." value={search} onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input type="text" placeholder="Cari sekolah..." value={search} onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+              </div>
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input type="text" placeholder="Cari nama siswa..." value={siswaSearch} onChange={(e) => setSiswaSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+              </div>
             </div>
 
+            {!siswaSearch && (
+            <>
             {(filterJenjang === 'ALL' ? jenjangList : [filterJenjang]).map((j) => {
           const meta = jenjangMeta[j];
           const Icon = meta.icon;
@@ -326,6 +344,58 @@ export default function DataPDPage() {
             );
           });
           })}
+          </>)}
+
+            {siswaSearch && (
+              <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b">
+                  <h3 className="font-semibold text-[#0d3b66]">Hasil Pencarian: "{siswaSearch}"</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  {!allSiswa ? (
+                    <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /></div>
+                  ) : siswaSearch.length < 2 ? (
+                    <div className="px-5 py-8 text-center text-gray-400">Ketik minimal 2 huruf</div>
+                  ) : (
+                    (() => {
+                      const q = siswaSearch.toLowerCase();
+                      const matched = allSiswa.filter((p: any) => p.nama?.toLowerCase().includes(q)).slice(0, 100);
+                      return matched.length === 0 ? (
+                        <div className="px-5 py-8 text-center text-gray-400">Tidak ditemukan</div>
+                      ) : (
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-5 py-3 font-semibold text-gray-600 text-center w-10">No</th>
+                              <th className="px-5 py-3 font-semibold text-gray-600">Nama</th>
+                              <th className="px-5 py-3 font-semibold text-gray-600">Sekolah</th>
+                              <th className="px-5 py-3 font-semibold text-gray-600">Kelas</th>
+                              <th className="px-5 py-3 font-semibold text-gray-600">JK</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            {matched.map((p: any, i: number) => (
+                              <tr key={`${p.nama}-${i}`} className="hover:bg-blue-50/50 transition-colors">
+                                <td className="px-5 py-2.5 text-gray-500 text-center">{i + 1}</td>
+                                <td className="px-5 py-2.5 font-medium text-gray-900">{p.nama}</td>
+                                <td className="px-5 py-2.5 text-gray-500">{p.sekolah}</td>
+                                <td className="px-5 py-2.5 text-gray-500">{p.kelas || (p.jenjang === 'TK' ? (p.rombel || '-') : '-')}</td>
+                                <td className="px-5 py-2.5 text-gray-500 text-center">{p.jk || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      );
+                    })()
+                  )}
+                </div>
+                {allSiswa && siswaSearch.length >= 2 && (
+                  <div className="px-5 py-3 border-t text-xs text-gray-400">
+                    Menampilkan {Math.min(100, allSiswa.filter((p: any) => p.nama?.toLowerCase().includes(siswaSearch.toLowerCase())).length)} dari {allSiswa.filter((p: any) => p.nama?.toLowerCase().includes(siswaSearch.toLowerCase())).length} hasil
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </main>
