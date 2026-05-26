@@ -21,6 +21,7 @@ interface SekolahForm {
   desa: string;
   alamat: string;
   kepalaSekolah: string;
+  nipKepalaSekolah: string;
   kontak: string;
   akreditasi: string;
   website: string;
@@ -28,7 +29,7 @@ interface SekolahForm {
 
 const defaultForm: SekolahForm = {
   name: '', npsn: '', jenjang: '', status: '', desa: '',
-  alamat: '', kepalaSekolah: '', kontak: '', akreditasi: '', website: '',
+  alamat: '', kepalaSekolah: '', nipKepalaSekolah: '', kontak: '', akreditasi: '', website: '',
 };
 
 export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
@@ -66,7 +67,7 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
           setForm({
             name: s.name || '', npsn: s.npsn || '', jenjang: s.jenjang || '',
             status: s.status || '', desa: s.desa || '', alamat: s.alamat || '',
-            kepalaSekolah: s.kepalaSekolah || '', kontak: s.kontak || '',
+            kepalaSekolah: s.kepalaSekolah || '', nipKepalaSekolah: s.nipKepalaSekolah || '', kontak: s.kontak || '',
             akreditasi: s.akreditasi || '', website: s.website || '',
           });
         }
@@ -91,7 +92,7 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
     setForm({
       name: s.name || '', npsn: s.npsn || '', jenjang: s.jenjang || '',
       status: s.status || '', desa: s.desa || '', alamat: s.alamat || '',
-      kepalaSekolah: s.kepalaSekolah || '', kontak: s.kontak || '',
+      kepalaSekolah: s.kepalaSekolah || '', nipKepalaSekolah: s.nipKepalaSekolah || '', kontak: s.kontak || '',
       akreditasi: s.akreditasi || '', website: s.website || '',
     });
     setFormOpen(true);
@@ -154,6 +155,7 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
                 ['Desa', mySchool.desa],
                 ['Alamat', mySchool.alamat],
                 ['Kepala Sekolah', mySchool.kepalaSekolah],
+                ['NIP Kepala Sekolah', mySchool.nipKepalaSekolah],
                 ['Akreditasi', mySchool.akreditasi],
                 ['Kontak', mySchool.kontak],
                 ['Website', mySchool.website],
@@ -220,19 +222,23 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
                     <Input value={form.kepalaSekolah} onChange={(e: any) => setForm(f => ({ ...f, kepalaSekolah: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Akreditasi</Label>
-                    <Input value={form.akreditasi} onChange={(e: any) => setForm(f => ({ ...f, akreditasi: e.target.value }))} />
+                    <Label>NIP Kepala Sekolah</Label>
+                    <Input value={form.nipKepalaSekolah} onChange={(e: any) => setForm(f => ({ ...f, nipKepalaSekolah: e.target.value }))} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
+                    <Label>Akreditasi</Label>
+                    <Input value={form.akreditasi} onChange={(e: any) => setForm(f => ({ ...f, akreditasi: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
                     <Label>Kontak</Label>
                     <Input value={form.kontak} onChange={(e: any) => setForm(f => ({ ...f, kontak: e.target.value }))} />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Website</Label>
-                    <Input value={form.website} onChange={(e: any) => setForm(f => ({ ...f, website: e.target.value }))} />
-                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Website</Label>
+                  <Input value={form.website} onChange={(e: any) => setForm(f => ({ ...f, website: e.target.value }))} />
                 </div>
               </div>
               <DialogFooter>
@@ -269,6 +275,8 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
               <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Nama Sekolah</th>
               <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Jenjang</th>
               <th className="px-4 py-3 text-left font-semibold text-muted-foreground">NPSN</th>
+              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Kepala Sekolah</th>
+              <th className="px-4 py-3 text-left font-semibold text-muted-foreground">NIP</th>
               <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Desa</th>
               <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Aksi</th>
             </tr></thead>
@@ -278,6 +286,8 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
                   <td className="px-4 py-3 font-medium text-foreground">{s.name || s.nama}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.jenjang}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.npsn || '-'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{s.kepalaSekolah || '-'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{s.nipKepalaSekolah || '-'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.desa || s.alamat || '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openEdit(s)}>
@@ -286,7 +296,7 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
                   </td>
                 </tr>
               ))}
-              {schools.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Belum ada data sekolah</td></tr>}
+              {schools.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Belum ada data sekolah</td></tr>}
             </tbody>
           </table>
         </div>
@@ -344,19 +354,23 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
                 <Input value={form.kepalaSekolah} onChange={(e: any) => setForm(f => ({ ...f, kepalaSekolah: e.target.value }))} />
               </div>
               <div className="space-y-2">
-                <Label>Akreditasi</Label>
-                <Input value={form.akreditasi} onChange={(e: any) => setForm(f => ({ ...f, akreditasi: e.target.value }))} />
+                <Label>NIP Kepala Sekolah</Label>
+                <Input value={form.nipKepalaSekolah} onChange={(e: any) => setForm(f => ({ ...f, nipKepalaSekolah: e.target.value }))} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label>Akreditasi</Label>
+                <Input value={form.akreditasi} onChange={(e: any) => setForm(f => ({ ...f, akreditasi: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
                 <Label>Kontak</Label>
                 <Input value={form.kontak} onChange={(e: any) => setForm(f => ({ ...f, kontak: e.target.value }))} />
               </div>
-              <div className="space-y-2">
-                <Label>Website</Label>
-                <Input value={form.website} onChange={(e: any) => setForm(f => ({ ...f, website: e.target.value }))} />
-              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Website</Label>
+              <Input value={form.website} onChange={(e: any) => setForm(f => ({ ...f, website: e.target.value }))} />
             </div>
           </div>
           <DialogFooter>
