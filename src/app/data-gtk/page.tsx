@@ -39,6 +39,7 @@ export default function DataGTKPage() {
   const [schoolData, setSchoolData] = useState<SchoolGtk[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [pegawaiSearch, setPegawaiSearch] = useState('');
   const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
   const [pegawaiList, setPegawaiList] = useState<Pegawai[]>([]);
   const [pegawaiLoading, setPegawaiLoading] = useState(false);
@@ -47,20 +48,27 @@ export default function DataGTKPage() {
   const refreshInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   useEffect(() => {
-    async function loadGtkSummary() {
+    async function loadInitial() {
       try {
-        const res = await fetch('/api/pegawai/gtk-summary');
-        if (res.ok) {
-          const data = await res.json();
+        const [summaryRes, pegRes] = await Promise.all([
+          fetch('/api/pegawai/gtk-summary'),
+          fetch('/api/pegawai/all?all=true'),
+        ]);
+        if (summaryRes.ok) {
+          const data = await summaryRes.json();
           setSchoolData(data.schools || []);
         }
+        if (pegRes.ok) {
+          const data = await pegRes.json();
+          setAllPegawai(data.items || []);
+        }
       } catch (e) {
-        console.error('Gagal memuat data GTK:', e);
+        console.error('Gagal memuat data:', e);
       } finally {
         setLoading(false);
       }
     }
-    loadGtkSummary();
+    loadInitial();
 
     refreshInterval.current = setInterval(() => {
       fetch('/api/pegawai/gtk-summary')
@@ -77,27 +85,13 @@ export default function DataGTKPage() {
     setPegawaiLoading(true);
     setPegawaiList([]);
 
-    try {
-      let data = allPegawai;
-      if (!data) {
-        const res = await fetch('/api/pegawai/all?all=true');
-        if (res.ok) {
-          const json = await res.json();
-          data = json.items || [];
-          setAllPegawai(data);
-        }
-      }
-      if (data) {
-        const filtered = data.filter((p: Pegawai) =>
-          p.sekolah?.toLowerCase() === schoolName.toLowerCase()
-        );
-        setPegawaiList(filtered);
-      }
-    } catch (e) {
-      console.error('Gagal memuat pegawai:', e);
-    } finally {
-      setPegawaiLoading(false);
+    if (allPegawai) {
+      const filtered = allPegawai.filter((p: Pegawai) =>
+        p.sekolah?.toLowerCase() === schoolName.toLowerCase()
+      );
+      setPegawaiList(filtered);
     }
+    setPegawaiLoading(false);
   }, [allPegawai]);
 
   const totalGTK = schoolData.reduce((a, s) => a + s.total, 0);
@@ -238,6 +232,16 @@ export default function DataGTKPage() {
                   className="pl-9 pr-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-48"
                 />
               </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Cari nama pegawai..."
+                  value={pegawaiSearch}
+                  onChange={e => setPegawaiSearch(e.target.value)}
+                  className="pl-9 pr-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-48"
+                />
+              </div>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -320,6 +324,70 @@ export default function DataGTKPage() {
             )}
           </div>
         </div>
+
+        {pegawaiSearch && (
+          <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b">
+              <h3 className="font-semibold text-[#0d3b66]">Hasil Pencarian: "{pegawaiSearch}"</h3>
+            </div>
+            <div className="overflow-x-auto">
+              {!allPegawai ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                </div>
+              ) : pegawaiSearch.length < 2 ? (
+                <div className="px-5 py-8 text-center text-gray-400">Ketik minimal 2 huruf</div>
+              ) : (
+                (() => {
+                  const q = pegawaiSearch.toLowerCase();
+                  const matched = allPegawai.filter(p => p.nama?.toLowerCase().includes(q)).slice(0, 100);
+                  return matched.length === 0 ? (
+                    <div className="px-5 py-8 text-center text-gray-400">Tidak ditemukan</div>
+                  ) : (
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-5 py-3 font-semibold text-gray-600 text-center w-10">No</th>
+                          <th className="px-5 py-3 font-semibold text-gray-600">Nama</th>
+                          <th className="px-5 py-3 font-semibold text-gray-600">Sekolah</th>
+                          <th className="px-5 py-3 font-semibold text-gray-600">Jenis PTK</th>
+                          <th className="px-5 py-3 font-semibold text-gray-600">JK</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {matched.map((p, i) => (
+                          <tr key={`${p.nama}-${i}`} className="hover:bg-blue-50/50 transition-colors">
+                            <td className="px-5 py-2.5 text-gray-500 text-center">{i + 1}</td>
+                            <td className="px-5 py-2.5 font-medium text-gray-900">
+                              {p.nama}
+                              {p.jenis_ptk === 'Kepala Sekolah' && (
+                                <span className="ml-2 inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-800">KEPSEK</span>
+                              )}
+                            </td>
+                            <td className="px-5 py-2.5 text-gray-500">{p.sekolah}</td>
+                            <td className="px-5 py-2.5">
+                              <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                                p.jenis_ptk === 'Guru' ? 'bg-blue-100 text-blue-700' :
+                                p.jenis_ptk === 'Kepala Sekolah' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-purple-100 text-purple-700'
+                              }`}>{p.jenis_ptk}</span>
+                            </td>
+                            <td className="px-5 py-2.5 text-gray-500 text-center">{p.jk || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  );
+                })()
+              )}
+            </div>
+            {allPegawai && pegawaiSearch.length >= 2 && (
+              <div className="px-5 py-3 border-t text-xs text-gray-400">
+                Menampilkan {allPegawai.filter(p => p.nama?.toLowerCase().includes(pegawaiSearch.toLowerCase())).length > 100 ? '100+' : allPegawai.filter(p => p.nama?.toLowerCase().includes(pegawaiSearch.toLowerCase())).length} dari {allPegawai.filter(p => p.nama?.toLowerCase().includes(pegawaiSearch.toLowerCase())).length} hasil
+              </div>
+            )}
+          </div>
+        )}
 
         {selectedSchool && (
           <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-10 px-2 sm:px-4">
