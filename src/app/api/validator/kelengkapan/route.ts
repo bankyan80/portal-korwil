@@ -44,6 +44,12 @@ const SARPRAS_FIELDS = [
   'r_dinas_guru_sp','r_dinas_guru_dr','perpustakaan_p','perpustakaan_sp','perpustakaan_dr',
 ];
 
+function loadJson(filename: string): any[] {
+  const p = path.join(process.cwd(), 'src', 'data', filename);
+  if (!fs.existsSync(p)) return [];
+  return JSON.parse(fs.readFileSync(p, 'utf-8'));
+}
+
 function loadSchools(): BaseSekolah[] {
   const p = path.join(process.cwd(), 'src', 'data', 'sekolah.ts');
   const raw = fs.readFileSync(p, 'utf-8');
@@ -79,45 +85,47 @@ export async function GET(req: NextRequest) {
   const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
   if (forbidden) return forbidden;
 
-  if (!isFirebaseAdminConfigured || !adminDb) {
-    return NextResponse.json({ success: false, error: 'Firebase Admin tidak dikonfigurasi' }, { status: 500 });
-  }
-
   try {
     const schools = loadSchools();
     const results: SchoolCompleteness[] = [];
 
-    const [siswaSnap, pegawaiSnap, sarprasSnap, laporanSnap, sekolahSnap] = await Promise.all([
-      adminDb.collection('students').get(),
-      adminDb.collection('employees').get(),
-      adminDb.collection('sarpras').get(),
-      adminDb.collection('laporan_bulanan').get(),
-      adminDb.collection('schools').get(),
-    ]);
+    // Baca siswa & pegawai dari static JSON
+    const siswaDocs = loadJson('data-siswa.json');
+    const pegawaiDocs = loadJson('data-pegawai.json');
+    const sekolahJsonDocs = loadJson('data-sekolah.json');
 
-    const siswaDocs = siswaSnap.docs.map(d => d.data());
-    const pegawaiDocs = pegawaiSnap.docs.map(d => d.data());
-    const sarprasDocs = new Map(sarprasSnap.docs.map(d => [d.id, d.data()]));
-    const laporanDocs = laporanSnap.docs.map(d => d.data());
-    const sekolahDocs = new Map(sekolahSnap.docs.map(d => [d.id, d.data()]));
+    // Sarpras & laporan masih dari Firestore (belum migrasi)
+    let sarprasDocs = new Map();
+    let laporanDocs: any[] = [];
+    if (isFirebaseAdminConfigured && adminDb) {
+      const [sarprasSnap, laporanSnap] = await Promise.all([
+        adminDb.collection('sarpras').get(),
+        adminDb.collection('laporan_bulanan').get(),
+      ]);
+      sarprasDocs = new Map(sarprasSnap.docs.map(d => [d.id, d.data()]));
+      laporanDocs = laporanSnap.docs.map(d => d.data());
+    }
 
     for (const school of schools) {
       const npsn = school.npsn;
       const schoolName = school.nama;
       const normalized = schoolName.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-      const sekolahFirestore = sekolahDocs.get(npsn) || sekolahDocs.get(schoolName);
+      const sekolahData = sekolahJsonDocs.find((s: any) =>
+        s.npsn === npsn || (s.nama || s.name || '').toLowerCase().replace(/[^a-z0-9]/g, '') === normalized
+      );
+      const profilAda = !!sekolahData && !!sekolahData.npsn;
 
       const siswaSchool = siswaDocs.filter((s: any) => {
         const sName = (s.sekolah || s.schoolName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        return sName === normalized || s.schoolId === npsn;
+        return sName === normalized;
       });
       const siswaAda = siswaSchool.length > 0;
       const siswaTotal = siswaSchool.length;
 
       const pegawaiSchool = pegawaiDocs.filter((p: any) => {
         const pName = (p.sekolah || p.schoolName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        return pName === normalized || p.schoolId === npsn;
+        return pName === normalized;
       });
       const pegawaiAda = pegawaiSchool.length > 0;
       const pegawaiTotal = pegawaiSchool.length;
@@ -132,8 +140,6 @@ export async function GET(req: NextRequest) {
       const laporanSchool = laporanDocs.filter((l: any) => l.sekolahId === npsn || l.sekolah === schoolName);
       const laporanAda = laporanSchool.length > 0;
       const laporanTotal = laporanSchool.length;
-
-      const profilAda = !!sekolahFirestore && !!sekolahFirestore.npsn && sekolahFirestore.npsn !== '-';
 
       const skorRaw = [siswaAda, pegawaiAda, sarprasAda, laporanAda, profilAda].filter(Boolean).length;
       const skor = Math.round((skorRaw / 5) * 100);

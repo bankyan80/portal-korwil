@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
 import { getRows } from '@/lib/googleSheets';
 import { verifyCookieAuth } from '@/lib/server-auth';
 import { normalizeSchool } from '@/lib/normalize';
-import type { Query } from 'firebase-admin/firestore';
 import siswaData from '@/data/data-siswa.json';
 
 const PRIVILEGED_ROLES = new Set(['super_admin', 'operator_sekolah', 'ketua_organisasi']);
@@ -121,63 +119,7 @@ export async function GET(req: NextRequest) {
     console.log('[siswa/list] Sheets unavailable, fallback:', (e as Error).message);
   }
 
-  // 2) Coba Firestore
-  if (isFirebaseAdminConfigured && adminDb) {
-    try {
-      let query: any = adminDb.collection('students');
-      
-      if (schoolId) {
-        query = query.where('schoolId', '==', schoolId);
-      } else if (sekolah) {
-        query = query.where('sekolah', '==', sekolah);
-      }
-
-      if (jenjang) {
-        const jenjangValues = getJenjangValues(jenjang);
-        if (jenjangValues.length === 1) {
-          query = query.where('jenjang', '==', jenjang);
-        } else {
-          query = query.where('jenjang', 'in', jenjangValues);
-        }
-      }
-      if (layak_pip) query = query.where('layak_pip', '==', layak_pip);
-
-      const snapshot = await query.get();
-      let all = snapshot.docs.map((doc: any) => ({ nik: doc.id, ...doc.data() })) as any[];
-      // Normalisasi PAUD → KB
-      all = all.map((s: any) => s.jenjang === 'PAUD' ? { ...s, jenjang: 'KB' } : s);
-
-      if (all.length === 0 && (schoolId || sekolah)) {
-        console.log(`[API] Query specific empty, falling back to all and manual filter for ${schoolId || sekolah}`);
-        const fallbackSnap = await adminDb.collection('students').limit(1000).get();
-        const allStudents = fallbackSnap.docs.map(d => ({ nik: d.id, ...d.data() }));
-        const q = normalizeSchool(sekolah || '');
-        all = allStudents.filter((s: any) => 
-          (schoolId && s.schoolId === schoolId) || 
-          (sekolah && normalizeSchool(s.sekolah || '') === q)
-        );
-      }
-
-      if (all.length > 0 && all[0].sekolah) {
-        if (sekolah) {
-          const q = normalizeSchool(sekolah);
-          all = all.filter((s: any) => normalizeSchool(s.sekolah || '') === q);
-        }
-        if (search) {
-          const q = search.toLowerCase();
-          all = all.filter((s: any) =>
-            s.nama?.toLowerCase().includes(q) ||
-            (fullData && s.nik?.includes(q))
-          );
-        }
-        return buildResponse(all, fullData);
-      }
-    } catch (error) {
-      console.error('Error fetching siswa from Firestore:', error);
-    }
-  }
-
-  // 3) Fallback: static JSON
+  // 2) Fallback: static JSON
   let all = [...siswaData] as any[];
   all = applyFilters(all, jenjang, layak_pip, sekolah, schoolId, search, limitParam, fullData);
   return buildResponse(all, fullData);

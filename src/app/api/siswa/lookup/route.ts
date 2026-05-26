@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
 import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
+import fs from 'fs';
+import path from 'path';
+
+function loadSiswa(): any[] {
+  const p = path.join(process.cwd(), 'src', 'data', 'data-siswa.json');
+  return JSON.parse(fs.readFileSync(p, 'utf-8'));
+}
 
 export async function GET(req: NextRequest) {
-  // Verify auth - only authenticated users can lookup students
   const token = req.cookies.get('auth-token')?.value;
   const auth = await verifyCookieAuth(token || '');
   const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
   if (forbidden) return forbidden;
-  if (!isFirebaseAdminConfigured || !adminDb) {
-    return NextResponse.json(
-      { found: false, message: 'Firebase Admin tidak dikonfigurasi' },
-      { status: 500 }
-    );
-  }
 
   const nik = req.nextUrl.searchParams.get('nik')?.replace(/\D/g, '');
   if (!nik) {
@@ -21,16 +20,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    let doc = await adminDb.collection('siswa').doc(nik).get();
-    let s = doc.data();
-
-    if (!doc.exists || !s) {
-      const studentsSnap = await adminDb.collection('students').where('nik', '==', nik).get();
-      if (!studentsSnap.empty) {
-        s = studentsSnap.docs[0].data();
-        s = { ...s, nik: s.nik || nik };
-      }
-    }
+    const all = loadSiswa();
+    const s = all.find((item: any) => item.nik === nik);
 
     if (!s) {
       return NextResponse.json({ found: false, message: 'NIK tidak ditemukan dalam database' });
@@ -50,7 +41,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error looking up siswa in Firestore:', error);
+    console.error('Error looking up siswa:', error);
     return NextResponse.json(
       { found: false, message: 'Gagal mencari data' },
       { status: 500 }

@@ -1,34 +1,16 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { cert, getApps, initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-import type { ServiceAccount } from 'firebase-admin';
+import fs from 'fs';
+import path from 'path';
 
 const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ROOT_ID || '1ROF4T8UETEfCyY_pzkwRh7c5rK7hdYSJ';
-const CONFIG_DOC_ID = 'google_sheets_config';
 
-function getServiceAccount(): ServiceAccount | null {
-  const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+function getServiceAccount(): any | null {
+  const envVal = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
   if (!envVal) return null;
-  try {
-    return JSON.parse(envVal) as ServiceAccount;
-  } catch {
-    try {
-      const decoded = Buffer.from(envVal, 'base64').toString('utf-8');
-      return JSON.parse(decoded) as ServiceAccount;
-    } catch {
-      return null;
-    }
-  }
-}
-
-function getAdminDb() {
-  const sa = getServiceAccount();
-  if (!sa) return null;
-  if (!getApps().length) {
-    initializeApp({ credential: cert(sa) });
-  }
-  return getFirestore();
+  try { return JSON.parse(envVal); } catch {}
+  try { return JSON.parse(Buffer.from(envVal, 'base64').toString('utf-8')); } catch {}
+  return null;
 }
 
 function getAuthClient() {
@@ -43,23 +25,26 @@ function getAuthClient() {
   });
 }
 
+function loadJson(filename: string): any[] {
+  const p = path.join(process.cwd(), 'src', 'data', filename);
+  if (!fs.existsSync(p)) return [];
+  return JSON.parse(fs.readFileSync(p, 'utf-8'));
+}
+
 function fmtDate(ts: any) {
   if (!ts) return '';
   try { return new Date(ts.toMillis ? ts.toMillis() : ts).toLocaleDateString('id-ID'); }
   catch { return String(ts); }
 }
 
-async function getOrCreateSpreadsheet(drive: any, sheets: any, db: any): Promise<{ id: string; url: string }> {
-  const configRef = db.collection('system_config').doc(CONFIG_DOC_ID);
-  const configDoc = await configRef.get();
-
-  if (configDoc.exists && configDoc.data()?.spreadsheetId) {
-    const existingId = configDoc.data().spreadsheetId;
+async function getOrCreateSpreadsheet(drive: any): Promise<{ id: string; url: string }> {
+  const existingId = process.env.GOOGLE_SHEET_ID;
+  if (existingId) {
     try {
       await drive.files.get({ fileId: existingId, fields: 'id' });
       return { id: existingId, url: `https://docs.google.com/spreadsheets/d/${existingId}` };
     } catch {
-      console.log('[cron] Existing spreadsheet not found, creating new one');
+      console.log('[cron] Existing spreadsheet not found via GOOGLE_SHEET_ID, creating new one');
     }
   }
 
@@ -75,13 +60,6 @@ async function getOrCreateSpreadsheet(drive: any, sheets: any, db: any): Promise
   await drive.permissions.create({
     fileId: fileRes.data.id!,
     requestBody: { role: 'writer', type: 'anyone' },
-  });
-
-  await configRef.set({
-    spreadsheetId: fileRes.data.id,
-    spreadsheetUrl: fileRes.data.webViewLink,
-    lastUpdated: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
   });
 
   return { id: fileRes.data.id!, url: fileRes.data.webViewLink! };
@@ -149,86 +127,51 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const db = getAdminDb();
   const auth = getAuthClient();
 
-  if (!db || !auth) {
-    return NextResponse.json({ error: 'Service not configured' }, { status: 500 });
+  if (!auth) {
+    return NextResponse.json({ error: 'Service account not configured' }, { status: 500 });
   }
 
   try {
     const sheets = google.sheets({ version: 'v4', auth });
     const drive = google.drive({ version: 'v3', auth });
 
-    const spreadsheet = await getOrCreateSpreadsheet(drive, sheets, db);
+    const spreadsheet = await getOrCreateSpreadsheet(drive);
 
-    const studentsSnap = await db.collection('students').get();
-    const studentRows: any[][] = [];
-    studentsSnap.forEach(doc => {
-      const d = doc.data();
-      studentRows.push([
-        d.nik || '', d.nama || '', d.jenis_kelamin || d.jk || '', d.nisn || '',
-        d.schoolId || d.sekolah || '', d.jenjang || '', d.kelas || '', d.desa || '',
-        d.status || 'aktif', d.tanggal_lahir || '', d.tempat_lahir || '',
-        d.alamat || '', d.hp || d.telepon || '', d.nama_ayah || '', d.nama_ibu || '',
-        d.pekerjaan_ayah || '', d.pekerjaan_ibu || '', d.penerima_kip || '',
-        d.nomor_kip || '', fmtDate(d.createdAt),
-      ]);
-    });
+    // Baca siswa dari static JSON
+    const siswaList = loadJson('data-siswa.json');
+    const studentRows: any[][] = siswaList.map((d: any) => [
+      d.nik || '', d.nama || '', d.jk || d.jenis_kelamin || '', d.nisn || '',
+      d.sekolah || '', d.jenjang || '', d.kelas ?? '', d.desa || '',
+      'aktif', d.tanggal_lahir || '', d.tempat_lahir || '',
+      d.alamat || '', d.hp || d.telepon || '',
+      d.data_ayah?.nama || '', d.data_ibu?.nama || '',
+      d.data_ayah?.pekerjaan || '', d.data_ibu?.pekerjaan || '',
+      d.penerima_kip || '', d.nomor_kip || '', '',
+    ]);
 
-    const empSnap = await db.collection('employees').get();
-    const empRows: any[][] = [];
-    empSnap.forEach(doc => {
-      const d = doc.data();
-      empRows.push([
-        d.nik || '', d.nama || '', d.jenis_kelamin || d.jk || '', d.nuptk || '',
-        d.nip || '', d.schoolId || d.sekolah || '', d.jenis_ptk || '', d.jabatan || '',
-        d.pendidikan || '', d.status_kepegawaian || d.status || '', d.tugas_tambahan || '',
-        d.tanggal_lahir || '', d.hp || d.telepon || '', d.email || '', d.alamat || '',
-        d.tmt || '', d.sertifikasi || '', fmtDate(d.createdAt),
-      ]);
-    });
+    // Baca pegawai dari static JSON
+    const pegawaiList = loadJson('data-pegawai.json');
+    const empRows: any[][] = pegawaiList.map((d: any) => [
+      d.nik || '', d.nama || '', d.jk || d.jenis_kelamin || '', d.nuptk || '',
+      d.nip || '', d.sekolah || '', d.jenis_ptk || '', d.jabatan || '',
+      d.pendidikan || '', d.status_kepegawaian || d.status || '', d.tugas_tambahan || '',
+      d.tanggal_lahir || '', d.hp || d.telepon || '', d.email || '', d.alamat || '',
+      d.tmt || '', d.sertifikasi || '', '',
+    ]);
 
-    const schoolsSnap = await db.collection('schools').get();
-    const schoolRows: any[][] = [];
-    schoolsSnap.forEach(doc => {
-      const d = doc.data();
-      schoolRows.push([
-        d.id || '', d.name || '', d.npsn || '', d.jenjang || '',
-        d.status || '', d.alamat || '', d.desa || '',
-        d.kepalaSekolah || '', d.kontak || '', d.akreditasi || '',
-      ]);
-    });
+    // Baca sekolah dari static JSON
+    const sekolahList = loadJson('data-sekolah.json');
+    const schoolRows: any[][] = sekolahList.map((d: any) => [
+      d.id || '', d.name || d.nama || '', d.npsn || '', d.jenjang || '',
+      d.status || '', d.alamat || '', d.desa || '',
+      d.kepalaSekolah || '', d.kontak || '', d.akreditasi || '',
+    ]);
 
-    const laporanSnap = await db.collection('laporan_bulanan').get();
     const laporanRows: any[][] = [];
-    laporanSnap.forEach(doc => {
-      const d = doc.data();
-      laporanRows.push([
-        d.id || '', d.sekolah || '', d.bulan || '', d.tahun || '',
-        d.status || '', fmtDate(d.dikirimPada) || '', d.dikirimNama || '',
-      ]);
-    });
-
-    const beritaSnap = await db.collection('berita').get();
     const beritaRows: any[][] = [];
-    beritaSnap.forEach(doc => {
-      const d = doc.data();
-      beritaRows.push([
-        d.id || '', d.judul || '', d.sekolah || '', d.kategori || '',
-        fmtDate(d.tanggal) || '', d.penulis || '', d.status || '',
-      ]);
-    });
-
-    const galeriSnap = await db.collection('galeri').get();
     const galeriRows: any[][] = [];
-    galeriSnap.forEach(doc => {
-      const d = doc.data();
-      galeriRows.push([
-        d.id || '', d.judul || '', d.kategori || '', d.sekolah || '',
-        d.url || '', fmtDate(d.createdAt) || '',
-      ]);
-    });
 
     await syncSheetData(sheets, spreadsheet.id, 'Data Siswa', 0, [
       'NIK', 'Nama', 'JK', 'NISN', 'Sekolah', 'Jenjang', 'Kelas', 'Desa', 'Status',
@@ -279,18 +222,6 @@ export async function POST(req: Request) {
     await syncSheetData(sheets, spreadsheet.id, 'Galeri', 5, [
       'ID', 'Judul', 'Kategori', 'Sekolah', 'URL', 'Tgl Upload',
     ], galeriRows, 6);
-
-    await db.collection('system_config').doc(CONFIG_DOC_ID).update({
-      lastSynced: new Date().toISOString(),
-      syncCount: {
-        siswa: studentRows.length,
-        pegawai: empRows.length,
-        sekolah: schoolRows.length,
-        laporan: laporanRows.length,
-        berita: beritaRows.length,
-        galeri: galeriRows.length,
-      },
-    });
 
     return NextResponse.json({
       success: true,

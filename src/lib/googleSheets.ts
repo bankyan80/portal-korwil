@@ -7,10 +7,17 @@ type SheetName = 'data_pegawai' | 'data_siswa' | 'data_sekolah';
 
 /** Coba baca service account dari env var, lalu fallback ke file lokal */
 function loadServiceAccount(): any {
-  const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-  if (envVal && envVal !== '""') {
-    try { return JSON.parse(envVal); } catch {}
-    try { return JSON.parse(Buffer.from(envVal, 'base64').toString('utf-8')); } catch {}
+  // Prioritas 1: GOOGLE_SERVICE_ACCOUNT_KEY (dedicated untuk Sheets)
+  const sheetsKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  if (sheetsKey && sheetsKey !== '""') {
+    try { return JSON.parse(sheetsKey); } catch {}
+    try { return JSON.parse(Buffer.from(sheetsKey, 'base64').toString('utf-8')); } catch {}
+  }
+  // Prioritas 2: FIREBASE_SERVICE_ACCOUNT_KEY (legacy)
+  const fbKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (fbKey && fbKey !== '""') {
+    try { return JSON.parse(fbKey); } catch {}
+    try { return JSON.parse(Buffer.from(fbKey, 'base64').toString('utf-8')); } catch {}
   }
   // Fallback: baca dari service-account/ folder
   const saDir = join(process.cwd(), 'service-account');
@@ -18,7 +25,7 @@ function loadServiceAccount(): any {
     const files = readdirSync(saDir).filter(f => f.endsWith('.json'));
     if (files.length) return JSON.parse(readFileSync(join(saDir, files[0]), 'utf-8'));
   }
-  throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY tidak ditemukan di env maupun file lokal');
+  throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY / FIREBASE_SERVICE_ACCOUNT_KEY tidak ditemukan di env maupun file lokal');
 }
 
 let cachedAuth: any = null;

@@ -7,13 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { db } from '@/lib/firebase';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  collection, addDoc, deleteDoc, doc, setDoc, writeBatch, onSnapshot, query, where, getDocs, limit
-} from 'firebase/firestore';
 import {
   School, Users, BarChart3, Search, Loader2, Plus, Pencil, Trash2, Save, ArrowUp, Upload,
 } from 'lucide-react';
@@ -85,6 +81,7 @@ export function ManageDataPd() {
 
   const userSchool = user?.schoolName || '';
   const isOperator = user?.role === 'operator_sekolah';
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Admin: fetch from student database API
   useEffect(() => {
@@ -138,52 +135,31 @@ export function ManageDataPd() {
           }));
       } catch (e) { console.error('Error fetching siswa API:', e); }
 
-      // Load Firestore overlay
-      const computeMerged = (fsSiswa: SiswaRecord[]) => {
-        const localNiks = new Set(fsSiswa.map(s => s.nik));
-        const combined = [...fsSiswa, ...dbSiswa.filter(s => !localNiks.has(s.nik))];
-        return combined;
-      };
+      // Load overlay from /api/siswa/manage
+      let overlayRecords: SiswaRecord[] = [];
+      try {
+        console.log(`[ManageDataPd] Fetching overlay data...`);
+        const res = await fetch('/api/siswa/manage');
+        const json = await res.json();
+        overlayRecords = (json.records || []).map((s: any) => ({
+          id: s.nik, nik: s.nik, nama: s.nama, jk: s.jk, nisn: s.nisn || '',
+          tanggal_lahir: s.tanggal_lahir || '', sekolah: s.sekolah || userSchool,
+          jenjang: s.jenjang || 'SD', kelas: s.kelas ? Number(s.kelas) : undefined,
+          desa: s.desa || '', createdAt: Date.now(),
+        }));
+      } catch (e) { console.error('Error fetching overlay:', e); }
 
-      if (db) {
-        try {
-          // Pencarian di Firestore ditingkatkan: tarik semua data siswa aktif, filter di client agar akurat
-          // (Karena data di Firestore mungkin tidak punya schoolId yang konsisten)
-          const siswaQuery = query(collection(db, 'students'), limit(2000));
-          
-          console.log(`[ManageDataPd] Fetching Firestore for local overlay...`);
-          const snap = await getDocs(siswaQuery);
-          const fsSiswa: SiswaRecord[] = [];
-          const q = normalizeSchool(userSchool);
-
-          snap.forEach((d) => {
-            const s = d.data() as SiswaRecord;
-            const normS = normalizeSchool(s.sekolah || '');
-            // Filter berdasarkan kesamaan nama sekolah atau schoolId
-            if ((normS === q || s.schoolId === user?.schoolId) && s.status !== 'lulus') {
-              fsSiswa.push({ id: d.id, ...s });
-            }
-          });
-          
-          const finalData = computeMerged(fsSiswa);
-          console.log(`[ManageDataPd] Final Merged Count: ${finalData.length} (${fsSiswa.length} from FS)`);
-          setAllSiswa(finalData);
-        } catch (e) {
-          console.error('Error loading Firestore students:', e);
-          setAllSiswa(dbSiswa);
-        } finally {
-          setLoading(false);
-          loadingDone = true;
-        }
-      } else {
-        setAllSiswa(dbSiswa);
-        setLoading(false);
-        loadingDone = true;
-      }
+      // Merge: overlay records override API records with same NIK
+      const mergedNiks = new Set(overlayRecords.map(s => s.nik));
+      const finalData = [...overlayRecords, ...dbSiswa.filter(s => !mergedNiks.has(s.nik))];
+      console.log(`[ManageDataPd] Final Merged Count: ${finalData.length} (${overlayRecords.length} from overlay)`);
+      setAllSiswa(finalData);
+      setLoading(false);
+      loadingDone = true;
     }
 
     load();
-  }, [isOperator, userSchool, user?.schoolId]);
+  }, [isOperator, userSchool, user?.schoolId, refreshKey]);
 
   const [page, setPage] = useState(1);
   const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
@@ -231,43 +207,50 @@ export function ManageDataPd() {
     if (cleanNik.length !== 16) { toast.error('NIK harus 16 digit angka'); return; }
     setSaving(true);
     try {
-      const data = { ...form, nik: cleanNik, schoolId: user?.schoolId || '', nisn: form.nisn || '', createdAt: Date.now(), updatedAt: Date.now() };
-      if (!db) {
-        if (editingId) setAllSiswa(prev => prev.map(s => s.id === editingId ? { ...s, ...data } : s));
-        else setAllSiswa(prev => [{ id: Date.now().toString(), ...data }, ...prev]);
+      const record = { ...form, nik: cleanNik, schoolId: user?.schoolId || '', nisn: form.nisn || '' };
+      const res = await fetch('/api/siswa/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'upsert', record }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success(editingId ? 'Data siswa diperbarui' : 'Data siswa ditambahkan');
+        setFormOpen(false);
+        setRefreshKey(k => k + 1);
       } else {
-        if (editingId) {
-          await setDoc(doc(db, 'students', editingId), data, { merge: true });
-        } else {
-          await addDoc(collection(db, 'students'), data);
-        }
+        toast.error(json.error || 'Gagal menyimpan');
       }
-      toast.success(editingId ? 'Data siswa diperbarui' : 'Data siswa ditambahkan');
-      setFormOpen(false);
     } catch (e) { console.error('Error saving siswa:', e); toast.error('Gagal menyimpan data'); } finally { setSaving(false); }
   }
 
-  async function handleDelete(id: string) {
-    if (!db) setAllSiswa(prev => prev.filter(s => s.id !== id));
-    else try { await deleteDoc(doc(db, 'students', id)); } catch (e) { console.error('Error deleting siswa:', e); }
+  async function handleDelete(nik: string) {
+    try {
+      await fetch('/api/siswa/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', nik }),
+      });
+    } catch (e) { console.error('Error deleting siswa:', e); }
+    setRefreshKey(k => k + 1);
     setDeleteId(null);
   }
 
   async function handlePromote() {
-    if (!db) { toast.error('Mode tidak mendukung'); return; }
     setPromoting(true);
     try {
-      const batch = writeBatch(db);
-      const sdSiswa = allSiswa.filter(s => s.jenjang === 'SD' && s.id && s.status !== 'lulus');
-      for (const s of sdSiswa) {
-        if (s.kelas >= 6) {
-          batch.update(doc(db, 'students', s.id!), { status: 'lulus', alasan: `Lulus ${new Date().getFullYear()}`, updatedAt: Date.now() });
-        } else {
-          batch.update(doc(db, 'students', s.id!), { kelas: s.kelas + 1, updatedAt: Date.now() });
-        }
+      const res = await fetch('/api/siswa/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'promote' }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success(`${json.promoted} siswa SD berhasil naik kelas`);
+        setRefreshKey(k => k + 1);
+      } else {
+        toast.error(json.error || 'Gagal menaikkan kelas');
       }
-      await batch.commit();
-      toast.success(`${sdSiswa.length} siswa SD berhasil naik kelas`);
     } catch (e) { console.error('Error promoting classes:', e); toast.error('Gagal menaikkan kelas'); } finally { setPromoting(false); }
   }
 
