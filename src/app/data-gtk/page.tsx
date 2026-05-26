@@ -218,6 +218,19 @@ export default function DataGTKPage() {
           </div>
         </div>
 
+        <div className="flex items-center gap-2 justify-end mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cari nama pegawai..."
+              value={pegawaiSearch}
+              onChange={e => setPegawaiSearch(e.target.value)}
+              className="pl-9 pr-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-48"
+            />
+          </div>
+        </div>
+
         {!pegawaiSearch && (
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b">
@@ -230,16 +243,6 @@ export default function DataGTKPage() {
                   placeholder="Cari sekolah..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="pl-9 pr-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-48"
-                />
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Cari nama pegawai..."
-                  value={pegawaiSearch}
-                  onChange={e => setPegawaiSearch(e.target.value)}
                   className="pl-9 pr-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-48"
                 />
               </div>
