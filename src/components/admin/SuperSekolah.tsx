@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { db } from '@/lib/firebase';
 import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore';
@@ -12,6 +12,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { usePegawaiAll } from '@/hooks/usePegawai';
+import { normalizeSchool } from '@/lib/normalize';
 
 interface SekolahForm {
   name: string;
@@ -40,6 +42,21 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SekolahForm>(defaultForm);
   const [saving, setSaving] = useState(false);
+
+  const { data: pegawaiAll } = usePegawaiAll();
+
+  const kepalaSekolahMap = useMemo(() => {
+    const map = new Map<string, { nama: string; nip: string }>();
+    const items = pegawaiAll?.items || [];
+    for (const r of items) {
+      if ((r.tugas_tambahan || '').toLowerCase() !== 'kepala sekolah') continue;
+      const key = normalizeSchool(r.sekolah || '');
+      if (key && !map.has(key)) {
+        map.set(key, { nama: r.nama || '', nip: r.nip || '' });
+      }
+    }
+    return map;
+  }, [pegawaiAll]);
 
   const isOperator = mode === 'operator';
 
@@ -154,8 +171,8 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
                 ['Status', mySchool.status],
                 ['Desa', mySchool.desa],
                 ['Alamat', mySchool.alamat],
-                ['Kepala Sekolah', mySchool.kepalaSekolah],
-                ['NIP Kepala Sekolah', mySchool.nipKepalaSekolah],
+                ['Kepala Sekolah', kepalaSekolahMap.get(normalizeSchool(mySchool.name || mySchool.nama || ''))?.nama || mySchool.kepalaSekolah],
+                ['NIP Kepala Sekolah', kepalaSekolahMap.get(normalizeSchool(mySchool.name || mySchool.nama || ''))?.nip || mySchool.nipKepalaSekolah],
                 ['Akreditasi', mySchool.akreditasi],
                 ['Kontak', mySchool.kontak],
                 ['Website', mySchool.website],
@@ -286,8 +303,8 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
                   <td className="px-4 py-3 font-medium text-foreground">{s.name || s.nama}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.jenjang}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.npsn || '-'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{s.kepalaSekolah || '-'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{s.nipKepalaSekolah || '-'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{kepalaSekolahMap.get(normalizeSchool(s.name || s.nama || ''))?.nama || s.kepalaSekolah || '-'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{kepalaSekolahMap.get(normalizeSchool(s.name || s.nama || ''))?.nip || s.nipKepalaSekolah || '-'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.desa || s.alamat || '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openEdit(s)}>
