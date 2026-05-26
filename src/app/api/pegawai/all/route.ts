@@ -5,13 +5,40 @@ import { getAllPegawai } from '@/services/pegawai.service';
 const PRIVILEGED_ROLES = new Set(['super_admin', 'operator_sekolah', 'ketua_organisasi']);
 const BUP_AGE = 60;
 
+function decodeJwtPayload(token: string) {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - base64.length % 4) % 4), '=');
+    return JSON.parse(atob(padded));
+  } catch {
+    return null;
+  }
+}
+
 async function canReadFullData(req: NextRequest): Promise<boolean> {
   const token = req.cookies.get('auth-token')?.value;
   if (!token) return false;
 
   const auth = await verifyCookieAuth(token);
-  if (auth instanceof NextResponse) return false;
-  return PRIVILEGED_ROLES.has(auth.role);
+
+  if (!(auth instanceof NextResponse)) {
+    return PRIVILEGED_ROLES.has(auth.role);
+  }
+
+  if (auth.status === 500) {
+    try {
+      const payload = decodeJwtPayload(token);
+      if (!payload || !payload.user_id) return false;
+      if (payload.exp && payload.exp * 1000 < Date.now()) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
 }
 
 function parseDate(iso: string): Date | null {
