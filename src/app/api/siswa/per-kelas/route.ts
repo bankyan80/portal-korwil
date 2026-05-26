@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getRows } from '@/lib/googleSheets';
-import { normalizeKelas } from '@/lib/normalize';
+import { normalizeKelas, getCanonicalSchoolName } from '@/lib/normalize';
 import fs from 'fs';
 import path from 'path';
 
@@ -21,7 +21,7 @@ function buildFromRawSiswa(siswa: any[]): PerKelasSekolah[] {
   const map = new Map<string, PerKelasSekolah>();
 
   for (const s of siswa) {
-    const name = s.sekolah || s.nama_sekolah || '';
+    const name = getCanonicalSchoolName(s.sekolah || s.nama_sekolah || '');
     const jenjang = s.jenjang || 'SD';
     if (!name) continue;
     const key = `${name}||${jenjang}`;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRows } from '@/lib/googleSheets';
 import { verifyCookieAuth } from '@/lib/server-auth';
-import { normalizeSchool } from '@/lib/normalize';
+import { normalizeSchool, getCanonicalSchoolName } from '@/lib/normalize';
 import siswaData from '@/data/data-siswa.json';
 
 const PRIVILEGED_ROLES = new Set(['super_admin', 'operator_sekolah', 'ketua_organisasi']);
@@ -95,6 +95,11 @@ function applyFilters(all: any[], jenjang: string | null, layak_pip: string | nu
       (fullData && (s.nik || '').includes(q))
     );
   }
+  // Canonicalize school names for display
+  all = all.map((s: any) => ({
+    ...s,
+    sekolah: getCanonicalSchoolName(s.sekolah || s.nama_sekolah || ''),
+  }));
   if (limitParam) all = all.slice(0, parseInt(limitParam));
   return all;
 }
