@@ -100,7 +100,9 @@ export function ManageLaporanBulanan() {
   }, [search, filterJenjang, isOperator, userSchool, schools]);
 
   const allSekolahCount = schools.length;
-  const sudahLaporCount = data.filter(d => d.status === 'sudah_lapor' || d.status === 'diverifikasi').length;
+  const totalLaporanTahunIni = data.filter(d => d.tahun === tahun && d.status !== 'belum_lapor').length;
+  const sekolahDenganLaporan = new Set(data.filter(d => d.tahun === tahun && d.status !== 'belum_lapor').map(d => d.sekolahId)).size;
+  const progressBulanIni = data.filter(d => d.bulan === String(new Date().getMonth() + 1).padStart(2, '0') && d.tahun === tahun && d.status !== 'belum_lapor').length;
 
   function openDetail(school: SekolahItem) {
     setSelectedSchool(school);
@@ -119,18 +121,22 @@ export function ManageLaporanBulanan() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4 shadow-sm">
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{allSekolahCount}</p>
           <p className="text-xs text-muted-foreground">Total Sekolah</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-2xl font-bold text-green-600">{sudahLaporCount}</p>
-          <p className="text-xs text-muted-foreground">Sudah Lapor</p>
+          <p className="text-2xl font-bold text-green-600">{sekolahDenganLaporan}</p>
+          <p className="text-xs text-muted-foreground">Sekolah sudah lapor ({tahun})</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-2xl font-bold text-red-600">{allSekolahCount - sudahLaporCount}</p>
-          <p className="text-xs text-muted-foreground">Belum Lapor</p>
+          <p className="text-2xl font-bold text-blue-600">{totalLaporanTahunIni}</p>
+          <p className="text-xs text-muted-foreground">Total laporan ({tahun})</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4 shadow-sm">
+          <p className="text-2xl font-bold text-amber-600">{progressBulanIni}</p>
+          <p className="text-xs text-muted-foreground">Laporan bulan ini</p>
         </div>
       </div>
 
@@ -187,6 +193,9 @@ export function ManageLaporanBulanan() {
                   const laporanSekolah = data.filter(d => d.sekolahId === s.npsn);
                   const latestStatus: StatusLaporan = laporanSekolah.length > 0 ? laporanSekolah[0].status : 'belum_lapor';
                   const sc = statusConfig[latestStatus];
+                  const reportsThisYear = laporanSekolah.filter(d => d.tahun === tahun && d.status !== 'belum_lapor');
+                  const progressCount = reportsThisYear.length;
+                  const progressLabel = progressCount > 0 ? `${progressCount}/12` : '';
                   return (
                     <tr key={s.npsn} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
@@ -195,12 +204,25 @@ export function ManageLaporanBulanan() {
                         <Badge variant="outline" className="text-[10px]">{s.jenjang}</Badge>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-full ${sc.className}`}>
-                          {latestStatus === 'diverifikasi' && <CheckCircle className="w-3 h-3" />}
-                          {latestStatus === 'sudah_lapor' && <Clock className="w-3 h-3" />}
-                          {latestStatus === 'belum_lapor' && <XCircle className="w-3 h-3" />}
-                          {sc.label}
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-full ${sc.className}`}>
+                            {latestStatus === 'diverifikasi' && <CheckCircle className="w-3 h-3" />}
+                            {latestStatus === 'sudah_lapor' && <Clock className="w-3 h-3" />}
+                            {latestStatus === 'belum_lapor' && <XCircle className="w-3 h-3" />}
+                            {sc.label}
+                          </span>
+                          {progressCount > 0 && (
+                            <div className="flex items-center gap-1.5 w-full max-w-[100px]">
+                              <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-blue-600 rounded-full transition-all"
+                                  style={{ width: `${(progressCount / 12) * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-[10px] text-muted-foreground whitespace-nowrap">{progressLabel}</span>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openDetail(s)}>
