@@ -54,6 +54,21 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
     const map = new Map<string, { nama: string; nip: string }>();
     for (const r of pegawaiItems) {
       if ((r.tugas_tambahan || '').toLowerCase() !== 'kepala sekolah') continue;
+
+      // Skip retired PNS/PPPK
+      const status = (r.status_kepegawaian || '').toUpperCase();
+      if (status === 'PNS' || status === 'PPPK') {
+        const tglLahir = r.tanggal_lahir || '';
+        if (tglLahir) {
+          const parts = tglLahir.split('-');
+          if (parts.length === 3) {
+            const birth = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+            const usia = Math.floor((Date.now() - birth.getTime()) / 31557600000);
+            if (usia >= 60) continue;
+          }
+        }
+      }
+
       const key = normalizeSchool(r.sekolah || '');
       if (key && !map.has(key)) {
         map.set(key, { nama: r.nama || '', nip: r.nip || '' });
