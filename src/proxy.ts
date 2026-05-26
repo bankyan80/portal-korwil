@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 // Hanya proteksi untuk API routes yang sensitive.
 // Page routes di-handle oleh SPA client-side auth.
-const protectedApiPaths = ['/api/admin/', '/api/sync/', '/api/siswa/sync', '/api/siswa/import-dapodik', '/api/tugas', '/api/pegawai/detail', '/api/drive/upload', '/api/upload-pegawai'];
+const protectedApiPaths = ['/api/admin/', '/api/sync/', '/api/siswa/import-dapodik', '/api/tugas', '/api/pegawai/detail', '/api/drive/upload', '/api/upload-pegawai'];
 
 function getBearerToken(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
