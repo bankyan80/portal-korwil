@@ -107,6 +107,8 @@ function SiswaTable({ title, data, isLoading, error, columns, sortFn }: {
 export default function SuperDataSiswa() {
   type JenjangFilter = 'ALL' | 'SD' | 'TK' | 'KB';
   const [jenjangFilter, setJenjangFilter] = useState<JenjangFilter>('ALL');
+  const [searchNama, setSearchNama] = useState('');
+  const [searchNik, setSearchNik] = useState('');
   const { data: sdData, isLoading: sdLoading, error: sdError } = useSiswa('SD');
   const { data: tkData, isLoading: tkLoading, error: tkError } = useSiswa('TK');
   const { data: kbData, isLoading: kbLoading, error: kbError } = useSiswa('KB');
@@ -133,6 +135,17 @@ export default function SuperDataSiswa() {
     : (jenjangFilter === 'TK' ? tkMapped
     : kbMapped));
 
+  const filteredData = useMemo(() => {
+    if (!searchNama.trim() && !searchNik.trim()) return activeData;
+    const qNama = searchNama.toLowerCase().trim();
+    const qNik = searchNik.trim();
+    return activeData.filter((d: any) => {
+      const matchNama = !qNama || (d.nama || '').toLowerCase().includes(qNama);
+      const matchNik = !qNik || (d.nik || '').includes(qNik);
+      return matchNama && matchNik;
+    });
+  }, [activeData, searchNama, searchNik]);
+
   const activeColumns = jenjangFilter === 'SD' ? sdColumns : (jenjangFilter === 'TK' ? tkColumns : kbColumns);
   const activeSortFn = jenjangFilter === 'SD' ? sortSD : (jenjangFilter === 'TK' ? sortTK : sortKB);
   const activeTitle = jenjangFilter === 'ALL' ? 'Semua Jenjang' : (jenjangFilter === 'SD' ? 'SD' : (jenjangFilter === 'TK' ? 'TK' : 'KB/PAUD'));
@@ -145,21 +158,43 @@ export default function SuperDataSiswa() {
 
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground whitespace-nowrap">Jenjang:</label>
-          <select
-            value={jenjangFilter}
-            onChange={e => setJenjangFilter(e.target.value as JenjangFilter)}
-            className="h-9 px-3 text-xs font-semibold rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0d3b66] cursor-pointer dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
-          >
-            {jenjangList.map(j => (
-              <option key={j} value={j}>{j === 'ALL' ? 'Semua' : JENJANG_LABEL[j]}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap gap-3 items-start sm:items-center">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Cari nama siswa..."
+              value={searchNama}
+              onChange={e => setSearchNama(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Cari NIK..."
+              value={searchNik}
+              onChange={e => setSearchNik(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-muted-foreground whitespace-nowrap">Jenjang:</label>
+            <select
+              value={jenjangFilter}
+              onChange={e => setJenjangFilter(e.target.value as JenjangFilter)}
+              className="h-9 px-3 text-xs font-semibold rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0d3b66] cursor-pointer dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
+            >
+              {jenjangList.map(j => (
+                <option key={j} value={j}>{j === 'ALL' ? 'Semua' : JENJANG_LABEL[j]}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      <SiswaTable title={activeTitle} data={activeData} isLoading={activeLoading} error={activeError} columns={activeColumns} sortFn={activeSortFn} />
+      <SiswaTable title={activeTitle} data={filteredData} isLoading={activeLoading} error={activeError} columns={activeColumns} sortFn={activeSortFn} />
     </div>
   );
 }
