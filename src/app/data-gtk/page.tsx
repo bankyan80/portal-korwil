@@ -218,6 +218,7 @@ export default function DataGTKPage() {
           </div>
         </div>
 
+        {!pegawaiSearch && (
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b">
             <h3 className="font-semibold text-[#0d3b66]">Daftar GTK per Sekolah</h3>
@@ -324,9 +325,10 @@ export default function DataGTKPage() {
             )}
           </div>
         </div>
+        )}
 
         {pegawaiSearch && (
-          <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b">
               <h3 className="font-semibold text-[#0d3b66]">Hasil Pencarian: "{pegawaiSearch}"</h3>
             </div>
