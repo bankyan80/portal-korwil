@@ -359,8 +359,7 @@ export default function SuperAdminDashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Data Tersinkron</p>
                 <p className="text-2xl font-bold" style={{ color: autoSyncStatus?.lastSynced ? '#16a34a' : '#d97706' }}>
-                  {autoSyncStatus?.lastSynced ? 'Ya' : 'Tidak'}
-              </div>
+                  {autoSyncStatus?.lastSynced ? 'Ya' : 'Tidak'}</p>
             </div>
           </div>
         </div>
