@@ -50,12 +50,12 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
       .catch(() => {});
   }, []);
 
-  const kepalaSekolahMap = useMemo(() => {
-    const map = new Map<string, { nama: string; nip: string }>();
+  const { kepalaSekolahMap, kepalaSekolahByNpsn } = useMemo(() => {
+    const byName = new Map<string, { nama: string; nip: string }>();
+    const byNpsn = new Map<string, { nama: string; nip: string }>();
     for (const r of pegawaiItems) {
       if ((r.tugas_tambahan || '').toLowerCase() !== 'kepala sekolah') continue;
 
-      // Skip retired PNS/PPPK
       const status = (r.status_kepegawaian || '').toUpperCase();
       if (status === 'PNS' || status === 'PPPK') {
         const tglLahir = r.tanggal_lahir || '';
@@ -69,13 +69,21 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
         }
       }
 
-      const key = normalizeSchool(r.sekolah || '');
-      if (key && !map.has(key)) {
-        map.set(key, { nama: r.nama || '', nip: r.nip || '' });
-      }
+      const entry = { nama: r.nama || '', nip: r.nip || '' };
+      const nameKey = normalizeSchool(r.sekolah || '');
+      if (nameKey && !byName.has(nameKey)) byName.set(nameKey, entry);
+      if (r.npsn && !byNpsn.has(r.npsn)) byNpsn.set(r.npsn, entry);
     }
-    return map;
+    return { kepalaSekolahMap: byName, kepalaSekolahByNpsn: byNpsn };
   }, [pegawaiItems]);
+
+  function findKepalaSekolah(s: any): { nama: string; nip: string } | undefined {
+    const nameKey = normalizeSchool(s.name || s.nama || '');
+    const byName = kepalaSekolahMap.get(nameKey);
+    if (byName) return byName;
+    if (s.npsn) return kepalaSekolahByNpsn.get(s.npsn);
+    return undefined;
+  }
 
   const isOperator = mode === 'operator';
 
@@ -190,8 +198,8 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
                 ['Status', mySchool.status],
                 ['Desa', mySchool.desa],
                 ['Alamat', mySchool.alamat],
-                ['Kepala Sekolah', kepalaSekolahMap.get(normalizeSchool(mySchool.name || mySchool.nama || ''))?.nama || mySchool.kepalaSekolah],
-                ['NIP Kepala Sekolah', kepalaSekolahMap.get(normalizeSchool(mySchool.name || mySchool.nama || ''))?.nip || mySchool.nipKepalaSekolah],
+                ['Kepala Sekolah', findKepalaSekolah(mySchool)?.nama || mySchool.kepalaSekolah],
+                ['NIP Kepala Sekolah', findKepalaSekolah(mySchool)?.nip || mySchool.nipKepalaSekolah],
                 ['Akreditasi', mySchool.akreditasi],
                 ['Kontak', mySchool.kontak],
                 ['Website', mySchool.website],
@@ -322,8 +330,8 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
                   <td className="px-4 py-3 font-medium text-foreground">{s.name || s.nama}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.jenjang}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.npsn || '-'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{kepalaSekolahMap.get(normalizeSchool(s.name || s.nama || ''))?.nama || s.kepalaSekolah || '-'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{kepalaSekolahMap.get(normalizeSchool(s.name || s.nama || ''))?.nip || s.nipKepalaSekolah || '-'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{findKepalaSekolah(s)?.nama || s.kepalaSekolah || '-'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{findKepalaSekolah(s)?.nip || s.nipKepalaSekolah || '-'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.desa || s.alamat || '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openEdit(s)}>
