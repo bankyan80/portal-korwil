@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
 import { allSekolah as staticSekolah } from '@/data/sekolah';
 
 export interface SekolahItem {
@@ -52,19 +50,20 @@ export function useSekolah() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!db) { setLoading(false); return; }
-    getDocs(collection(db, 'schools')).then((snap) => {
-      const list: SekolahItem[] = [];
-      snap.forEach((d) => {
-        list.push(mapDoc(d.data()));
+    fetch('/api/firestore/schools')
+      .then(r => r.ok ? r.json() as Promise<{ items?: any[] }> : null)
+      .then((res) => {
+        if (res?.items?.length) {
+          const list: SekolahItem[] = res.items.map(mapDoc);
+          list.sort((a, b) => a.nama.localeCompare(b.nama));
+          setSchools(list);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error loading schools:', err);
+        setLoading(false);
       });
-      list.sort((a, b) => a.nama.localeCompare(b.nama));
-      if (list.length > 0) setSchools(list);
-      setLoading(false);
-    }).catch((err) => {
-      console.error('Error loading schools:', err);
-      setLoading(false);
-    });
   }, []);
 
   return { schools, loading };

@@ -1,7 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
 import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 import { normalizeSchool } from '@/lib/normalize';
 import type { UserRole } from '@/types';
+
+async function getEmployee(nik: string) {
+  const { data } = await supabaseAdmin!
+    .from('app_data')
+    .select('*')
+    .eq('collection', 'employees')
+    .eq('id', nik)
+    .single();
+  return data;
+}
+
+async function upsertEmployee(nik: string, data: any) {
+  const { data: existing } = await supabaseAdmin!
+    .from('app_data')
+    .select('data')
+    .eq('collection', 'employees')
+    .eq('id', nik)
+    .single();
+  const merged = { ...(existing?.data as object || {}), ...data, updatedAt: Date.now() };
+  const { error } = await supabaseAdmin!
+    .from('app_data')
+    .upsert({ id: nik, collection: 'employees', data: merged, updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+
+async function deleteEmployee(nik: string) {
+  await supabaseAdmin!
+    .from('app_data')
+    .delete()
+    .eq('collection', 'employees')
+    .eq('id', nik);
+}
 
 export async function PUT(
   req: NextRequest,
@@ -13,14 +46,12 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized — tidak ada token' }, { status: 401 });
     }
 
-    const { isFirebaseAdminConfigured, adminAuth, adminDb } = await import('@/lib/firebase-admin');
-    console.log('[PUT /api/pegawai] isFirebaseAdminConfigured:', isFirebaseAdminConfigured, 'adminAuth:', !!adminAuth, 'adminDb:', !!adminDb);
+    if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+      return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
+    }
 
     const authResult = await verifyCookieAuth(cookieToken);
-    if (authResult instanceof NextResponse) {
-      console.log('[PUT /api/pegawai] verifyCookieAuth failed:', authResult.status);
-      return authResult;
-    }
+    if (authResult instanceof NextResponse) return authResult;
 
     const forbidden = requireRole(authResult as any, ['super_admin', 'operator_sekolah']);
     if (forbidden) return forbidden;
@@ -28,9 +59,6 @@ export async function PUT(
     const { nik } = await params;
     if (!nik) {
       return NextResponse.json({ error: 'NIK wajib diisi' }, { status: 400 });
-    }
-    if (!adminDb) {
-      return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     }
 
     const body = await req.json();
@@ -55,28 +83,24 @@ export async function PUT(
 
     // operator_sekolah: only allow updating their own school's records
     if (authResult.role === 'operator_sekolah') {
-      const docRef = adminDb.collection('employees').doc(nik);
-      const docSnap = await docRef.get();
-      if (!docSnap.exists) {
+      const docData = await getEmployee(nik);
+      if (!docData) {
         return NextResponse.json({ error: 'Data pegawai tidak ditemukan' }, { status: 404 });
       }
-      const existingData = docSnap.data();
-      const actorSchool = existingData?.sekolah || '';
-      const userDoc = await adminDb.collection('users').doc(authResult.uid).get();
-      const operatorSchool = userDoc.data()?.schoolName || '';
+      const existingData = docData.data as Record<string, any> || {};
+      const actorSchool = existingData.sekolah || '';
+      const operatorSchool = authResult.schoolName || '';
       if (!operatorSchool || normalizeSchool(actorSchool) !== normalizeSchool(operatorSchool)) {
         return NextResponse.json({ error: 'Forbidden — hanya bisa mengubah data sekolah sendiri' }, { status: 403 });
       }
     }
 
-    const docRef = adminDb.collection('employees').doc(nik);
-    const exists = (await docRef.get()).exists;
-    if (!exists) {
+    const existing = await getEmployee(nik);
+    if (!existing) {
       return NextResponse.json({ error: 'Data pegawai tidak ditemukan' }, { status: 404 });
     }
 
-    updateData.updatedAt = Date.now();
-    await docRef.set(updateData, { merge: true });
+    await upsertEmployee(nik, updateData);
 
     // Sync ke Google Sheets
     try {
@@ -137,12 +161,9 @@ export async function PUT(
 
     // If NIK changed, copy to new document and delete old
     if (renamedNik && renamedNik !== nik) {
-      const fullData = (await docRef.get()).data();
-      if (fullData) {
-        const newDocRef = adminDb.collection('employees').doc(renamedNik);
-        await newDocRef.set({ ...fullData, nik: renamedNik, updatedAt: Date.now() });
-        await docRef.delete();
-      }
+      const fullData = (await getEmployee(nik))?.data as Record<string, any> || {};
+      await upsertEmployee(renamedNik, { ...fullData, nik: renamedNik });
+      await deleteEmployee(nik);
     }
 
     return NextResponse.json({ success: true, message: 'Data pegawai berhasil diperbarui' });
@@ -174,12 +195,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'NIK wajib diisi' }, { status: 400 });
     }
 
-    const { adminDb } = await import('@/lib/firebase-admin');
-    if (adminDb) {
-      const docRef = adminDb.collection('employees').doc(nik);
-      const doc = await docRef.get();
-      if (doc.exists) {
-        await docRef.delete();
+    if (isSupabaseAdminConfigured() && supabaseAdmin) {
+      const existing = await getEmployee(nik);
+      if (existing) {
+        await deleteEmployee(nik);
       }
     }
 

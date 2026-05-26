@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
 import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 import fs from 'fs';
 import path from 'path';
@@ -10,14 +10,13 @@ function loadData(): any[] {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isFirebaseAdminConfigured || !adminDb) {
+  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
     return NextResponse.json(
-      { success: false, error: 'Firebase Admin tidak dikonfigurasi' },
+      { success: false, error: 'Database tidak dikonfigurasi' },
       { status: 500 }
     );
   }
 
-  // Verify auth
   const token = request.cookies.get('auth-token')?.value;
   const auth = await verifyCookieAuth(token || '');
   const forbidden = requireRole(auth, ['super_admin']);
@@ -29,30 +28,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Tidak ada data pegawai' });
     }
 
-    const collection = adminDb.collection('employees');
-    let committed = 0;
-
-    for (let i = 0; i < allData.length; i += 500) {
-      const batch = adminDb.batch();
-      const chunk = allData.slice(i, i + 500);
-
-      for (const pegawai of chunk) {
-        const docRef = collection.doc(pegawai.nik || pegawai.nuptk || `${pegawai.sekolah}_${pegawai.nama}`);
-        batch.set(docRef, {
+    const records = allData.map((pegawai: any) => {
+      const id = pegawai.nik || pegawai.nuptk || `${pegawai.sekolah}_${pegawai.nama}`;
+      return {
+        id,
+        collection: 'employees',
+        data: {
           ...pegawai,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        });
-      }
+        },
+        updated_at: new Date().toISOString(),
+      };
+    });
 
-      await batch.commit();
-      committed += chunk.length;
-    }
+    const { error } = await supabaseAdmin
+      .from('app_data')
+      .upsert(records, { onConflict: 'collection,id' });
+
+    if (error) throw error;
 
     return NextResponse.json({
       success: true,
-      message: `Berhasil menyinkronkan ${committed} pegawai ke Firestore`,
-      count: committed,
+      message: `Berhasil menyinkronkan ${records.length} pegawai ke database`,
+      count: records.length,
     });
   } catch (error) {
     console.error('Error syncing pegawai:', error);

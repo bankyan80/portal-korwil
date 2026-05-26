@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { adminAuth, adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
+import { adminAuth, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
 import { verifyAuth, requireRole } from '@/lib/server-auth';
 import type { UserProfile, UserRole } from '@/types';
 
@@ -9,9 +10,41 @@ function getErrorMessage(error: unknown) {
   return String(error);
 }
 
-function getErrorCode(error: unknown) {
-  if (typeof error === 'object' && error && 'code' in error) return String(error.code);
-  return '';
+async function getUserProfileFromDb(uid: string): Promise<Partial<UserProfile>> {
+  if (!isSupabaseAdminConfigured || !supabaseAdmin) return {};
+  try {
+    const { data } = await supabaseAdmin
+      .from('app_data')
+      .select('*')
+      .eq('collection', 'users')
+      .eq('id', uid)
+      .single();
+    if (data) return (data.data as Partial<UserProfile>) || {};
+  } catch {}
+  return {};
+}
+
+async function upsertUserProfile(uid: string, profile: Record<string, any>) {
+  if (!isSupabaseAdminConfigured || !supabaseAdmin) return;
+  const { data: existing } = await supabaseAdmin
+    .from('app_data')
+    .select('data')
+    .eq('collection', 'users')
+    .eq('id', uid)
+    .single();
+  const merged = { ...(existing?.data as object || {}), ...profile, updatedAt: Date.now() };
+  await supabaseAdmin
+    .from('app_data')
+    .upsert({ id: uid, collection: 'users', data: merged, updated_at: new Date().toISOString() });
+}
+
+async function deleteUserProfile(uid: string) {
+  if (!isSupabaseAdminConfigured || !supabaseAdmin) return;
+  await supabaseAdmin
+    .from('app_data')
+    .delete()
+    .eq('collection', 'users')
+    .eq('id', uid);
 }
 
 export async function GET(request: Request) {
@@ -19,7 +52,7 @@ export async function GET(request: Request) {
   const forbidden = requireRole(auth, ['super_admin']);
   if (forbidden) return forbidden;
 
-  if (!isFirebaseAdminConfigured || !adminAuth || !adminDb) {
+  if (!isFirebaseAdminConfigured || !adminAuth) {
     const { mockUsers } = await import('@/lib/mock-data');
     return NextResponse.json({ users: mockUsers });
   }
@@ -30,14 +63,7 @@ export async function GET(request: Request) {
 
     for (const authUser of listResult.users) {
       const uid = authUser.uid;
-      let profile: Partial<UserProfile> = {};
-
-      try {
-        const docSnap = await adminDb.collection('users').doc(uid).get();
-        if (docSnap.exists) {
-          profile = docSnap.data() as Partial<UserProfile>;
-        }
-      } catch {}
+      const profile = await getUserProfileFromDb(uid);
 
       users.push({
         uid,
@@ -70,8 +96,8 @@ export async function PATCH(request: Request) {
   const forbidden = requireRole(auth, ['super_admin']);
   if (forbidden) return forbidden;
 
-  if (!isFirebaseAdminConfigured || !adminDb) {
-    return NextResponse.json({ success: false, error: 'Admin not configured' }, { status: 500 });
+  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+    return NextResponse.json({ success: false, error: 'Database tidak dikonfigurasi' }, { status: 500 });
   }
 
   try {
@@ -81,14 +107,14 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: 'uid required' }, { status: 400 });
     }
 
-    const updateData: Record<string, unknown> = { updatedAt: Date.now() };
+    const updateData: Record<string, unknown> = {};
     if (role) updateData.role = role;
     if (schoolName !== undefined) updateData.schoolName = schoolName;
     if (schoolId !== undefined) updateData.schoolId = schoolId;
     if (organization !== undefined) updateData.organization = organization;
     if (organizationId !== undefined) updateData.organizationId = organizationId;
 
-    await adminDb.collection('users').doc(uid).set(updateData, { merge: true });
+    await upsertUserProfile(uid, updateData);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -99,12 +125,10 @@ export async function PATCH(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    // Verify auth via Bearer token
     const authResult = await verifyAuth(request);
     const forbidden = requireRole(authResult, ['super_admin']);
     if (forbidden) return forbidden;
 
-    // Parse body
     let email = '', role = '', schoolId = '', organizationId = '';
     try {
       const body = await request.json();
@@ -120,9 +144,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Email harus diisi' }, { status: 400 });
     }
 
-    // Tulis profil ke Firestore
-    if (!adminDb) {
-      return NextResponse.json({ success: false, error: 'Firestore Admin tidak tersedia' }, { status: 500 });
+    if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+      return NextResponse.json({ success: false, error: 'Database tidak tersedia' }, { status: 500 });
     }
 
     const uid = 'manual_' + email.replace(/[^a-zA-Z0-9]/g, '_');
@@ -139,30 +162,29 @@ export async function POST(request: Request) {
     if (schoolId) profileData.schoolId = schoolId;
     if (organizationId) profileData.organizationId = organizationId;
 
-    await adminDb.collection('users').doc(uid).set(profileData, { merge: true });
+    await supabaseAdmin
+      .from('app_data')
+      .upsert({ id: uid, collection: 'users', data: profileData, updated_at: new Date().toISOString() });
 
-    // Coba create Firebase Auth user (opsional)
     if (adminAuth) {
       try {
         const existingUser = await adminAuth.getUserByEmail(email);
-        // User Auth sudah ada — update uid di Firestore
-        await adminDb.collection('users').doc(uid).delete();
-        await adminDb.collection('users').doc(existingUser.uid).set({ ...profileData, uid: existingUser.uid }, { merge: true });
+        await deleteUserProfile(uid);
+        await upsertUserProfile(existingUser.uid, { ...profileData, uid: existingUser.uid });
         return NextResponse.json({ success: true, uid: existingUser.uid });
       } catch (err: any) {
-        if (getErrorCode(err) === 'auth/user-not-found') {
+        if (getErrorMessage(err).includes('user-not-found') || err?.code === 'auth/user-not-found') {
           try {
             const created = await adminAuth.createUser({ email });
-            // Update Firestore doc dengan uid asli
-            await adminDb.collection('users').doc(uid).delete();
-            await adminDb.collection('users').doc(created.uid).set({ ...profileData, uid: created.uid }, { merge: true });
+            await deleteUserProfile(uid);
+            await upsertUserProfile(created.uid, { ...profileData, uid: created.uid });
             return NextResponse.json({ success: true, uid: created.uid });
           } catch {}
         }
       }
     }
 
-    return NextResponse.json({ success: true, uid, note: 'User dibuat di Firestore. Saat login Google, Auth akan auto-buat.' });
+    return NextResponse.json({ success: true, uid, note: 'User dibuat. Saat login Google, Auth akan auto-buat.' });
   } catch (error) {
     console.error('[admin/users POST] Error:', error);
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : String(error) }, { status: 500 });

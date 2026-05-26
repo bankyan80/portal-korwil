@@ -6,9 +6,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAppStore } from '@/store/app-store';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/types';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription,
@@ -41,24 +40,11 @@ const firebaseErrors: Record<string, string> = {
 };
 
 async function getOrCreateUserProfile(uid: string, email: string, displayName: string | null): Promise<UserProfile> {
-  if (!db) {
-    return {
-      uid,
-      email,
-      displayName: displayName || email.split('@')[0],
-      role: 'publik',
-      isActive: true,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-  }
-
-  const userRef = doc(db, 'users', uid);
-  const userSnap = await getDoc(userRef);
-
-  if (userSnap.exists()) {
-    return userSnap.data() as UserProfile;
-  }
+  try {
+    const res = await fetch(`/api/firestore/users?id=${encodeURIComponent(uid)}`);
+    const json = await res.json();
+    if (json.exists && json.data) return json.data as UserProfile;
+  } catch {}
 
   const newUser: UserProfile = {
     uid,
@@ -70,7 +56,14 @@ async function getOrCreateUserProfile(uid: string, email: string, displayName: s
     updatedAt: Date.now(),
   };
 
-  await setDoc(userRef, newUser);
+  try {
+    await fetch('/api/firestore/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: uid, data: newUser, merge: true }),
+    });
+  } catch {}
+
   return newUser;
 }
 

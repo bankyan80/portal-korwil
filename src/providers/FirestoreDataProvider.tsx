@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDataStore } from '@/store/data-store';
-import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
-import { db } from '@/lib/firebase';
 import { mockMenus, mockAnnouncements, mockGalleryItems, mockOrganizations, mockInstitutionLinks } from '@/lib/mock-data';
 import type { MenuItem, Announcement, GalleryItem, Organization, InstitutionLink } from '@/types';
 
@@ -11,8 +9,14 @@ interface FirestoreDataProviderProps {
   children: React.ReactNode;
 }
 
-function allEmpty(...items: unknown[][]): boolean {
-  return items.every((arr) => arr.length === 0);
+async function apiGetCollection<T>(collection: string, orderBy?: string): Promise<T[]> {
+  try {
+    const params = new URLSearchParams();
+    if (orderBy) params.set('orderBy', orderBy);
+    const res = await fetch(`/api/firestore/${collection}?${params}`);
+    const json = await res.json();
+    return json.items || [];
+  } catch { return []; }
 }
 
 export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) {
@@ -23,45 +27,31 @@ export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) 
   const setInstitutionLinks = useDataStore((s) => s.setInstitutionLinks);
   const setReady = useDataStore((s) => s.setReady);
 
-  const menusHook = useFirestoreCollection<MenuItem>('menus', [], 'order');
-  const announcementsHook = useFirestoreCollection<Announcement>('announcements', [], 'createdAt');
-  const galleryHook = useFirestoreCollection<GalleryItem>('gallery', [], 'createdAt');
-  const organizationsHook = useFirestoreCollection<Organization>('organizations', []);
-  const institutionLinksHook = useFirestoreCollection<InstitutionLink>('institution_links', [], 'order');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const allLoaded =
-      !menusHook.loading &&
-      !announcementsHook.loading &&
-      !galleryHook.loading &&
-      !organizationsHook.loading &&
-      !institutionLinksHook.loading;
+    const mockEnabled = process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false';
 
-    if (allLoaded) {
-      const mockEnabled = process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false';
-      const useMock = mockEnabled && !db && allEmpty(
-        menusHook.items,
-        announcementsHook.items,
-        galleryHook.items,
-        organizationsHook.items,
-        institutionLinksHook.items
-      );
+    Promise.all([
+      apiGetCollection<MenuItem>('menus', 'order'),
+      apiGetCollection<Announcement>('announcements', 'createdAt'),
+      apiGetCollection<GalleryItem>('gallery', 'createdAt'),
+      apiGetCollection<Organization>('organizations'),
+      apiGetCollection<InstitutionLink>('institution_links', 'order'),
+    ]).then(([menus, announcements, gallery, organizations, institutionLinks]) => {
+      const allEmpty = [menus, announcements, gallery, organizations, institutionLinks].every(a => a.length === 0);
+      const useMock = mockEnabled && allEmpty;
 
-      setMenus(useMock ? mockMenus : menusHook.items);
-      setAnnouncements(useMock ? mockAnnouncements : announcementsHook.items);
-      setGalleryItems(useMock ? mockGalleryItems : galleryHook.items);
-      setOrganizations(useMock ? mockOrganizations : organizationsHook.items);
-      setInstitutionLinks(useMock ? mockInstitutionLinks : institutionLinksHook.items);
+      setMenus(useMock ? mockMenus : menus);
+      setAnnouncements(useMock ? mockAnnouncements : announcements);
+      setGalleryItems(useMock ? mockGalleryItems : gallery);
+      setOrganizations(useMock ? mockOrganizations : organizations);
+      setInstitutionLinks(useMock ? mockInstitutionLinks : institutionLinks);
+    }).finally(() => {
+      setLoading(false);
       setReady(true);
-    }
-  }, [
-    menusHook.items, menusHook.loading,
-    announcementsHook.items, announcementsHook.loading,
-    galleryHook.items, galleryHook.loading,
-    organizationsHook.items, organizationsHook.loading,
-    institutionLinksHook.items, institutionLinksHook.loading,
-    setMenus, setAnnouncements, setGalleryItems, setOrganizations, setInstitutionLinks, setReady
-  ]);
+    });
+  }, [setMenus, setAnnouncements, setGalleryItems, setOrganizations, setInstitutionLinks, setReady]);
 
   return <>{children}</>;
 }

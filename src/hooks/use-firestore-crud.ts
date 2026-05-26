@@ -2,11 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import {
-  addItemToCollection,
-  updateItemInCollection,
-  deleteItemFromCollection,
-} from '@/lib/firestore-service';
+import { apiSet, apiDelete } from '@/lib/api-firestore';
 import { useDataStore } from '@/store/data-store';
 import type { MenuItem, Announcement, GalleryItem, Organization, InstitutionLink, UserProfile } from '@/types';
 
@@ -70,7 +66,7 @@ function useFirestoreCrudInternal<T extends { id: string }>(
 
   const confirmDelete = useCallback(async () => {
     if (!deletingId) return;
-    await deleteItemFromCollection(path, deletingId);
+    await apiDelete(path, deletingId);
     setItems(items.filter(i => i.id !== deletingId));
     setDeleteOpen(false);
     setDeletingId(null);
@@ -83,14 +79,15 @@ function useFirestoreCrudInternal<T extends { id: string }>(
   }, []);
 
   const updateItem = useCallback(async (id: string, updates: Partial<T>) => {
-    await updateItemInCollection(path, id, updates as Record<string, unknown>);
+    await apiSet(path, id, updates as Record<string, unknown>, true);
     setItems(items.map(i => (i.id === id ? { ...i, ...updates } : i)));
     toast.success('Item berhasil diperbarui');
   }, [items, path, setItems]);
 
   const addItem = useCallback(async (item: Omit<T, 'id'> & { id?: string }) => {
-    const newItem = await addItemToCollection<T>(path, item);
-    setItems([newItem, ...items]);
+    const newId = item.id || `${path}-${Date.now()}`;
+    await apiSet(path, newId, item as Record<string, unknown>, false);
+    setItems([{ ...item, id: newId } as T, ...items]);
     toast.success('Item berhasil ditambahkan');
   }, [items, path, setItems]);
 

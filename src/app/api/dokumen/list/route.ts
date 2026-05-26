@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
 import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 export async function GET(req: NextRequest) {
-  if (!isFirebaseAdminConfigured || !adminDb) {
+  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
     return NextResponse.json({ documents: [] });
   }
 
@@ -18,12 +18,18 @@ export async function GET(req: NextRequest) {
   if (forbidden) return forbidden;
 
   try {
-    const byNip = await adminDb.collection('dokumen').where('nip', '==', nip).get();
-    const byNik = await adminDb.collection('dokumen').where('nik', '==', nip).get();
-    const docs = new Map<string, unknown>();
+    const { data } = await supabaseAdmin
+      .from('app_data')
+      .select('*')
+      .eq('collection', 'dokumen');
 
-    byNip.forEach((doc) => docs.set(doc.id, { id: doc.id, ...doc.data() }));
-    byNik.forEach((doc) => docs.set(doc.id, { id: doc.id, ...doc.data() }));
+    const docs = new Map<string, unknown>();
+    for (const r of data || []) {
+      const d = r.data as Record<string, unknown> || {};
+      if (d.nip === nip || d.nik === nip) {
+        docs.set(r.id, { id: r.id, ...d });
+      }
+    }
 
     return NextResponse.json({ documents: Array.from(docs.values()) });
   } catch (error) {

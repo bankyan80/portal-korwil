@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
 import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 import fs from 'fs';
 import path from 'path';
@@ -94,16 +94,15 @@ export async function GET(req: NextRequest) {
     const pegawaiDocs = loadJson('data-pegawai.json');
     const sekolahJsonDocs = loadJson('data-sekolah.json');
 
-    // Sarpras & laporan masih dari Firestore (belum migrasi)
     let sarprasDocs = new Map();
     let laporanDocs: any[] = [];
-    if (isFirebaseAdminConfigured && adminDb) {
-      const [sarprasSnap, laporanSnap] = await Promise.all([
-        adminDb.collection('sarpras').get(),
-        adminDb.collection('laporan_bulanan').get(),
+    if (isSupabaseAdminConfigured() && supabaseAdmin) {
+      const [sarprasResult, laporanResult] = await Promise.all([
+        supabaseAdmin.from('app_data').select('*').eq('collection', 'sarpras'),
+        supabaseAdmin.from('app_data').select('*').eq('collection', 'laporan_bulanan'),
       ]);
-      sarprasDocs = new Map(sarprasSnap.docs.map(d => [d.id, d.data()]));
-      laporanDocs = laporanSnap.docs.map(d => d.data());
+      sarprasDocs = new Map((sarprasResult.data || []).map(r => [r.id, r.data] as [string, any]));
+      laporanDocs = (laporanResult.data || []).map(r => r.data as any);
     }
 
     for (const school of schools) {

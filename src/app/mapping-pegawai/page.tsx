@@ -510,7 +510,6 @@ export default function MappingPegawaiPage() {
       } catch (e) {
         console.log('Sheets API failed, using cache if available:', e);
       }
-      if (!cachedRows) setFirebaseStatus('error');
       setLoading(false);
     }
     load();

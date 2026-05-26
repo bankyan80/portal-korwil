@@ -1,13 +1,9 @@
 import localforage from 'localforage';
-import { db } from '@/lib/firebase';
-import {
-  doc, setDoc, updateDoc, deleteDoc, collection,
-} from 'firebase/firestore';
 
 const queueStore = localforage.createInstance({
   name: 'PortalDinas',
   storeName: 'offline_queue',
-  description: 'Offline operation queue for failed Firebase writes',
+  description: 'Offline operation queue for failed writes',
 });
 
 export interface QueuedOperation {
@@ -56,6 +52,23 @@ export async function getAllQueued(): Promise<QueuedOperation[]> {
   return result.sort((a, b) => a.createdAt - b.createdAt);
 }
 
+async function apiCall(op: QueuedOperation): Promise<void> {
+  const url = `/api/firestore/${op.collection}`;
+  if (op.type === 'create' || op.type === 'update') {
+    const res = await fetch(`${url}?id=${encodeURIComponent(op.docId)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: op.docId, data: op.data || {}, merge: true }),
+    });
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+  } else if (op.type === 'delete') {
+    const res = await fetch(`${url}?id=${encodeURIComponent(op.docId)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+  }
+}
+
 export async function processQueue(): Promise<{ success: number; failed: number }> {
   const ops = await getAllQueued();
   let success = 0;
@@ -63,12 +76,7 @@ export async function processQueue(): Promise<{ success: number; failed: number 
 
   for (const op of ops) {
     try {
-      const ref = doc(collection(db!, op.collection), op.docId);
-      if (op.type === 'create' || op.type === 'update') {
-        await setDoc(ref, op.data || {}, { merge: true });
-      } else if (op.type === 'delete') {
-        await deleteDoc(ref);
-      }
+      await apiCall(op);
       await dequeue(op.id);
       success++;
     } catch (e) {

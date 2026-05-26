@@ -1,11 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { db } from '@/lib/firebase';
-import {
-  collection, query, limit, getDocs,
-} from 'firebase/firestore';
-import { enqueue } from '@/lib/local/offlineQueue';
 
 export type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'offline_browser';
 
@@ -25,15 +20,11 @@ export function useConnectionStatus(): {
       setStatus('offline_browser');
       return;
     }
-    if (!db) {
-      setStatus('connecting');
-      return;
-    }
     try {
-      await getDocs(query(collection(db, 'menus'), limit(1)));
+      const res = await fetch('/api/firestore/menus?limit=1');
       if (mountedRef.current) {
-        setStatus('connected');
-        setLastSync(Date.now());
+        setStatus(res.ok ? 'connected' : 'disconnected');
+        if (res.ok) setLastSync(Date.now());
       }
     } catch {
       if (mountedRef.current) setStatus('disconnected');

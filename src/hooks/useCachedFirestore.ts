@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { collection, getDocs, onSnapshot, query, type QueryConstraint, type Unsubscribe } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { setCache, getCache } from '@/cache/cacheService';
 
 interface UseCachedFirestoreOptions {
   collectionName: string;
-  constraints?: QueryConstraint[];
+  constraints?: never[];
   cacheKey?: string;
   realtime?: boolean;
   ttl?: number;
@@ -28,9 +26,7 @@ export function useCachedFirestore<T extends { id?: string }>(
 ): UseCachedFirestoreResult<T> {
   const {
     collectionName,
-    constraints = [],
     cacheKey,
-    realtime = false,
     enabled = true,
   } = options;
 
@@ -38,23 +34,25 @@ export function useCachedFirestore<T extends { id?: string }>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const unsubscribeRef = useRef<Unsubscribe | null>(null);
   const mountedRef = useRef(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Stable cache key string — avoids array identity issues
   const cacheKeyStr = cacheKey ?? collectionName;
 
-  const constraintsKey = JSON.stringify(constraints);
-
   const fetchData = useCallback(async (): Promise<T[]> => {
-    if (!db) return [];
-    const q = query(collection(db, collectionName), ...constraints);
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as T));
-  }, [collectionName, constraintsKey]);
+    try {
+      const res = await fetch(`/api/firestore/${collectionName}`);
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const json = await res.json();
+      return json.items || [];
+    } catch (err) {
+      console.error(`Error fetching ${collectionName}:`, err);
+      throw err;
+    }
+  }, [collectionName]);
 
   const loadFromCacheThenRefresh = useCallback(async () => {
-    if (!enabled || !db) {
+    if (!enabled) {
       setData([]);
       setLoading(false);
       return;
@@ -62,22 +60,16 @@ export function useCachedFirestore<T extends { id?: string }>(
 
     try {
       const cached = await getCache<T[]>(collectionName, cacheKeyStr);
-      
-      // Jika ada cache, gunakan itu dulu
+
       if (cached && mountedRef.current) {
         setData(cached);
         setLoading(false);
-        
-        // Strategi penghematan: Jika sudah ada cache, jangan fetch lagi ke server 
-        // kecuali data cache-nya kosong. 
-        // Di masa depan bisa ditambah pengecekan Timestamp/TTL di cacheService.
         if (cached.length > 0) {
-          console.log(`[FirestoreCache] Using cached data for ${collectionName}`);
-          return; 
+          console.log(`[Cache] Using cached data for ${collectionName}`);
+          return;
         }
       }
 
-      // Hanya fetch ke server jika cache kosong atau tidak ada
       const fresh = await fetchData();
       if (!mountedRef.current) return;
 
@@ -102,38 +94,26 @@ export function useCachedFirestore<T extends { id?: string }>(
       });
     }
 
-    if (realtime && db && enabled) {
-      try {
-        console.log(`[Firestore] Starting realtime listener for ${collectionName}`);
-        const q = query(collection(db, collectionName), ...constraints);
-        const unsub = onSnapshot(q, (snap) => {
+    if (enabled) {
+      intervalRef.current = setInterval(async () => {
+        if (!mountedRef.current) return;
+        try {
+          const fresh = await fetchData();
           if (!mountedRef.current) return;
-          const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as T));
-          setData(docs);
-          setCache(collectionName, docs, cacheKeyStr);
-        }, (err) => {
-          if (mountedRef.current) setError(err.message);
-        });
-        unsubscribeRef.current = unsub;
-      } catch (err) {
-        console.error("Failed to start onSnapshot:", err);
-      }
-    } else {
-      // Jika tidak realtime, pastikan listener lama dimatikan
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null;
-      }
+          setData(fresh);
+          await setCache(collectionName, fresh, cacheKeyStr);
+        } catch {}
+      }, 30_000);
     }
 
     return () => {
       mountedRef.current = false;
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
-  }, [collectionName, constraintsKey, realtime, enabled, cacheKeyStr]);
+  }, [collectionName, cacheKeyStr, enabled, fetchData, loadFromCacheThenRefresh]);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);

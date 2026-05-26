@@ -2,102 +2,130 @@
 
 import { useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, onIdTokenChanged, getIdToken } from 'firebase/auth';
-import {
-  doc, getDoc, setDoc, collection, query, limit, getDocs,
-  getCountFromServer,
-} from 'firebase/firestore';
-import type { Firestore } from 'firebase/firestore';
 import type { Auth } from 'firebase/auth';
-import type { UserProfile, UserRole } from '@/types';
+import type { UserProfile } from '@/types';
 
 const SUPER_ADMIN_EMAILS = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS
   ? process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS.split(',').map(email => email.trim())
   : [];
 
+function parseJwtPayload(token: string) {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - base64.length % 4) % 4), '=');
+    return JSON.parse(atob(padded));
+  } catch { return null; }
+}
+
+function setAuthCookie(token: string) {
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `auth-token=${token}; path=/; max-age=3600; SameSite=Lax${secure}`;
+}
+
+function clearAuthCookie() {
+  document.cookie = 'auth-token=; path=/; max-age=0';
+}
+
+async function apiGetUser(uid: string): Promise<UserProfile | null> {
+  try {
+    const res = await fetch(`/api/firestore/users?id=${encodeURIComponent(uid)}`);
+    const json = await res.json();
+    if (json.exists && json.data) return json.data as UserProfile;
+  } catch {}
+  return null;
+}
+
+async function apiSetUser(uid: string, data: Record<string, any>) {
+  try {
+    await fetch('/api/firestore/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: uid, data, merge: true }),
+    });
+  } catch {}
+}
+
+async function apiGetFirstUser(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/firestore/users?limit=1');
+    const json = await res.json();
+    return (json.items || []).length === 0;
+  } catch { return true; }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUser, setLoadingAuth } = useAppStore();
 
   useEffect(() => {
-    if (!auth || !db) {
+    if (!auth) {
+      const match = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
+      if (match) {
+        const payload = parseJwtPayload(match[1]);
+        if (payload && payload.exp && payload.exp * 1000 > Date.now()) {
+          setUser({
+            uid: payload.user_id || payload.uid || '',
+            email: payload.email || '',
+            displayName: payload.name || payload.email?.split('@')[0] || '',
+            role: payload.role || 'publik',
+            isActive: true,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+        }
+      }
       setLoadingAuth(false);
       return;
     }
 
-    const firestore = db as Firestore;
     const firebaseAuth = auth as Auth;
 
     const unsubscribeToken = onIdTokenChanged(firebaseAuth, async (user) => {
       if (user) {
         const token = await getIdToken(user);
-        document.cookie = `auth-token=${token}; path=/; max-age=3600; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+        setAuthCookie(token);
       }
     });
 
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Set auth-token cookie for API route protection
           const token = await getIdToken(firebaseUser);
-          const secureCookie = window.location.protocol === 'https:' ? '; Secure' : '';
-          document.cookie = `auth-token=${token}; path=/; max-age=3600; SameSite=Lax${secureCookie}`;
+          setAuthCookie(token);
 
-          let userProfile: UserProfile | null = null;
-          let isOffline = false;
+          let userProfile = await apiGetUser(firebaseUser.uid);
 
-          // Try read from Firestore users collection
-          try {
-            const userDoc = await getDoc(doc(firestore, 'users', firebaseUser.uid));
-            if (userDoc.exists()) {
-              userProfile = userDoc.data() as UserProfile;
-              const email = firebaseUser.email || '';
-              if (SUPER_ADMIN_EMAILS.includes(email) && userProfile.role !== 'super_admin') {
-                const updated = { ...userProfile, role: 'super_admin' as const, updatedAt: Date.now() };
-                try { await setDoc(doc(firestore, 'users', firebaseUser.uid), updated); } catch {}
-                userProfile = updated;
-              }
+          if (userProfile) {
+            const email = firebaseUser.email || '';
+            if (SUPER_ADMIN_EMAILS.includes(email) && userProfile.role !== 'super_admin') {
+              userProfile = { ...userProfile, role: 'super_admin' as const, updatedAt: Date.now() };
+              await apiSetUser(firebaseUser.uid, userProfile);
             }
-          } catch (err: any) {
-            const msg = (err?.message || '').toLowerCase();
-            if (msg.includes('offline') || msg.includes('network') || err?.code === 'unavailable') {
-              isOffline = true;
-            }
-          }
-
-          if (!userProfile) {
-            // Firestore unreachable or user doc doesn't exist — build from email
+          } else {
             const email = firebaseUser.email || '';
             const isSuperAdminEmail = SUPER_ADMIN_EMAILS.includes(email);
+            const isFirstUser = process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production'
+              ? await apiGetFirstUser()
+              : false;
+            const role = isSuperAdminEmail ? 'super_admin' : (isFirstUser ? 'super_admin' : 'publik');
             userProfile = {
               uid: firebaseUser.uid,
               email,
               displayName: firebaseUser.displayName || email.split('@')[0],
-              role: isSuperAdminEmail ? 'super_admin' : (isOffline ? 'publik' : 'publik'),
+              role,
               isActive: true,
               createdAt: Date.now(),
               updatedAt: Date.now(),
             };
-
-            // Try to write back to Firestore only when NOT offline
-            if (!isOffline) {
-              try {
-                if (process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production') {
-                  const q = query(collection(firestore, 'users'), limit(1));
-                  const allUsersSnapshot = await getDocs(q);
-                  if (userProfile?.role !== 'super_admin' && allUsersSnapshot.empty) {
-                    userProfile = { ...userProfile, role: 'super_admin' as const };
-                  }
-                }
-                await setDoc(doc(firestore, 'users', firebaseUser.uid), userProfile as UserProfile);
-              } catch {}
-            }
+            await apiSetUser(firebaseUser.uid, userProfile);
           }
 
           setUser(userProfile);
         } catch (error) {
           console.error('Error in AuthProvider:', error);
-          // Final fallback: still set user so the app doesn't hang forever
           setUser({
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
@@ -109,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       } else {
-        document.cookie = 'auth-token=; path=/; max-age=0';
+        clearAuthCookie();
         setUser(null);
       }
       setLoadingAuth(false);

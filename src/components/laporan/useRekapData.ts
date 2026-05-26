@@ -1,8 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { db } from '@/lib/firebase'
-import { collection, onSnapshot } from 'firebase/firestore'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSekolah } from '@/hooks/useSekolah'
 import { normalizeSchool } from '@/lib/normalize'
 import type { LaporanRecord, StatusLaporan, FilterState } from './types'
@@ -17,51 +15,69 @@ const statusMap: Record<string, StatusLaporan> = {
   belum_lapor: 'belum_lapor',
 }
 
+function mapDoc(d: any): LaporanRecord {
+  const rawGtk = d.dataGtk || undefined
+  let dataGtk = rawGtk
+  if (!rawGtk && d.dataSiswa) {
+    const ds = d.dataSiswa
+    dataGtk = {
+      guruL: Number(ds.guru_l) || 0,
+      guruP: Number(ds.guru_p) || 0,
+      tendikL: Number(ds.tendik_l) || 0,
+      tendikP: Number(ds.tendik_p) || 0,
+    }
+  }
+  return {
+    id: d.id,
+    sekolah: d.sekolah || '',
+    sekolahId: d.sekolahId || d.sekolah_id || '',
+    bulan: d.bulan || '',
+    tahun: d.tahun || 0,
+    status: statusMap[d.status] || d.status || 'belum_lapor',
+    tglLapor: d.tglLapor || d.dikirimPada || undefined,
+    dataSiswa: d.dataSiswa || undefined,
+    dataGtk,
+    dataSarpras: d.dataSarpras || undefined,
+    dataAbsen: d.dataAbsen || undefined,
+  }
+}
+
 export function useRekapData() {
   const { schools } = useSekolah()
   const [laporanList, setLaporanList] = useState<LaporanRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    if (!db) { setLoading(false); setError('Database tidak tersedia'); return }
-    const unsub = onSnapshot(
-      collection(db, 'laporan_bulanan'),
-      (snap) => {
-        const items: LaporanRecord[] = []
-        snap.forEach((d) => {
-          const data = d.data()
-          const rawGtk = data.dataGtk || undefined
-          let dataGtk = rawGtk
-          if (!rawGtk && data.dataSiswa) {
-            const ds = data.dataSiswa
-            dataGtk = {
-              guruL: Number(ds.guru_l) || 0,
-              guruP: Number(ds.guru_p) || 0,
-              tendikL: Number(ds.tendik_l) || 0,
-              tendikP: Number(ds.tendik_p) || 0,
-            }
-          }
-          items.push({
-            id: d.id,
-            sekolah: data.sekolah || '',
-            sekolahId: data.sekolahId || data.sekolah_id || '',
-            bulan: data.bulan || '',
-            tahun: data.tahun || 0,
-            status: statusMap[data.status] || data.status || 'belum_lapor',
-            tglLapor: data.tglLapor || data.dikirimPada || undefined,
-            dataSiswa: data.dataSiswa || undefined,
-            dataGtk,
-            dataSarpras: data.dataSarpras || undefined,
-            dataAbsen: data.dataAbsen || undefined,
-          })
-        })
+    mountedRef.current = true
+
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/firestore/laporan_bulanan')
+        if (!res.ok) throw new Error(`API error: ${res.status}`)
+        const json = await res.json()
+        if (!mountedRef.current) return
+        const items: LaporanRecord[] = (json.items || []).map(mapDoc)
         setLaporanList(items)
-        setLoading(false)
-      },
-      (err) => { console.error('Laporan listener error:', err); setLoading(false); setError(err.message) }
-    )
-    return () => unsub()
+        setError(null)
+      } catch (err) {
+        if (!mountedRef.current) return
+        console.error('Laporan fetch error:', err)
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        if (mountedRef.current) setLoading(false)
+      }
+    }
+
+    fetchData()
+
+    const interval = setInterval(fetchData, 30_000)
+
+    return () => {
+      mountedRef.current = false
+      clearInterval(interval)
+    }
   }, [])
 
   const sekolahList = useMemo(() => {

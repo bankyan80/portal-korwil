@@ -1,4 +1,4 @@
-import { adminDb } from '@/lib/firebase-admin';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getRows } from '@/lib/googleSheets';
 import { getCanonicalSchoolName, getNpsnBySchool } from '@/lib/normalize';
 import fs from 'fs';
@@ -10,7 +10,6 @@ function normalizeRecord(d: any) {
   return d;
 }
 
-/** Map Sheets column names to internal field names */
 function mapSheetRow(r: Record<string, string>): any {
   return {
     nik: r.nik || '',
@@ -60,7 +59,6 @@ function unionByNik(base: any[], override: any[]): any[] {
     if (!key) continue;
     const existing = map.get(key);
     if (existing) {
-      // Only override truthy values from the override record
       const merged = { ...existing };
       for (const [k, v] of Object.entries(r)) {
         if (v !== undefined && v !== null && v !== '') {
@@ -76,18 +74,18 @@ function unionByNik(base: any[], override: any[]): any[] {
   return [...map.values()];
 }
 
-function loadFromFirestore() {
-  return adminDb
+function loadFromSupabase() {
+  return supabaseAdmin
     ? Promise.all([
-        adminDb.collection('employees').get(),
-        adminDb.collection('pegawai_tambahan').get(),
-      ]).then(([empSnap, tambahanSnap]) => {
+        supabaseAdmin.from('app_data').select('*').eq('collection', 'employees'),
+        supabaseAdmin.from('app_data').select('*').eq('collection', 'pegawai_tambahan'),
+      ]).then(([empResult, tambahanResult]) => {
         const combined: any[] = [];
-        if (!empSnap.empty) {
-          combined.push(...empSnap.docs.map(doc => normalizeRecord({ id: doc.id, ...doc.data() })));
+        if (empResult.data?.length) {
+          combined.push(...empResult.data.map(r => normalizeRecord({ id: r.id, ...(r.data as any) })));
         }
-        if (!tambahanSnap.empty) {
-          combined.push(...tambahanSnap.docs.map(doc => normalizeRecord({ id: doc.id, ...doc.data() })));
+        if (tambahanResult.data?.length) {
+          combined.push(...tambahanResult.data.map(r => normalizeRecord({ id: r.id, ...(r.data as any) })));
         }
         return combined;
       })
@@ -101,15 +99,13 @@ function loadFromSheet(): Promise<any[]> {
 }
 
 export async function getAllPegawai() {
-  // Priority: Sheets (most complete) > Firestore > Static JSON
-  const [sheetRecords, firestoreRecords] = await Promise.all([
+  const [sheetRecords, supabaseRecords] = await Promise.all([
     loadFromSheet(),
-    loadFromFirestore(),
+    loadFromSupabase(),
   ]);
   const staticRecords = loadFromStatic();
 
-  // Merge: static → firestore → sheets (each overrides with truthy values only)
-  let result = unionByNik(staticRecords, firestoreRecords);
+  let result = unionByNik(staticRecords, supabaseRecords);
   if (sheetRecords.length > 0) {
     result = unionByNik(result, sheetRecords);
   }

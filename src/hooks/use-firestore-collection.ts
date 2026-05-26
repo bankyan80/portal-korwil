@@ -1,20 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-  collection,
-  getDocs,
-  doc,
-  setDoc,
-  deleteDoc,
-  writeBatch,
-  query,
-  orderBy,
-  onSnapshot,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { apiGet, apiSet, apiDelete } from '@/lib/api-firestore';
 import { toast } from 'sonner';
-import type { Firestore } from 'firebase/firestore';
 
 export interface FirestoreCollectionHook<T extends { id: string }> {
   items: T[];
@@ -28,6 +16,16 @@ export interface FirestoreCollectionHook<T extends { id: string }> {
   replaceAll: (data: T[]) => Promise<void>;
 }
 
+function sortData<T extends { id: string }>(data: T[], orderField?: keyof T): T[] {
+  if (!orderField) return data;
+  return [...data].sort((a, b) => {
+    const aVal = a[orderField];
+    const bVal = b[orderField];
+    if (typeof aVal === 'string' && typeof bVal === 'string') return aVal.localeCompare(bVal);
+    return String(aVal ?? '').localeCompare(String(bVal ?? ''));
+  });
+}
+
 export function useFirestoreCollection<T extends { id: string }>(
   collectionPath: string,
   _defaultData: T[] = [],
@@ -37,48 +35,12 @@ export function useFirestoreCollection<T extends { id: string }>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchItems = useCallback(async (firestore: Firestore): Promise<T[]> => {
-    try {
-      let q;
-      if (orderField) {
-        q = query(collection(firestore, collectionPath), orderBy(orderField as string));
-      } else {
-        q = query(collection(firestore, collectionPath));
-      }
-
-      const snapshot = await getDocs(q);
-      const fetchedItems: T[] = [];
-
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data() as Record<string, unknown>;
-        fetchedItems.push({
-          id: docSnap.id,
-          ...data,
-        } as T);
-      });
-
-      return fetchedItems;
-    } catch (err) {
-      console.error(`Error fetching ${collectionPath}:`, err);
-      throw err;
-    }
-  }, [collectionPath, orderField]);
-
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
-
-    if (!db) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
-
-    const firestore = db;
-
     try {
-      const fetched = await fetchItems(firestore);
-      setItems(fetched);
+      const result = await apiGet(collectionPath, orderField ? { orderBy: { field: orderField as string } } : undefined);
+      setItems(sortData(result.items || [], orderField));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
@@ -87,58 +49,18 @@ export function useFirestoreCollection<T extends { id: string }>(
     } finally {
       setLoading(false);
     }
-  }, [fetchItems]);
-
-  // Realtime listener: use onSnapshot directly (no setState in effect guards)
-  useEffect(() => {
-    if (!db) {
-      setLoading(false);
-      return;
-    }
-    const firestore = db;
-    let q;
-    if (orderField) {
-      q = query(collection(firestore, collectionPath), orderBy(orderField as string));
-    } else {
-      q = query(collection(firestore, collectionPath));
-    }
-    const unsub = onSnapshot(
-      q,
-      (snapshot) => {
-        const fetchedItems: T[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data() as Record<string, unknown>;
-          fetchedItems.push({ id: docSnap.id, ...data } as T);
-        });
-        setItems(fetchedItems);
-        setLoading(false);
-      },
-      (err) => {
-        console.error(`Error in realtime listener for ${collectionPath}:`, err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        setLoading(false);
-      }
-    );
-    return () => { unsub(); };
   }, [collectionPath, orderField]);
 
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
   const seedData = useCallback(async (data: T[]) => {
-    if (!db) return;
-    const firestore = db;
-
     try {
-      const batch = writeBatch(firestore);
-
-      data.forEach((item) => {
-        const docRef = doc(firestore, collectionPath, item.id);
-        const itemData = { ...item } as Record<string, unknown>;
-        delete itemData.id;
-        batch.set(docRef, itemData);
-      });
-
-      await batch.commit();
-      console.log(`Seeded ${data.length} items to ${collectionPath}`);
-
+      for (const item of data) {
+        const { id, ...rest } = item;
+        await apiSet(collectionPath, id, rest as Record<string, unknown>, false);
+      }
       await refresh();
       toast.success(`Data berhasil disimpan ke ${collectionPath}`);
     } catch (err) {
@@ -148,79 +70,41 @@ export function useFirestoreCollection<T extends { id: string }>(
   }, [collectionPath, refresh]);
 
   const replaceAll = useCallback(async (data: T[]) => {
-    if (!db) {
-      setItems([...data]);
-      return;
-    }
-
-    const firestore = db;
-
     try {
-      const existing = await fetchItems(firestore);
-
-      const batch = writeBatch(firestore);
-      existing.forEach((item) => {
-        batch.delete(doc(firestore, collectionPath, item.id));
-      });
-      data.forEach((item) => {
-        const docRef = doc(firestore, collectionPath, item.id);
-        const itemData = { ...item } as Record<string, unknown>;
-        delete itemData.id;
-        batch.set(docRef, itemData);
-      });
-      await batch.commit();
-
-      setItems([...data]);
+      const existing = await apiGet(collectionPath);
+      for (const item of existing.items || []) {
+        await apiDelete(collectionPath, item.id);
+      }
+      for (const item of data) {
+        const { id, ...rest } = item;
+        await apiSet(collectionPath, id, rest as Record<string, unknown>, false);
+      }
+      setItems(sortData([...data], orderField));
     } catch (err) {
       console.error(`Error replacing ${collectionPath}:`, err);
       toast.error('Gagal menyimpan data');
     }
-  }, [collectionPath, fetchItems]);
+  }, [collectionPath, orderField]);
 
   const addItem = useCallback(async (item: Omit<T, 'id'> & { id?: string }) => {
     const newId = item.id || `${collectionPath}-${Date.now()}`;
-
-    if (!db) {
-      setItems((prev) => [{ ...item, id: newId } as T, ...prev]);
-      return;
-    }
-
-    const firestore = db;
-
     try {
-      const docRef = doc(firestore, collectionPath, newId);
-      const itemData = { ...item } as Record<string, unknown>;
-      delete itemData.id;
-      await setDoc(docRef, itemData);
-
+      await apiSet(collectionPath, newId, item as Record<string, unknown>, false);
       const newItem = { ...item, id: newId } as T;
-      setItems((prev) => [newItem, ...prev]);
+      setItems((prev) => sortData([newItem, ...prev], orderField));
       toast.success('Item berhasil ditambahkan');
     } catch (err) {
       console.error(`Error adding item to ${collectionPath}:`, err);
       toast.error('Gagal menambahkan item');
       throw err;
     }
-  }, [collectionPath]);
+  }, [collectionPath, orderField]);
 
   const updateItem = useCallback(async (id: string, updates: Partial<T>) => {
-    if (!db) {
-      setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
-      );
-      return;
-    }
-
-    const firestore = db;
-
     try {
-      const docRef = doc(firestore, collectionPath, id);
-      const updatesData = { ...updates } as Record<string, unknown>;
-      delete updatesData.id;
-      await setDoc(docRef, updatesData, { merge: true });
-
+      await apiSet(collectionPath, id, updates as Record<string, unknown>, true);
       setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+        sortData(prev.map((item) => (item.id === id ? { ...item, ...updates } : item)), orderField)
       );
       toast.success('Item berhasil diperbarui');
     } catch (err) {
@@ -228,20 +112,11 @@ export function useFirestoreCollection<T extends { id: string }>(
       toast.error('Gagal memperbarui item');
       throw err;
     }
-  }, [collectionPath]);
+  }, [collectionPath, orderField]);
 
   const deleteItem = useCallback(async (id: string) => {
-    if (!db) {
-      setItems((prev) => prev.filter((item) => item.id !== id));
-      return;
-    }
-
-    const firestore = db;
-
     try {
-      const docRef = doc(firestore, collectionPath, id);
-      await deleteDoc(docRef);
-
+      await apiDelete(collectionPath, id);
       setItems((prev) => prev.filter((item) => item.id !== id));
       toast.success('Item berhasil dihapus');
     } catch (err) {

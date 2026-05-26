@@ -1,14 +1,22 @@
-import { adminDb } from '@/lib/firebase-admin';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function getAllBerita() {
-  if (!adminDb) throw new Error('Firebase Admin not configured');
-  const snapshot = await adminDb.collection('berita').orderBy('tanggal', 'desc').get();
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  if (!supabaseAdmin) throw new Error('Database not configured');
+  const { data, error } = await supabaseAdmin
+    .from('app_data')
+    .select('*')
+    .eq('collection', 'berita')
+    .order('data->>tanggal', { ascending: false });
+  if (error) throw error;
+  return (data || []).map(r => ({ id: r.id, ...(r.data as object) }));
 }
 
 export async function createBerita(data: any) {
-  if (!adminDb) throw new Error('Firebase Admin not configured');
-  const ref = await adminDb.collection('berita').add(data);
-  return ref.id;
+  if (!supabaseAdmin) throw new Error('Database not configured');
+  const id = crypto.randomUUID();
+  const { error } = await supabaseAdmin
+    .from('app_data')
+    .insert({ id, collection: 'berita', data: { ...data, createdAt: Date.now(), updatedAt: Date.now() } });
+  if (error) throw error;
+  return id;
 }
-

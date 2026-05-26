@@ -1,31 +1,11 @@
-/**
- * FirebaseLED — global connection-status indicator.
- *
- * Shows a small pill/badge:
- *   🟢 green  = connected
- *   🔴 red    = disconnected
- *   🟡 amber  = connecting / unknown
- *   ⛔ grey   = browser offline
- *
- * Probes Firestore by reading one doc from the `menus` collection.
- * Status is updated every 30 s so a dropped connection shows as
- * "disconnected" even when the browser is online.
- * Clicking the pill shows a tooltip with the last sync timestamp.
- */
-
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { db } from '@/lib/firebase';
-import {
-  collection, query, limit, getDocs,
-} from 'firebase/firestore';
 import { Wifi, WifiOff, Loader2, Clock, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type Status = 'connected' | 'disconnected' | 'connecting' | 'offline_browser';
 
-// Module-level var — remembered across renders
 let lastRefresh = 0;
 
 export function getLastRefresh(): number {
@@ -36,11 +16,10 @@ export function touchRefresh(): void {
   lastRefresh = Date.now();
 }
 
-/** Try a 1-doc read against the `menus` collection to confirm the wire is up. */
-async function probeFirestore(firestoreDb: ReturnType<typeof import('firebase/firestore').getFirestore>): Promise<boolean> {
+async function probeApi(): Promise<boolean> {
   try {
-    await getDocs(query(collection(firestoreDb, 'menus'), limit(1)));
-    return true;
+    const res = await fetch('/api/firestore/menus?limit=1');
+    return res.ok;
   } catch {
     return false;
   }
@@ -61,19 +40,13 @@ export function FirebaseLED({
   const [showTooltip, setShowTooltip] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  /* ── helpers ─────────────────────────────────────────────── */
-
   const updateStatus = useCallback(async () => {
     if (!browserOnline) {
       setStatus('offline_browser');
       return;
     }
-    if (!db) {
-      setStatus('disconnected');
-      return;
-    }
     try {
-      const ok = await probeFirestore(db);
+      const ok = await probeApi();
       setStatus(ok ? 'connected' : 'disconnected');
     } catch {
       setStatus('disconnected');
@@ -86,8 +59,6 @@ export function FirebaseLED({
     updateStatus();
   }, [updateStatus]);
 
-  /* ── browser online / offline events ─────────────────── */
-
   useEffect(() => {
     const onOnline = () => setBrowserOnline(true);
     const onOffline = () => setBrowserOnline(false);
@@ -99,8 +70,6 @@ export function FirebaseLED({
     };
   }, []);
 
-  /* ── initial status probe ────────────────────────────── */
-
   useEffect(() => {
     queueMicrotask(() => {
       updateStatus();
@@ -109,16 +78,12 @@ export function FirebaseLED({
     });
   }, [updateStatus]);
 
-  /* ── periodic probe (every 30 s) ────────────────────── */
-
   useEffect(() => {
     timerRef.current = setInterval(updateStatus, 30_000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [updateStatus]);
-
-  /* ── render ─────────────────────────────────────────── */
 
   const colors: Record<Status, string> = {
     connected: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
@@ -134,9 +99,9 @@ export function FirebaseLED({
       : Loader2;
 
   const label = {
-    connected: 'Firebase Terhubung',
-    disconnected: 'Firebase Terputus',
-    connecting: 'Firebase Menghubungkan…',
+    connected: 'Server Terhubung',
+    disconnected: 'Server Terputus',
+    connecting: 'Menghubungkan…',
     offline_browser: 'Offline',
   }[status];
 
@@ -151,7 +116,6 @@ export function FirebaseLED({
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-1">
-      {/* Compact LED pill */}
       <div
         role="status"
         tabIndex={0}
@@ -168,7 +132,6 @@ export function FirebaseLED({
         <span className="hidden sm:inline">{label}</span>
       </div>
 
-      {/* Tooltip */}
       {showTooltip && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border dark:border-gray-700 p-3 w-56 text-xs space-y-2 animate-in fade-in slide-in-from-bottom-1">
           <div className="flex items-center gap-2">

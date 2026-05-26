@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { adminAuth, adminDb, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
+import { adminAuth, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
 import type { UserRole } from '@/types';
 
 export interface AuthResult {
@@ -11,10 +12,33 @@ export interface AuthResult {
   isActive: boolean;
 }
 
+async function getUserProfile(uid: string): Promise<AuthResult | null> {
+  if (isSupabaseAdminConfigured() && supabaseAdmin) {
+    const { data } = await supabaseAdmin
+      .from('app_data')
+      .select('*')
+      .eq('collection', 'users')
+      .eq('id', uid)
+      .single();
+    if (data) {
+      const d = data.data as Record<string, any> || {};
+      return {
+        uid,
+        role: (d.role as UserRole) || 'publik',
+        schoolId: d.schoolId,
+        schoolName: d.schoolName,
+        organizationId: d.organizationId,
+        isActive: d.isActive ?? true,
+      };
+    }
+  }
+  return null;
+}
+
 export async function verifyAuth(request: Request): Promise<AuthResult | NextResponse> {
   const authHeader = request.headers.get('authorization');
 
-  if (!isFirebaseAdminConfigured || !adminAuth || !adminDb) {
+  if (!isFirebaseAdminConfigured || !adminAuth) {
     return NextResponse.json({
       error: 'Firebase Admin belum dikonfigurasi. Set FIREBASE_SERVICE_ACCOUNT_KEY di Environment Variables Vercel, lalu redeploy.',
     }, { status: 500 }) as NextResponse;
@@ -28,30 +52,17 @@ export async function verifyAuth(request: Request): Promise<AuthResult | NextRes
 
   try {
     const decoded = await adminAuth.verifyIdToken(token);
-    const docSnap = await adminDb.collection('users').doc(decoded.uid).get();
-    let role: UserRole = 'publik';
+    const profile = await getUserProfile(decoded.uid);
+    if (profile) return profile;
 
-    if (docSnap.exists) {
-      const data = docSnap.data();
-      role = (data?.role as UserRole) || 'publik';
-      return {
-        uid: decoded.uid,
-        role,
-        schoolId: data?.schoolId,
-        schoolName: data?.schoolName,
-        organizationId: data?.organizationId,
-        isActive: data?.isActive ?? true,
-      };
-    }
-
-    return { uid: decoded.uid, role, isActive: false };
+    return { uid: decoded.uid, role: 'publik', isActive: false };
   } catch {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 }) as NextResponse;
   }
 }
 
 export async function verifyCookieAuth(token: string): Promise<AuthResult | NextResponse> {
-  if (!isFirebaseAdminConfigured || !adminAuth || !adminDb) {
+  if (!isFirebaseAdminConfigured || !adminAuth) {
     return NextResponse.json({
       error: 'Firebase Admin belum dikonfigurasi. Set FIREBASE_SERVICE_ACCOUNT_KEY di Environment Variables Vercel, lalu redeploy.',
     }, { status: 500 }) as NextResponse;
@@ -63,23 +74,10 @@ export async function verifyCookieAuth(token: string): Promise<AuthResult | Next
 
   try {
     const decoded = await adminAuth.verifyIdToken(token);
-    const docSnap = await adminDb.collection('users').doc(decoded.uid).get();
-    let role: UserRole = 'publik';
+    const profile = await getUserProfile(decoded.uid);
+    if (profile) return profile;
 
-    if (docSnap.exists) {
-      const data = docSnap.data();
-      role = (data?.role as UserRole) || 'publik';
-      return {
-        uid: decoded.uid,
-        role,
-        schoolId: data?.schoolId,
-        schoolName: data?.schoolName,
-        organizationId: data?.organizationId,
-        isActive: data?.isActive ?? true,
-      };
-    }
-
-    return { uid: decoded.uid, role, isActive: false };
+    return { uid: decoded.uid, role: 'publik', isActive: false };
   } catch {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 }) as NextResponse;
   }
