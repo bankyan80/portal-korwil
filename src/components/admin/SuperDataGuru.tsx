@@ -210,9 +210,10 @@ export default function SuperDataGuru() {
     return sekolahWithMeta.filter(s => {
       const matchesSearch = !searchSekolah || s.nama.toLowerCase().includes(searchSekolah.toLowerCase());
       const matchesJenjang = jenjangFilter === 'ALL' || s.jenjang === jenjangFilter;
-      return matchesSearch && matchesJenjang;
+      const matchesPegawai = !searchNama.trim() || s.total > 0;
+      return matchesSearch && matchesJenjang && matchesPegawai;
     });
-  }, [sekolahWithMeta, searchSekolah, jenjangFilter]);
+  }, [sekolahWithMeta, searchSekolah, searchNama, jenjangFilter]);
 
   const JENJANG_LABEL: Record<string, string> = { SD: 'SD', TK: 'TK', KB: 'KB/PAUD' };
   const JENJANG_COLOR: Record<string, string> = {
