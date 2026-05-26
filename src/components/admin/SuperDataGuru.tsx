@@ -85,6 +85,7 @@ export default function SuperDataGuru() {
   }
   const { data: allDataResult, isLoading, isError, error } = usePegawaiAll();
   const [searchSekolah, setSearchSekolah] = useState('');
+  const [searchNama, setSearchNama] = useState('');
   const [jenjangFilter, setJenjangFilter] = useState<JenjangFilter>('ALL');
   const [formOpen, setFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Record<string, any> | null>(null);
@@ -160,8 +161,15 @@ export default function SuperDataGuru() {
   }
 
   // Build per-sekolah aggregation from pegawai data
-  const sekolahAgg = useMemo(() => {
+  const filteredItems = useMemo(() => {
     const items = allDataResult?.items || [];
+    if (!searchNama.trim()) return items;
+    const q = searchNama.toLowerCase().trim();
+    return items.filter((r: any) => (r.nama || '').toLowerCase().includes(q));
+  }, [allDataResult, searchNama]);
+
+  const sekolahAgg = useMemo(() => {
+    const items = filteredItems;
     const aggMap: Record<string, { guru: number; tendik: number; total: number }> = {};
     for (const r of items) {
       const keyName = (r.sekolah || '').trim() || '-';
@@ -172,7 +180,7 @@ export default function SuperDataGuru() {
       aggMap[nama].total++;
     }
     return aggMap;
-  }, [allDataResult]);
+  }, [filteredItems]);
 
   // All sekolah from master + their pegawai stats (jenjang always from master)
   const sekolahWithMeta = useMemo(() => {
@@ -248,6 +256,16 @@ export default function SuperDataGuru() {
               className="pl-9 h-9"
             />
           </div>
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Cari nama pegawai..."
+              value={searchNama}
+              onChange={e => setSearchNama(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
           <div className="flex items-center gap-2">
             <label className="text-xs text-muted-foreground whitespace-nowrap">Jenjang:</label>
             <select
@@ -276,7 +294,7 @@ export default function SuperDataGuru() {
       {filteredData.length > 0 && (
         <div className="space-y-3">
           {filteredData.map(school => {
-            const items = allDataResult?.items || [];
+            const items = filteredItems;
             const schoolDisplay = displaySchoolName(school.nama);
             const guruRecords = items.filter(r => displaySchoolName(r.sekolah) === schoolDisplay && r.jenis_ptk === 'Guru');
             const tendikRecords = items.filter(r => displaySchoolName(r.sekolah) === schoolDisplay && r.jenis_ptk === 'Tenaga Kependidikan');
