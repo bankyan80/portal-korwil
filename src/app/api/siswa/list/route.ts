@@ -114,9 +114,12 @@ export async function GET(req: NextRequest) {
   const limitParam = req.nextUrl.searchParams.get('limit');
   const fullData = await canReadFullData(req);
 
-  // 1) Coba Google Sheets (primary)
+  // 1) Coba Google Sheets (primary, with 7s timeout)
   try {
-    const rows = await getRows('data_siswa');
+    const rows = await Promise.race([
+      getRows('data_siswa'),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 7000)),
+    ]);
     if (rows.length > 200) {
       const filtered = applyFilters(rows, jenjang, layak_pip, sekolah, schoolId, search, limitParam, fullData);
       return buildResponse(filtered, fullData);
