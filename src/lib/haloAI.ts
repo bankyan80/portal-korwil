@@ -39,7 +39,7 @@ ATURAN LINK:
 
 const ROUTE_OPERATOR = `
 ${ROUTE_PUBLIK}
-ROUTE OPERATOR: /admin/operator /admin/operator/profil-sekolah /admin/operator/data-siswa /admin/operator/tambah-siswa /admin/operator/data-guru /admin/operator/sarpras /admin/operator/laporan-bulanan
+ROUTE OPERATOR: /admin/operator /admin/operator/profil-sekolah /admin/operator/data-siswa /admin/operator/tambah-siswa /admin/operator/data-guru /admin/operator/sarpras /admin/operator/laporan-bulanan /admin/operator/yatim-piatu
 `;
 
 const ROUTE_ADMIN = `
@@ -71,8 +71,9 @@ Kamu membantu informasi sekolah, SPMB, TKA, dan layanan pendidikan.`;
   })();
 
   const isNavigation = complexity === 'sederhana' || ctx.currentPath === '/';
+  const isLoggedIn = ctx.userRole && ctx.userRole !== 'publik';
   const routeMap = (() => {
-    if (!isNavigation) return '';
+    if (!isNavigation && !isLoggedIn) return '';
     switch (ctx.userRole) {
       case 'super_admin': return ROUTE_SUPER;
       case 'operator_sekolah': return ROUTE_OPERATOR;

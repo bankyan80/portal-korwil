@@ -80,7 +80,7 @@ const LOCAL_KB: Record<string, LocalAnswer> = {
     confidence: 'exact',
   },
   'yatim piatu': {
-    answer: 'Data yatim piatu bisa diakses di:\n\n[🤝 Yatim Piatu](/yatim-piatu)\n\nHalaman ini berisi data anak yatim piatu di Kecamatan Lemahabang.',
+    answer: 'Data yatim piatu bisa diakses di:\n\n[🤝 Yatim Piatu](/yatim-piatu) — halaman publik\n\nUntuk operator: [📝 Kelola Yatim Piatu](/admin/operator/yatim-piatu) (login sebagai operator sekolah).',
     confidence: 'exact',
   },
   'bos arkas': {
