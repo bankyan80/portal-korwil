@@ -37,8 +37,9 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export default function DokumenBersamaPage() {
   const user = useAppStore((s) => s.user);
-  const [nip, setNip] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [pegawai, setPegawai] = useState<any | null>(null);
+  const [searchResults, setSearchResults] = useState<any[] | null>(null);
   const [documents, setDocuments] = useState<DokumenBersama[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -51,21 +52,32 @@ export default function DokumenBersamaPage() {
   const isAdmin = user && (user.role === 'super_admin' || user.role === 'operator_sekolah');
 
   async function cari() {
-    const clean = nip.replace(/\D/g, '');
-    if (!clean) return;
+    const q = searchQuery.trim();
+    if (!q) return;
     setLoading(true);
     setSearched(true);
     setDocuments([]);
     setPegawai(null);
+    setSearchResults(null);
 
     try {
-      const res = await fetch(`/api/pegawai/lookup?nip=${clean}`);
-      const json = await res.json();
-      if (json.found) {
-        setPegawai(json.pegawai);
-        const docsRes = await fetch(`/api/dokumen/list?nip=${clean}`);
-        const docsJson = await docsRes.json();
-        setDocuments(docsJson.documents || []);
+      const isNip = /^\d+$/.test(q);
+      let json: any;
+      if (isNip) {
+        const res = await fetch(`/api/pegawai/lookup?nip=${q}`);
+        json = await res.json();
+        if (json.found) {
+          await pilihPegawai(json.pegawai);
+          return;
+        }
+      }
+
+      const res = await fetch(`/api/pegawai/lookup?search=${encodeURIComponent(q)}`);
+      json = await res.json();
+      if (json.found && json.results?.length === 1) {
+        await pilihPegawai(json.results[0]);
+      } else if (json.found && json.results?.length > 1) {
+        setSearchResults(json.results);
       } else {
         setPegawai(null);
         setDocuments([]);
@@ -75,6 +87,17 @@ export default function DokumenBersamaPage() {
       setPegawai(null);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function pilihPegawai(p: any) {
+    setPegawai(p);
+    setSearchResults(null);
+    const nip = p.nip || '';
+    if (nip) {
+      const docsRes = await fetch(`/api/dokumen/list?nip=${nip}`);
+      const docsJson = await docsRes.json();
+      setDocuments(docsJson.documents || []);
     }
   }
 
@@ -109,7 +132,7 @@ export default function DokumenBersamaPage() {
 
     await apiAdd('dokumen', {
       nik: pegawai.nik || '',
-      nip: pegawai.nip || nip.replace(/\D/g, ''),
+      nip: pegawai.nip || '',
       nama: pegawai.nama,
       sekolah: pegawai.sekolah || user?.schoolName || '',
       schoolId: pegawai.schoolId || user?.schoolId || '',
@@ -215,7 +238,7 @@ export default function DokumenBersamaPage() {
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div>
           <h2 className="text-2xl font-bold text-[#0d3b66]">Dokumen Bersama</h2>
-          <p className="text-sm text-gray-500 mt-1">Cari dokumen berdasarkan NIP pegawai</p>
+          <p className="text-sm text-gray-500 mt-1">Cari dokumen berdasarkan NIP atau nama pegawai</p>
         </div>
 
         <div className="bg-white rounded-xl border shadow-sm p-5 space-y-3">
@@ -225,16 +248,16 @@ export default function DokumenBersamaPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Masukkan NIP (tanpa spasi)"
-                value={nip}
-                onChange={e => setNip(e.target.value.replace(/\s/g, ''))}
+                placeholder="Masukkan NIP atau nama pegawai"
+                value={searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); setSearchResults(null); }}
                 onKeyDown={e => e.key === 'Enter' && cari()}
-                className="pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-full font-mono"
+                className="pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-full"
               />
             </div>
             <button
               onClick={cari}
-              disabled={!nip || loading}
+              disabled={!searchQuery.trim() || loading}
               className="flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium text-white bg-blue-800 rounded-lg hover:bg-blue-900 disabled:opacity-50"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
@@ -243,11 +266,37 @@ export default function DokumenBersamaPage() {
           </div>
         </div>
 
-        {searched && !loading && !pegawai && (
+        {searchResults && searchResults.length > 0 && (
+          <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b bg-gray-50">
+              <p className="text-sm font-semibold text-[#0d3b66]">Ditemukan {searchResults.length} pegawai</p>
+            </div>
+            <div className="divide-y max-h-64 overflow-y-auto">
+              {searchResults.map((p, i) => (
+                <button
+                  key={p.nip || i}
+                  onClick={() => pilihPegawai(p)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-blue-50 transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm shrink-0">
+                    {p.nama?.charAt(0) || '?'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#0d3b66] truncate">{p.nama}</p>
+                    <p className="text-xs text-gray-500 truncate">{p.sekolah} {p.nip ? `• ${p.nip}` : ''}</p>
+                  </div>
+                  <span className="text-xs text-blue-600 shrink-0">Pilih</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {searched && !loading && !pegawai && !searchResults && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
             <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-2" />
-            <p className="font-medium text-amber-800">NIP tidak ditemukan</p>
-            <p className="text-sm text-amber-600 mt-1">Pastikan NIP yang dimasukkan benar</p>
+            <p className="font-medium text-amber-800">Pegawai tidak ditemukan</p>
+            <p className="text-sm text-amber-600 mt-1">Pastikan NIP atau nama yang dimasukkan benar</p>
           </div>
         )}
 
@@ -338,7 +387,8 @@ export default function DokumenBersamaPage() {
             {documents.length === 0 ? (
               <div className="bg-white rounded-xl border shadow-sm p-8 text-center">
                 <FileText className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-400 text-sm">Belum ada dokumen</p>
+                <p className="text-gray-500 text-sm font-medium">Dokumen belum tersedia</p>
+                <p className="text-gray-400 text-xs mt-1">Silahkan hubungi operator pada sekolah masing-masing</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

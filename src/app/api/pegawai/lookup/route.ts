@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 import { getAllPegawai } from '@/services/pegawai.service';
 
 export async function GET(req: NextRequest) {
-  // Verify auth - only authenticated users can lookup employees
-  const token = req.cookies.get('auth-token')?.value;
-  const auth = await verifyCookieAuth(token || '');
-  const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
-  if (forbidden) return forbidden;
-
   const nik = req.nextUrl.searchParams.get('nik')?.replace(/\D/g, '');
   const nip = req.nextUrl.searchParams.get('nip')?.replace(/\D/g, '');
   const search = req.nextUrl.searchParams.get('search')?.toLowerCase();
