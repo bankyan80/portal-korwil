@@ -7,7 +7,7 @@ import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
 import { apiGet } from '@/lib/api-firestore';
 import { sekolahSD, sekolahTK, sekolahKB } from '@/data/sekolah';
-import { rombelData, type RombelEntry, type RombelDetail } from '@/data/rombel';
+import { rombelData, extractKelas as extractKelasRombel, type RombelEntry, type RombelDetail } from '@/data/rombel';
 import { useSekolah, type SekolahItem } from '@/hooks/useSekolah';
 
 const tabs = [
@@ -157,15 +157,7 @@ function buildSekolahData(allSekolah: SekolahItem[], firestoreSd?: SekolahKelas[
 }
 
 function extractKelas(name: string, jenjang: string): string {
-  if (jenjang === 'SD') {
-    const m = name.match(/Kelas\s+(\d+)/i);
-    return m ? m[1] : name;
-  }
-  if (jenjang === 'TK' || jenjang === 'KB') {
-    const m = name.match(/([A-E])/i);
-    return m ? m[1].toUpperCase() : name;
-  }
-  return name;
+  return extractKelasRombel(name, jenjang);
 }
 
 function aggregateRombel(students: any[]): RombelEntry[] {
