@@ -4,7 +4,7 @@ import { buildSystemPrompt, ChatContext, checkGeminiHealth } from '@/lib/haloAI'
 import { findLocalAnswer, classifyComplexity, classifyQueryType, getSmartRoutingReply, hasSearchIntent, type Complexity } from '@/lib/haloAI-knowledge';
 import { verifyCookieAuth } from '@/lib/server-auth';
 
-const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-2.5-flash-lite,gemini-2.5-flash,gemini-2.0-flash')
+const GEMINI_MODELS = (process.env.GEMINI_MODELS || 'gemini-2.0-flash,gemini-2.0-flash-exp,gemini-2.5-flash')
   .split(',')
   .map(m => m.trim())
   .filter(m => m.length > 0);
