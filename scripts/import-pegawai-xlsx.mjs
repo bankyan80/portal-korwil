@@ -36,6 +36,20 @@ const FILES = [
   { id: '1h_r8oPaofOARc1Jvsno45B4bA_dSYUer', school: 'PAUD AMANAH', type: 'tendik' },
   { id: '1cycQ278fplWLTfuxRQUEqveYcu-vf8NU', school: 'TK MUSLIMAT NU', type: 'guru' },
   { id: '13OtePp-DsakF7kqjT2_UFD-dN4Wybfy7', school: 'TK MUSLIMAT NU', type: 'tendik' },
+
+  // New xlsx files (batch sync May 2026)
+  { id: '1HD28oILkZ5X-wZn7bSYNeWQgucS1cFVp', school: 'KB MUTIARA', type: 'guru' },
+  { id: '1V0Bqx92cbvptIQfMcFN4LVfuj-EcgHBR', school: 'PAUD SPS MELATI', type: 'guru' },
+  { id: '1V_BLU5sZrmjLmFiZTGX-w2ibf1yannno', school: 'PAUD TUNAS HARAPAN', type: 'guru' },
+  { id: '1mYf7xAbsNxaixcZam446KM_NiZtzYcLv', school: 'PAUD TUNAS HARAPAN', type: 'tendik' },
+
+  // Sub-folder files (embeddedfolderview)
+  { id: '19nnEatEq6pH7VNz5GaujXAeUQyIIEXsC', school: 'PAUD AN NAIM', type: 'guru' },
+  { id: '17lHkPT5dL769uRIJaEcF35dR9Pv_Lyzx', school: 'PAUD AN NAIM', type: 'tendik' },
+  { id: '1-Ljh0fioqTyp6g0P6z6y_EvAy7uLbjCF', school: 'PAUD ASY-SYAFIIYAH', type: 'guru' },
+  { id: '1rR_835vBIyujAnhrEBEzGnLhZxG-Kx0F', school: 'PAUD ASY-SYAFIIYAH', type: 'tendik' },
+  { id: '19d3jEvRRx7KeZiZ71JuIP-QuUIQunQhl', school: 'PAUD BUDGENVIL', type: 'guru' },
+  { id: '16wvIeC9TRdeJyTEI2VwcY0AOh_olLZD1', school: 'PAUD BUDGENVIL', type: 'tendik' },
 ];
 
 // === Load canonical schools & NPSN map ===
