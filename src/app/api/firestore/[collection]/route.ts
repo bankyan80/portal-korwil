@@ -47,7 +47,12 @@ export async function GET(req: NextRequest, { params }: { params: { collection: 
 
     query = query.limit(limit);
 
-    const { data, error } = await query;
+    const { data, error } = await Promise.race([
+      Promise.resolve(query),
+      new Promise<{ data: null; error: { message: string } }>((_, reject) =>
+        setTimeout(() => reject(new Error('Database timeout')), 7000)
+      ),
+    ]);
     if (error) throw error;
 
     const items = (data || []).map((r) => ({ id: r.id, ...(r.data as object) }));
