@@ -184,19 +184,19 @@ const LOCAL_KB: Record<string, LocalAnswer> = {
     confidence: 'exact',
   },
   'dapodik': {
-    answer: 'Data Dapodik bisa diakses di:\n\n[💾 Dapodik](/dapodik)\n\nHalaman ini berisi data pokok pendidikan yang terintegrasi dengan Dapodik.',
+    answer: 'Data Dapodik bisa diakses di:\n\n[💾 Dapodik](/master-data?tab=dapodik)\n\nHalaman ini berisi data pokok pendidikan yang terintegrasi dengan Dapodik.',
     confidence: 'exact',
   },
   'data paud': {
-    answer: 'Data PAUD bisa diakses di:\n\n[👶 Data PAUD](/data-paud)\n\nHalaman ini berisi data Pendidikan Anak Usia Dini di Kecamatan Lemahabang.',
+    answer: 'Data PAUD bisa diakses di:\n\n[👶 Data PAUD](/master-data?tab=kb)\n\nHalaman ini berisi data Pendidikan Anak Usia Dini di Kecamatan Lemahabang.',
     confidence: 'exact',
   },
   'data rombel': {
-    answer: 'Data rombongan belajar (rombel) bisa diakses di:\n\n[👥 Data Rombel](/data-rombel)\n\nHalaman ini berisi data rombongan belajar setiap sekolah.',
+    answer: 'Data rombongan belajar (rombel) bisa diakses di:\n\n[👥 Data Rombel](/master-data?tab=rombel)\n\nHalaman ini berisi data rombongan belajar setiap sekolah.',
     confidence: 'exact',
   },
   'data gtk': {
-    answer: 'Data GTK (Guru dan Tenaga Kependidikan) bisa diakses di:\n\n[👨‍🏫 Data GTK](/data-gtk)\n\nBerisi data lengkap guru dan tenaga kependidikan.',
+    answer: 'Data GTK (Guru dan Tenaga Kependidikan) bisa diakses di:\n\n[👨‍🏫 Data GTK](/master-data?tab=gtk)\n\nBerisi data lengkap guru dan tenaga kependidikan.',
     confidence: 'exact',
   },
   'website sekolah': {

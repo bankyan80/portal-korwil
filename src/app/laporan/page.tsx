@@ -4,9 +4,9 @@ import { BarChart3, BookOpen, GraduationCap, School, FileSpreadsheet, FileDown }
 
 export default function LaporanPage() {
   const menu = [
-    { label: 'Rekap Peserta Didik', icon: BookOpen, desc: 'Data peserta didik per sekolah', href: '/data-pd' },
-    { label: 'Rekap GTK', icon: GraduationCap, desc: 'Data guru dan tenaga kependidikan', href: '/data-gtk' },
-    { label: 'Rekap Kelas', icon: BarChart3, desc: 'Rekapitulasi kelas per jenjang', href: '/data-rombel' },
+    { label: 'Rekap Peserta Didik', icon: BookOpen, desc: 'Data peserta didik per sekolah', href: '/master-data?tab=pd' },
+    { label: 'Rekap GTK', icon: GraduationCap, desc: 'Data guru dan tenaga kependidikan', href: '/master-data?tab=gtk' },
+    { label: 'Rekap Kelas', icon: BarChart3, desc: 'Rekapitulasi kelas per jenjang', href: '/master-data?tab=rombel' },
     { label: 'Rekap SPMB', icon: School, desc: 'Data penerimaan peserta didik baru', href: '/spmb-sd' },
     { label: 'Rekap Laporan Bulanan', icon: FileSpreadsheet, desc: 'Laporan bulanan sekolah', href: '/rekap-laporan' },
     { label: 'Rekap BOS ARKAS', icon: FileDown, desc: 'Data BOS dan ARKAS sekolah', href: '/bos-arkas' },

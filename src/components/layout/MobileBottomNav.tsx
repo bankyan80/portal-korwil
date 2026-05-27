@@ -16,7 +16,7 @@ const iconMap: Record<string, LucideIcon> = {
 
 const FALLBACK_ITEMS = [
   { id: 'home', label: 'Home', icon: Home, path: '/' },
-  { id: 'data', label: 'Data', icon: Database, path: '/data-gtk' },
+  { id: 'data', label: 'Data', icon: Database, path: '/master-data' },
   { id: 'rekap', label: 'Rekap', icon: BarChart3, path: '/rekap-laporan' },
   { id: 'haloai', label: 'HaloAI', icon: Sparkles, path: '' },
   { id: 'profil', label: 'Profil', icon: Users, path: '/profil' },

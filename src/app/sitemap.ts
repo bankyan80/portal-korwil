@@ -3,11 +3,11 @@ import type { MetadataRoute } from 'next';
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = 'https://www.portalkorwil.online';
   const pages = [
-    '', '/profil', '/spmb-sd', '/data-gtk', '/data-pd', '/data-rombel',
-    '/data-sekolah', '/data-sd', '/data-tk', '/data-paud',
+    '', '/profil', '/spmb-sd', '/master-data',
+    '/data-sekolah',
     '/yatim-piatu', '/kip-sd', '/bos-arkas', '/mapping-pegawai',
     '/laporan', '/rekap-laporan', '/berita', '/galeri', '/semua-galeri',
-    '/semua-informasi', '/kalender', '/agenda-kegiatan', '/dapodik',
+    '/semua-informasi', '/kalender', '/agenda-kegiatan',
     '/ruang-guru', '/e-kinerja', '/dokumen-bersama', '/administrasi',
     '/organisasi', '/donasi', '/spmb-sd/cek', '/bup',
   ];
