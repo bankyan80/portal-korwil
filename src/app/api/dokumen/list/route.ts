@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
-import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 export async function GET(req: NextRequest) {
   if (!isSupabaseAdminConfigured || !supabaseAdmin) {
@@ -9,13 +8,8 @@ export async function GET(req: NextRequest) {
 
   const nip = req.nextUrl.searchParams.get('nip')?.replace(/\D/g, '') || '';
   if (!nip) {
-    return NextResponse.json({ error: 'NIP wajib diisi' }, { status: 400 });
+    return NextResponse.json({ documents: [] });
   }
-
-  const token = req.cookies.get('auth-token')?.value;
-  const authUser = await verifyCookieAuth(token || '');
-  const forbidden = requireRole(authUser, ['super_admin', 'operator_sekolah']);
-  if (forbidden) return forbidden;
 
   try {
     const { data } = await supabaseAdmin
