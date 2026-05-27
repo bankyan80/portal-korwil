@@ -5,8 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, FileText, Home, ShieldCheck, Truck, CheckCircle, AlertTriangle, MapPin, School, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { useSekolah } from '@/hooks/useSekolah';
-import { db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { apiSet } from '@/lib/api-firestore';
 import { toast } from 'sonner';
 
 function hitungUsia(tanggalLahir: string): number {
@@ -92,8 +91,6 @@ function FormPendaftaranContent() {
 
     setSubmitting(true);
     try {
-      if (!db) throw new Error('Database not initialized');
-      // Gunakan NIK sebagai ID atau prefix agar tidak double
       const id = `spmb-${nik}`;
       const payload = {
         id,
@@ -104,7 +101,7 @@ function FormPendaftaranContent() {
         tglDaftar: new Date().toISOString().split('T')[0],
         createdAt: Date.now()
       };
-      await setDoc(doc(db, 'spmb_sd', id), payload, { merge: true });
+      await apiSet('spmb_sd', id, payload, true);
       toast.success('Pendaftaran berhasil dikirim!');
       router.push(`/spmb-sd/pengumuman?nik=${nik}`);
     } catch (e) {

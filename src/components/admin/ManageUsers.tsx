@@ -20,8 +20,7 @@ import { SortableHeader } from '@/components/ui/SortableHeader';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { UserProfile, UserRole } from '@/types';
-import { auth, db } from '@/lib/firebase';
-import { collection, onSnapshot, doc, setDoc, getDocs } from 'firebase/firestore';
+import { apiGet, apiSet } from '@/lib/api-firestore';
 import { AdminEmptyState, AdminTableSkeleton } from '@/components/shared/AdminTable';
 
 const roleConfig: Record<string, { label: string; className: string }> = {
@@ -67,11 +66,10 @@ export function ManageUsers() {
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
-    if (!db) return;
     setRefreshing(true);
     try {
-      const snap = await getDocs(collection(db, 'users'));
-      const list = snap.docs.map(d => ({ ...d.data(), uid: d.id } as UserProfile));
+      const json = await apiGet('users', { orderBy: { field: 'createdAt', dir: 'asc' } });
+      const list: UserProfile[] = (json.items || []).map((d: any) => ({ ...d, uid: d.id || d.uid }));
       setUsers(list);
       toast.success('Data user diperbarui');
     } catch {
@@ -81,18 +79,21 @@ export function ManageUsers() {
   }, []);
 
   useEffect(() => {
-    if (!db) return;
     async function fetchData() {
       try {
-        const [usersSnap, schoolsSnap, orgsSnap] = await Promise.all([
-          getDocs(collection(db!, 'users')),
-          getDocs(collection(db!, 'schools')),
-          getDocs(collection(db!, 'organizations'))
+        const [usersJson, schoolsJson, orgsJson] = await Promise.all([
+          apiGet('users'),
+          apiGet('schools'),
+          apiGet('organizations'),
         ]);
         
-        setUsers(usersSnap.docs.map(d => ({ ...d.data(), uid: d.id } as UserProfile)));
-        setSchools(schoolsSnap.docs.map(d => ({ id: d.id, name: d.data().name || '' })));
-        setOrgs(snap => orgsSnap.docs.map(d => ({ id: d.id, name: d.data().name || '' })));
+        const usersList: UserProfile[] = (usersJson.items || []).map((d: any) => ({ ...d, uid: d.id || d.uid }));
+        const schoolsList: { id: string; name: string }[] = (schoolsJson.items || []).map((d: any) => ({ id: d.id, name: d.name || '' }));
+        const orgsList: { id: string; name: string }[] = (orgsJson.items || []).map((d: any) => ({ id: d.id, name: d.name || '' }));
+        
+        setUsers(usersList);
+        setSchools(schoolsList);
+        setOrgs(orgsList);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching manage users data:', err);
@@ -103,10 +104,9 @@ export function ManageUsers() {
   }, []);
 
   const handleChangeRole = useCallback(async (uid: string, newRole: UserRole) => {
-    if (!db) return;
     setUpdating(uid);
     try {
-      await setDoc(doc(db, 'users', uid), { role: newRole, updatedAt: Date.now() }, { merge: true });
+      await apiSet('users', uid, { role: newRole, updatedAt: Date.now() }, true);
       setUsers((prev) => prev.map((u) => (u.uid === uid ? { ...u, role: newRole } : u)));
       toast.success('Role berhasil diubah');
     } catch {
@@ -125,7 +125,7 @@ export function ManageUsers() {
   }, [schools, orgs]);
 
   const saveAffiliation = useCallback(async () => {
-    if (!editUser || !db) return;
+    if (!editUser) return;
     setUpdating(editUser.uid);
     try {
       const matchSchool = schools.find(s => s.id === editSchool || s.name === editSchool);
@@ -135,7 +135,7 @@ export function ManageUsers() {
       else { body.schoolName = editSchool; }
       if (matchOrg) { body.organizationId = matchOrg.id; body.organization = matchOrg.name; }
       else { body.organization = editOrg; }
-      await setDoc(doc(db, 'users', editUser.uid), body, { merge: true });
+      await apiSet('users', editUser.uid, body, true);
       setUsers((prev) => prev.map((u) => u.uid === editUser.uid ? { ...u, ...body } : u));
       toast.success('Berhasil diperbarui');
       setEditUser(null);
@@ -148,7 +148,8 @@ export function ManageUsers() {
 
   async function handleAddUser() {
     if (!addForm.email.trim()) { toast.error('Email harus diisi'); return; }
-    if (!db || !auth?.currentUser) { toast.error('Koneksi database tidak tersedia'); return; }
+    const cookieMatch = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
+    if (!cookieMatch) { toast.error('Anda harus login untuk menambah user'); return; }
     setAdding(true);
     try {
       const email = addForm.email.trim().toLowerCase();
@@ -166,7 +167,7 @@ export function ManageUsers() {
       if (addForm.schoolId) profile.schoolId = addForm.schoolId;
       if (addForm.organizationId) profile.organizationId = addForm.organizationId;
 
-      await setDoc(doc(db, 'users', uid), profile);
+      await apiSet('users', uid, profile, false);
       toast.success('User berhasil didaftarkan');
       setAddOpen(false);
       setAddForm({ email: '', role: 'operator_sekolah', schoolId: '', organizationId: '' });

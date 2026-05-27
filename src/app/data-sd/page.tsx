@@ -5,8 +5,7 @@ import { ArrowLeft, Search, School, Building2, MapPin, Loader2 } from 'lucide-re
 import { useSort } from '@/hooks/useSort';
 import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
-import { db } from '@/lib/firebase';
-import { getAllDocs, listenToCollection } from '@/lib/firestore';
+import { apiGet } from '@/lib/api-firestore';
 import { sekolahSD } from '@/data/sekolah';
 
 interface SchoolItem {
@@ -29,46 +28,30 @@ const fallbackSD: SchoolItem[] = sekolahSD.map(s => ({
 
 export default function DataSDPage() {
   const [schools, setSchools] = useState<SchoolItem[]>(fallbackSD);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    if (!db) return;
-    let unsub: (() => void) | null = null;
-    async function setupRealtime() {
-      try {
-        const initial = await getAllDocs('schools');
-        if (initial.length > 0) {
-          const filtered: SchoolItem[] = initial
-            .filter((s: any) => s.jenjang === 'SD')
-            .map((s: any) => ({
-              name: s.name || s.nama || '',
-              npsn: s.npsn || '-',
-              status: s.status || 'NEGERI',
-              akreditasi: s.akreditasi || '-',
-              address: s.alamat || '',
-              desa: s.desa || '',
-            }));
-          if (filtered.length > 0) setSchools(filtered);
-        }
-        unsub = listenToCollection('schools', (data) => {
-          const filtered: SchoolItem[] = data
-            .filter((s: any) => s.jenjang === 'SD')
-            .map((s: any) => ({
-              name: s.name || s.nama || '',
-              npsn: s.npsn || '-',
-              status: s.status || 'NEGERI',
-              akreditasi: s.akreditasi || '-',
-              address: s.alamat || '',
-              desa: s.desa || '',
-            }));
-          if (filtered.length > 0) setSchools(filtered);
-          setLoading(false);
-        });
-      } catch (e) { console.error('Gagal memuat data SD:', e); } finally { if (!unsub) setLoading(false); }
-    }
-    setupRealtime();
-    return () => { if (unsub) unsub(); };
+    apiGet('schools').then((res) => {
+      const all = (res.items || []) as any[];
+      if (all.length > 0) {
+        const filtered: SchoolItem[] = all
+          .filter((s: any) => s.jenjang === 'SD')
+          .map((s: any) => ({
+            name: s.name || s.nama || '',
+            npsn: s.npsn || '-',
+            status: s.status || 'NEGERI',
+            akreditasi: s.akreditasi || '-',
+            address: s.alamat || '',
+            desa: s.desa || '',
+          }));
+        if (filtered.length > 0) setSchools(filtered);
+      }
+      setLoading(false);
+    }).catch((e) => {
+      console.error('Gagal memuat data SD:', e);
+      setLoading(false);
+    });
   }, []);
 
   const totalNegeri = schools.filter(s => s.status === 'NEGERI').length;

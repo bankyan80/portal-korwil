@@ -5,9 +5,8 @@ import { ArrowLeft, Heart, Loader2, FileDown, Printer } from 'lucide-react';
 import { useSort } from '@/hooks/useSort';
 import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
+import { apiGet } from '@/lib/api-firestore';
 import type { YatimPiatuData, YatimCategory } from '@/types';
 
 const kategoriLabel: Record<YatimCategory, string> = {
@@ -30,14 +29,11 @@ const kategoriSimple: Record<YatimCategory, string> = {
 
 export default function YatimPiatuPage() {
   const [data, setData] = useState<YatimPiatuData[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!db) return;
-    const q = query(collection(db, 'yatim_piatu'), orderBy('createdAt', 'desc'));
-    getDocs(q).then((snap) => {
-      const list: YatimPiatuData[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as YatimPiatuData));
+    apiGet('yatim_piatu', { orderBy: { field: 'createdAt', dir: 'desc' } }).then((res) => {
+      const list: YatimPiatuData[] = (res.items || []).map((d: any) => ({ id: d.id, ...d }));
       setData(list);
       setLoading(false);
     }).catch(() => setLoading(false));

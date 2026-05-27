@@ -6,8 +6,7 @@ import { AdminEmptyState } from '@/components/shared/AdminTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { apiGet, apiAdd, apiDelete } from '@/lib/api-firestore';
 import { WalletMinimal, Search, Plus, Trash2, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import type { KipSdData } from '@/types';
@@ -27,7 +26,7 @@ interface SiswaItem {
 export function ManageKipSd() {
   const { user } = useAppStore();
   const [data, setData] = useState<KipSdData[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -36,16 +35,20 @@ export function ManageKipSd() {
   const [addStatus, setAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [adding, setAdding] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!db) return;
-    const q = query(collection(db, 'kip_sd'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      const list: KipSdData[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as KipSdData));
-      setData(list);
+  async function fetchData() {
+    try {
+      const json = await apiGet('kip_sd', { orderBy: { field: 'createdAt', dir: 'desc' } });
+      setData(json.items || []);
+    } catch (err) {
+      console.error('Error loading KIP:', err);
+      toast.error('Gagal memuat data KIP');
+    } finally {
       setLoading(false);
-    }, (err) => { console.error('Error loading KIP:', err); toast.error('Gagal memuat data KIP'); setLoading(false); });
-    return () => unsub();
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   async function handleSearch() {
@@ -86,13 +89,9 @@ export function ManageKipSd() {
     setSearchResults([]);
     setSearched(false);
     try {
-      if (!db) {
-        const newItem: KipSdData = { id: Date.now().toString(), nik: s.nik, nama: s.nama, sekolah: s.sekolah, desa: s.desa, layak_pip: s.layak_pip, createdAt: Date.now() };
-        setData(prev => [newItem, ...prev]);
-      } else {
-        await addDoc(collection(db, 'kip_sd'), { nik: s.nik, nama: s.nama, sekolah: s.sekolah, desa: s.desa, layak_pip: s.layak_pip, createdAt: Date.now() });
-      }
+      await apiAdd('kip_sd', { nik: s.nik, nama: s.nama, sekolah: s.sekolah, desa: s.desa, layak_pip: s.layak_pip, createdAt: Date.now() });
       setAddStatus({ ok: true, msg: `${s.nama} ditambahkan sebagai penerima PIP` });
+      await fetchData();
     } catch (e) {
       console.error('Error adding kip sd:', e);
       setAddStatus({ ok: false, msg: 'Gagal menambahkan data' });
@@ -102,11 +101,10 @@ export function ManageKipSd() {
   }
 
   async function handleDelete(id: string) {
-    if (!db) {
-      setData(prev => prev.filter(d => d.id !== id));
-      return;
-    }
-    await deleteDoc(doc(db, 'kip_sd', id));
+    try {
+      await apiDelete('kip_sd', id);
+      await fetchData();
+    } catch (e) { console.error('Error deleting kip sd:', e); }
   }
 
   const filteredData = data.filter(d => {

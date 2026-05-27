@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { db } from '@/lib/firebase';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { apiGet, apiSet } from '@/lib/api-firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -143,14 +142,13 @@ export function ManageSarpras() {
   }, [loadDraft]);
 
   useEffect(() => {
-    if (!db || !user?.schoolId) return;
+    if (!user?.schoolId) return;
 
-    const docRef = doc(db, 'sarpras', user.schoolId);
-    const unsubscribe = onSnapshot(
-      docRef,
-      (snap) => {
-        if (snap.exists()) {
-          const d = snap.data();
+    async function loadData() {
+      try {
+        const json = await apiGet('sarpras', { id: user.schoolId });
+        const d = json.data || json;
+        if (d && !('error' in d)) {
           setForm(prev => {
             const next = { ...prev };
             for (const k of Object.keys(defaultForm)) {
@@ -159,29 +157,25 @@ export function ManageSarpras() {
             return next;
           });
         }
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error in sarpras realtime listener:', err);
+      } catch (err) {
+        console.error('Error loading sarpras:', err);
         toast.error('Gagal memuat data sarpras');
+      } finally {
         setLoading(false);
       }
-    );
-
-    return () => {
-      unsubscribe();
-    };
+    }
+    loadData();
   }, [user?.schoolId]);
 
   async function handleSave() {
-    if (!db || !user?.schoolId) { toast.error('Data sekolah tidak tersedia'); return; }
+    if (!user?.schoolId) { toast.error('Data sekolah tidak tersedia'); return; }
     setSaving(true);
     try {
-      await setDoc(doc(db, 'sarpras', user.schoolId), {
+      await apiSet('sarpras', user.schoolId, {
         ...form,
         schoolId: user.schoolId,
         updatedAt: Date.now(),
-      }, { merge: true });
+      }, true);
       await clearDraft();
       setAutoSaveStatus('saved');
       toast.success('Data sarpras berhasil disimpan');

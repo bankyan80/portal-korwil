@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { apiGet, apiSet } from '@/lib/api-firestore';
 import {
   ArrowLeft, Building2, Phone, Save, Loader2,
 } from 'lucide-react';
@@ -31,10 +30,10 @@ export default function OrganisasiProfilPage() {
   }, [user, router]);
 
   useEffect(() => {
-    if (!db || !user?.organizationId) return;
+    if (!user?.organizationId) return;
     setLoading(true);
-    getDoc(doc(db, 'organizations', user.organizationId)).then((snap) => {
-      if (snap.exists()) setOrg(snap.data());
+    apiGet('organizations', { id: user.organizationId }).then((json: any) => {
+      if (json.exists) setOrg(json.data);
       setLoading(false);
     }).catch((err) => {
       console.error('Error loading organisasi profil:', err);
@@ -56,10 +55,10 @@ export default function OrganisasiProfilPage() {
   }
 
   async function handleSave() {
-    if (!form.name.trim() || !db || !user?.organizationId) return;
+    if (!form.name.trim() || !user?.organizationId) return;
     setSaving(true);
     try {
-      await setDoc(doc(db, 'organizations', user.organizationId), {
+      await apiSet('organizations', user.organizationId, {
         name: form.name,
         leader: form.leader,
         description: form.description,
@@ -67,7 +66,7 @@ export default function OrganisasiProfilPage() {
         mission: form.mission.split('\n').filter((m: string) => m.trim()),
         contact: form.contact,
         updatedAt: Date.now(),
-      }, { merge: true });
+      });
       toast.success('Profil organisasi berhasil diperbarui');
       setEditOpen(false);
     } catch (e) {

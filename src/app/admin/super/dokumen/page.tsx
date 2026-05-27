@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Search, Trash2, Loader2, FolderOpen, FileText } from 'lucide-react';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { apiGet, apiDelete } from '@/lib/api-firestore';
 import AuthGuard from '@/components/auth/AuthGuard';
 import type { DokumenBersama } from '@/types';
 
@@ -26,12 +25,8 @@ export default function SuperAdminDokumenPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    if (!db) { queueMicrotask(() => setLoading(false)); return; }
-    const q = query(collection(db, 'dokumen'), orderBy('uploadedAt', 'desc'));
-    getDocs(q).then((snap) => {
-      const list: DokumenBersama[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as DokumenBersama));
-      setAllDocs(list);
+    apiGet('dokumen', { orderBy: { field: 'uploadedAt', dir: 'desc' } }).then((res) => {
+      setAllDocs(res?.items || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -49,8 +44,7 @@ export default function SuperAdminDokumenPage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Hapus dokumen ini?')) return;
-    if (!db) { setAllDocs(prev => prev.filter(d => d.id !== id)); return; }
-    try { await deleteDoc(doc(db, 'dokumen', id)); }
+    try { await apiDelete('dokumen', id); }
     catch (e) { console.error('Gagal hapus:', e); }
   }
 

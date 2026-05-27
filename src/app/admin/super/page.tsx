@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { auth } from '@/lib/firebase';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
 import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
@@ -14,8 +13,7 @@ import {
   Calendar, Globe, ListTodo, GraduationCap,
   Image, Link2, ArrowLeft, Clock, CheckCircle, XCircle, FolderOpen
 } from 'lucide-react';
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot, getDocs } from 'firebase/firestore';
+import { apiGet } from '@/lib/api-firestore';
 import { useSekolah } from '@/hooks/useSekolah';
 import { normalizeSchool } from '@/lib/normalize';
 import type { StatusLaporan } from '@/components/laporan/types';
@@ -108,12 +106,9 @@ export default function SuperAdminDashboard() {
 
   const fetchAutoSyncStatus = useCallback(async () => {
     try {
-      const { doc, getDoc } = await import('firebase/firestore');
-      if (!db) return;
-      const configRef = doc(db, 'system_config', 'google_sheets_config');
-      const configSnap = await getDoc(configRef);
-      if (configSnap.exists()) {
-        setAutoSyncStatus(configSnap.data());
+      const res = await apiGet('system_config', { id: 'google_sheets_config' });
+      if (res?.data) {
+        setAutoSyncStatus(res.data);
       }
     } catch {
       // ignore
@@ -151,17 +146,14 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     const triggerAutoSync = async () => {
       try {
-        const { doc, getDoc } = await import('firebase/firestore');
-        if (!db) return;
-        const configRef = doc(db, 'system_config', 'google_sheets_config');
-        const configSnap = await getDoc(configRef);
-        const lastSynced = configSnap.exists() ? configSnap.data()?.lastSynced : null;
+        const cfg = await apiGet('system_config', { id: 'google_sheets_config' });
+        const lastSynced = cfg?.data?.lastSynced ?? null;
         if (lastSynced) {
           const hoursSince = (Date.now() - new Date(lastSynced).getTime()) / (1000 * 60 * 60);
           if (hoursSince < 6) return;
         }
-        const res = await fetch('/api/cron/sync-sheets', { method: 'POST' });
-        const data = await res.json();
+        const syncRes = await fetch('/api/cron/sync-sheets', { method: 'POST' });
+        const data = await syncRes.json();
         if (data.success) {
           fetchAutoSyncStatus();
         }
@@ -176,16 +168,11 @@ export default function SuperAdminDashboard() {
     return semuaSekolah.map(s => s.nama).sort();
   }, [semuaSekolah]);
 
-  // Realtime listener for laporan bulanan
   useEffect(() => {
-    if (!db) return;
-    
     async function fetchLaporan() {
       try {
-        const snap = await getDocs(collection(db!, 'laporan_bulanan'));
-        const list: any[] = [];
-        snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-        setLaporanData(list);
+        const res = await apiGet('laporan_bulanan');
+        setLaporanData(res?.items || []);
       } catch (err) {
         console.error("Error fetching laporan:", err);
       }
@@ -221,9 +208,6 @@ export default function SuperAdminDashboard() {
   if (!user) return null;
 
   async function handleLogout() {
-    if (auth) {
-      try { await auth.signOut(); } catch {}
-    }
     window.location.href = '/login';
   }
 

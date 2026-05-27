@@ -3,9 +3,8 @@
 import { useState, useRef } from 'react';
 import { ArrowLeft, Search, FileText, Download, Loader2, FolderOpen, AlertTriangle, DownloadCloud, Upload as UploadIcon, CheckCircle, XCircle } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
-import { db, auth } from '@/lib/firebase';
 import { useAppStore } from '@/store/app-store';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { apiAdd } from '@/lib/api-firestore';
 import type { DokumenBersama } from '@/types';
 
 function getIcon(type: string) {
@@ -80,7 +79,7 @@ export default function DokumenBersamaPage() {
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !pegawai || !db) return;
+    if (!file || !pegawai) return;
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       setUploadStatus({ ok: false, msg: `Tipe file "${file.type}" tidak diizinkan. Gunakan PDF, Word, Excel, JPG/JPEG, PNG, WEBP, GIF, atau TIFF.` });
@@ -99,12 +98,12 @@ export default function DokumenBersamaPage() {
     setUploadProgress('uploading');
 
     try {
-      const currentUser = auth?.currentUser;
-      if (!currentUser) {
+      const match = document.cookie.match(/(^| )auth-token=([^;]+)/);
+      const token = match?.[2];
+      if (!token) {
         throw new Error('Anda harus login untuk upload dokumen');
       }
 
-      const token = await currentUser.getIdToken();
       const formData = new FormData();
       formData.append('file', file);
       formData.append('kategori', 'dokumen');
@@ -126,7 +125,7 @@ export default function DokumenBersamaPage() {
       const driveData = uploadData.data;
 
       setUploadProgress('saving');
-      await addDoc(collection(db!, 'dokumen'), {
+      await apiAdd('dokumen', {
         nik: pegawai.nik || '',
         nip: pegawai.nip || nip.replace(/\D/g, ''),
         nama: pegawai.nama,
@@ -147,7 +146,7 @@ export default function DokumenBersamaPage() {
           uploadedAt: driveData.uploadedAt,
           uploadedBy: driveData.uploadedBy,
         },
-        uploadedAt: serverTimestamp(),
+        uploadedAt: new Date().toISOString(),
       });
 
       setUploadProgress('done');
@@ -252,7 +251,7 @@ export default function DokumenBersamaPage() {
               <p className="font-semibold text-[#0d3b66]">{pegawai.nama}</p>
               <p className="text-xs text-gray-500">{pegawai.sekolah} • {pegawai.jenis_ptk}</p>
             </div>
-            {isAdmin && db && (
+            {isAdmin && (
               <div>
                 <input
                   ref={fileRef}

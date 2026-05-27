@@ -26,7 +26,7 @@ import type { GalleryItem, GalleryCategory, GalleryStatus, GalleryImageFile } fr
 import { useGalleryCrud } from '@/hooks/use-firestore-crud';
 import { Progress } from '@/components/ui/progress';
 import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTable';
-import { auth } from '@/lib/firebase';
+
 import { useAppStore } from '@/store/app-store';
 
 async function compressImage(file: File, maxWidth = 1200, quality = 0.7): Promise<Blob> {
@@ -116,10 +116,9 @@ export function ManageGallery() {
       fileToUpload = await compressImage(file, 1200, 0.7);
     }
 
-    const currentUser = auth?.currentUser;
-    if (!currentUser) throw new Error('Anda harus login untuk upload gambar');
-
-    const token = await currentUser.getIdToken();
+    const cookieMatch = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
+    const token = cookieMatch ? cookieMatch[1] : '';
+    if (!token) throw new Error('Anda harus login untuk upload gambar');
     const formData = new FormData();
     formData.append('file', fileToUpload, file.name);
     formData.append('kategori', 'galeri');

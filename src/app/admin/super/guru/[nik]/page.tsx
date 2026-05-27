@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { auth } from '@/lib/firebase';
 import {
   Shield, LogOut, Loader2, ArrowLeft, User, BookOpen,
   BadgeCheck, Calendar, Building2, Hash, FileText, Clock,
@@ -45,9 +44,6 @@ export default function GuruDetailPage() {
   }, [user, router, nik]);
 
   async function handleLogout() {
-    if (auth) {
-      try { await auth.signOut(); } catch {}
-    }
     window.location.href = '/login';
   }
 

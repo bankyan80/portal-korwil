@@ -2,8 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { db } from '@/lib/firebase';
-import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { apiSet, apiAdd } from '@/lib/api-firestore';
 import { ArrowLeft, Upload, FileText, CheckCircle2, XCircle, Loader2, Database, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -324,7 +323,7 @@ export function UpdateDataSiswaPegawai() {
       for (let i = 0; i < valid.length; i++) {
         const item = valid[i];
         try {
-          await setDoc(doc(db!, collectionName, item.nik), item, { merge: true });
+          await apiSet(collectionName, item.nik, item, true);
           success++;
         } catch (e: any) {
           updateErrors.push({ row: i + 1, message: `NIK ${item.nik}: ${e.message}` });
@@ -350,11 +349,11 @@ export function UpdateDataSiswaPegawai() {
       // Disabled logs and import history to save Firestore capacity
       /*
       try {
-        await addDoc(collection(db!, 'import_history'), importRecord);
+        await apiAdd('import_history', importRecord);
       } catch { }
 
       try {
-        await addDoc(collection(db!, 'logs'), {
+        await apiAdd('logs', {
           action: 'import_data',
           detail: `${tipe === 'siswa' ? 'Siswa' : 'Pegawai'} - ${sekolahName}`,
           total: valid.length,

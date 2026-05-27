@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, LogOut } from 'lucide-react';
-import { auth } from '@/lib/firebase';
 import { useAppStore } from '@/store/app-store';
 
 interface SuperPageShellProps {
@@ -25,9 +24,6 @@ export default function SuperPageShell({ title, subtitle, children, maxWidth = '
   }, [user, router]);
 
   async function handleLogout() {
-    if (auth) {
-      try { await auth.signOut(); } catch {}
-    }
     setUser(null);
     window.location.href = '/login';
   }

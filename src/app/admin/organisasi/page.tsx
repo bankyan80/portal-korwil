@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { auth } from '@/lib/firebase';
 import { Loader2, Building2, Calendar, FileText, Image, Megaphone, LogOut } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 
@@ -33,9 +32,6 @@ export default function OrganisasiDashboard() {
   ];
 
   async function handleLogout() {
-    if (auth) {
-      try { await auth.signOut(); } catch {}
-    }
     window.location.href = '/login';
   }
 

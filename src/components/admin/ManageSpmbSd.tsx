@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
-import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { AdminEmptyState } from '@/components/shared/AdminTable';
 import { Button } from '@/components/ui/button';
@@ -10,10 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { db } from '@/lib/firebase';
-import {
-  collection, addDoc, query, where, getDocs, doc, setDoc, limit, orderBy
-} from 'firebase/firestore';
+import { apiGet, apiAdd, apiSet, apiDelete } from '@/lib/api-firestore';
 import {
   FileText, Users, CheckCircle, Clock, XCircle, Search,
   Plus, Pencil, Trash2, Save, Loader2,
@@ -74,44 +70,51 @@ const defaultData: Pendaftar[] = [
 const acceptedStatuses = ['Diverifikasi', 'Valid'];
 
 async function autoAddToDataPd(p: Pendaftar) {
-  if (!db) return;
   if (!p.jk || !p.tanggal_lahir) {
     console.warn('autoAddToDataPd: jk atau tanggal_lahir kosong, skip auto-add untuk', p.nama);
     return;
   }
 
-  const q = query(collection(db, 'students'), where('nik', '==', p.nik));
-  const existing = await getDocs(q);
-  if (!existing.empty) return;
+  try {
+    const existing = await apiGet('students', { where: { field: 'nik', value: p.nik } });
+    const existingList = existing.items || [];
+    if (Array.isArray(existingList) && existingList.length > 0) return;
 
-  await addDoc(collection(db, 'students'), {
-    nik: p.nik, nama: p.nama, jk: p.jk, nisn: '',
-    tanggal_lahir: p.tanggal_lahir,
-    sekolah: p.sekolah, schoolId: p.sekolahId || '', jenjang: 'SD', kelas: 1, desa: '',
-    alasan: `Auto dari SPMB - ${p.jalur}`,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  });
+    await apiAdd('students', {
+      nik: p.nik, nama: p.nama, jk: p.jk, nisn: '',
+      tanggal_lahir: p.tanggal_lahir,
+      sekolah: p.sekolah, schoolId: p.sekolahId || '', jenjang: 'SD', kelas: 1, desa: '',
+      alasan: `Auto dari SPMB - ${p.jalur}`,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  } catch (e) {
+    console.error('autoAddToDataPd error:', e);
+  }
 }
 
 export function ManageSpmbSd() {
   const { user } = useAppStore();
-  // Tambahkan limit 100 untuk menghemat kuota Read saat pertama buka
-  const spmbQuery = useMemo(() => [
-    orderBy('createdAt', 'desc'),
-    limit(100)
-  ], []);
-
-  const { items, addItem, updateItem, deleteItem } = useFirestoreCollection<Pendaftar>(
-    'spmb_sd', 
-    defaultData,
-    'createdAt' // Field untuk ordering
-  );
+  const [items, setItems] = useState<Pendaftar[]>([]);
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(defaultForm);
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('idle');
+
+  async function fetchData() {
+    try {
+      const json = await apiGet('spmb_sd', { orderBy: { field: 'createdAt', dir: 'desc' }, limit: 100 });
+      setItems(json.items || []);
+    } catch (err) {
+      console.error('Error loading spmb:', err);
+      toast.error('Gagal memuat data SPMB');
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const { debouncedSave: autoSave, load: loadDraft, clear: clearDraft } = useAutoSaveForm<Record<string, unknown>>(
     { userId: 'admin', page: 'spmb-sd', formType: 'spmb-sd' },
@@ -228,13 +231,13 @@ export function ManageSpmbSd() {
     const payload = { ...form, usia };
     try {
       if (editingId) {
-        await updateItem(editingId, payload);
+        await apiSet('spmb_sd', editingId, payload, true);
         if (acceptedStatuses.includes(form.status)) {
           const original = items.find(i => i.id === editingId);
           if (original) await autoAddToDataPd({ ...original, ...payload });
         }
       } else {
-        await addItem(payload);
+        await apiAdd('spmb_sd', { ...payload, createdAt: Date.now() });
         if (acceptedStatuses.includes(form.status)) {
           await autoAddToDataPd({ id: '', ...payload });
         }
@@ -242,6 +245,7 @@ export function ManageSpmbSd() {
       await clearDraft();
       setFormOpen(false);
       setForm(defaultForm);
+      await fetchData();
     } catch (e: any) {
       console.error('Error saving spmb:', e);
       if (e.code === 'unavailable' || e.message?.includes('offline') || e.message?.includes('network')) {
@@ -314,7 +318,7 @@ export function ManageSpmbSd() {
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openEdit(d)}><Pencil className="w-3.5 h-3.5" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => deleteItem(d.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={async () => { try { await apiDelete('spmb_sd', d.id); await fetchData(); } catch (e) { console.error(e); } }}><Trash2 className="w-3.5 h-3.5" /></Button>
                       </div>
                     </td>
                   </tr>

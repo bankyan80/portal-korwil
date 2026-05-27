@@ -4,8 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { ArrowLeft, FileText, Users, CheckCircle, Clock, XCircle, Search, Loader2, ThumbsUp, ThumbsDown, UserPlus } from 'lucide-react';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { apiSet } from '@/lib/api-firestore';
 import { toast } from 'sonner';
 import Footer from '@/components/portal/Footer';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
@@ -64,10 +63,8 @@ export default function AdminPage() {
   const daftarUlang = filtered.filter((d) => d.daftarUlang).length;
 
   async function updateStatus(item: Pendaftar, newStatus: string) {
-    if (!db) return;
     try {
-      const docRef = doc(db, 'spmb_sd', item.id);
-      await setDoc(docRef, { status: newStatus }, { merge: true });
+      await apiSet('spmb_sd', item.id, { status: newStatus }, true);
       toast.success(`Status ${item.nama} diubah menjadi ${newStatus}`);
     } catch (e) {
       console.error('Error updating status:', e);

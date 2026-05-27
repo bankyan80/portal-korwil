@@ -5,8 +5,7 @@ import { useAppStore } from '@/store/app-store';
 import { AdminEmptyState } from '@/components/shared/AdminTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { apiGet, apiAdd, apiDelete } from '@/lib/api-firestore';
 import { Heart, Search, Plus, Trash2, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import type { YatimPiatuData, YatimCategory } from '@/types';
@@ -26,7 +25,7 @@ const kategoriColors: Record<YatimCategory, string> = {
 export function ManageYatimPiatu() {
   const { user } = useAppStore();
   const [data, setData] = useState<YatimPiatuData[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
   const [nikInput, setNikInput] = useState('');
   const [kategori, setKategori] = useState<YatimCategory>('yatim_piatu');
   const [addStatus, setAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -34,16 +33,20 @@ export function ManageYatimPiatu() {
 
   const userSchool = user?.schoolName || '';
 
-  useEffect(() => {
-    if (!db) return;
-    const q = query(collection(db, 'yatim_piatu'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      const list: YatimPiatuData[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as YatimPiatuData));
-      setData(list);
+  async function fetchData() {
+    try {
+      const json = await apiGet('yatim_piatu', { orderBy: { field: 'createdAt', dir: 'desc' } });
+      setData(json.items || []);
+    } catch (err) {
+      console.error('Error loading yatim piatu:', err);
+      toast.error('Gagal memuat data yatim piatu');
+    } finally {
       setLoading(false);
-    }, (err) => { console.error('Error loading yatim piatu:', err); toast.error('Gagal memuat data yatim piatu'); setLoading(false); });
-    return () => unsub();
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   const filteredData = useMemo(() => {
@@ -71,14 +74,10 @@ export function ManageYatimPiatu() {
         return;
       }
       const s = json.siswa;
-      if (!db) {
-        const newItem: YatimPiatuData = { id: Date.now().toString(), nik: s.nik, nama: s.nama, sekolah: s.sekolah, desa: s.desa, kategori, createdAt: Date.now() };
-        setData(prev => [newItem, ...prev]);
-      } else {
-        await addDoc(collection(db, 'yatim_piatu'), { nik: s.nik, nama: s.nama, sekolah: s.sekolah, schoolId: user?.schoolId || '', desa: s.desa, kategori, createdAt: Date.now() });
-      }
+      await apiAdd('yatim_piatu', { nik: s.nik, nama: s.nama, sekolah: s.sekolah, schoolId: user?.schoolId || '', desa: s.desa, kategori, createdAt: Date.now() });
       setAddStatus({ ok: true, msg: `${s.nama} ditambahkan sebagai ${kategoriLabel[kategori]}` });
       setNikInput('');
+      await fetchData();
     } catch (e) {
       console.error('Error adding yatim piatu:', e);
       setAddStatus({ ok: false, msg: 'Gagal menghubungi server' });
@@ -88,11 +87,10 @@ export function ManageYatimPiatu() {
   }
 
   async function handleDelete(id: string) {
-    if (!db) {
-      setData(prev => prev.filter(d => d.id !== id));
-      return;
-    }
-    try { await deleteDoc(doc(db, 'yatim_piatu', id)); } catch (e) { console.error('Error deleting yatim piatu:', e); }
+    try {
+      await apiDelete('yatim_piatu', id);
+      await fetchData();
+    } catch (e) { console.error('Error deleting yatim piatu:', e); }
   }
 
   const counts = useMemo(() => ({

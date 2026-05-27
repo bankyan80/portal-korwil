@@ -1,21 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { apiGet } from '@/lib/api-firestore';
 import SuperPageShell from '@/components/admin/SuperPageShell';
 
 export default function SuperSekolahPage() {
   const [schools, setSchools] = useState<any[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!db) return;
-
-    getDocs(collection(db, 'schools')).then((snap) => {
-      const list: any[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
-      setSchools(list.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
+    apiGet('schools').then((res) => {
+      const list = (res?.items || []).sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
+      setSchools(list);
       setLoading(false);
     }).catch((err) => {
       console.error('Error fetching schools:', err);

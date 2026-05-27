@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { apiGet } from '@/lib/api-firestore';
 import { FileText, Download, Loader2, FolderOpen } from 'lucide-react';
 
 interface DocItem {
@@ -14,23 +13,17 @@ interface DocItem {
 
 export default function AdministrasiPage() {
   const [docs, setDocs] = useState<DocItem[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!db) return;
-
-    getDocs(collection(db, 'dokumen')).then((snapshot) => {
-      if (!snapshot.empty) {
-        const fb: DocItem[] = snapshot.docs.map(d => ({
-          id: d.id,
-          title: d.data().title || d.data().nama || 'Dokumen',
-          type: d.data().type || d.data().jenis || 'PDF',
-          url: d.data().url || d.data().fileUrl || '',
-        }));
-        setDocs(fb);
-      } else {
-        setDocs([]);
-      }
+    apiGet('dokumen').then((res) => {
+      const fb: DocItem[] = (res.items || []).map((d: any) => ({
+        id: d.id,
+        title: d.title || d.nama || 'Dokumen',
+        type: d.type || d.jenis || 'PDF',
+        url: d.url || d.fileUrl || '',
+      }));
+      setDocs(fb);
       setLoading(false);
     }).catch((err) => {
       console.error('Error fetching dokumen:', err);

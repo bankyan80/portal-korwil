@@ -1,18 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { auth } from '@/lib/firebase';
-import { useCachedFirestore } from '@/hooks/useCachedFirestore';
 import { normalizeSchool } from '@/lib/normalize';
-import { Users, School, BarChart3, FileText, Image, Megaphone, LogOut, Loader2, Building2, ListTodo, CheckCircle, ExternalLink, Clock, Heart, FolderOpen } from 'lucide-react';
+import { Users, School, FileText, Image, Megaphone, Loader2, Building2, ListTodo, CheckCircle, ExternalLink, Clock, Heart, FolderOpen } from 'lucide-react';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
 import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import AuthGuard from '@/components/auth/AuthGuard';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
 import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function OperatorDashboard() {
@@ -20,36 +16,29 @@ export default function OperatorDashboard() {
   const router = useRouter();
   const { isLoadingAuth } = useAppStore();
 
-  const { data: allStudents, loading: studentsLoading } = useCachedFirestore<Record<string, any>>({
-    collectionName: 'students',
-    realtime: true,
-    enabled: !!user?.schoolName,
-  });
-  const { data: allEmployees, loading: employeesLoading } = useCachedFirestore<Record<string, any>>({
-    collectionName: 'employees',
-    realtime: true,
-    enabled: !!user?.schoolName,
-  });
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [sCount, setSCount] = useState(0);
+  const [eCount, setECount] = useState(0);
 
-  const calculatedCounts = useMemo(() => {
-    const schoolName = user?.schoolName;
+  useEffect(() => {
+    if (!user?.schoolName && !user?.schoolId) { setIsStatsLoading(false); return; }
+    const normalized = normalizeSchool(user?.schoolName || '');
     const schoolId = user?.schoolId;
-    if (!schoolName && !schoolId) return { sCount: 0, eCount: 0 };
-    const normalized = normalizeSchool(schoolName || '');
-    let sCount = 0;
-    let eCount = 0;
-    for (const d of allStudents) {
-      if (d.schoolId === schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized) {
-        sCount++;
-      }
-    }
-    for (const d of allEmployees) {
-      if (d.schoolId === schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized) {
-        eCount++;
-      }
-    }
-    return { sCount, eCount };
-  }, [allStudents, allEmployees, user?.schoolName, user?.schoolId]);
+
+    Promise.all([
+      fetch('/api/siswa/list').then(r => r.json()).catch(() => ({ siswa: [] })),
+      fetch('/api/pegawai/all?all=true').then(r => r.json()).catch(() => ({ items: [] })),
+    ]).then(([siswaRes, pegawaiRes]) => {
+      const siswa = (siswaRes.siswa || []).filter((d: any) =>
+        d.schoolId === schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized
+      );
+      const pegawai = (pegawaiRes.items || []).filter((d: any) =>
+        d.schoolId === schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized
+      );
+      setSCount(siswa.length);
+      setECount(pegawai.length);
+    }).finally(() => setIsStatsLoading(false));
+  }, [user?.schoolName, user?.schoolId]);
 
   const [tugasList, setTugasList] = useState<any[]>([]);
   const [tugasLoading, setTugasLoading] = useState(true);
@@ -90,15 +79,12 @@ export default function OperatorDashboard() {
 
   // Fetch laporan bulanan history
   useEffect(() => {
-    if (!db || (!user?.schoolId && !user?.schoolName)) return;
+    if (!user?.schoolId && !user?.schoolName) return;
     const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
-    const q = query(collection(db, 'laporan_bulanan'), where('sekolahId', '==', schoolId));
-    getDocs(q).then((snap) => {
-      const items: any[] = [];
-      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
-      items.sort((a, b) => (b.tahun || 0) - (a.tahun || 0) || (bulanList.indexOf(a.bulan || '') - bulanList.indexOf(b.bulan || '')));
-      setLaporanHistory(items);
-    }).catch((err) => { console.error('Error fetching laporan history:', err); });
+    fetch(`/api/laporan-bulanan?mode=history&schoolId=${encodeURIComponent(schoolId)}`)
+      .then(r => r.json())
+      .then(json => setLaporanHistory(json.items || []))
+      .catch((err) => console.error('Error fetching laporan history:', err));
   }, [user?.schoolId, user?.schoolName]);
 
   const handleCompleteTask = useCallback(async (taskId: string) => {
@@ -117,8 +103,6 @@ export default function OperatorDashboard() {
     } catch (e) { console.error(e); }
   }, [user, fetchTugas]);
 
-  const isStatsLoading = studentsLoading || employeesLoading;
-
   if (isLoadingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -136,18 +120,15 @@ export default function OperatorDashboard() {
   }
 
   async function handleLogout() {
-    if (auth) {
-      try { await auth.signOut(); } catch {}
-    }
     setUser(null);
     window.location.href = '/login';
   }
 
   const menu = [
     { label: 'Profil Sekolah', icon: School, desc: 'Kelola data sekolah', count: null, href: '/admin/operator/profil-sekolah' },
-    { label: 'Data Guru', icon: Users, desc: 'Kelola data pendidik dan tenaga kependidikan', count: calculatedCounts.eCount, href: '/admin/operator/data-guru' },
+    { label: 'Data Guru', icon: Users, desc: 'Kelola data pendidik dan tenaga kependidikan', count: eCount, href: '/admin/operator/data-guru' },
     { label: 'Tambah Pegawai', icon: School, desc: 'Input data pegawai baru + upload SK', count: null, href: '/admin/operator/tambah-pegawai' },
-    { label: 'Data Siswa', icon: Users, desc: 'Kelola data peserta didik', count: calculatedCounts.sCount, href: '/admin/operator/data-siswa' },
+    { label: 'Data Siswa', icon: Users, desc: 'Kelola data peserta didik', count: sCount, href: '/admin/operator/data-siswa' },
     { label: 'Tambah Siswa', icon: School, desc: 'Daftarkan siswa baru', count: null, href: '/admin/operator/tambah-siswa' },
     { label: 'SPMB', icon: FileText, desc: 'Penerimaan peserta didik baru', count: null, href: '/admin/operator/spmb' },
     { label: 'Upload Berita', icon: Megaphone, desc: 'Kirim berita sekolah', count: null, href: '/admin/operator/berita' },

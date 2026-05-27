@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Upload, Trash2, FileText, Download, Loader2, CheckCircle, XCircle, File } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '@/store/app-store';
-import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, query, where, deleteDoc, doc, orderBy, onSnapshot } from 'firebase/firestore';
+import { apiGet, apiAdd, apiDelete } from '@/lib/api-firestore';
 import type { DokumenBersama } from '@/types';
 
 function formatSize(bytes: number) {
@@ -67,18 +66,22 @@ export default function InputDokumenPage() {
   const [uploadPhase, setUploadPhase] = useState<'idle' | 'uploading' | 'saving' | 'done' | 'error'>('idle');
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [dataLoaded, setDataLoaded] = useState(db ? false : true);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  async function fetchData() {
+    try {
+      const json = await apiGet('dokumen', { orderBy: { field: 'uploadedAt', dir: 'desc' } });
+      setDocuments(json.items || []);
+    } catch (err) {
+      console.error('Error loading dokumen:', err);
+      toast.error('Gagal memuat data dokumen');
+    } finally {
+      setDataLoaded(true);
+    }
+  }
 
   useEffect(() => {
-    if (!db) return;
-    const q = query(collection(db, 'dokumen'), orderBy('uploadedAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      const list: DokumenBersama[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as DokumenBersama));
-      setDocuments(list);
-      setDataLoaded(true);
-    }, (err) => { console.error('Error loading dokumen:', err); toast.error('Gagal memuat data dokumen'); setDataLoaded(true); });
-    return () => unsub();
+    fetchData();
   }, []);
 
   async function cariNIP() {
@@ -126,13 +129,12 @@ export default function InputDokumenPage() {
      const nip = pegawai.nip || nipSearch.replace(/\D/g, '');
      const uploaded: DokumenBersama[] = [];
 
-     try {
-       const currentUser = auth?.currentUser;
-       if (!currentUser) {
-         throw new Error('Anda harus login untuk upload dokumen');
-       }
-
-       const token = await currentUser.getIdToken();
+      try {
+        const cookieMatch = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
+        const token = cookieMatch ? cookieMatch[1] : '';
+        if (!token) {
+          throw new Error('Anda harus login untuk upload dokumen');
+        }
 
        for (let i = 0; i < files.length; i++) {
          const file = files[i];
@@ -158,7 +160,7 @@ export default function InputDokumenPage() {
           formData.append('file', fileToUpload, file.name);
           formData.append('kategori', 'dokumen');
           formData.append('sekolahId', pegawai.sekolah?.toLowerCase().replace(/\s+/g, '-') || '');
-          formData.append('uploadedBy', currentUser.uid);
+          formData.append('uploadedBy', user?.displayName || user?.email || 'unknown');
 
           const uploadRes = await fetch('/api/drive/upload', {
             method: 'POST',
@@ -174,10 +176,10 @@ export default function InputDokumenPage() {
           const uploadData = await uploadRes.json();
           const driveData = uploadData.data;
 
-         setUploadProgress(50 + Math.round(((i + 1) / files.length) * 50));
-         setUploadPhase('saving');
+          setUploadProgress(50 + Math.round(((i + 1) / files.length) * 50));
+          setUploadPhase('saving');
 
-          const docRef = await addDoc(collection(db!, 'dokumen'), {
+          await apiAdd('dokumen', {
             nik: pegawai.nik || '',
             nip,
             nama: pegawai.nama,
@@ -198,9 +200,10 @@ export default function InputDokumenPage() {
             },
             uploadedAt: Date.now(),
           });
+          await fetchData();
 
           uploaded.push({
-            id: docRef.id,
+            id: '',
             nik: pegawai.nik || '',
             nip,
             nama: pegawai.nama,
@@ -236,11 +239,10 @@ export default function InputDokumenPage() {
    }
 
   async function handleDelete(docId: string) {
-    if (db) {
-      await deleteDoc(doc(db, 'dokumen', docId));
-    } else {
-      setDocuments(prev => prev.filter(d => d.id !== docId));
-    }
+    try {
+      await apiDelete('dokumen', docId);
+      await fetchData();
+    } catch (e) { console.error('Error deleting dokumen:', e); }
   }
 
   function handleDownload(doc: DokumenBersama) {

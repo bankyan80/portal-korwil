@@ -4,9 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { normalizeSchool } from '@/lib/normalize';
-import { db } from '@/lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -66,19 +63,20 @@ export default function TambahSiswaPage() {
         updatedAt: Date.now(),
       };
 
-      if (!db) {
-        toast.error('Firebase tidak tersedia');
-        setSaving(false);
-        return;
-      }
-      await addDoc(collection(db, 'students'), payload);
+      const res = await fetch('/api/siswa/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'upsert', record: payload }),
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error || 'Gagal menyimpan');
 
       toast.success('Data siswa berhasil ditambahkan');
       setForm(defaultForm);
       setTimeout(() => router.push('/admin/operator/data-siswa'), 600);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error adding siswa:', e);
-      toast.error('Gagal menyimpan data siswa');
+      toast.error(e.message || 'Gagal menyimpan data siswa');
     } finally {
       setSaving(false);
     }

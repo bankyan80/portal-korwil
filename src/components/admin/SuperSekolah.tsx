@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { db } from '@/lib/firebase';
-import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { apiGet, apiSet } from '@/lib/api-firestore';
 import { ArrowLeft, School, Plus, Pencil, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +35,7 @@ const defaultForm: SekolahForm = {
 export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
   const { user, setCurrentView } = useAppStore();
   const [schools, setSchools] = useState<any[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<SekolahForm>(defaultForm);
@@ -88,41 +87,35 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
   const isOperator = mode === 'operator';
 
   useEffect(() => {
-    if (!db) return;
-    const unsubscribe = onSnapshot(
-      collection(db, 'schools'),
-      (snap) => {
-        let all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        if (isOperator && user) {
-          const matchId = user.schoolId;
-          const matchName = user.schoolName?.toLowerCase().trim();
-          all = all.filter(s =>
-            s.npsn === matchId ||
-            (s.name || '').toLowerCase().trim() === matchName ||
-            (s.nama || '').toLowerCase().trim() === matchName
-          );
-        }
-        setSchools(all);
-        setLoading(false);
-
-        if (isOperator && all.length === 1 && !formOpen) {
-          const s = all[0];
-          setEditingId(s.id);
-          setForm({
-            name: s.name || '', npsn: s.npsn || '', jenjang: s.jenjang || '',
-            status: s.status || '', desa: s.desa || '', alamat: s.alamat || '',
-            kepalaSekolah: s.kepalaSekolah || '', nipKepalaSekolah: s.nipKepalaSekolah || '', kontak: s.kontak || '',
-            akreditasi: s.akreditasi || '', website: s.website || '',
-          });
-        }
-      },
-      (err) => {
-        console.error('Error in schools realtime listener:', err);
-        toast.error('Gagal memuat data sekolah');
-        setLoading(false);
+    apiGet('schools').then((res) => {
+      let all = (res?.items || []).map((d: any) => ({ ...d }));
+      if (isOperator && user) {
+        const matchId = user.schoolId;
+        const matchName = user.schoolName?.toLowerCase().trim();
+        all = all.filter((s: any) =>
+          s.npsn === matchId ||
+          (s.name || '').toLowerCase().trim() === matchName ||
+          (s.nama || '').toLowerCase().trim() === matchName
+        );
       }
-    );
-    return () => { unsubscribe(); };
+      setSchools(all);
+      setLoading(false);
+
+      if (isOperator && all.length === 1 && !formOpen) {
+        const s = all[0];
+        setEditingId(s.id);
+        setForm({
+          name: s.name || '', npsn: s.npsn || '', jenjang: s.jenjang || '',
+          status: s.status || '', desa: s.desa || '', alamat: s.alamat || '',
+          kepalaSekolah: s.kepalaSekolah || '', nipKepalaSekolah: s.nipKepalaSekolah || '', kontak: s.kontak || '',
+          akreditasi: s.akreditasi || '', website: s.website || '',
+        });
+      }
+    }).catch((err) => {
+      console.error('Error fetching schools:', err);
+      toast.error('Gagal memuat data sekolah');
+      setLoading(false);
+    });
   }, [isOperator, user?.schoolId, user?.schoolName]);
 
   function openAdd() {
@@ -143,11 +136,11 @@ export function SuperSekolah({ mode }: { mode?: 'admin' | 'operator' }) {
   }
 
   async function handleSave() {
-    if (!form.name.trim() || !db) return;
+    if (!form.name.trim()) return;
     setSaving(true);
     try {
       const id = editingId || `school-${Date.now()}`;
-      await setDoc(doc(db, 'schools', id), { ...form, updatedAt: Date.now() }, { merge: true });
+      await apiSet('schools', id, { ...form, updatedAt: Date.now() });
       toast.success(editingId ? 'Profil sekolah berhasil diperbarui' : 'Sekolah berhasil ditambahkan');
       setFormOpen(false);
     } catch {

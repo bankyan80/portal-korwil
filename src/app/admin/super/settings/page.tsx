@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { apiGet, apiSet } from '@/lib/api-firestore';
 import SuperPageShell from '@/components/admin/SuperPageShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,10 +16,9 @@ export default function SuperSettingsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
-    getDoc(doc(db, 'settings', 'profile')).then((snap) => {
-      if (snap.exists()) {
-        const d = snap.data();
+    apiGet('settings', { id: 'profile' }).then((res) => {
+      if (res?.data) {
+        const d = res.data;
         setForm({
           portalName: d.portalName || '',
           description: d.description || '',
@@ -33,10 +31,9 @@ export default function SuperSettingsPage() {
   }, []);
 
   async function handleSave() {
-    if (!db) return;
     setSaving(true);
     try {
-      await setDoc(doc(db, 'settings', 'profile'), { ...form, updatedAt: Date.now() }, { merge: true });
+      await apiSet('settings', 'profile', { ...form, updatedAt: Date.now() });
       toast.success('Pengaturan berhasil disimpan');
     } catch {
       toast.error('Gagal menyimpan pengaturan');

@@ -1,23 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { getDocById } from '@/lib/firestore';
+import { apiGet } from '@/lib/api-firestore';
 import { ArrowLeft, Loader2, MapPin, Mail, Phone } from 'lucide-react';
 
 export default function ProfilPage() {
   const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!db) return;
-    async function fetchProfile() {
-      try {
-        const data = await getDocById('settings', 'profile');
-        if (data) setProfile(data);
-      } catch (e) { console.error('Gagal memuat profil:', e); } finally { setLoading(false); }
-    }
-    fetchProfile();
+    apiGet('settings', { id: 'profile' }).then((res) => {
+      if (res?.data) setProfile(res.data);
+      setLoading(false);
+    }).catch((e) => {
+      console.error('Gagal memuat profil:', e);
+      setLoading(false);
+    });
   }, []);
 
   if (loading) return <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900"><header className="sticky top-0 z-50 bg-gradient-to-b from-[#1a5276] to-[#0d3b66]"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div className="flex items-center justify-between py-3"><a href="/" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"><ArrowLeft className="w-4 h-4" /><span className="text-sm font-medium">Kembali</span></a><div className="flex items-center gap-2"><h1 className="text-sm font-bold text-white uppercase tracking-wide">Profil</h1></div><div /></div></div></header><div className="flex-1 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div></div>;

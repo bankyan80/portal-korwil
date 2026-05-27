@@ -2,16 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, Plus, Trash2, CheckCircle, XCircle, Calendar } from 'lucide-react';
-import { db } from '@/lib/firebase';
-import {
-  collection,
-  addDoc,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  query,
-  orderBy,
-} from 'firebase/firestore';
+import { apiGet, apiAdd, apiDelete } from '@/lib/api-firestore';
 import { toast } from 'sonner';
 
 interface PegawaiTambahan {
@@ -30,7 +21,7 @@ const PTK_OPTIONS = ['Guru', 'Tenaga Kependidikan', 'Kepala Sekolah', 'Pengawas'
 
 export default function TambahPegawai() {
   const [data, setData] = useState<PegawaiTambahan[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
   const [nik, setNik] = useState('');
   const [nama, setNama] = useState('');
   const [tanggalLahir, setTanggalLahir] = useState('');
@@ -40,16 +31,20 @@ export default function TambahPegawai() {
   const [saving, setSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ ok: boolean; msg: string } | null>(null);
 
-  useEffect(() => {
-    if (!db) return;
-    const q = query(collection(db, 'employees'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      const list: PegawaiTambahan[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as PegawaiTambahan));
-      setData(list);
+  async function fetchData() {
+    try {
+      const json = await apiGet('employees', { orderBy: { field: 'createdAt', dir: 'desc' } });
+      setData(json.items || []);
+    } catch (err) {
+      console.error('Error loading pegawai tambahan:', err);
+      toast.error('Gagal memuat data pegawai');
+    } finally {
       setLoading(false);
-    }, (err) => { console.error('Error loading pegawai tambahan:', err); toast.error('Gagal memuat data pegawai'); setLoading(false); });
-    return () => unsub();
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   const resetForm = () => {
@@ -84,22 +79,19 @@ export default function TambahPegawai() {
     setSaving(true);
     setStatusMsg(null);
     try {
-      if (db) {
-        await addDoc(collection(db, 'employees'), {
-          nik: cleanNik,
-          nama: nama.trim(),
-          tanggal_lahir: tanggalLahir,
-          status_kepegawaian: status,
-          jenis_ptk: jenisPtk,
-          sekolah: sekolah.trim(),
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-        toast.success(`${nama.trim()} ditambahkan`);
-      } else {
-        toast.error('Database tidak tersedia, coba lagi');
-      }
+      await apiAdd('employees', {
+        nik: cleanNik,
+        nama: nama.trim(),
+        tanggal_lahir: tanggalLahir,
+        status_kepegawaian: status,
+        jenis_ptk: jenisPtk,
+        sekolah: sekolah.trim(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      toast.success(`${nama.trim()} ditambahkan`);
       resetForm();
+      await fetchData();
     } catch (e) {
       console.error('Error adding pegawai:', e);
       setStatusMsg({ ok: false, msg: 'Gagal menyimpan data' });
@@ -110,9 +102,11 @@ export default function TambahPegawai() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!db) return;
-    await deleteDoc(doc(db, 'employees', id));
-    toast.success('Data berhasil dihapus');
+    try {
+      await apiDelete('employees', id);
+      await fetchData();
+      toast.success('Data berhasil dihapus');
+    } catch (e) { console.error('Error deleting pegawai:', e); }
   };
 
   return (

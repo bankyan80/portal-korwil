@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { MapPin, Mail, Phone } from 'lucide-react';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { mockFooterData } from '@/lib/mock-data';
 
 const socialLinks = [
@@ -17,11 +15,9 @@ export default function Footer() {
   const [footer, setFooter] = useState(mockFooterData);
 
   useEffect(() => {
-    if (!db) return;
-
-    getDoc(doc(db, 'settings', 'profile')).then((snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
+    fetch('/api/firestore/settings?id=profile').then(r => r.json()).then((json) => {
+      if (json.exists && json.data) {
+        const data = json.data;
         setFooter({
           address: data.alamat || data.address || mockFooterData.address,
           email: data.email || mockFooterData.email,

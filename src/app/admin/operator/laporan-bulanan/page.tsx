@@ -1,17 +1,14 @@
 'use client';
 
-import { useEffect, useState, useRef, Fragment, useCallback } from 'react';
+import { useEffect, useState, useRef, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { db } from '@/lib/firebase';
-import { doc, onSnapshot, setDoc, collection, query, where } from 'firebase/firestore';
 import { normalizeSchool } from '@/lib/normalize';
 import pltData from '@/data/data-plt.json';
 import Link from 'next/link';
-import { ArrowLeft, Printer, Loader2, Send, CheckCircle, Clock, AlertCircle, Eye, TriangleAlert } from 'lucide-react';
+import { Printer, Loader2, Send, CheckCircle, Clock, AlertCircle, TriangleAlert } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { saveDraft, loadDraft, removeDraft } from '@/lib/local/draftStorage';
-import { enqueue } from '@/lib/local/offlineQueue';
 import { AutoSaveStatusBadge } from '@/components/AutoSaveStatus';
 import type { AutoSaveStatus } from '@/hooks/useAutoSaveForm';
 import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
@@ -152,108 +149,58 @@ export default function LaporBulananPage() {
     queueMicrotask(() => { setWarnings(w); });
   }, [dataLoading, loading, sekolah, sarpras, laporanData, existingDocId, siswaL, siswaP, guru, tendik]);
 
-  // Realtime listener for laporan bulanan
-  useEffect(() => {
-    if (!db || !user?.schoolId && !user?.schoolName) return;
+  async function loadData() {
+    if (!user) return;
+    setDataLoading(true);
+    try {
+      const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
 
-    const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
-    const blnIndex = String(bulanList.indexOf(bulan) + 1).padStart(2, '0');
-    const docId = `${schoolId}_${tahun}_${blnIndex}`;
-    const docRef = doc(db, 'laporan_bulanan', docId);
+      // Fetch sekolah
+      try {
+        if (user.schoolId) {
+          const res = await fetch(`/api/sekolah/${encodeURIComponent(user.schoolId)}`);
+          const json = await res.json();
+          if (json.exists) setSekolah(json.data);
+        }
+      } catch (e) { console.error('Gagal memuat sekolah:', e); }
 
-    const unsubscribe = onSnapshot(
-      docRef,
-      (snap) => {
-        if (snap.exists()) {
-          const data = { id: snap.id, ...snap.data() };
-          setLaporanData(data);
-          setExistingDocId(snap.id);
-          const d = snap.data();
-          if (d.dataAbsen) {
+      // Fetch sarpras
+      try {
+        if (user.schoolId) {
+          const res = await fetch(`/api/sarpras/${encodeURIComponent(user.schoolId)}`);
+          const json = await res.json();
+          if (json.exists) setSarpras(json.data);
+        }
+      } catch (e) { console.error('Gagal memuat sarpras:', e); }
+
+      // Fetch laporan doc for current bulan/tahun
+      try {
+        const res = await fetch(`/api/laporan-bulanan?mode=single&schoolId=${encodeURIComponent(schoolId)}&tahun=${tahun}&bulan=${encodeURIComponent(bulan)}`);
+        const json = await res.json();
+        if (json.exists && json.data) {
+          setLaporanData(json.data);
+          setExistingDocId(json.data.id);
+          if (json.data.dataAbsen) {
             setAbsen({
-              sakit: Number(d.dataAbsen.sakit) || 0,
-              izin: Number(d.dataAbsen.izin) || 0,
-              tanpa_keterangan: Number(d.dataAbsen.tanpa_keterangan) || 0,
+              sakit: Number(json.data.dataAbsen.sakit) || 0,
+              izin: Number(json.data.dataAbsen.izin) || 0,
+              tanpa_keterangan: Number(json.data.dataAbsen.tanpa_keterangan) || 0,
             });
           }
         } else {
           setLaporanData(null);
           setExistingDocId(null);
-          setAbsen({ sakit: 0, izin: 0, tanpa_keterangan: 0 });
         }
-      },
-      (err) => {
-        console.error('Error in laporanBulanan realtime listener:', err);
-      }
-    );
+      } catch (e) { console.error('Gagal memuat laporan:', e); }
 
-    return () => { unsubscribe(); };
-  }, [db, user?.schoolId, user?.schoolName, bulan, tahun]);
-
-  // Realtime listener for school data
-  useEffect(() => {
-    if (!db || !user?.schoolId) return;
-
-    const unsubscribe = onSnapshot(
-      doc(db, 'schools', user.schoolId),
-      (snap) => {
-        if (snap.exists()) {
-          setSekolah({ id: snap.id, ...snap.data() });
-        }
-      },
-      (err) => {
-        console.error('Error in schools realtime listener:', err);
-      }
-    );
-
-    return () => { unsubscribe(); };
-  }, [db, user?.schoolId]);
-
-  // Realtime listener for sarpras data
-  useEffect(() => {
-    if (!db || !user?.schoolId) return;
-
-    const unsubscribe = onSnapshot(
-      doc(db, 'sarpras', user.schoolId),
-      (snap) => {
-        if (snap.exists()) {
-          setSarpras(snap.data());
-        }
-      },
-      (err) => {
-        console.error('Error in sarpras realtime listener:', err);
-      }
-    );
-
-    return () => { unsubscribe(); };
-  }, [db, user?.schoolId]);
-
-  // Realtime listener for history (laporan_bulanan collection)
-  useEffect(() => {
-    if (!db || !user?.schoolId && !user?.schoolName) return;
-    const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
-
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'laporan_bulanan'), where('sekolahId', '==', schoolId)),
-      (snap) => {
-        const items: any[] = [];
-        snap.forEach((d: any) => items.push({ id: d.id, ...d.data() }));
-        items.sort((a, b) => (b.tahun || 0) - (a.tahun || 0) || (bulanList.indexOf(a.bulan || '') - bulanList.indexOf(b.bulan || '')));
+      // Fetch history
+      try {
+        const res = await fetch(`/api/laporan-bulanan?mode=history&schoolId=${encodeURIComponent(schoolId)}`);
+        const json = await res.json();
+        const items = json.items || [];
+        items.sort((a: any, b: any) => (b.tahun || 0) - (a.tahun || 0) || (bulanList.indexOf(a.bulan || '') - bulanList.indexOf(b.bulan || '')));
         setHistory(items);
-      },
-      (err) => {
-        console.error('Error in laporan_bulanan history listener:', err);
-      }
-    );
-
-    return () => { unsubscribe(); };
-  }, [db, user?.schoolId, user?.schoolName]);
-
-
-  async function loadData() {
-    setDataLoading(true);
-    try {
-      // sekolah and sarpras are already loaded via onSnapshot listeners
+      } catch (e) { console.error('Gagal memuat history:', e); }
 
       // Fetch all pegawai and filter by operator's school (same as data-guru page)
       let allPegawai: any[] = [];
@@ -326,7 +273,6 @@ export default function LaporBulananPage() {
   }
 
   async function handleSubmitLaporan() {
-    if (!db) { setSubmitMsg('Database tidak tersedia'); setSubmitStatus('error'); return; }
     if (!user?.schoolId && !user?.schoolName) { setSubmitMsg('Data sekolah tidak ditemukan'); setSubmitStatus('error'); return; }
 
     setSending(true);
@@ -337,8 +283,6 @@ export default function LaporBulananPage() {
     try {
       const blnIndex = String(bulanList.indexOf(bulan) + 1).padStart(2, '0');
       const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
-      const docId = `${schoolId}_${tahun}_${blnIndex}`;
-      const docRef = doc(db, 'laporan_bulanan', docId);
 
       const kelasData: Record<string, number> = {};
       for (let i = 1; i <= 6; i++) {
@@ -496,7 +440,18 @@ export default function LaporBulananPage() {
         updatedAt: Date.now(),
       };
 
-      await setDoc(docRef, payload, { merge: true });
+      const res = await fetch('/api/laporan-bulanan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schoolId,
+          tahun: String(tahun),
+          bulan,
+          payload,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Gagal menyimpan');
 
       // Clear absen draft on successful submit
       const clearKey = {
@@ -508,21 +463,14 @@ export default function LaporBulananPage() {
       await removeDraft(clearKey);
       setAbsenAutoSaveStatus('saved');
 
-      setExistingDocId(docRef.id);
+      setExistingDocId(json.id);
       setLaporanData(payload);
       setSubmitStatus('success');
       setSubmitMsg('Laporan bulanan berhasil dikirim!');
     } catch (e: any) {
       console.error('Gagal kirim laporan:', e);
-      // Offline queue: save for retry
-      try {
-        const sid = user?.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
-        const blnIndex = String(bulanList.indexOf(bulan) + 1).padStart(2, '0');
-        const docId = `${sid}_${tahun}_${blnIndex}`;
-        await enqueue('update', 'laporan_bulanan', docId, payload || {});
-      } catch {}
       setSubmitStatus('error');
-      setSubmitMsg(`Koneksi terputus: data akan dikirim saat online kembali.`);
+      setSubmitMsg(e.message || 'Gagal mengirim laporan');
     } finally {
       setSending(false);
     }

@@ -6,13 +6,10 @@ import { AdminEmptyState, AdminDeleteDialog } from '@/components/shared/AdminTab
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { db } from '@/lib/firebase';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot,
-} from 'firebase/firestore';
+import { apiGet, apiAdd, apiSet, apiDelete } from '@/lib/api-firestore';
 import {
   School, Users, BookOpen, BadgeCheck, Search, Loader2, Plus, Pencil, Trash2, Save, GraduationCap, Eye,
 } from 'lucide-react';
@@ -60,7 +57,7 @@ export function ManageDataGtk() {
   const { user } = useAppStore();
   const [schoolSummary, setSchoolSummary] = useState<SchoolGtkSummary[]>([]);
   const [allPegawai, setAllPegawai] = useState<PegawaiRecord[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -72,26 +69,34 @@ export function ManageDataGtk() {
   const isOperator = user?.role === 'operator_sekolah';
 
   useEffect(() => {
-    if (!db) return;
+    async function fetchData() {
+      if (!isOperator) {
+        try {
+          const r = await fetch('/api/pegawai/gtk-summary');
+          const json = await r.json();
+          setSchoolSummary(json.schools || []);
+        } catch (e) {
+          console.error('Error fetching GTK summary:', e);
+          setSchoolSummary([]);
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
 
-    if (!isOperator) {
-      fetch('/api/pegawai/gtk-summary')
-        .then(r => r.json())
-        .then(json => setSchoolSummary(json.schools || []))
-        .catch((e) => { console.error('Error fetching GTK summary:', e); setSchoolSummary([]); })
-        .finally(() => setLoading(false));
-      return;
+      try {
+        const json = await apiGet('employees', { where: { field: 'schoolId', value: user.schoolId || '' } });
+        const list: PegawaiRecord[] = (json.items || []).map((d: any) => ({ ...d, id: d.id || d._id }));
+        list.sort((a: PegawaiRecord, b: PegawaiRecord) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+        setAllPegawai(list);
+      } catch (err) {
+        console.error('Error loading GTK:', err);
+        toast.error('Gagal memuat data GTK');
+      } finally {
+        setLoading(false);
+      }
     }
-
-    const q = query(collection(db, 'employees'), where('schoolId', '==', user.schoolId));
-    const unsub = onSnapshot(q, (snap) => {
-      const list: PegawaiRecord[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as PegawaiRecord));
-      list.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
-      setAllPegawai(list);
-      setLoading(false);
-    }, (err) => { console.error('Error loading GTK:', err); toast.error('Gagal memuat data GTK'); setLoading(false); });
-    return () => unsub();
+    fetchData();
   }, [isOperator, userSchool]);
 
   const filteredPegawai = useMemo(() => {
@@ -136,12 +141,10 @@ export function ManageDataGtk() {
     setSaving(true);
     try {
       const data = { nik: cleanNik, nama: form.nama.trim(), jk: form.jk, nuptk: form.nuptk, nip: form.nip, tanggal_lahir: form.tanggal_lahir, status_kepegawaian: form.status_kepegawaian, jenis_ptk: form.jenis_ptk, tugas_tambahan: form.tugas_tambahan, sertifikasi: form.sertifikasi, sekolah: form.sekolah, schoolId: user?.schoolId || '', createdAt: Date.now(), updatedAt: Date.now() };
-      if (!db) {
-        if (editingId) setAllPegawai(prev => prev.map(p => p.id === editingId ? { ...p, ...data } : p));
-        else setAllPegawai(prev => [{ id: Date.now().toString(), ...data }, ...prev]);
+      if (editingId) {
+        await apiSet('employees', editingId, data, true);
       } else {
-        if (editingId) await updateDoc(doc(db, 'employees', editingId), data);
-        else await addDoc(collection(db, 'employees'), data);
+        await apiAdd('employees', data);
       }
       toast.success(editingId ? 'Data pegawai diperbarui' : 'Data pegawai ditambahkan');
       setFormOpen(false);
@@ -149,8 +152,7 @@ export function ManageDataGtk() {
   }
 
   async function handleDelete(id: string) {
-    if (!db) setAllPegawai(prev => prev.filter(p => p.id !== id));
-    else try { await deleteDoc(doc(db, 'employees', id)); } catch (e) { console.error('Error deleting pegawai:', e); }
+    try { await apiDelete('employees', id); } catch (e) { console.error('Error deleting pegawai:', e); }
     setDeleteId(null);
   }
 

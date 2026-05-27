@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { mockHeroData } from '@/lib/mock-data';
 
 function GoldCurveTopRight() {
@@ -44,10 +42,9 @@ export default function HeroSection() {
   const [hero, setHero] = useState(mockHeroData);
 
   useEffect(() => {
-    if (!db) return;
-    getDoc(doc(db, 'settings', 'profile')).then((snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
+    fetch('/api/firestore/settings?id=profile').then(r => r.json()).then((json) => {
+      if (json.exists && json.data) {
+        const data = json.data;
         setHero({
           name: data.kepalaDinas || data.name || mockHeroData.name,
           title: data.jabatan || data.title || mockHeroData.title,

@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,9 +59,9 @@ export default function TambahPegawaiPage() {
 
       // 2. Upload file jika ada
       if (file) {
-        const currentUser = auth?.currentUser;
-        if (currentUser) {
-          const token = await currentUser.getIdToken();
+        const tokenMatch = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
+        const token = tokenMatch ? tokenMatch[1] : null;
+        if (token) {
           const fd = new FormData();
           fd.append('file', file);
           fd.append('nik', form.nik.trim());
@@ -78,6 +77,8 @@ export default function TambahPegawaiPage() {
             const err = await uploadRes.json();
             toast.warning(`Data tersimpan, tapi file gagal diupload: ${err.error}`);
           }
+        } else {
+          toast.warning('Tidak dapat mengupload file (sesi tidak ditemukan). Data tetap tersimpan.');
         }
       }
 

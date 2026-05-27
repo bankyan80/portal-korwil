@@ -6,8 +6,7 @@ import { AdminEmptyState } from '@/components/shared/AdminTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { apiGet } from '@/lib/api-firestore';
 import { BarChart3, Search, CheckCircle, XCircle, Clock, Eye, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSekolah, type SekolahItem } from '@/hooks/useSekolah';
@@ -59,7 +58,7 @@ export function ManageLaporanBulanan() {
   const { user } = useAppStore();
   const { schools } = useSekolah();
   const [data, setData] = useState<LaporanRecord[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterBulan, setFilterBulan] = useState<string>('');
   const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
@@ -71,18 +70,14 @@ export function ManageLaporanBulanan() {
   const isOperator = user?.role === 'operator_sekolah';
 
   useEffect(() => {
-    if (!db) return;
-    const q = query(collection(db, 'laporan_bulanan'), orderBy('tglLapor', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      const list: LaporanRecord[] = [];
-      snap.forEach((d) => {
-        const raw = d.data();
-        list.push({ id: d.id, ...raw, status: statusMap[raw.status] || raw.status || 'belum_lapor' } as LaporanRecord);
-      });
+    apiGet('laporan_bulanan', { orderBy: { field: 'tglLapor', dir: 'desc' } }).then((res) => {
+      const list: LaporanRecord[] = (res?.items || []).map((d: any) => ({
+        ...d,
+        status: statusMap[d.status] || d.status || 'belum_lapor',
+      }));
       setData(list);
       setLoading(false);
-    }, (err) => { console.error('Error loading laporan:', err); toast.error('Gagal memuat data laporan'); setLoading(false); });
-    return () => unsub();
+    }).catch((err) => { console.error('Error loading laporan:', err); toast.error('Gagal memuat data laporan'); setLoading(false); });
   }, []);
 
   const filtered = useMemo(() => {

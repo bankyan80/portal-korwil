@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, FileText, Search, Loader2, CheckCircle, XCircle, User, MapPin, School, Calendar, Home, ShieldCheck, Truck, AlertTriangle } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { apiSet } from '@/lib/api-firestore';
 import { toast } from 'sonner';
 
 interface Pendaftar {
@@ -54,15 +53,14 @@ export default function DaftarUlangPage() {
   const sudahDaftarUlang = hasil?.daftarUlang;
 
   async function handleDaftarUlang() {
-    if (!hasil || !db) return;
+    if (!hasil) return;
     setSubmitting(true);
     try {
-      const docRef = doc(db, 'spmb_sd', hasil.id);
-      await setDoc(docRef, {
+      await apiSet('spmb_sd', hasil.id, {
         status: 'Diverifikasi',
         daftarUlang: true,
         tglDaftarUlang: new Date().toISOString().split('T')[0],
-      }, { merge: true });
+      }, true);
       toast.success('Daftar ulang berhasil dikonfirmasi');
       setConfirmOpen(false);
     } catch (e) {

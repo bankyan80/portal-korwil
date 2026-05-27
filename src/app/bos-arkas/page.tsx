@@ -8,9 +8,8 @@ import {
 import { useSort } from '@/hooks/useSort';
 import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import type { BosSchoolData, StatusValidasi } from '@/types';
+import { apiGet } from '@/lib/api-firestore';
 
 const statusLabel: Record<StatusValidasi, string> = {
   valid: 'Valid',
@@ -40,21 +39,15 @@ export default function BosArkasPage() {
   const [filterJenjang, setFilterJenjang] = useState<string>('semua');
   const [showFilters, setShowFilters] = useState(false);
   const [data, setData] = useState<BosSchoolData[]>([]);
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!db) return;
-
-    const q = query(collection(db, 'bos_arkas'), orderBy('nama'));
-    getDocs(q).then((snapshot) => {
-      const list: BosSchoolData[] = [];
-      snapshot.forEach((doc) => {
-        list.push({ id: doc.id, ...doc.data() } as BosSchoolData);
-      });
+    apiGet('bos_arkas', { orderBy: { field: 'nama', dir: 'asc' } }).then((res) => {
+      const list: BosSchoolData[] = (res.items || []).map((d: any) => ({ id: d.id, ...d }));
       setData(list);
       setLoading(false);
     }).catch((err) => {
-      console.error('Firestore error:', err);
+      console.error('Error fetching data:', err);
       setLoading(false);
     });
   }, []);

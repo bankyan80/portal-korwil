@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { auth } from '@/lib/firebase';
 import { ManageUsers } from '@/components/admin/ManageUsers';
 import SuperPageShell from '@/components/admin/SuperPageShell';
 

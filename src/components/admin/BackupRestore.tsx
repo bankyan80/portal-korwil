@@ -1,13 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import {
-  collection,
-  getDocs,
-  writeBatch,
-  doc,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { apiGet, apiSet } from '@/lib/api-firestore';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -106,14 +100,14 @@ export default function BackupRestore() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleBackup = async () => {
-    if (!db) return;
     setBackingUp(true);
     setStatus(null);
     try {
       const data: BackupData = {};
       for (const col of COLLECTIONS) {
-        const snap = await getDocs(collection(db, col));
-        data[col] = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const json = await apiGet(col);
+        const docs = json.items || [];
+        data[col] = docs.map((d: any) => ({ id: d.id || d._id, ...d }));
       }
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -138,7 +132,6 @@ export default function BackupRestore() {
   const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!db) return;
     setRestoring(true);
     setStatus(null);
     try {
@@ -158,20 +151,11 @@ export default function BackupRestore() {
       let total = 0;
       for (const [colName, docs] of Object.entries(data)) {
         if (docs.length === 0) continue;
-        const batch = writeBatch(db);
-        let batchCount = 0;
         for (const docData of docs) {
           const { id, ...rest } = docData;
-          const ref = doc(db, colName, id as string);
-          batch.set(ref, rest);
-          batchCount++;
+          await apiSet(colName, id as string, rest, true);
           total++;
-          if (batchCount === 500) {
-            await batch.commit();
-            batchCount = 0;
-          }
         }
-        if (batchCount > 0) await batch.commit();
       }
 
       setStatus({ ok: true, msg: `${total} dokumen berhasil direstore.` });
@@ -189,7 +173,6 @@ export default function BackupRestore() {
   const triggerFileInput = () => fileInputRef.current?.click();
 
   const handleSeed = async () => {
-    if (!db) return;
     const totalDocs = Object.values(SEED_DATA).reduce((s, arr) => s + arr.length, 0);
     if (totalDocs === 0) {
       setStatus({ ok: false, msg: 'Tidak ada data untuk di-seed.' });
@@ -205,20 +188,11 @@ export default function BackupRestore() {
       let total = 0;
       for (const [colName, docs] of Object.entries(SEED_DATA)) {
         if (docs.length === 0) continue;
-        const batch = writeBatch(db);
-        let batchCount = 0;
         for (const docData of docs) {
           const { id, ...rest } = docData;
-          const ref = doc(db, colName, id);
-          batch.set(ref, rest);
-          batchCount++;
+          await apiSet(colName, id, rest, true);
           total++;
-          if (batchCount === 500) {
-            await batch.commit();
-            batchCount = 0;
-          }
         }
-        if (batchCount > 0) await batch.commit();
       }
       setStatus({ ok: true, msg: `${total} dokumen berhasil di-seed ke database.` });
       toast.success(`Seed data berhasil: ${total} dokumen`);

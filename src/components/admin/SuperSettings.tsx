@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { db } from '@/lib/firebase';
-import { getDocById } from '@/lib/firestore';
-import { doc, setDoc } from 'firebase/firestore';
+import { apiGet, apiSet } from '@/lib/api-firestore';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,38 +13,45 @@ import { toast } from 'sonner';
 export function SuperSettings() {
   const { setCurrentView } = useAppStore();
   const [form, setForm] = useState({ tentang: '', visi: '', misi: '', alamat: '', email: '', telepon: '', kepalaDinas: '', jabatan: '', sambutan: '', fotoKepalaDinas: '' });
-  const [loading, setLoading] = useState(db ? true : false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
-    getDocById('settings', 'profile').then(d => {
-      if (d && typeof d === 'object') {
-        setForm({
-          tentang: (d as any).tentang || '',
-          visi: (d as any).visi || '',
-          misi: Array.isArray((d as any).misi) ? (d as any).misi.join('\n') : '',
-          alamat: (d as any).alamat || '',
-          email: (d as any).email || '',
-          telepon: (d as any).telepon || '',
-          kepalaDinas: (d as any).kepalaDinas || '',
-          jabatan: (d as any).jabatan || '',
-          sambutan: (d as any).sambutan || '',
-          fotoKepalaDinas: (d as any).fotoKepalaDinas || '',
-        });
+    async function loadData() {
+      try {
+        const json = await apiGet('settings', { id: 'profile' });
+        const d = json.data || json;
+        if (d && typeof d === 'object' && !('error' in d)) {
+          setForm({
+            tentang: (d as any).tentang || '',
+            visi: (d as any).visi || '',
+            misi: Array.isArray((d as any).misi) ? (d as any).misi.join('\n') : '',
+            alamat: (d as any).alamat || '',
+            email: (d as any).email || '',
+            telepon: (d as any).telepon || '',
+            kepalaDinas: (d as any).kepalaDinas || '',
+            jabatan: (d as any).jabatan || '',
+            sambutan: (d as any).sambutan || '',
+            fotoKepalaDinas: (d as any).fotoKepalaDinas || '',
+          });
+        }
+      } catch (e) {
+        console.error('Error loading settings:', e);
+      } finally {
+        setLoading(false);
       }
-    }).catch((e) => { console.error('Error loading settings:', e); }).finally(() => setLoading(false));
+    }
+    loadData();
   }, []);
 
   async function handleSave() {
-    if (!db) return;
     setSaving(true);
     try {
-      await setDoc(doc(db!, 'settings', 'profile'), {
+      await apiSet('settings', 'profile', {
         ...form,
         misi: form.misi.split('\n').filter(Boolean),
         updatedAt: Date.now(),
-      });
+      }, true);
       toast.success('Pengaturan disimpan');
     } catch (e) { console.error('Error saving settings:', e); toast.error('Gagal menyimpan'); } finally { setSaving(false); }
   }

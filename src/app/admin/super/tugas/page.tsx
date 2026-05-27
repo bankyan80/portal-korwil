@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { auth } from '@/lib/firebase';
 import SuperPageShell from '@/components/admin/SuperPageShell';
 import {
   Shield, LogOut, Loader2, Plus, Trash2, CheckCircle, XCircle,
