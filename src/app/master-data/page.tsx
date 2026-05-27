@@ -7,7 +7,7 @@ import { SortableHeader } from '@/components/ui/SortableHeader';
 import Footer from '@/components/portal/Footer';
 import { apiGet } from '@/lib/api-firestore';
 import { sekolahSD, sekolahTK, sekolahKB } from '@/data/sekolah';
-import { rombelData as fallbackRombel, type RombelEntry, type RombelDetail } from '@/data/rombel';
+import { rombelData, type RombelEntry, type RombelDetail } from '@/data/rombel';
 import { useSekolah, type SekolahItem } from '@/hooks/useSekolah';
 
 const tabs = [
@@ -1163,7 +1163,7 @@ function TabPD() {
 }
 
 function TabRombel() {
-  const [data, setData] = useState<RombelEntry[]>(fallbackRombel);
+  const [data, setData] = useState<RombelEntry[]>(rombelData);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
