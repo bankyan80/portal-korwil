@@ -59,7 +59,7 @@ export async function GET(req: NextRequest, { params }: { params: { collection: 
     return NextResponse.json({ items, count: items.length });
   } catch (e) {
     console.error(`[firestore/${collection}] GET error:`, e);
-    return NextResponse.json({ error: 'Gagal memuat data' }, { status: 500 });
+    return NextResponse.json({ items: [], count: 0 });
   }
 }
 
