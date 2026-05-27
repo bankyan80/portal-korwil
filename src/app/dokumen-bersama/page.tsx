@@ -44,7 +44,8 @@ export default function DokumenBersamaPage() {
   const [searched, setSearched] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ ok: boolean; msg: string } | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<'idle' | 'uploading' | 'saving' | 'done' | 'error'>('idle');
+  const [batchProgress, setBatchProgress] = useState<{ total: number; done: number; current: string } | null>(null);
+  const [batchErrors, setBatchErrors] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = user && (user.role === 'super_admin' || user.role === 'operator_sekolah');
@@ -77,87 +78,95 @@ export default function DokumenBersamaPage() {
     }
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !pegawai) return;
-
+  async function uploadSingle(file: File, token: string): Promise<string | null> {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setUploadStatus({ ok: false, msg: `Tipe file "${file.type}" tidak diizinkan. Gunakan PDF, Word, Excel, JPG/JPEG, PNG, WEBP, GIF, atau TIFF.` });
-      if (fileRef.current) fileRef.current.value = '';
-      return;
+      return `"${file.name}" — tipe file tidak diizinkan`;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return `"${file.name}" — ukuran ${(file.size / (1024 * 1024)).toFixed(1)}MB melebihi batas 10MB`;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      setUploadStatus({ ok: false, msg: `Ukuran file ${(file.size / (1024 * 1024)).toFixed(1)}MB melebihi batas 10MB.` });
-      if (fileRef.current) fileRef.current.value = '';
+    setBatchProgress(p => p ? { ...p, current: file.name } : null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('kategori', 'dokumen');
+    formData.append('sekolahId', user?.schoolId || pegawai.schoolId || '');
+
+    const uploadRes = await fetch('/api/drive/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (!uploadRes.ok) {
+      const errData = await uploadRes.json();
+      return `"${file.name}" — ${errData.error || 'Upload gagal'}`;
+    }
+
+    const uploadData = await uploadRes.json();
+    const driveData = uploadData.data;
+
+    await apiAdd('dokumen', {
+      nik: pegawai.nik || '',
+      nip: pegawai.nip || nip.replace(/\D/g, ''),
+      nama: pegawai.nama,
+      sekolah: pegawai.sekolah || user?.schoolName || '',
+      schoolId: pegawai.schoolId || user?.schoolId || '',
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      file: {
+        provider: 'google_drive',
+        driveFileId: driveData.driveFileId,
+        fileName: driveData.fileName,
+        originalName: file.name,
+        fileUrl: driveData.webViewLink,
+        webContentLink: driveData.webContentLink,
+        mimeType: driveData.mimeType,
+        size: driveData.size,
+        uploadedAt: driveData.uploadedAt,
+        uploadedBy: driveData.uploadedBy,
+      },
+      uploadedAt: new Date().toISOString(),
+    });
+
+    return null;
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files?.length || !pegawai) return;
+
+    const match = document.cookie.match(/(^| )auth-token=([^;]+)/);
+    const token = match?.[2];
+    if (!token) {
+      setUploadStatus({ ok: false, msg: 'Anda harus login untuk upload dokumen' });
       return;
     }
 
     setUploading(true);
     setUploadStatus(null);
-    setUploadProgress('uploading');
+    setBatchProgress({ total: files.length, done: 0, current: '' });
+    setBatchErrors([]);
 
-    try {
-      const match = document.cookie.match(/(^| )auth-token=([^;]+)/);
-      const token = match?.[2];
-      if (!token) {
-        throw new Error('Anda harus login untuk upload dokumen');
-      }
+    const errs: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const err = await uploadSingle(files[i], token);
+      if (err) errs.push(err);
+      setBatchProgress(p => p ? { ...p, done: i + 1 } : null);
+    }
 
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('kategori', 'dokumen');
-      formData.append('sekolahId', user?.schoolId || pegawai.schoolId || '');
+    setBatchErrors(errs);
+    setUploading(false);
+    if (fileRef.current) fileRef.current.value = '';
 
-      setUploadProgress('uploading');
-      const uploadRes = await fetch('/api/drive/upload', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (!uploadRes.ok) {
-        const errData = await uploadRes.json();
-        throw new Error(errData.error || 'Upload gagal');
-      }
-
-      const uploadData = await uploadRes.json();
-      const driveData = uploadData.data;
-
-      setUploadProgress('saving');
-      await apiAdd('dokumen', {
-        nik: pegawai.nik || '',
-        nip: pegawai.nip || nip.replace(/\D/g, ''),
-        nama: pegawai.nama,
-        sekolah: pegawai.sekolah || user?.schoolName || '',
-        schoolId: pegawai.schoolId || user?.schoolId || '',
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        file: {
-          provider: 'google_drive',
-          driveFileId: driveData.driveFileId,
-          fileName: driveData.fileName,
-          originalName: file.name,
-          fileUrl: driveData.webViewLink,
-          webContentLink: driveData.webContentLink,
-          mimeType: driveData.mimeType,
-          size: driveData.size,
-          uploadedAt: driveData.uploadedAt,
-          uploadedBy: driveData.uploadedBy,
-        },
-        uploadedAt: new Date().toISOString(),
-      });
-
-      setUploadProgress('done');
-      setUploadStatus({ ok: true, msg: `"${file.name}" berhasil diupload.` });
-    } catch (err) {
-      console.error('Upload gagal:', err);
-      setUploadProgress('error');
-      setUploadStatus({ ok: false, msg: err instanceof Error ? err.message : 'Upload gagal' });
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = '';
+    const okCount = files.length - errs.length;
+    if (okCount > 0) {
+      setUploadStatus({ ok: true, msg: `${okCount} file berhasil diupload.` });
+      await cari();
+    } else {
+      setUploadStatus({ ok: false, msg: 'Semua file gagal diupload' });
     }
   }
 
@@ -256,6 +265,7 @@ export default function DokumenBersamaPage() {
                 <input
                   ref={fileRef}
                   type="file"
+                  multiple
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.gif,.tiff,.tif"
                   onChange={handleUpload}
                   className="hidden"
@@ -270,22 +280,43 @@ export default function DokumenBersamaPage() {
                   ) : (
                     <UploadIcon className="w-4 h-4" />
                   )}
-                  Upload Dokumen
+                  {uploading ? 'Mengupload...' : 'Upload Dokumen'}
                 </button>
               </div>
             )}
           </div>
         )}
 
-        {uploadStatus && (
+        {batchProgress && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+            <div className="flex items-center gap-2 mb-1">
+              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+              <span className="font-medium">Mengupload {batchProgress.total} file...</span>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex-1 h-2 bg-blue-200 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: `${(batchProgress.done / batchProgress.total) * 100}%` }} />
+              </div>
+              <span className="text-xs font-mono shrink-0">{batchProgress.done}/{batchProgress.total}</span>
+            </div>
+            {batchProgress.current && (
+              <p className="text-xs mt-1 text-blue-600 truncate">Sedang: {batchProgress.current}</p>
+            )}
+          </div>
+        )}
+
+        {uploadStatus && !batchProgress && (
           <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${uploadStatus.ok ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
             {uploadStatus.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
             <div className="flex-1">
               <p className="font-medium">{uploadStatus.msg}</p>
-              {uploadProgress === 'uploading' && <p className="text-xs mt-1">Mengupload file...</p>}
-              {uploadProgress === 'saving' && <p className="text-xs mt-1">Menyimpan metadata ke Firestore...</p>}
-              {uploadProgress === 'done' && <p className="text-xs mt-1 text-green-600">File berhasil disimpan</p>}
-              {uploadProgress === 'error' && <p className="text-xs mt-1 text-red-600">Silakan coba lagi</p>}
+              {batchErrors.length > 0 && (
+                <ul className="mt-1 space-y-0.5">
+                  {batchErrors.map((e, i) => (
+                    <li key={i} className="text-xs text-red-600">{e}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         )}
