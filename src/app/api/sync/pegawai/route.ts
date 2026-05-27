@@ -28,23 +28,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Tidak ada data pegawai' });
     }
 
-    const records = allData.map((pegawai: any) => {
-      const id = pegawai.nik || pegawai.nuptk || `${pegawai.sekolah}_${pegawai.nama}`;
-      return {
-        id,
-        collection: 'employees',
-        data: {
-          ...pegawai,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        updated_at: new Date().toISOString(),
-      };
-    });
+    const records = allData.map((pegawai: any) => ({
+      nik: pegawai.nik || pegawai.nuptk || `${pegawai.sekolah}_${pegawai.nama}`,
+      ...pegawai,
+      updated_at: new Date().toISOString(),
+    }));
 
     const { error } = await supabaseAdmin
-      .from('app_data')
-      .upsert(records, { onConflict: 'collection,id' });
+      .from('employees')
+      .upsert(records, { onConflict: 'nik' });
 
     if (error) throw error;
 

@@ -76,18 +76,11 @@ function unionByNik(base: any[], override: any[]): any[] {
 
 function loadFromSupabase() {
   return supabaseAdmin
-    ? Promise.all([
-        supabaseAdmin.from('app_data').select('*').eq('collection', 'employees'),
-        supabaseAdmin.from('app_data').select('*').eq('collection', 'pegawai_tambahan'),
-      ]).then(([empResult, tambahanResult]) => {
-        const combined: any[] = [];
-        if (empResult.data?.length) {
-          combined.push(...empResult.data.map(r => normalizeRecord({ id: r.id, ...(r.data as any) })));
+    ? supabaseAdmin.from('employees').select('*').then((result) => {
+        if (result.data?.length) {
+          return result.data.map(r => normalizeRecord(r));
         }
-        if (tambahanResult.data?.length) {
-          combined.push(...tambahanResult.data.map(r => normalizeRecord({ id: r.id, ...(r.data as any) })));
-        }
-        return combined;
+        return [];
       })
     : Promise.resolve([]);
 }

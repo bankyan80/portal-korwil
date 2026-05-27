@@ -6,34 +6,25 @@ import type { UserRole } from '@/types';
 
 async function getEmployee(nik: string) {
   const { data } = await supabaseAdmin!
-    .from('app_data')
+    .from('employees')
     .select('*')
-    .eq('collection', 'employees')
-    .eq('id', nik)
+    .eq('nik', nik)
     .single();
   return data;
 }
 
 async function upsertEmployee(nik: string, data: any) {
-  const { data: existing } = await supabaseAdmin!
-    .from('app_data')
-    .select('data')
-    .eq('collection', 'employees')
-    .eq('id', nik)
-    .single();
-  const merged = { ...(existing?.data as object || {}), ...data, updatedAt: Date.now() };
   const { error } = await supabaseAdmin!
-    .from('app_data')
-    .upsert({ id: nik, collection: 'employees', data: merged, updated_at: new Date().toISOString() });
+    .from('employees')
+    .upsert({ nik, ...data, updated_at: new Date().toISOString() }, { onConflict: 'nik' });
   if (error) throw error;
 }
 
 async function deleteEmployee(nik: string) {
   await supabaseAdmin!
-    .from('app_data')
+    .from('employees')
     .delete()
-    .eq('collection', 'employees')
-    .eq('id', nik);
+    .eq('nik', nik);
 }
 
 export async function PUT(
@@ -87,8 +78,7 @@ export async function PUT(
       if (!docData) {
         return NextResponse.json({ error: 'Data pegawai tidak ditemukan' }, { status: 404 });
       }
-      const existingData = docData.data as Record<string, any> || {};
-      const actorSchool = existingData.sekolah || '';
+      const actorSchool = (docData as Record<string, any>).sekolah || '';
       const operatorSchool = authResult.schoolName || '';
       if (!operatorSchool || normalizeSchool(actorSchool) !== normalizeSchool(operatorSchool)) {
         return NextResponse.json({ error: 'Forbidden — hanya bisa mengubah data sekolah sendiri' }, { status: 403 });
@@ -159,9 +149,9 @@ export async function PUT(
       console.log('[sync-to-sheets] non-fatal:', e);
     }
 
-    // If NIK changed, copy to new document and delete old
+    // If NIK changed, copy to new record and delete old
     if (renamedNik && renamedNik !== nik) {
-      const fullData = (await getEmployee(nik))?.data as Record<string, any> || {};
+      const fullData = (await getEmployee(nik)) as Record<string, any> || {};
       await upsertEmployee(renamedNik, { ...fullData, nik: renamedNik });
       await deleteEmployee(nik);
     }
