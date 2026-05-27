@@ -14,6 +14,7 @@ import {
   School, Users, BarChart3, Search, Loader2, Plus, Pencil, Trash2, Save, ArrowUp, Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
 
 interface SiswaRecord {
   id?: string;
@@ -83,12 +84,33 @@ export function ManageDataPd() {
   const isOperator = user?.role === 'operator_sekolah';
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const autoSave = useAutoSaveForm(
+    { userId: user?.uid || 'anon', page: 'data_pd', formType: 'form' },
+    undefined,
+    800,
+  );
+
+  useEffect(() => {
+    if (!formOpen) return;
+    autoSave.load().then(saved => {
+      if (saved && saved.form) {
+        setForm(saved.form as typeof defaultForm);
+        setEditingId(saved.editingId || null);
+      }
+    });
+  }, [formOpen]);
+
+  useEffect(() => {
+    if (!formOpen) return;
+    autoSave.debouncedSave({ form, editingId });
+  }, [form, editingId, formOpen]);
+
   // Admin: fetch from student database API
   useEffect(() => {
     if (isOperator) return;
     async function fetchDb() {
       try {
-        const res = await fetch('/api/siswa/list?limit=1000'); // Batasi admin view
+        const res = await fetch('/api/siswa/list?limit=1000');
         const json = await res.json();
         const siswa: any[] = json.siswa || [];
         const grouped: Record<string, SchoolSummary> = {};
@@ -113,21 +135,19 @@ export function ManageDataPd() {
     let loadingDone = false;
 
     async function load() {
-      // Load API data (one-shot)
       let dbSiswa: SiswaRecord[] = [];
       try {
-        // Coba pakai schoolId dulu, jika gagal API akan fallback ke filter manual di server
-        const apiUrl = user?.schoolId 
+        const apiUrl = user?.schoolId
           ? `/api/siswa/list?schoolId=${user.schoolId}&sekolah=${encodeURIComponent(userSchool)}`
           : `/api/siswa/list?sekolah=${encodeURIComponent(userSchool)}`;
-        
+
         console.log(`[ManageDataPd] Fetching API: ${apiUrl}`);
         const res = await fetch(apiUrl);
         const json = await res.json();
         console.log(`[ManageDataPd] API Result Count: ${json.siswa?.length || 0}`);
         dbSiswa = (json.siswa || [])
           .map((s: any) => ({
-            id: s.id || s.nik, 
+            id: s.id || s.nik,
             nik: s.nik, nama: s.nama, jk: s.jk, nisn: s.nisn || '',
             tanggal_lahir: s.tanggal_lahir || '', sekolah: s.sekolah || userSchool,
             jenjang: s.jenjang || 'SD', kelas: s.kelas ? Number(s.kelas) : undefined,
@@ -135,7 +155,6 @@ export function ManageDataPd() {
           }));
       } catch (e) { console.error('Error fetching siswa API:', e); }
 
-      // Load overlay from /api/siswa/manage
       let overlayRecords: SiswaRecord[] = [];
       try {
         console.log(`[ManageDataPd] Fetching overlay data...`);
@@ -149,7 +168,6 @@ export function ManageDataPd() {
         }));
       } catch (e) { console.error('Error fetching overlay:', e); }
 
-      // Merge: overlay records override API records with same NIK
       const mergedNiks = new Set(overlayRecords.map(s => s.nik));
       const finalData = [...overlayRecords, ...dbSiswa.filter(s => !mergedNiks.has(s.nik))];
       console.log(`[ManageDataPd] Final Merged Count: ${finalData.length} (${overlayRecords.length} from overlay)`);
@@ -217,6 +235,8 @@ export function ManageDataPd() {
       if (json.success) {
         toast.success(editingId ? 'Data siswa diperbarui' : 'Data siswa ditambahkan');
         setFormOpen(false);
+        setForm(defaultForm);
+        void autoSave.clear();
         setRefreshKey(k => k + 1);
       } else {
         toast.error(json.error || 'Gagal menyimpan');
@@ -371,7 +391,6 @@ export function ManageDataPd() {
         Mengelola data siswa: <strong>{userSchool}</strong>
       </p>
 
-      {/* Per-kelas summary */}
       {allSiswa.some(s => s.jenjang === 'SD') && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="overflow-x-auto">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { AdminEmptyState } from '@/components/shared/AdminTable';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { apiGet, apiAdd, apiDelete } from '@/lib/api-firestore';
 import { Heart, Search, Plus, Trash2, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
 import type { YatimPiatuData, YatimCategory } from '@/types';
 
 const kategoriLabel: Record<YatimCategory, string> = {
@@ -31,6 +32,21 @@ export function ManageYatimPiatu() {
   const [addStatus, setAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [adding, setAdding] = useState(false);
 
+  const autoSave = useAutoSaveForm(
+    { userId: user?.uid || 'anon', page: 'yatim_piatu', formType: 'add' },
+    undefined,
+    800,
+  );
+
+  useEffect(() => {
+    autoSave.load().then(saved => {
+      if (saved && saved.nik) {
+        setNikInput(saved.nik);
+        setKategori(saved.kategori || 'yatim_piatu');
+      }
+    });
+  }, []);
+
   const userSchool = user?.schoolName || '';
 
   async function fetchData() {
@@ -48,6 +64,10 @@ export function ManageYatimPiatu() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    autoSave.debouncedSave({ nik: nikInput, kategori });
+  }, [nikInput, kategori]);
 
   const filteredData = useMemo(() => {
     if (!userSchool) return data;
@@ -77,6 +97,7 @@ export function ManageYatimPiatu() {
       await apiAdd('yatim_piatu', { nik: s.nik, nama: s.nama, sekolah: s.sekolah, schoolId: user?.schoolId || '', desa: s.desa, kategori, createdAt: Date.now() });
       setAddStatus({ ok: true, msg: `${s.nama} ditambahkan sebagai ${kategoriLabel[kategori]}` });
       setNikInput('');
+      void autoSave.clear();
       await fetchData();
     } catch (e) {
       console.error('Error adding yatim piatu:', e);

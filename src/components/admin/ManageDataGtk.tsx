@@ -14,6 +14,7 @@ import {
   School, Users, BookOpen, BadgeCheck, Search, Loader2, Plus, Pencil, Trash2, Save, GraduationCap, Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
 
 interface PegawaiRecord {
   id?: string;
@@ -67,6 +68,27 @@ export function ManageDataGtk() {
 
   const userSchool = user?.schoolName || '';
   const isOperator = user?.role === 'operator_sekolah';
+
+  const autoSave = useAutoSaveForm(
+    { userId: user?.uid || 'anon', page: 'data_gtk', formType: 'form' },
+    undefined,
+    800,
+  );
+
+  useEffect(() => {
+    if (!formOpen) return;
+    autoSave.load().then(saved => {
+      if (saved && saved.form) {
+        setForm(saved.form as typeof defaultForm);
+        setEditingId(saved.editingId || null);
+      }
+    });
+  }, [formOpen]);
+
+  useEffect(() => {
+    if (!formOpen) return;
+    autoSave.debouncedSave({ form, editingId });
+  }, [form, editingId, formOpen]);
 
   useEffect(() => {
     async function fetchData() {
@@ -148,6 +170,8 @@ export function ManageDataGtk() {
       }
       toast.success(editingId ? 'Data pegawai diperbarui' : 'Data pegawai ditambahkan');
       setFormOpen(false);
+      setForm(defaultForm);
+      void autoSave.clear();
     } catch (e) { console.error('Error saving pegawai:', e); toast.error('Gagal menyimpan data'); } finally { setSaving(false); }
   }
 

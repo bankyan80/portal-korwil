@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Loader2, Plus, Trash2, CheckCircle, XCircle, Calendar } from 'lucide-react';
 import { apiGet, apiAdd, apiDelete } from '@/lib/api-firestore';
 import { toast } from 'sonner';
+import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
 
 interface PegawaiTambahan {
   id?: string;
@@ -30,6 +31,29 @@ export default function TambahPegawai() {
   const [sekolah, setSekolah] = useState('');
   const [saving, setSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  const autoSave = useAutoSaveForm(
+    { userId: 'global', page: 'tambah_pegawai', formType: 'add' },
+    undefined,
+    800,
+  );
+
+  useEffect(() => {
+    autoSave.load().then(saved => {
+      if (saved) {
+        if (saved.nik) setNik(saved.nik);
+        if (saved.nama) setNama(saved.nama);
+        if (saved.tanggalLahir) setTanggalLahir(saved.tanggalLahir);
+        if (saved.status) setStatus(saved.status);
+        if (saved.jenisPtk) setJenisPtk(saved.jenisPtk);
+        if (saved.sekolah) setSekolah(saved.sekolah);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    autoSave.debouncedSave({ nik, nama, tanggalLahir, status, jenisPtk, sekolah });
+  }, [nik, nama, tanggalLahir, status, jenisPtk, sekolah]);
 
   async function fetchData() {
     try {
@@ -90,6 +114,7 @@ export default function TambahPegawai() {
         updatedAt: Date.now(),
       });
       toast.success(`${nama.trim()} ditambahkan`);
+      void autoSave.clear();
       resetForm();
       await fetchData();
     } catch (e) {

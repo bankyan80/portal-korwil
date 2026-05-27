@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { apiGet, apiAdd, apiDelete } from '@/lib/api-firestore';
 import { WalletMinimal, Search, Plus, Trash2, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAutoSaveForm } from '@/hooks/useAutoSaveForm';
 import type { KipSdData } from '@/types';
 
 interface SiswaItem {
@@ -34,6 +35,22 @@ export function ManageKipSd() {
   const [userSchool, setUserSchool] = useState(user?.schoolName || '');
   const [addStatus, setAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [adding, setAdding] = useState<string | null>(null);
+
+  const autoSave = useAutoSaveForm(
+    { userId: user?.uid || 'anon', page: 'kip_sd', formType: 'search' },
+    undefined,
+    800,
+  );
+
+  useEffect(() => {
+    autoSave.load().then(saved => {
+      if (saved && saved.query) setSearchQuery(saved.query);
+    });
+  }, []);
+
+  useEffect(() => {
+    autoSave.debouncedSave({ query: searchQuery });
+  }, [searchQuery]);
 
   async function fetchData() {
     try {
@@ -88,6 +105,7 @@ export function ManageKipSd() {
     setSearchQuery('');
     setSearchResults([]);
     setSearched(false);
+    void autoSave.clear();
     try {
       await apiAdd('kip_sd', { nik: s.nik, nama: s.nama, sekolah: s.sekolah, desa: s.desa, layak_pip: s.layak_pip, createdAt: Date.now() });
       setAddStatus({ ok: true, msg: `${s.nama} ditambahkan sebagai penerima PIP` });
