@@ -43,6 +43,7 @@ async function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promis
 function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void }) {
   const [documents, setDocuments] = useState<DokumenBersama[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -62,19 +63,25 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
 
   async function uploadFiles(files: FileList) {
     setUploading(true);
+    setUploadProgress(0);
     setUploadStatus(null);
 
     const cookieMatch = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
     const token = cookieMatch?.[1] || '';
     if (!token) { setUploadStatus({ ok: false, msg: 'Anda harus login' }); setUploading(false); return; }
 
+    const total = files.length;
     let ok = 0;
     const errs: string[] = [];
-    for (const file of Array.from(files)) {
+
+    for (let i = 0; i < total; i++) {
+      const file = files[i];
       try {
         const isImage = file.type.startsWith('image/');
         let fileToUpload: File | Blob = file;
         if (isImage && file.size > 2 * 1024 * 1024) fileToUpload = await compressImage(file);
+
+        setUploadProgress(Math.round((i / total) * 100));
 
         const formData = new FormData();
         formData.append('file', fileToUpload, file.name);
@@ -85,6 +92,8 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
         });
         if (!uploadRes.ok) throw new Error((await uploadRes.json()).error || 'Upload gagal');
         const driveData = (await uploadRes.json()).data;
+
+        setUploadProgress(50 + Math.round(((i + 1) / total) * 50));
 
         await apiAdd('dokumen', {
           nik: pegawai.nik || '', nip, nama: pegawai.nama, sekolah: pegawai.sekolah || '',
@@ -100,6 +109,8 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
         ok++;
       } catch (e: any) { errs.push(`${file.name}: ${e.message}`); }
     }
+
+    setUploadProgress(100);
 
     const parts: string[] = [];
     if (ok > 0) parts.push(`${ok} berhasil`);
@@ -143,6 +154,17 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
               {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
               {uploading ? 'Mengupload...' : 'Pilih File (auto-upload)'}
             </button>
+            {uploading && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>Mengupload...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                </div>
+              </div>
+            )}
             {uploadStatus && (
               <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${uploadStatus.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                 {uploadStatus.ok ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
