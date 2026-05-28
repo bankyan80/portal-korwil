@@ -60,8 +60,9 @@ export async function POST(req: NextRequest) {
         const chunk = docs.slice(i, i + CHUNK);
         const { error } = await supabaseAdmin
           .from('app_data')
-          .upsert(chunk, { onConflict: 'collection,id' });
+          .upsert(chunk, { onConflict: 'id' });
         if (error) {
+          console.error(`[migrate/${name}] chunk error:`, error.message, error.details);
           failed += chunk.length;
         } else {
           success += chunk.length;
