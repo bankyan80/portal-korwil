@@ -1,28 +1,17 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Search, Trash2, Loader2, FolderOpen, FileText } from 'lucide-react';
+import { ArrowLeft, Search, Loader2, FolderOpen, FileText, ChevronDown } from 'lucide-react';
 import { apiGet, apiDelete } from '@/lib/api-firestore';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { allSekolah } from '@/data/sekolah';
 import type { DokumenBersama } from '@/types';
-
-function formatSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1048576).toFixed(1)} MB`;
-}
-
-function getDocumentUrl(d: DokumenBersama) {
-  const f = d.file;
-  if (f && 'fileUrl' in f && f.fileUrl) return f.fileUrl;
-  if (f && 'webViewLink' in f && f.webViewLink) return f.webViewLink;
-  return d.downloadUrl || d.dataUrl || '#';
-}
 
 export default function SuperAdminDokumenPage() {
   const [allDocs, setAllDocs] = useState<DokumenBersama[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [schoolFilter, setSchoolFilter] = useState('');
 
   useEffect(() => {
     apiGet('dokumen', { orderBy: { field: 'uploadedAt', dir: 'desc' } }).then((res) => {
@@ -31,21 +20,54 @@ export default function SuperAdminDokumenPage() {
     }).catch(() => setLoading(false));
   }, []);
 
-  const filtered = useMemo(() => {
-    if (!search) return allDocs;
-    const q = search.toLowerCase();
-    return allDocs.filter(d =>
-      d.nama?.toLowerCase().includes(q) ||
-      d.nik?.includes(q) ||
-      d.nip?.includes(q) ||
-      d.fileName?.toLowerCase().includes(q)
-    );
-  }, [allDocs, search]);
+  const employeeMap = useMemo(() => {
+    const map = new Map<string, {
+      nik: string; nip: string; nama: string; sekolah: string; count: number; docs: DokumenBersama[];
+    }>();
+    for (const d of allDocs) {
+      const key = d.nik || d.nip || d.nama;
+      if (!key) continue;
+      let e = map.get(key);
+      if (!e) {
+        e = { nik: d.nik, nip: d.nip, nama: d.nama, sekolah: d.sekolah || '', count: 0, docs: [] };
+        map.set(key, e);
+      }
+      e.count++;
+      e.docs.push(d);
+    }
+    return map;
+  }, [allDocs]);
 
-  async function handleDelete(id: string) {
-    if (!confirm('Hapus dokumen ini?')) return;
-    try { await apiDelete('dokumen', id); }
-    catch (e) { console.error('Gagal hapus:', e); }
+  const employees = useMemo(() => {
+    let list = Array.from(employeeMap.values());
+    if (schoolFilter) {
+      list = list.filter(e => e.sekolah === schoolFilter);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(e =>
+        e.nama.toLowerCase().includes(q) ||
+        e.nik?.toLowerCase().includes(q) ||
+        e.nip?.toLowerCase().includes(q)
+      );
+    }
+    list.sort((a, b) => b.count - a.count);
+    return list;
+  }, [employeeMap, schoolFilter, search]);
+
+  const uniqueSchools = useMemo(() => {
+    const s = new Set<string>();
+    allDocs.forEach(d => { if (d.sekolah) s.add(d.sekolah); });
+    return Array.from(s).sort();
+  }, [allDocs]);
+
+  async function handleDeleteAll(nik: string) {
+    const emp = employeeMap.get(nik);
+    if (!emp || emp.docs.length === 0) return;
+    if (!confirm(`Hapus ${emp.docs.length} dokumen milik ${emp.nama}?`)) return;
+    for (const d of emp.docs) {
+      try { if (d.id) await apiDelete('dokumen', d.id); } catch { }
+    }
   }
 
   return (
@@ -55,24 +77,34 @@ export default function SuperAdminDokumenPage() {
         <div className="flex items-center gap-3">
           <a href="/admin/super" className="text-white/80 hover:text-white"><ArrowLeft className="w-5 h-5" /></a>
           <FolderOpen className="w-5 h-5 text-yellow-400" />
-          <h1 className="text-lg font-bold text-white">Dokumen Bersama</h1>
+          <h1 className="text-lg font-bold text-white">Dokumen Pegawai</h1>
         </div>
-        <p className="text-sm text-blue-200">{allDocs.length} dokumen</p>
+        <p className="text-sm text-blue-200">{employees.length} pegawai ({allDocs.length} dokumen)</p>
       </header>
 
       <main className="p-6 max-w-7xl mx-auto space-y-6">
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input type="text" placeholder="Cari NIP/NIK/nama/file..." value={search} onChange={e => setSearch(e.target.value)}
-            className="pl-9 pr-3 py-2 text-sm border rounded-lg w-full bg-white dark:bg-gray-800" />
+        <div className="flex flex-wrap gap-3 items-center">
+          <div className="relative max-w-sm flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input type="text" placeholder="Cari NIP/NIK/nama..." value={search} onChange={e => setSearch(e.target.value)}
+              className="pl-9 pr-3 py-2 text-sm border rounded-lg w-full bg-white dark:bg-gray-800" />
+          </div>
+          <div className="relative">
+            <select value={schoolFilter} onChange={e => setSchoolFilter(e.target.value)}
+              className="appearance-none pl-3 pr-8 py-2 text-sm border rounded-lg bg-white dark:bg-gray-800 pr-8">
+              <option value="">Semua Sekolah</option>
+              {uniqueSchools.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
-        ) : filtered.length === 0 ? (
+        ) : employees.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-12 text-center">
             <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400">{search ? 'Tidak ada dokumen yang cocok' : 'Belum ada dokumen'}</p>
+            <p className="text-gray-400">{search || schoolFilter ? 'Tidak ada pegawai yang cocok' : 'Belum ada dokumen'}</p>
           </div>
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
@@ -80,29 +112,34 @@ export default function SuperAdminDokumenPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-muted/50">
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">No</th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground w-12">No</th>
                     <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Nama</th>
                     <th className="px-4 py-3 text-left font-semibold text-muted-foreground">NIP/NIK</th>
-                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">File</th>
-                    <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Ukuran</th>
-                    <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Aksi</th>
+                    <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Sekolah</th>
+                    <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Jumlah</th>
+                    <th className="px-4 py-3 text-center font-semibold text-muted-foreground w-24">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {filtered.map((d, i) => (
-                    <tr key={d.id || i} className="hover:bg-muted/50 transition-colors">
+                  {employees.map((e, i) => (
+                    <tr key={e.nik || e.nip || e.nama} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
-                      <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{d.nama}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{d.nip || d.nik || '-'}</td>
-                      <td className="px-4 py-3 text-muted-foreground max-w-[250px] truncate">
-                        <a href={getDocumentUrl(d)} target="_blank" rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline">{d.fileName}</a>
-                      </td>
-                      <td className="px-4 py-3 text-center text-xs text-muted-foreground">{formatSize(d.fileSize)}</td>
+                      <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{e.nama}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{e.nip || e.nik || '-'}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{e.sekolah || '-'}</td>
                       <td className="px-4 py-3 text-center">
-                        <button onClick={() => handleDelete(d.id!)}
+                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold
+                          ${e.count >= 10 ? 'bg-green-100 text-green-700' :
+                            e.count >= 5 ? 'bg-blue-100 text-blue-700' :
+                            e.count >= 2 ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-gray-100 text-gray-600'}`}>
+                          {e.count}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button onClick={() => { const key = e.nik || e.nip || e.nama; handleDeleteAll(key); }}
                           className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100">
-                          <Trash2 className="w-3 h-3" /> Hapus
+                          Hapus
                         </button>
                       </td>
                     </tr>
@@ -111,7 +148,8 @@ export default function SuperAdminDokumenPage() {
               </table>
             </div>
             <div className="px-4 py-3 border-t text-xs text-muted-foreground">
-              Menampilkan {filtered.length} dari {allDocs.length} dokumen
+              Menampilkan {employees.length} pegawai dari {employeeMap.size} total
+              {schoolFilter ? ` (filter: ${schoolFilter})` : ''}
             </div>
           </div>
         )}
