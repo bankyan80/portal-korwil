@@ -42,7 +42,6 @@ async function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promis
 
 function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void }) {
   const [documents, setDocuments] = useState<DokumenBersama[]>([]);
-  const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,8 +60,7 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
 
   useEffect(() => { fetchDocs(); }, [fetchDocs]);
 
-  async function handleUpload() {
-    if (files.length === 0) return;
+  async function uploadFiles(files: FileList) {
     setUploading(true);
     setUploadStatus(null);
 
@@ -70,13 +68,13 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
     const token = cookieMatch?.[1] || '';
     if (!token) { setUploadStatus({ ok: false, msg: 'Anda harus login' }); setUploading(false); return; }
 
-    try {
-      for (const file of files) {
+    let ok = 0;
+    const errs: string[] = [];
+    for (const file of Array.from(files)) {
+      try {
         const isImage = file.type.startsWith('image/');
         let fileToUpload: File | Blob = file;
-        if (isImage && file.size > 2 * 1024 * 1024) {
-          fileToUpload = await compressImage(file);
-        }
+        if (isImage && file.size > 2 * 1024 * 1024) fileToUpload = await compressImage(file);
 
         const formData = new FormData();
         formData.append('file', fileToUpload, file.name);
@@ -99,13 +97,16 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
           },
           uploadedAt: Date.now(),
         });
-      }
-      setUploadStatus({ ok: true, msg: `${files.length} dokumen berhasil diupload` });
-      setFiles([]);
-      await fetchDocs();
-    } catch (e: any) {
-      setUploadStatus({ ok: false, msg: `Gagal: ${e.message}` });
-    } finally { setUploading(false); }
+        ok++;
+      } catch (e: any) { errs.push(`${file.name}: ${e.message}`); }
+    }
+
+    const parts: string[] = [];
+    if (ok > 0) parts.push(`${ok} berhasil`);
+    if (errs.length > 0) parts.push(`${errs.length} gagal`);
+    setUploadStatus({ ok: errs.length === 0, msg: parts.join(', ') || 'Tidak ada file diupload' });
+    setUploading(false);
+    await fetchDocs();
   }
 
   async function handleDelete(docId: string) {
@@ -134,24 +135,14 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
           {/* Upload */}
           <div className="space-y-3">
             <h3 className="font-semibold text-sm text-[#0d3b66]">Upload Dokumen</h3>
-            <input ref={fileRef} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp" onChange={e => { if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]); }} className="hidden" />
-            <button onClick={() => fileRef.current?.click()} className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-blue-700 bg-blue-50 rounded-xl hover:bg-blue-100 border-2 border-dashed border-blue-200 w-full justify-center">
-              <Upload className="w-5 h-5" /> Pilih File
+            <input ref={fileRef} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
+              onChange={e => { if (e.target.files?.length) uploadFiles(e.target.files); e.target.value = ''; }}
+              className="hidden" />
+            <button onClick={() => fileRef.current?.click()} disabled={uploading}
+              className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-blue-700 bg-blue-50 rounded-xl hover:bg-blue-100 border-2 border-dashed border-blue-200 w-full justify-center disabled:opacity-50">
+              {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+              {uploading ? 'Mengupload...' : 'Pilih File (auto-upload)'}
             </button>
-            {files.length > 0 && (
-              <div className="space-y-2">
-                {files.map((f, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm">
-                    <span className="truncate">{f.name} ({formatSize(f.size)})</span>
-                    <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                ))}
-                <button onClick={handleUpload} disabled={uploading} className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-lg hover:bg-green-800 disabled:opacity-50">
-                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                  Upload {files.length} File
-                </button>
-              </div>
-            )}
             {uploadStatus && (
               <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${uploadStatus.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                 {uploadStatus.ok ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
