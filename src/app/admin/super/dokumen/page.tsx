@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Search, Loader2, FolderOpen, FileText, ChevronDown } from 'lucide-react';
 import { apiGet, apiDelete } from '@/lib/api-firestore';
 import AuthGuard from '@/components/auth/AuthGuard';
-import { allSekolah } from '@/data/sekolah';
 import type { DokumenBersama } from '@/types';
 
 export default function SuperAdminDokumenPage() {
@@ -26,7 +25,7 @@ export default function SuperAdminDokumenPage() {
       nik: string; nip: string; nama: string; sekolah: string; count: number; docs: DokumenBersama[];
     }>();
     for (const d of allDocs) {
-      const key = d.nik || d.nip || d.nama;
+      const key = d.nik || d.nip || d.nama || crypto.randomUUID();
       if (!key) continue;
       let e = map.get(key);
       if (!e) {
@@ -47,9 +46,9 @@ export default function SuperAdminDokumenPage() {
     if (search) {
       const q = search.toLowerCase();
       list = list.filter(e =>
-        e.nama.toLowerCase().includes(q) ||
-        e.nik?.toLowerCase().includes(q) ||
-        e.nip?.toLowerCase().includes(q)
+        (e.nama || '').toLowerCase().includes(q) ||
+        (e.nik || '').toLowerCase().includes(q) ||
+        (e.nip || '').toLowerCase().includes(q)
       );
     }
     list.sort((a, b) => b.count - a.count);
@@ -57,16 +56,21 @@ export default function SuperAdminDokumenPage() {
   }, [employeeMap, schoolFilter, search]);
 
   const allNames = useMemo(() => {
-    return Array.from(employeeMap.values()).map(e => ({ nama: e.nama, nik: e.nik, nip: e.nip, sekolah: e.sekolah }));
+    return Array.from(employeeMap.values()).map(e => ({
+      nama: e.nama || '',
+      nik: e.nik || '',
+      nip: e.nip || '',
+      sekolah: e.sekolah || ''
+    }));
   }, [employeeMap]);
 
   const suggestions = useMemo(() => {
     if (search.length < 3) return [];
     const q = search.toLowerCase();
     return allNames.filter(e =>
-      e.nama.toLowerCase().includes(q) ||
-      e.nik?.toLowerCase().includes(q) ||
-      e.nip?.toLowerCase().includes(q)
+      (e.nama || '').toLowerCase().includes(q) ||
+      (e.nik || '').toLowerCase().includes(q) ||
+      (e.nip || '').toLowerCase().includes(q)
     ).slice(0, 10);
   }, [allNames, search]);
 
