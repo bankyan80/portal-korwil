@@ -61,7 +61,7 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
 
   useEffect(() => { fetchDocs(); }, [fetchDocs]);
 
-  async function uploadFiles(files: FileList) {
+  async function uploadFiles(fileList: FileList) {
     setUploading(true);
     setUploadProgress(0);
     setUploadStatus(null);
@@ -70,6 +70,7 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
     const token = cookieMatch?.[1] || '';
     if (!token) { setUploadStatus({ ok: false, msg: 'Anda harus login' }); setUploading(false); return; }
 
+    const files = Array.from(fileList);
     const total = files.length;
     let ok = 0;
     const errs: string[] = [];
@@ -90,7 +91,10 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
         const uploadRes = await fetch('/api/drive/upload', {
           method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData,
         });
-        if (!uploadRes.ok) throw new Error((await uploadRes.json()).error || 'Upload gagal');
+        if (!uploadRes.ok) {
+          const errBody = await uploadRes.json().catch(() => ({ error: 'Upload gagal' }));
+          throw new Error(errBody.error || `HTTP ${uploadRes.status}`);
+        }
         const driveData = (await uploadRes.json()).data;
 
         setUploadProgress(50 + Math.round(((i + 1) / total) * 50));
@@ -107,7 +111,9 @@ function DokumenModal({ pegawai, onClose }: { pegawai: any; onClose: () => void 
           uploadedAt: Date.now(),
         });
         ok++;
-      } catch (e: any) { errs.push(`${file.name}: ${e.message}`); }
+      } catch (e: any) {
+        errs.push(`${file.name}: ${e?.message || e || 'Unknown error'}`);
+      }
     }
 
     setUploadProgress(100);

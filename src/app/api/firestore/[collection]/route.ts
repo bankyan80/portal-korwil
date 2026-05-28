@@ -7,11 +7,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ coll
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
 
+  const { collection } = await params;
+const PUBLIC_COLLECTIONS = ['announcements', 'menus', 'institution_links', 'organizations', 'contacts', 'faq'];
+if (!PUBLIC_COLLECTIONS.includes(collection)) {
   const token = req.cookies.get('auth-token')?.value;
   const auth = await verifyCookieAuth(token || '');
   if (auth instanceof NextResponse && auth.status !== 500) return auth;
-
-  const { collection } = await params;
+}
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   const orderByField = searchParams.get('orderBy');
@@ -68,11 +70,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ col
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
 
+  const { collection } = await params;
+const PUBLIC_COLLECTIONS = ['announcements', 'menus', 'institution_links', 'organizations', 'contacts', 'faq'];
+if (!PUBLIC_COLLECTIONS.includes(collection)) {
   const token = req.cookies.get('auth-token')?.value;
   const auth = await verifyCookieAuth(token || '');
   if (auth instanceof NextResponse && auth.status !== 500) return auth;
-
-  const { collection } = await params;
+}
 
   try {
     const body = await req.json();
@@ -123,11 +127,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ c
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
 
+  const { collection } = await params;
+const PUBLIC_COLLECTIONS = ['announcements', 'menus', 'institution_links', 'organizations', 'contacts', 'faq'];
+if (!PUBLIC_COLLECTIONS.includes(collection)) {
   const token = req.cookies.get('auth-token')?.value;
   const auth = await verifyCookieAuth(token || '');
   if (auth instanceof NextResponse && auth.status !== 500) return auth;
-
-  const { collection } = await params;
+}
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
 
@@ -148,3 +154,4 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ c
     return NextResponse.json({ error: 'Gagal menghapus data' }, { status: 500 });
   }
 }
+
