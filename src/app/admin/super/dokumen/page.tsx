@@ -12,6 +12,7 @@ export default function SuperAdminDokumenPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [schoolFilter, setSchoolFilter] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     apiGet('dokumen', { orderBy: { field: 'uploadedAt', dir: 'desc' } }).then((res) => {
@@ -55,6 +56,20 @@ export default function SuperAdminDokumenPage() {
     return list;
   }, [employeeMap, schoolFilter, search]);
 
+  const allNames = useMemo(() => {
+    return Array.from(employeeMap.values()).map(e => ({ nama: e.nama, nik: e.nik, nip: e.nip, sekolah: e.sekolah }));
+  }, [employeeMap]);
+
+  const suggestions = useMemo(() => {
+    if (search.length < 3) return [];
+    const q = search.toLowerCase();
+    return allNames.filter(e =>
+      e.nama.toLowerCase().includes(q) ||
+      e.nik?.toLowerCase().includes(q) ||
+      e.nip?.toLowerCase().includes(q)
+    ).slice(0, 10);
+  }, [allNames, search]);
+
   const uniqueSchools = useMemo(() => {
     const s = new Set<string>();
     allDocs.forEach(d => { if (d.sekolah) s.add(d.sekolah); });
@@ -86,8 +101,24 @@ export default function SuperAdminDokumenPage() {
         <div className="flex flex-wrap gap-3 items-center">
           <div className="relative max-w-sm flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input type="text" placeholder="Cari NIP/NIK/nama..." value={search} onChange={e => setSearch(e.target.value)}
+            <input type="text" placeholder="Cari NIP/NIK/nama..." value={search}
+              onChange={e => { setSearch(e.target.value); setShowSuggestions(true); }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               className="pl-9 pr-3 py-2 text-sm border rounded-lg w-full bg-white dark:bg-gray-800" />
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute z-10 top-full mt-1 w-full bg-white dark:bg-gray-800 border rounded-lg shadow-lg max-h-60 overflow-auto">
+                {suggestions.map((s, i) => (
+                  <button key={i} type="button"
+                    onMouseDown={() => { setSearch(s.nama); setShowSuggestions(false); }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-gray-700 border-b last:border-0 border-gray-100 dark:border-gray-700">
+                    <span className="font-medium">{s.nama}</span>
+                    <span className="text-xs text-muted-foreground ml-2">{s.nip || s.nik || ''}</span>
+                    {s.sekolah && <span className="text-xs text-muted-foreground ml-2">— {s.sekolah}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="relative">
             <select value={schoolFilter} onChange={e => setSchoolFilter(e.target.value)}
