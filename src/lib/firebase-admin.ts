@@ -10,6 +10,14 @@ function normalizePrivateKey(privateKey: string) {
   return privateKey.replace(/\\n/g, '\n');
 }
 
+function normalizeServiceAccount(raw: Record<string, unknown>): ServiceAccount {
+  return {
+    projectId: (raw.projectId as string) || (raw.project_id as string),
+    clientEmail: (raw.clientEmail as string) || (raw.client_email as string),
+    privateKey: (raw.privateKey as string) || (raw.private_key as string),
+  };
+}
+
 function findServiceAccountFile(): string | null {
   // 1) Env var (raw JSON string or base64)
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
@@ -64,11 +72,11 @@ function loadServiceAccount(): ServiceAccount | null {
 
   try {
     if (matched === '__env__') {
-      return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!) as ServiceAccount;
+      return normalizeServiceAccount(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!));
     }
     if (matched === '__env_b64__') {
       const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!, 'base64').toString('utf-8');
-      return JSON.parse(decoded) as ServiceAccount;
+      return normalizeServiceAccount(JSON.parse(decoded));
     }
     if (matched === '__env_split__') {
       return {
@@ -78,7 +86,7 @@ function loadServiceAccount(): ServiceAccount | null {
       } as ServiceAccount;
     }
     const content = fs.readFileSync(/*turbopackIgnore: true*/ matched, 'utf-8');
-    return JSON.parse(content) as ServiceAccount;
+    return normalizeServiceAccount(JSON.parse(content));
   } catch (err) {
     console.error(`[firebase-admin] Failed to load service-account from ${matched}:`, err);
     return null;
