@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
 import { verifyCookieAuth } from '@/lib/server-auth';
 
-export async function GET(req: NextRequest, { params }: { params: { collection: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ collection: string }> }) {
   if (!isSupabaseAdminConfigured || !supabaseAdmin) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { collection: 
   const auth = await verifyCookieAuth(token || '');
   if (auth instanceof NextResponse && auth.status !== 500) return auth;
 
-  const { collection } = params;
+  const { collection } = await params;
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   const orderByField = searchParams.get('orderBy');
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest, { params }: { params: { collection: 
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { collection: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ collection: string }> }) {
   if (!isSupabaseAdminConfigured || !supabaseAdmin) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: { collection:
   const auth = await verifyCookieAuth(token || '');
   if (auth instanceof NextResponse && auth.status !== 500) return auth;
 
-  const { collection } = params;
+  const { collection } = await params;
 
   try {
     const body = await req.json();
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest, { params }: { params: { collection:
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { collection: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ collection: string }> }) {
   if (!isSupabaseAdminConfigured || !supabaseAdmin) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
@@ -127,7 +127,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { collectio
   const auth = await verifyCookieAuth(token || '');
   if (auth instanceof NextResponse && auth.status !== 500) return auth;
 
-  const { collection } = params;
+  const { collection } = await params;
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
 

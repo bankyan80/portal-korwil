@@ -51,7 +51,7 @@ const PAGE_SIZE = 20;
 
 export function ManageUsers() {
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [updating, setUpdating] = useState<string | null>(null);

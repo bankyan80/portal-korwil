@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
 import { verifyCookieAuth } from '@/lib/server-auth';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!isSupabaseAdminConfigured || !supabaseAdmin) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (auth instanceof NextResponse && auth.status !== 500) return auth;
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const { data, error } = await supabaseAdmin
       .from('app_data')
       .select('*')
