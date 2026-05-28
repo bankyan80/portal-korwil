@@ -20,10 +20,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Supabase Admin not configured' }, { status: 500 });
   }
 
-  const token = req.cookies.get('auth-token')?.value;
-  const auth = await verifyCookieAuth(token || '');
-  const forbidden = requireRole(auth, ['super_admin']);
-  if (forbidden) return forbidden;
+  // Allow API key auth for headless/script calls
+  const apiKey = req.headers.get('x-api-key');
+  if (apiKey && apiKey === process.env.MIGRATION_API_KEY) {
+    // API key authenticated
+  } else {
+    const token = req.cookies.get('auth-token')?.value;
+    const auth = await verifyCookieAuth(token || '');
+    const forbidden = requireRole(auth, ['super_admin']);
+    if (forbidden) return forbidden;
+  }
 
   const { searchParams } = new URL(req.url);
   const specificCollection = searchParams.get('collection');
