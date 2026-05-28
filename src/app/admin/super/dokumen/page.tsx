@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Search, Loader2, FolderOpen, FileText, ChevronDown } from 'lucide-react';
 import { apiGet, apiDelete } from '@/lib/api-firestore';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { allSekolah } from '@/data/sekolah';
 import type { DokumenBersama } from '@/types';
 
 export default function SuperAdminDokumenPage() {
@@ -75,9 +76,11 @@ export default function SuperAdminDokumenPage() {
   }, [allNames, search]);
 
   const uniqueSchools = useMemo(() => {
-    const s = new Set<string>();
-    allDocs.forEach(d => { if (d.sekolah) s.add(d.sekolah); });
-    return Array.from(s).sort();
+    const fromDocs = new Set<string>();
+    allDocs.forEach(d => { if (d.sekolah) fromDocs.add(d.sekolah); });
+    const all = allSekolah.map(s => s.nama);
+    const merged = Array.from(new Set([...Array.from(fromDocs), ...all]));
+    return merged.sort();
   }, [allDocs]);
 
   async function handleDeleteAll(nik: string) {
