@@ -41,12 +41,18 @@ async function apiGetUser(uid: string): Promise<UserProfile | null> {
 
 async function apiSetUser(uid: string, data: Record<string, any>) {
   try {
-    await fetch('/api/firestore/users', {
+    const res = await fetch('/api/firestore/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: uid, data, merge: true }),
     });
-  } catch {}
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      console.warn('[apiSetUser] Gagal menyimpan profil:', json.error || res.status);
+    }
+  } catch (e) {
+    console.warn('[apiSetUser] Network error:', e);
+  }
 }
 
 async function apiGetFirstUser(): Promise<boolean> {

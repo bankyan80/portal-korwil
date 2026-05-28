@@ -8,7 +8,9 @@ export async function apiGet(collection: string, opts?: { id?: string; where?: W
   if (opts?.orderBy) { params.set('orderBy', opts.orderBy.field); params.set('orderDir', opts.orderBy.dir || 'asc'); }
   if (opts?.limit) params.set('limit', String(opts.limit));
   const res = await fetch(`/api/firestore/${collection}?${params}`);
-  return res.json();
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || `Gagal memuat data (${res.status})`);
+  return json;
 }
 
 export async function apiSet(collection: string, id: string | undefined, data: any, merge = true) {
@@ -17,7 +19,9 @@ export async function apiSet(collection: string, id: string | undefined, data: a
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id, data, merge }),
   });
-  return res.json();
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || `Gagal menyimpan data (${res.status})`);
+  return json;
 }
 
 export async function apiAdd(collection: string, data: any) {
@@ -26,5 +30,7 @@ export async function apiAdd(collection: string, data: any) {
 
 export async function apiDelete(collection: string, id: string) {
   const res = await fetch(`/api/firestore/${collection}?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-  return res.json();
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || `Gagal menghapus data (${res.status})`);
+  return json;
 }
