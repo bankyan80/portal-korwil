@@ -94,7 +94,7 @@ export function ManageYatimPiatu() {
         return;
       }
       const s = json.siswa;
-      await apiAdd('yatim_piatu', { nik: s.nik, nama: s.nama, sekolah: s.sekolah, schoolId: user?.schoolId || '', desa: s.desa, kategori, createdAt: Date.now() });
+      await apiAdd('yatim_piatu', { nik: s.nik, nama: s.nama, kelas: s.kelas || '', sekolah: s.sekolah, schoolId: user?.schoolId || '', desa: s.desa, kategori, createdAt: Date.now() });
       setAddStatus({ ok: true, msg: `${s.nama} ditambahkan sebagai ${kategoriLabel[kategori]}` });
       setNikInput('');
       void autoSave.clear();

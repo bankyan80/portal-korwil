@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
         sekolah: s.sekolah,
         jenjang: s.jenjang,
         desa: s.desa,
+        kelas: s.kelas != null ? String(s.kelas) : '',
       },
     });
   } catch (error) {
