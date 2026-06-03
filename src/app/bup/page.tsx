@@ -149,10 +149,10 @@ export default function BupPage() {
     }
     // Sort by BUP ascending (closest to retirement first)
     items.sort((a, b) => bupDate(a) - bupDate(b));
-    return items;
+    return items.map(p => ({ ...p, _bup: getBupDateForPegawai(p)?.getTime() ?? Infinity }));
      }, [allData, search]);
 
-  const { sorted, sortKey, sortDir, toggle } = useSort(filtered, 'nama');
+  const { sorted, sortKey, sortDir, toggle } = useSort(filtered, null);
 
   const totalPages = Math.ceil(sorted.length / PER_PAGE);
   const paginated = sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -263,8 +263,8 @@ export default function BupPage() {
                       <SortableHeader label="Nama" sortKey="nama" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="px-3 py-3" />
                       <SortableHeader label="Status" sortKey="status_kepegawaian" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="px-3 py-3" hideBelow="sm" />
                       <SortableHeader label="Sekolah" sortKey="sekolah" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="px-3 py-3 max-w-[180px]" hideBelow="md" />
-                      <SortableHeader label="BUP" sortKey="bup_tanggal" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="px-3 py-3 whitespace-nowrap" hideBelow="md" />
-                      <th className="px-3 py-3 font-semibold text-gray-600 whitespace-nowrap">Sisa</th>
+                      <th className="px-3 py-3 font-semibold text-gray-600 whitespace-nowrap hidden md:table-cell">BUP</th>
+                      <SortableHeader label="Sisa" sortKey="_bup" currentKey={sortKey} direction={sortDir} onToggle={toggle} className="px-3 py-3 whitespace-nowrap" />
                     </tr>
                   </thead>
                   <tbody className="divide-y">
