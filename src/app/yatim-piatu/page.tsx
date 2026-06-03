@@ -52,13 +52,14 @@ export default function YatimPiatuPage() {
       No: i + 1,
       NIK: d.nik,
       Nama: d.nama,
+      Kelas: d.kelas || '',
       Sekolah: d.sekolah,
       Desa: d.desa || '',
       Kategori: kategoriSimple[d.kategori],
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     ws['!cols'] = [
-      { wch: 4 }, { wch: 18 }, { wch: 30 }, { wch: 35 }, { wch: 20 }, { wch: 16 },
+      { wch: 4 }, { wch: 18 }, { wch: 30 }, { wch: 8 }, { wch: 35 }, { wch: 20 }, { wch: 16 },
     ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Yatim Piatu');
@@ -140,6 +141,7 @@ export default function YatimPiatuPage() {
                       <th className="px-5 py-3 font-semibold text-gray-600">No</th>
                       <SortableHeader label="NIK" sortKey="nik" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
                       <SortableHeader label="Nama" sortKey="nama" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
+                      <SortableHeader label="Kelas" sortKey="kelas" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="md" />
                       <SortableHeader label="Sekolah" sortKey="sekolah" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
                       <SortableHeader label="Desa" sortKey="desa" currentKey={sortKey} direction={sortDir} onToggle={toggle} hideBelow="md" />
                       <SortableHeader label="Kategori" sortKey="kategori" currentKey={sortKey} direction={sortDir} onToggle={toggle} />
@@ -148,7 +150,7 @@ export default function YatimPiatuPage() {
                   <tbody className="divide-y">
                     {data.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-5 py-10 text-center text-gray-400 text-sm">
+                        <td colSpan={7} className="px-5 py-10 text-center text-gray-400 text-sm">
                           Belum ada data
                         </td>
                       </tr>
@@ -158,6 +160,7 @@ export default function YatimPiatuPage() {
                           <td className="px-5 py-3 text-gray-500">{i + 1}</td>
                           <td className="px-5 py-3 font-mono text-xs text-gray-500">{d.nik}</td>
                           <td className="px-5 py-3 font-medium text-[#0d3b66] whitespace-nowrap">{d.nama}</td>
+                          <td className="px-5 py-3 text-gray-500 hidden md:table-cell">{d.kelas || '-'}</td>
                           <td className="px-5 py-3 text-gray-500 max-w-[200px] truncate">{d.sekolah}</td>
                           <td className="px-5 py-3 text-gray-500 hidden md:table-cell">{d.desa}</td>
                           <td className="px-5 py-3">
@@ -210,6 +213,7 @@ export default function YatimPiatuPage() {
               <th>No</th>
               <th>NIK</th>
               <th>Nama</th>
+              <th>Kelas</th>
               <th>Sekolah</th>
               <th>Desa</th>
               <th>Kategori</th>
@@ -221,6 +225,7 @@ export default function YatimPiatuPage() {
                 <td>{i + 1}</td>
                 <td>{d.nik}</td>
                 <td>{d.nama}</td>
+                <td>{d.kelas || '-'}</td>
                 <td>{d.sekolah}</td>
                 <td>{d.desa || '-'}</td>
                 <td>{kategoriSimple[d.kategori]}</td>

@@ -62,6 +62,7 @@ export interface YatimPiatuData {
   id: string;
   nik: string;
   nama: string;
+  kelas?: string;
   sekolah: string;
   schoolId?: string;
   desa: string;
