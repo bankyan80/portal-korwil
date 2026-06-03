@@ -4,25 +4,71 @@ import { useState } from 'react';
 import { Search, ExternalLink, FileText, Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
 
-type DocumentEntry = {
-  type: string;
-  url: string;
+const DOC_ICONS: Record<string, string> = {
+  'IJAZAH TERAKHIR': '🎓',
+  'IJAZAH': '🎓',
+  'IJAZAH + TRANSKRIP': '🎓',
+  'SK PPPK': '📜',
+  'SK PPPK PW': '📜',
+  'SK PNS/P3K': '📜',
+  'SK KGB': '📜',
+  'SK CPNS': '📜',
+  'SK PANGKAT': '📜',
+  'SK JABATAN': '📋',
+  'SK PENUGASAN KEPSEK': '📋',
+  'SK KEPSEK': '📋',
+  'SKP/DP3 2021': '📋',
+  'KARPEG': '🪪',
+  'KARIS/KARSU': '🪪',
+  'KTP': '🆔',
+  'KARTU KELUARGA': '👨‍👩‍👧‍👦',
+  'AKTA NIKAH': '💍',
+  'SURAT TUGAS': '📋',
+  'SERTIFIKAT PENDIDIK': '📜',
+  'SERTIFIKAT DIKLAT': '📜',
+  'DOKUMEN LAIN': '📁',
+  'DOKUMEN LAINNYA': '📁',
+  'NPWP': '📄',
+  'BPJS KESEHATAN': '🏥',
+  'IDENTITAS DIRI': '🪪',
+  'DATA KELUARGA': '👨‍👩‍👧‍👦',
+  'DOKUMEN KOMPETENSI': '📚',
+  'PAS FOTO': '📸',
+  'FOTO ASN PPPK': '📸',
 };
 
-const DOC_TYPES = [
-  { key: 'IJAZAH TERAKHIR', icon: '🎓', label: 'Ijazah' },
-  { key: 'SK PPPK', icon: '📜', label: 'SK PPPK' },
-  { key: 'SK KGB', icon: '📜', label: 'SK KGB' },
-  { key: 'KARPEG/KARTU VIRTUAL ASN', icon: '🪪', label: 'Karpeg' },
-  { key: 'KARIS/KARSU', icon: '🪪', label: 'Karis/Karsu' },
-  { key: 'KTP', icon: '🆔', label: 'KTP' },
-  { key: 'KARTU KELUARGA', icon: '👨‍👩‍👧‍👦', label: 'KK' },
-  { key: 'KARTU/AKTA NIKAH', icon: '💍', label: 'Akta Nikah' },
-  { key: 'SURAT TUGAS (MUTASI)', icon: '📋', label: 'Surat Tugas' },
-  { key: 'SERTIFIKAT PENDIDIK (GURU)', icon: '📜', label: 'Sertifikat Pendidik' },
-  { key: 'SK KEPALA SEKOLAH (SKBM)', icon: '📋', label: 'SK Kepala Sekolah' },
-  { key: 'DOKUMEN LAINNYA', icon: '📁', label: 'Dokumen Lain' },
-];
+const DOC_LABELS: Record<string, string> = {
+  'IJAZAH TERAKHIR': 'Ijazah',
+  'IJAZAH': 'Ijazah',
+  'IJAZAH + TRANSKRIP': 'Ijazah + Transkrip',
+  'SK PPPK': 'SK PPPK',
+  'SK PPPK PW': 'SK PPPK PW',
+  'SK PNS/P3K': 'SK PNS/P3K',
+  'SK KGB': 'SK KGB',
+  'SK CPNS': 'SK CPNS',
+  'SK PANGKAT': 'SK Pangkat',
+  'SK JABATAN': 'SK Jabatan',
+  'SK PENUGASAN KEPSEK': 'SK Penugasan KEPSEK',
+  'SK KEPSEK': 'SK Kepala Sekolah',
+  'SKP/DP3 2021': 'SKP/DP3 2021',
+  'KARPEG': 'Karpeg',
+  'KARIS/KARSU': 'Karis/Karsu',
+  'KTP': 'KTP',
+  'KARTU KELUARGA': 'Kartu Keluarga',
+  'AKTA NIKAH': 'Akta Nikah',
+  'SURAT TUGAS': 'Surat Tugas',
+  'SERTIFIKAT PENDIDIK': 'Sertifikat Pendidik',
+  'SERTIFIKAT DIKLAT': 'Sertifikat Diklat',
+  'DOKUMEN LAIN': 'Dokumen Lain',
+  'DOKUMEN LAINNYA': 'Dokumen Lainnya',
+  'NPWP': 'NPWP',
+  'BPJS KESEHATAN': 'BPJS Kesehatan',
+  'IDENTITAS DIRI': 'Identitas Diri',
+  'DATA KELUARGA': 'Data Keluarga',
+  'DOKUMEN KOMPETENSI': 'Dokumen Kompetensi',
+  'PAS FOTO': 'Pas Foto',
+  'FOTO ASN PPPK': 'Foto ASN PPPK',
+};
 
 export default function InputDokumenPage() {
   const { user } = useAppStore();
@@ -31,7 +77,7 @@ export default function InputDokumenPage() {
   const [nipSearch, setNipSearch] = useState('');
   const [pegawai, setPegawai] = useState<any | null>(null);
   const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
-  const [documents, setDocuments] = useState<DocumentEntry[]>([]);
+  const [documents, setDocuments] = useState<{ type: string; url: string }[]>([]);
   const [loadingDoc, setLoadingDoc] = useState(false);
 
   async function cariNIP() {
@@ -50,7 +96,7 @@ export default function InputDokumenPage() {
         } else {
           setPegawai(json.pegawai);
           setSearchStatus('found');
-          loadDocuments(clean);
+          loadDocuments(clean, json.pegawai.nama);
         }
       } else {
         setSearchStatus('not_found');
@@ -61,16 +107,12 @@ export default function InputDokumenPage() {
     }
   }
 
-  async function loadDocuments(nip: string) {
+  async function loadDocuments(nip: string, nama: string) {
     setLoadingDoc(true);
     try {
-      const res = await fetch(`/api/dokumen/sheet?nip=${nip}`);
+      const res = await fetch(`/api/dokumen/sheet?nip=${nip}&nama=${encodeURIComponent(nama)}`);
       const json = await res.json();
-      if (json.found) {
-        setDocuments(json.documents || []);
-      } else {
-        setDocuments([]);
-      }
+      setDocuments(json.documents || []);
     } catch (e) {
       console.error('Error loading documents:', e);
       setDocuments([]);
@@ -84,7 +126,7 @@ export default function InputDokumenPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <h2 className="text-2xl font-bold text-[#0d3b66]">Dokumen Pegawai</h2>
-      <p className="text-sm text-gray-500">Cari dokumen pegawai berdasarkan NIP — data dari Google Form</p>
+      <p className="text-sm text-gray-500">Cari dokumen pegawai — data dari 4 Google Form</p>
       {isOperator && (
         <p className="text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2">
           Anda sebagai operator <strong>{userSchool}</strong> — hanya dapat melihat dokumen pegawai di sekolah Anda.
@@ -136,7 +178,7 @@ export default function InputDokumenPage() {
             <h3 className="font-semibold text-[#0d3b66]">
               Dokumen Tersimpan
               <span className="ml-2 text-sm font-normal text-gray-500">
-                ({documents.length}/12)
+                ({documents.length})
               </span>
             </h3>
             {loadingDoc && <Loader2 className="w-4 h-4 animate-spin text-blue-600" />}
@@ -145,47 +187,31 @@ export default function InputDokumenPage() {
           {!loadingDoc && documents.length === 0 && (
             <div className="flex flex-col items-center gap-2 py-8 text-gray-400">
               <AlertCircle className="w-8 h-8" />
-              <p className="text-sm">Belum ada dokumen yang diupload melalui Google Form</p>
-              <a
-                href="https://docs.google.com/forms/d/e/1FAIpQLSfY5q4dS7vF5sVf5sVf5sVf5sVf5sVf5sVf5sVf5sVf5sVf5sVf5sVf5/viewform"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-              >
-                <ExternalLink className="w-3 h-3" />
-                Buka Google Form
-              </a>
+              <p className="text-sm">Belum ada dokumen yang diupload</p>
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {DOC_TYPES.map(({ key, icon, label }) => {
-              const url = docMap.get(key);
-              return (
+            {Array.from(docMap.entries())
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([type, url]) => (
                 <a
-                  key={key}
-                  href={url || '#'}
-                  target={url ? '_blank' : undefined}
-                  rel={url ? 'noopener noreferrer' : undefined}
-                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                    url
-                      ? 'bg-green-50 border-green-200 hover:bg-green-100 cursor-pointer'
-                      : 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-60'
-                  }`}
+                  key={type}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
                 >
-                  <span className="text-lg">{icon}</span>
+                  <span className="text-lg">{DOC_ICONS[type] || '📄'}</span>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium truncate ${url ? 'text-green-800' : 'text-gray-400'}`}>
-                      {label}
+                    <p className="text-sm font-medium text-green-800 truncate">
+                      {DOC_LABELS[type] || type}
                     </p>
-                    <p className="text-xs text-gray-400">
-                      {url ? 'Tersedia' : 'Belum diupload'}
-                    </p>
+                    <p className="text-xs text-gray-400">Tersedia</p>
                   </div>
-                  {url && <ExternalLink className="w-4 h-4 text-green-600 shrink-0" />}
+                  <ExternalLink className="w-4 h-4 text-green-600 shrink-0" />
                 </a>
-              );
-            })}
+              ))}
           </div>
         </div>
       )}
