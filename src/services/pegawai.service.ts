@@ -91,6 +91,14 @@ function loadFromSheet(): Promise<any[]> {
     .catch(() => []);
 }
 
+const EXCLUDED_NIKS = new Set([
+  '3209072108660002', // SANUSI
+  '3209071304660003', // KARTONI
+  '3209072302690002', // SOBANA
+  '3209071603670001', // Aan Hamami
+  '3209072908780003', // IMAN SUKIMAN
+]);
+
 export async function getAllPegawai() {
   const [sheetRecords, supabaseRecords] = await Promise.all([
     loadFromSheet(),
@@ -103,7 +111,7 @@ export async function getAllPegawai() {
     result = unionByNik(result, sheetRecords);
   }
 
-  return result;
+  return result.filter((d: any) => !EXCLUDED_NIKS.has(d.nik));
 }
 
 export async function getPegawaiByNik(nik: string) {
