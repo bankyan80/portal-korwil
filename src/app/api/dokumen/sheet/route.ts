@@ -97,30 +97,35 @@ function parseCSV(text: string): Record<string, string>[] {
   let current = '';
   let inQuote = false;
   for (const ch of text) {
-    if (ch === '"') { inQuote = !inQuote; continue; }
     if (ch === '\n' && !inQuote) { lines.push(current); current = ''; continue; }
     if (ch === '\r') continue;
     current += ch;
   }
   if (current) lines.push(current);
   if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim());
+  const headers = splitLine(lines[0]);
   const result: Record<string, string>[] = [];
   for (let i = 1; i < lines.length; i++) {
-    const vals: string[] = [];
-    let field = '';
-    let q = false;
-    for (const ch of lines[i]) {
-      if (ch === '"') { q = !q; continue; }
-      if (ch === ',' && !q) { vals.push(field.trim()); field = ''; continue; }
-      field += ch;
-    }
-    vals.push(field.trim());
+    const vals = splitLine(lines[i]);
     const row: Record<string, string> = {};
     headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
     result.push(row);
   }
   return result;
+}
+
+function splitLine(line: string): string[] {
+  const vals: string[] = [];
+  let field = '';
+  let q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { q = !q; continue; }
+    if (ch === ',' && !q) { vals.push(field.trim()); field = ''; continue; }
+    field += ch;
+  }
+  vals.push(field.trim());
+  return vals;
 }
 
 function isHttpUrl(v: string): boolean {
