@@ -112,7 +112,7 @@ export default function InputDokumenPage() {
   async function loadDocuments(nip: string, nama: string, nik?: string) {
     setLoadingDoc(true);
     try {
-      let url = `/api/dokumen/sheet?nip=${nip}&nama=${encodeURIComponent(nama)}`;
+      let url = `/api/dokumen/all?nip=${nip}&nama=${encodeURIComponent(nama)}`;
       if (nik) url += `&nik=${nik}`;
       const res = await fetch(url);
       const json = await res.json();
@@ -198,24 +198,38 @@ export default function InputDokumenPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {Array.from(docMap.entries())
               .sort(([a], [b]) => a.localeCompare(b))
-              .map(([type, url]) => (
-                <a
-                  key={type}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-xl border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
-                >
-                  <span className="text-lg">{DOC_ICONS[type] || '📄'}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-green-800 truncate">
-                      {DOC_LABELS[type] || type}
-                    </p>
-                    <p className="text-xs text-gray-400">Tersedia</p>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-green-600 shrink-0" />
-                </a>
-              ))}
+              .map(([type, url]) => {
+                const doc = documents.find(d => d.type === type && d.url === url);
+                const isDrive = doc?.source === 'drive';
+                return (
+                  <a
+                    key={`${type}-${url}`}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                      isDrive
+                        ? 'border-purple-200 bg-purple-50 hover:bg-purple-100'
+                        : 'border-green-200 bg-green-50 hover:bg-green-100'
+                    }`}
+                  >
+                    <span className="text-lg">{DOC_ICONS[type] || '📄'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {DOC_LABELS[type] || type}
+                      </p>
+                      <p className="text-xs">
+                        {isDrive ? (
+                          <span className="text-purple-500">Dari Drive</span>
+                        ) : (
+                          <span className="text-gray-400">Tersedia</span>
+                        )}
+                      </p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 shrink-0" />
+                  </a>
+                );
+              })}
           </div>
         </div>
       )}

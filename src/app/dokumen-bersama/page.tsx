@@ -87,7 +87,7 @@ export default function DokumenBersamaPage() {
     setLoadingDoc(true);
     const nip = p.nip || '';
     try {
-      let url = `/api/dokumen/sheet?nip=${nip}&nama=${encodeURIComponent(p.nama)}`;
+      let url = `/api/dokumen/all?nip=${nip}&nama=${encodeURIComponent(p.nama)}`;
       if (p.nik) url += `&nik=${p.nik}`;
       const res = await fetch(url);
       const json = await res.json();
@@ -227,11 +227,14 @@ export default function DokumenBersamaPage() {
                       {documents
                         .sort((a, b) => a.type.localeCompare(b.type))
                         .map((doc, i) => (
-                          <tr key={`${doc.type}-${i}`} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-gray-500 text-center">{i + 1}</td>
+                          <tr key={`${doc.type}-${doc.url}-${i}`} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-gray-500 text-center w-10">{i + 1}</td>
                             <td className="px-4 py-3">
                               <span className="mr-2">{DOC_ICONS[doc.type] || '📄'}</span>
                               {DOC_LABELS[doc.type] || doc.type}
+                              {doc.source === 'drive' && (
+                                <span className="ml-2 text-[10px] font-medium text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">Drive</span>
+                              )}
                             </td>
                             <td className="px-4 py-3">
                               <a
