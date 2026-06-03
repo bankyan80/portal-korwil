@@ -72,6 +72,7 @@ function toPublicPegawai(p: any) {
     role: p.role || '',
     npsn: p.npsn || '',
     jenjang: p.jenjang || '',
+    tmt: p.tmt || '',
     bup_tanggal: isPensionEligible(p.status_kepegawaian) ? getBupDate(p.tanggal_lahir) : '',
   };
 }
