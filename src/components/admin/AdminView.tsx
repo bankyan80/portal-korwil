@@ -27,6 +27,7 @@ import { SuperSekolah } from './SuperSekolah';
 import { SuperMonitoring } from './SuperMonitoring';
 import { SuperSettings } from './SuperSettings';
 import { UpdateDataSiswaPegawai } from './UpdateDataSiswaPegawai';
+import { SuperDriveMapping } from './SuperDriveMapping';
 
 function AdminContent() {
   const { currentView, user, setCurrentView } = useAppStore();
@@ -65,6 +66,7 @@ function AdminContent() {
     case 'super-organizations': return <ManageOrganizations />;
     case 'super-reports': return <ManageLaporanBulanan />;
     case 'super-update-data': return <UpdateDataSiswaPegawai />;
+    case 'super-drive-mapping': return <SuperDriveMapping />;
     default: return <AdminDashboard />;
   }
 }

@@ -27,6 +27,7 @@ import {
   Settings,
   Shield,
   RefreshCw,
+  FolderOpen,
 } from 'lucide-react';
 
 interface NavSection {
@@ -49,6 +50,7 @@ const navSections: NavSection[] = [
       { label: 'Monitoring', icon: Activity, view: 'super-monitoring', permission: 'manage-monitoring' },
       { label: 'Pengaturan Portal', icon: Settings, view: 'super-settings', permission: 'manage-settings' },
       { label: 'Update Data', icon: RefreshCw, view: 'super-update-data', permission: 'manage-schools' },
+      { label: 'Folder Drive', icon: FolderOpen, view: 'super-drive-mapping', permission: 'manage-schools' },
       { label: 'Kelola Informasi', icon: Bell, view: 'admin-manage-announcements', permission: 'manage-announcements' },
       { label: 'Kelola Galeri', icon: Camera, view: 'admin-manage-gallery', permission: 'manage-gallery' },
       { label: 'Agenda Kegiatan', icon: CalendarDays, view: 'admin-manage-agenda-kegiatan', permission: 'manage-agenda-kegiatan' },

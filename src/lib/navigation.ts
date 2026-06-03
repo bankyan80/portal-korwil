@@ -19,6 +19,7 @@ export const ADMIN_PATH_MAP: Record<string, AppView> = {
   'super/monitoring': 'super-monitoring',
   'super/settings': 'super-settings',
   'super/update-data': 'super-update-data',
+  'super/drive': 'super-drive-mapping',
 };
 
 export function getViewFromPath(pathname: string): AppView {
@@ -58,6 +59,7 @@ export function getPathFromView(view: string): string {
     'super-monitoring': '/admin/super/monitoring',
     'super-settings': '/admin/super/settings',
     'super-update-data': '/admin/super/update-data',
+    'super-drive-mapping': '/admin/super/drive',
   };
   return map[view] || '/admin';
 }
@@ -90,6 +92,7 @@ export const VIEW_PERMISSION_MAP: Record<string, Permission> = {
   'super-monitoring': 'manage-monitoring',
   'super-settings': 'manage-settings',
   'super-update-data': 'manage-schools',
+  'super-drive-mapping': 'manage-schools',
 };
 
 export const VIEW_TITLES: Record<string, string> = {
@@ -114,4 +117,5 @@ export const VIEW_TITLES: Record<string, string> = {
   'super-monitoring': 'Monitoring',
   'super-settings': 'Pengaturan Portal',
   'super-update-data': 'Update Data',
+  'super-drive-mapping': 'Folder Drive Sekolah',
 };

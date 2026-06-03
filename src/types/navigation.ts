@@ -29,6 +29,7 @@ export type AppView =
   | 'super-settings'
   | 'super-backup'
   | 'super-update-data'
+  | 'super-drive-mapping'
   | 'org-dashboard'
   | 'org-profile'
   | 'org-program'
