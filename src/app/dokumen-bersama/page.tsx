@@ -214,30 +214,40 @@ export default function DokumenBersamaPage() {
               )}
 
               {!loadingDoc && documents.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {documents
-                    .sort((a, b) => a.type.localeCompare(b.type))
-                    .map((doc, i) => (
-                      <a
-                        key={`${doc.type}-${i}`}
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-white rounded-xl border border-green-200 shadow-sm p-4 hover:shadow-md transition-shadow flex flex-col"
-                      >
-                        <div className="text-3xl mb-3">{DOC_ICONS[doc.type] || '📄'}</div>
-                        <p className="text-sm font-medium text-green-800 truncate mb-1" title={DOC_LABELS[doc.type] || doc.type}>
-                          {DOC_LABELS[doc.type] || doc.type}
-                        </p>
-                        <p className="text-xs text-gray-400 mb-3">Tersedia</p>
-                        <div className="mt-auto">
-                          <span className="flex items-center justify-center gap-1.5 w-full px-3 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                            <ExternalLink className="w-4 h-4" />
-                            Buka
-                          </span>
-                        </div>
-                      </a>
-                    ))}
+                <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b">
+                        <th className="px-4 py-3 text-left font-semibold text-[#0d3b66] w-10">No</th>
+                        <th className="px-4 py-3 text-left font-semibold text-[#0d3b66]">Jenis Dokumen</th>
+                        <th className="px-4 py-3 text-left font-semibold text-[#0d3b66]">Link</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {documents
+                        .sort((a, b) => a.type.localeCompare(b.type))
+                        .map((doc, i) => (
+                          <tr key={`${doc.type}-${i}`} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-gray-500 text-center">{i + 1}</td>
+                            <td className="px-4 py-3">
+                              <span className="mr-2">{DOC_ICONS[doc.type] || '📄'}</span>
+                              {DOC_LABELS[doc.type] || doc.type}
+                            </td>
+                            <td className="px-4 py-3">
+                              <a
+                                href={doc.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 underline break-all"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                                {doc.url.length > 60 ? doc.url.substring(0, 60) + '...' : doc.url}
+                              </a>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
