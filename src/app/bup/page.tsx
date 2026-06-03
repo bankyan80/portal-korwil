@@ -139,7 +139,9 @@ export default function BupPage() {
   };
 
   const filtered = useMemo(() => {
-    let items = [...allData];
+    let items = [...allData].filter(p =>
+      (p.sekolah || '').toLowerCase().includes('negeri')
+    );
     if (search) {
       const q = search.toLowerCase();
       items = items.filter((p) =>
