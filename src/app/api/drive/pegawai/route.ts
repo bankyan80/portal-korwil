@@ -22,9 +22,10 @@ function getServiceAccount() {
 
 export async function GET(req: NextRequest) {
   const nip = req.nextUrl.searchParams.get('nip');
+  const nama = req.nextUrl.searchParams.get('nama');
 
-  if (!nip) {
-    return NextResponse.json({ error: 'Parameter nip wajib' }, { status: 400 });
+  if (!nip && !nama) {
+    return NextResponse.json({ error: 'Parameter nip atau nama wajib' }, { status: 400 });
   }
 
   const sa = getServiceAccount();
@@ -40,7 +41,17 @@ export async function GET(req: NextRequest) {
     const drive = google.drive({ version: 'v3', auth });
 
     const pegawaiList = await getAllPegawai();
-    const pegawai = pegawaiList.find((p: any) => p.nip === nip);
+    let pegawai: any | undefined;
+
+    if (nip) {
+      pegawai = pegawaiList.find((p: any) => p.nip === nip);
+    } else if (nama) {
+      const q = normalizeName(nama);
+      pegawai = pegawaiList.find((p: any) => normalizeName(p.nama || '') === q);
+      if (!pegawai) {
+        pegawai = pegawaiList.find((p: any) => normalizeName(p.nama || '').includes(q));
+      }
+    }
 
     if (!pegawai) {
       return NextResponse.json({ error: 'Pegawai tidak ditemukan' }, { status: 404 });
