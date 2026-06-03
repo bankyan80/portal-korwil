@@ -96,7 +96,7 @@ export default function InputDokumenPage() {
         } else {
           setPegawai(json.pegawai);
           setSearchStatus('found');
-          loadDocuments(clean, json.pegawai.nama);
+          loadDocuments(clean, json.pegawai.nama, json.pegawai.nik);
         }
       } else {
         setSearchStatus('not_found');
@@ -107,10 +107,12 @@ export default function InputDokumenPage() {
     }
   }
 
-  async function loadDocuments(nip: string, nama: string) {
+  async function loadDocuments(nip: string, nama: string, nik?: string) {
     setLoadingDoc(true);
     try {
-      const res = await fetch(`/api/dokumen/sheet?nip=${nip}&nama=${encodeURIComponent(nama)}`);
+      let url = `/api/dokumen/sheet?nip=${nip}&nama=${encodeURIComponent(nama)}`;
+      if (nik) url += `&nik=${nik}`;
+      const res = await fetch(url);
       const json = await res.json();
       setDocuments(json.documents || []);
     } catch (e) {

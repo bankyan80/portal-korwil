@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 type SheetConfig = {
   id: string;
   nipCol: string | null;
+  nikCol?: string | null;
   nameCol: string;
   docCols: [string, string][];
 };
@@ -52,7 +53,8 @@ const SHEETS: SheetConfig[] = [
   },
   {
     id: '1hbPqf3GM0A2FV8PclZHkS6o1XqavEhEhLi9ZKrJLBrg',
-    nipCol: null,
+    nipCol: 'NIP',
+    nikCol: 'NIK',
     nameCol: 'NAMA LENGKAP & GELAR',
     docCols: [
       ['SK CPNS', 'SCAN SK CPNS PDF (MAKS 1MB)'],
@@ -118,6 +120,7 @@ function isHttpUrl(v: string): boolean {
 
 export async function GET(req: NextRequest) {
   const nip = req.nextUrl.searchParams.get('nip')?.replace(/\D/g, '') || '';
+  const nik = req.nextUrl.searchParams.get('nik')?.replace(/\D/g, '') || '';
   const nama = req.nextUrl.searchParams.get('nama')?.trim() || '';
 
   try {
@@ -151,12 +154,17 @@ export async function GET(req: NextRequest) {
           if (rowNip === nip) match = true;
         }
 
+        if (!match && sheet.nikCol && nik) {
+          const rowNik = (row[sheet.nikCol] || '').replace(/\D/g, '');
+          if (rowNik === nik) match = true;
+        }
+
         if (!match && normalizedNama) {
           const rowName = normalizeName(row[sheet.nameCol] || '');
           if (rowName === normalizedNama) match = true;
         }
 
-        if (!nip && !nama) match = true;
+        if (!nip && !nik && !nama) match = true;
         if (!match) continue;
 
         for (const [type, col] of sheet.docCols) {
