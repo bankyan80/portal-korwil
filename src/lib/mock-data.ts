@@ -44,12 +44,21 @@ export const mockMenus: MenuItem[] = [
     category: 'Laporan',
   },
   {
+    id: 'menu-pendataan-spmb',
+    title: 'Pendataan SPMB',
+    icon: 'GraduationCap',
+    url: 'https://pendataan-spmb.vercel.app',
+    active: true,
+    order: 3,
+    category: 'Pendaftaran',
+  },
+  {
     id: 'menu-3',
     title: 'SPMB SD',
     icon: 'FileText',
     url: '/spmb-sd',
     active: true,
-    order: 3,
+    order: 4,
     category: 'Pendaftaran',
   },
   {
@@ -58,7 +67,7 @@ export const mockMenus: MenuItem[] = [
     icon: 'WalletMinimal',
     url: '/kip-sd',
     active: true,
-    order: 4,
+    order: 5,
     category: 'Pendaftaran',
   },
   {
@@ -67,7 +76,7 @@ export const mockMenus: MenuItem[] = [
     icon: 'Heart',
     url: '/yatim-piatu',
     active: true,
-    order: 5,
+    order: 6,
     category: 'Pendaftaran',
   },
   {
@@ -76,7 +85,7 @@ export const mockMenus: MenuItem[] = [
     icon: 'WalletMinimal',
     url: '/bos-arkas',
     active: true,
-    order: 6,
+    order: 7,
     category: 'Keuangan',
   },
   {
@@ -85,7 +94,7 @@ export const mockMenus: MenuItem[] = [
     icon: 'Monitor',
     url: '/ruang-guru',
     active: true,
-    order: 7,
+    order: 8,
     category: 'Program',
   },
   {
@@ -94,7 +103,7 @@ export const mockMenus: MenuItem[] = [
     icon: 'Target',
     url: '/e-kinerja',
     active: true,
-    order: 8,
+    order: 9,
     category: 'Evaluasi',
   },
   {
@@ -103,7 +112,7 @@ export const mockMenus: MenuItem[] = [
     icon: 'FolderOpen',
     url: '/dokumen-bersama',
     active: true,
-    order: 9,
+    order: 10,
     category: 'Dokumen',
   },
   {
@@ -112,7 +121,7 @@ export const mockMenus: MenuItem[] = [
     icon: 'CalendarDays',
     url: '/agenda-kegiatan',
     active: true,
-    order: 10,
+    order: 11,
     category: 'Informasi',
   },
   {
@@ -121,7 +130,7 @@ export const mockMenus: MenuItem[] = [
     icon: 'Clock',
     url: '/bup',
     active: true,
-    order: 11,
+    order: 12,
     category: 'Kepegawaian',
   },
   {
@@ -130,7 +139,7 @@ export const mockMenus: MenuItem[] = [
     icon: 'HeartHandshake',
     url: '/donasi',
     active: true,
-    order: 12,
+    order: 13,
     category: 'Informasi',
   },
   {
@@ -139,7 +148,7 @@ export const mockMenus: MenuItem[] = [
     icon: 'Users',
     url: '/mapping-pegawai',
     active: true,
-    order: 13,
+    order: 14,
     category: 'Kepegawaian',
   },
 ];
