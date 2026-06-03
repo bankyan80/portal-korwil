@@ -115,20 +115,26 @@ export async function GET(req: NextRequest) {
   const fullData = await canReadFullData(req);
 
   // 1) Coba Google Sheets (primary, with 7s timeout)
+  let sheetsHadData = false;
   try {
     const rows = await Promise.race([
       getRows('data_siswa'),
       new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 7000)),
     ]);
     if (rows.length > 200) {
+      sheetsHadData = true;
       const filtered = applyFilters(rows, jenjang, layak_pip, sekolah, schoolId, search, limitParam, fullData);
-      return buildResponse(filtered, fullData);
+      // Google Sheets tidak punya kolom layak_pip, jadi fallback ke static JSON jika filter layak_pip
+      if (!layak_pip || filtered.length > 0) {
+        return buildResponse(filtered, fullData);
+      }
     }
   } catch (e) {
     console.log('[siswa/list] Sheets unavailable, fallback:', (e as Error).message);
   }
 
-  // 2) Fallback: static JSON
+  // 2) Fallback: static JSON (digunakan ketika Google Sheets gagal, <200 baris,
+  //    atau ketika filter layak_pip dipakai karena Sheets tidak punya kolom tsb)
   let all = [...siswaData] as any[];
   all = applyFilters(all, jenjang, layak_pip, sekolah, schoolId, search, limitParam, fullData);
   return buildResponse(all, fullData);
