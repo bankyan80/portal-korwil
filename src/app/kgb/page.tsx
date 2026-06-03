@@ -146,7 +146,7 @@ export default function KgbPage() {
     pppk: sorted.filter((p) => p.status_kepegawaian === 'PPPK').length,
     urgent: sorted.filter((p) => {
       const r = getKgbBerikutnya(p.tmt || '');
-      return r.urgent;
+      return r && r.urgent;
     }).length,
   }), [sorted]);
 
