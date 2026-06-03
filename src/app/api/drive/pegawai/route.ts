@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getAllPegawai } from '@/services/pegawai.service';
 
 function normalizeName(raw: string): string {
   return raw
@@ -21,8 +22,6 @@ function getServiceAccount() {
 
 export async function GET(req: NextRequest) {
   const nip = req.nextUrl.searchParams.get('nip');
-  const halaman = req.nextUrl.searchParams.get('halaman') || '1';
-  const limit = parseInt(req.nextUrl.searchParams.get('limit') || '100', 10);
 
   if (!nip) {
     return NextResponse.json({ error: 'Parameter nip wajib' }, { status: 400 });
@@ -40,14 +39,11 @@ export async function GET(req: NextRequest) {
     });
     const drive = google.drive({ version: 'v3', auth });
 
-    // 1. Cari pegawai dari data-pegawai.json via /api/pegawai/all
-    const pegRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'https://www.portalkorwil.online'}/api/pegawai/all?all=true`);
-    const pegData = await pegRes.json();
-    const pegawaiList: any[] = pegData?.items || [];
+    const pegawaiList = await getAllPegawai();
     const pegawai = pegawaiList.find((p: any) => p.nip === nip);
 
     if (!pegawai) {
-      return NextResponse.json({ error: 'Pegawai tidak ditemukan', pegawaiCount: pegawaiList.length }, { status: 404 });
+      return NextResponse.json({ error: 'Pegawai tidak ditemukan' }, { status: 404 });
     }
 
     const sekolahName: string = pegawai.sekolah || '';
@@ -55,8 +51,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Pegawai tidak memiliki data sekolah' }, { status: 404 });
     }
 
-    // 2. Cari NPSN sekolah
-    const sekolahNormalized = normalizeName(sekolahName);
     const { data: sekolahData } = await supabaseAdmin
       .from('app_data')
       .select('data')
@@ -67,7 +61,6 @@ export async function GET(req: NextRequest) {
 
     const npsn = sekolahData?.data?.npsn || '';
 
-    // 3. Cari folder ID dari mapping
     const { data: mappingData } = await supabaseAdmin
       .from('app_data')
       .select('data')
@@ -85,7 +78,6 @@ export async function GET(req: NextRequest) {
       }, { status: 404 });
     }
 
-    // 4. List subfolder pegawai
     const allFolders: any[] = [];
     let pt: string | undefined;
     do {
@@ -99,11 +91,9 @@ export async function GET(req: NextRequest) {
       pt = r.data.nextPageToken || undefined;
     } while (pt);
 
-    // 5. Cari folder pegawai berdasarkan nama
     const pegawaiName = normalizeName(pegawai.nama || '');
     const matchedFolder = allFolders.find((f: any) => normalizeName(f.name || '') === pegawaiName);
 
-    // Fallback: partial match
     const matchedFolderPartial = !matchedFolder
       ? allFolders.find((f: any) => normalizeName(f.name || '').includes(pegawaiName) || pegawaiName.includes(normalizeName(f.name || '')))
       : null;
@@ -119,7 +109,6 @@ export async function GET(req: NextRequest) {
       }, { status: 404 });
     }
 
-    // 6. List files di folder pegawai
     const files: any[] = [];
     let fpt: string | undefined;
     do {
