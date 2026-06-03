@@ -1,56 +1,28 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Search, Upload, Trash2, FileText, Download, Loader2, CheckCircle, XCircle, File } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from 'react';
+import { Search, ExternalLink, FileText, Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
-import { apiGet, apiAdd, apiDelete } from '@/lib/api-firestore';
-import type { DokumenBersama } from '@/types';
 
-function formatSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1048576).toFixed(1)} MB`;
-}
+type DocumentEntry = {
+  type: string;
+  url: string;
+};
 
-async function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promise<{ blob: Blob; type: string }> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > height) {
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-      } else {
-        if (height > maxWidth) {
-          width = Math.round((width * maxWidth) / height);
-          height = maxWidth;
-        }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Failed to get canvas context'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve({ blob, type: file.type });
-          else reject(new Error('Failed to compress image'));
-        },
-        file.type,
-        quality
-      );
-    };
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
-  });
-}
+const DOC_TYPES = [
+  { key: 'IJAZAH TERAKHIR', icon: '🎓', label: 'Ijazah' },
+  { key: 'SK PPPK', icon: '📜', label: 'SK PPPK' },
+  { key: 'SK KGB', icon: '📜', label: 'SK KGB' },
+  { key: 'KARPEG/KARTU VIRTUAL ASN', icon: '🪪', label: 'Karpeg' },
+  { key: 'KARIS/KARSU', icon: '🪪', label: 'Karis/Karsu' },
+  { key: 'KTP', icon: '🆔', label: 'KTP' },
+  { key: 'KARTU KELUARGA', icon: '👨‍👩‍👧‍👦', label: 'KK' },
+  { key: 'KARTU/AKTA NIKAH', icon: '💍', label: 'Akta Nikah' },
+  { key: 'SURAT TUGAS (MUTASI)', icon: '📋', label: 'Surat Tugas' },
+  { key: 'SERTIFIKAT PENDIDIK (GURU)', icon: '📜', label: 'Sertifikat Pendidik' },
+  { key: 'SK KEPALA SEKOLAH (SKBM)', icon: '📋', label: 'SK Kepala Sekolah' },
+  { key: 'DOKUMEN LAINNYA', icon: '📁', label: 'Dokumen Lain' },
+];
 
 export default function InputDokumenPage() {
   const { user } = useAppStore();
@@ -59,36 +31,15 @@ export default function InputDokumenPage() {
   const [nipSearch, setNipSearch] = useState('');
   const [pegawai, setPegawai] = useState<any | null>(null);
   const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
-  const [documents, setDocuments] = useState<DokumenBersama[]>([]);
-  const [files, setFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<{ ok: boolean; msg: string } | null>(null);
-  const [uploadPhase, setUploadPhase] = useState<'idle' | 'uploading' | 'saving' | 'done' | 'error'>('idle');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [dataLoaded, setDataLoaded] = useState(false);
-
-  async function fetchData() {
-    try {
-      const json = await apiGet('dokumen', { orderBy: { field: 'uploadedAt', dir: 'desc' } });
-      setDocuments(json.items || []);
-    } catch (err) {
-      console.error('Error loading dokumen:', err);
-      toast.error('Gagal memuat data dokumen');
-    } finally {
-      setDataLoaded(true);
-    }
-  }
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const [documents, setDocuments] = useState<DocumentEntry[]>([]);
+  const [loadingDoc, setLoadingDoc] = useState(false);
 
   async function cariNIP() {
     const clean = nipSearch.replace(/\D/g, '');
     if (!clean) return;
     setSearchStatus('loading');
     setPegawai(null);
+    setDocuments([]);
     try {
       const res = await fetch(`/api/pegawai/lookup?nip=${clean}`);
       const json = await res.json();
@@ -99,6 +50,7 @@ export default function InputDokumenPage() {
         } else {
           setPegawai(json.pegawai);
           setSearchStatus('found');
+          loadDocuments(clean);
         }
       } else {
         setSearchStatus('not_found');
@@ -109,176 +61,34 @@ export default function InputDokumenPage() {
     }
   }
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.files) {
-      setFiles(prev => [...prev, ...Array.from(e.target.files!)]);
-    }
-  }
-
-  function removeFile(idx: number) {
-    setFiles(prev => prev.filter((_, i) => i !== idx));
-  }
-
-   async function handleUpload() {
-     if (!pegawai || files.length === 0) return;
-     setUploading(true);
-     setUploadStatus(null);
-     setUploadPhase('uploading');
-     setUploadProgress(0);
-
-     const nip = pegawai.nip || nipSearch.replace(/\D/g, '');
-     const uploaded: DokumenBersama[] = [];
-
-      try {
-        const cookieMatch = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
-        const token = cookieMatch ? cookieMatch[1] : '';
-        if (!token) {
-          throw new Error('Anda harus login untuk upload dokumen');
-        }
-
-       for (let i = 0; i < files.length; i++) {
-         const file = files[i];
-         const isImage = file.type.startsWith('image/');
-         const maxSize = isImage ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
-
-         let fileToUpload: File | Blob = file;
-         if (isImage && file.size > 2 * 1024 * 1024) {
-           fileToUpload = (await compressImage(file, 1920, 0.8)).blob;
-         }
-
-         if (fileToUpload.size > maxSize) {
-           setUploadStatus({ ok: false, msg: `File "${file.name}" melebihi ukuran maksimum ${isImage ? '5MB' : '10MB'}` });
-           setUploadPhase('error');
-           setUploading(false);
-           return;
-         }
-
-         setUploadProgress(Math.round(((i) / files.length) * 50));
-         setUploadPhase('uploading');
-
-          const formData = new FormData();
-          formData.append('file', fileToUpload, file.name);
-          formData.append('kategori', 'dokumen');
-          formData.append('sekolahId', pegawai.sekolah?.toLowerCase().replace(/\s+/g, '-') || '');
-          formData.append('uploadedBy', user?.displayName || user?.email || 'unknown');
-
-          const uploadRes = await fetch('/api/drive/upload', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
-          });
-
-          if (!uploadRes.ok) {
-            const errData = await uploadRes.json();
-            throw new Error(errData.error || `Upload "${file.name}" gagal`);
-          }
-
-          const uploadData = await uploadRes.json();
-          const driveData = uploadData.data;
-
-          setUploadProgress(50 + Math.round(((i + 1) / files.length) * 50));
-          setUploadPhase('saving');
-
-          await apiAdd('dokumen', {
-            nik: pegawai.nik || '',
-            nip,
-            nama: pegawai.nama,
-            fileName: file.name,
-            fileType: fileToUpload.type || file.type,
-            fileSize: fileToUpload.size,
-            file: {
-              provider: 'google_drive',
-              driveFileId: driveData.driveFileId,
-              fileName: driveData.fileName,
-              originalName: file.name,
-              fileUrl: driveData.webViewLink,
-              webContentLink: driveData.webContentLink,
-              mimeType: driveData.mimeType,
-              size: driveData.size,
-              uploadedAt: driveData.uploadedAt,
-              uploadedBy: driveData.uploadedBy,
-            },
-            uploadedAt: Date.now(),
-          });
-          await fetchData();
-
-          uploaded.push({
-            id: '',
-            nik: pegawai.nik || '',
-            nip,
-            nama: pegawai.nama,
-            fileName: file.name,
-            fileType: fileToUpload.type || file.type,
-            fileSize: fileToUpload.size,
-            file: {
-              provider: 'google_drive',
-              driveFileId: driveData.driveFileId,
-              fileName: driveData.fileName,
-              originalName: file.name,
-              fileUrl: driveData.webViewLink,
-              webContentLink: driveData.webContentLink,
-              mimeType: driveData.mimeType,
-              size: driveData.size,
-              uploadedAt: driveData.uploadedAt,
-              uploadedBy: driveData.uploadedBy,
-            },
-            uploadedAt: Date.now(),
-          });
-       }
-
-        setUploadPhase('done');
-        setUploadStatus({ ok: true, msg: `${files.length} dokumen berhasil diupload` });
-       setFiles([]);
-     } catch (e: any) {
-       setUploadPhase('error');
-       setUploadStatus({ ok: false, msg: `Gagal upload: ${e.message}` });
-     } finally {
-       setUploading(false);
-       setUploadProgress(0);
-     }
-   }
-
-  async function handleDelete(docId: string) {
+  async function loadDocuments(nip: string) {
+    setLoadingDoc(true);
     try {
-      await apiDelete('dokumen', docId);
-      await fetchData();
-    } catch (e) { console.error('Error deleting dokumen:', e); }
-  }
-
-  function handleDownload(doc: DokumenBersama) {
-    const f = doc.file;
-    if (!f) return;
-    if ('fileUrl' in f && f.fileUrl) {
-      window.open(f.fileUrl, '_blank');
-    } else if ('webViewLink' in f && f.webViewLink) {
-      window.open(f.webViewLink, '_blank');
-    } else if (doc.downloadUrl) {
-      window.open(doc.downloadUrl, '_blank');
-    } else if (doc.dataUrl) {
-      const a = document.createElement('a');
-      a.href = doc.dataUrl;
-      a.download = doc.fileName;
-      a.click();
+      const res = await fetch(`/api/dokumen/sheet?nip=${nip}`);
+      const json = await res.json();
+      if (json.found) {
+        setDocuments(json.documents || []);
+      } else {
+        setDocuments([]);
+      }
+    } catch (e) {
+      console.error('Error loading documents:', e);
+      setDocuments([]);
+    } finally {
+      setLoadingDoc(false);
     }
   }
 
-  async function downloadAll() {
-    const nip = nipSearch.replace(/\D/g, '');
-    const filtered = documents.filter(d => d.nip === nip || d.nik === pegawai?.nik);
-    for (const doc of filtered) {
-      handleDownload(doc);
-      await new Promise(r => setTimeout(r, 500));
-    }
-  }
-
-  const filteredDocs = pegawai ? documents.filter(d => d.nip === (pegawai.nip || nipSearch.replace(/\D/g, '')) || d.nik === pegawai.nik) : [];
+  const docMap = new Map(documents.map(d => [d.type, d.url]));
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <h2 className="text-2xl font-bold text-[#0d3b66]">Input Dokumen</h2>
-      <p className="text-sm text-gray-500">Unggah dokumen berdasarkan NIP pegawai</p>
+      <h2 className="text-2xl font-bold text-[#0d3b66]">Dokumen Pegawai</h2>
+      <p className="text-sm text-gray-500">Cari dokumen pegawai berdasarkan NIP — data dari Google Form</p>
       {isOperator && (
-        <p className="text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2">Anda sebagai operator <strong>{userSchool}</strong> — hanya dapat mengelola dokumen pegawai di sekolah Anda.</p>
+        <p className="text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2">
+          Anda sebagai operator <strong>{userSchool}</strong> — hanya dapat melihat dokumen pegawai di sekolah Anda.
+        </p>
       )}
 
       {/* Search NIP */}
@@ -292,6 +102,7 @@ export default function InputDokumenPage() {
               placeholder="Masukkan NIP"
               value={nipSearch}
               onChange={e => { setNipSearch(e.target.value.replace(/\D/g, '')); setSearchStatus('idle'); }}
+              onKeyDown={e => e.key === 'Enter' && cariNIP()}
               className="pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-full font-mono"
             />
           </div>
@@ -318,121 +129,63 @@ export default function InputDokumenPage() {
         )}
       </div>
 
-      {/* Upload */}
-      {searchStatus === 'found' && pegawai && (
-        <div className="bg-white rounded-xl border shadow-sm p-5 space-y-3">
-          <h3 className="font-semibold text-[#0d3b66]">Upload Dokumen</h3>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.gif,.tiff,.tif"
-            multiple
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-blue-700 bg-blue-50 rounded-xl hover:bg-blue-100 border-2 border-dashed border-blue-200 w-full justify-center"
-          >
-            <Upload className="w-5 h-5" />
-            Pilih File (PDF, Word, Excel, Gambar, dll)
-          </button>
-           <p className="text-xs text-gray-500 mt-1">Gambar &gt;2MB akan dikompres otomatis. Maks: 10MB (dokumen), 5MB (gambar setelah kompresi).</p>
-          {files.length > 0 && (
-            <div className="space-y-2">
-              {files.map((f, i) => (
-                <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm">
-                  <div className="flex items-center gap-2 truncate">
-                    <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                    <span className="truncate">{f.name}</span>
-                    <span className="text-xs text-gray-400 shrink-0">({formatSize(f.size)})</span>
-                  </div>
-                  <button onClick={() => removeFile(i)} className="text-red-500 hover:text-red-700">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={handleUpload}
-                disabled={uploading}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-lg hover:bg-green-800 disabled:opacity-50"
-              >
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                Upload {files.length} File
-              </button>
-            </div>
-          )}
-          {(uploading || uploadPhase !== 'idle') && (
-            <div className="space-y-2 py-2">
-              <div className="flex items-center gap-2 text-sm text-blue-600">
-                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                <span className="truncate">
-                  {uploadPhase === 'uploading' && 'Mengupload file...'}
-                  {uploadPhase === 'saving' && 'Menyimpan metadata ke Firestore...'}
-                  {uploadPhase === 'done' && 'Upload selesai'}
-                  {uploadPhase === 'error' && 'Upload gagal'}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
-              </div>
-            </div>
-          )}
-          {uploadStatus && (
-            <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${uploadStatus.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-              {uploadStatus.ok ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-              {uploadStatus.msg}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Dokumen List */}
+      {/* Document Grid */}
       {searchStatus === 'found' && (
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b">
-            <h3 className="font-semibold text-[#0d3b66]">Dokumen Tersimpan ({filteredDocs.length})</h3>
-            {filteredDocs.length > 1 && (
-              <button
-                onClick={downloadAll}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100"
-              >
-                <Download className="w-4 h-4" />
-                Download Semua
-              </button>
-            )}
+        <div className="bg-white rounded-xl border shadow-sm p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-[#0d3b66]">
+              Dokumen Tersimpan
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                ({documents.length}/12)
+              </span>
+            </h3>
+            {loadingDoc && <Loader2 className="w-4 h-4 animate-spin text-blue-600" />}
           </div>
-          <div className="divide-y">
-            {filteredDocs.length === 0 ? (
-              <p className="px-5 py-8 text-center text-gray-400 text-sm">Belum ada dokumen</p>
-            ) : (
-              filteredDocs.map((doc, i) => (
-                <div key={doc.id || i} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <FileText className="w-5 h-5 text-blue-600 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-[#0d3b66] truncate">{doc.fileName}</p>
-                      <p className="text-xs text-gray-400">{formatSize(doc.fileSize)}</p>
-                      {doc.file && (
-                        <p className="text-[10px] text-green-600 flex items-center gap-1 mt-0.5">
-                          <CheckCircle className="w-3 h-3" /> {'provider' in doc.file && doc.file.provider === 'supabase' ? 'Supabase Storage' : 'Google Drive'}
-                        </p>
-                      )}
-                    </div>
+
+          {!loadingDoc && documents.length === 0 && (
+            <div className="flex flex-col items-center gap-2 py-8 text-gray-400">
+              <AlertCircle className="w-8 h-8" />
+              <p className="text-sm">Belum ada dokumen yang diupload melalui Google Form</p>
+              <a
+                href="https://docs.google.com/forms/d/e/1FAIpQLSfY5q4dS7vF5sVf5sVf5sVf5sVf5sVf5sVf5sVf5sVf5sVf5sVf5sVf5/viewform"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+              >
+                <ExternalLink className="w-3 h-3" />
+                Buka Google Form
+              </a>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {DOC_TYPES.map(({ key, icon, label }) => {
+              const url = docMap.get(key);
+              return (
+                <a
+                  key={key}
+                  href={url || '#'}
+                  target={url ? '_blank' : undefined}
+                  rel={url ? 'noopener noreferrer' : undefined}
+                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                    url
+                      ? 'bg-green-50 border-green-200 hover:bg-green-100 cursor-pointer'
+                      : 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-60'
+                  }`}
+                >
+                  <span className="text-lg">{icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium truncate ${url ? 'text-green-800' : 'text-gray-400'}`}>
+                      {label}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {url ? 'Tersedia' : 'Belum diupload'}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={() => handleDownload(doc)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg">
-                      <Download className="w-4 h-4" />
-                    </button>
-                    {doc.id && (
-                      <button onClick={() => handleDelete(doc.id!)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
+                  {url && <ExternalLink className="w-4 h-4 text-green-600 shrink-0" />}
+                </a>
+              );
+            })}
           </div>
         </div>
       )}
