@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSekolah } from '@/hooks/useSekolah'
-import { normalizeSchool } from '@/lib/normalize'
+import { getCanonicalSchoolName, normalizeSchool } from '@/lib/normalize'
 import type { LaporanRecord, StatusLaporan, FilterState } from './types'
 
 const bulanList = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
@@ -108,15 +108,15 @@ export function useRekapData() {
       for (const l of laporanList) {
         if (l.tahun !== tahun) continue
         if (l.bulan !== bulan && l.bulan !== monthStr) continue
-        const key = normalizeSchool(l.sekolah)
+        const key = getCanonicalSchoolName(l.sekolah) || normalizeSchool(l.sekolah)
         if (!laporanBySekolah.has(key) || (l.tglLapor && (laporanBySekolah.get(key)?.tglLapor || 0) < l.tglLapor)) {
           laporanBySekolah.set(key, l)
         }
       }
 
       const result = sekolahFiltered.map((s) => {
-        const key = normalizeSchool(s.nama)
-        const laporan = laporanBySekolah.get(key) || laporanBySekolah.get(s.npsn)
+        const key = getCanonicalSchoolName(s.nama) || normalizeSchool(s.nama)
+        const laporan = laporanBySekolah.get(key) || laporanBySekolah.get(normalizeSchool(s.nama))
         return { sekolah: s, laporan: laporan || null }
       })
 
@@ -134,11 +134,12 @@ export function useRekapData() {
   const getLaporanForSekolah = (sekolahNama: string, bulan: string, tahun: number): LaporanRecord | null => {
     const monthIndex = bulanList.indexOf(bulan)
     const monthStr = String(monthIndex + 1).padStart(2, '0')
-    const key = normalizeSchool(sekolahNama)
+    const key = getCanonicalSchoolName(sekolahNama) || normalizeSchool(sekolahNama)
     for (const l of laporanList) {
       if (l.tahun !== tahun) continue
       if (l.bulan !== bulan && l.bulan !== monthStr) continue
-      if (normalizeSchool(l.sekolah) === key) return l
+      const lKey = getCanonicalSchoolName(l.sekolah) || normalizeSchool(l.sekolah)
+      if (lKey === key) return l
     }
     return null
   }
