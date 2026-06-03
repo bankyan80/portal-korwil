@@ -15,8 +15,8 @@ const DRIVE_FOLDER_CONFIG: Record<string, { name: string; parentKey?: string }> 
 };
 
 function getServiceAccountCredentials() {
-  const envVal = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-  if (!envVal) throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY not set');
+  const envVal = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (!envVal) throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY / FIREBASE_SERVICE_ACCOUNT_KEY not set');
 
   try {
     return JSON.parse(envVal);
@@ -24,7 +24,7 @@ function getServiceAccountCredentials() {
     try {
       return JSON.parse(Buffer.from(envVal, 'base64').toString('utf-8'));
     } catch {
-      throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_KEY format');
+      throw new Error('Invalid service account key format');
     }
   }
 }
