@@ -13,7 +13,8 @@ const DOC_ICONS: Record<string, string> = {
   'SERTIFIKAT PENDIDIK': '📜', 'SERTIFIKAT DIKLAT': '📜',
   'DOKUMEN LAIN': '📁', 'DOKUMEN LAINNYA': '📁',
   'NPWP': '📄', 'BPJS KESEHATAN': '🏥', 'IDENTITAS DIRI': '🪪', 'DATA KELUARGA': '👨‍👩‍👧‍👦',
-  'DOKUMEN KOMPETENSI': '📚', 'PAS FOTO': '📸', 'FOTO ASN PPPK': '📸',
+  'DOKUMEN KOMPETENSI': '📚', 'PAS FOTO': '📸',   'FOTO ASN PPPK': '📸',
+  'FOLDER DOKUMEN': '📂',
 };
 
 const DOC_LABELS: Record<string, string> = {
@@ -28,7 +29,8 @@ const DOC_LABELS: Record<string, string> = {
   'DOKUMEN LAIN': 'Dokumen Lain', 'DOKUMEN LAINNYA': 'Dokumen Lainnya',
   'NPWP': 'NPWP', 'BPJS KESEHATAN': 'BPJS Kesehatan',
   'IDENTITAS DIRI': 'Identitas Diri', 'DATA KELUARGA': 'Data Keluarga',
-  'DOKUMEN KOMPETENSI': 'Dokumen Kompetensi', 'PAS FOTO': 'Pas Foto', 'FOTO ASN PPPK': 'Foto ASN PPPK',
+  'DOKUMEN KOMPETENSI': 'Dokumen Kompetensi', 'PAS FOTO': 'Pas Foto',   'FOTO ASN PPPK': 'Foto ASN PPPK',
+  'FOLDER DOKUMEN': 'Folder Dokumen',
 };
 
 export default function DokumenBersamaPage() {

@@ -35,6 +35,7 @@ const DOC_ICONS: Record<string, string> = {
   'DOKUMEN KOMPETENSI': '📚',
   'PAS FOTO': '📸',
   'FOTO ASN PPPK': '📸',
+  'FOLDER DOKUMEN': '📂',
 };
 
 const DOC_LABELS: Record<string, string> = {
@@ -68,6 +69,7 @@ const DOC_LABELS: Record<string, string> = {
   'DOKUMEN KOMPETENSI': 'Dokumen Kompetensi',
   'PAS FOTO': 'Pas Foto',
   'FOTO ASN PPPK': 'Foto ASN PPPK',
+  'FOLDER DOKUMEN': 'Folder Dokumen',
 };
 
 export default function InputDokumenPage() {

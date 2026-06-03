@@ -52,6 +52,15 @@ const SHEETS: SheetConfig[] = [
     ],
   },
   {
+    id: '1MUAng-gw62IfrptbjndRx4cweHYJpgs-04vd792oAgI',
+    nipCol: 'NIP',
+    nikCol: null,
+    nameCol: 'NAMA ASN (PNS)',
+    docCols: [
+      ['FOLDER DOKUMEN', 'LINK FOLDER (DRIVE)'],
+    ],
+  },
+  {
     id: '1hbPqf3GM0A2FV8PclZHkS6o1XqavEhEhLi9ZKrJLBrg',
     nipCol: 'NIP',
     nikCol: 'NIK',
