@@ -139,9 +139,12 @@ export default function BupPage() {
   };
 
   const filtered = useMemo(() => {
-    let items = [...allData].filter(p =>
-      (p.sekolah || '').toLowerCase().includes('negeri')
-    );
+    let items = [...allData].filter(p => {
+      if (!(p.sekolah || '').toLowerCase().includes('negeri')) return false;
+      if (!isPensionEligible(p.status_kepegawaian)) return true;
+      const bup = getBupDateForPegawai(p);
+      return bup ? bup > new Date() : true;
+    });
     if (search) {
       const q = search.toLowerCase();
       items = items.filter((p) =>
