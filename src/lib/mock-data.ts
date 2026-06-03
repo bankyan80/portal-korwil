@@ -151,6 +151,15 @@ export const mockMenus: MenuItem[] = [
     order: 14,
     category: 'Kepegawaian',
   },
+  {
+    id: 'menu-20',
+    title: 'Data KGB',
+    icon: 'Calendar',
+    url: '/kgb',
+    active: true,
+    order: 15,
+    category: 'Kepegawaian',
+  },
 ];
 
 // ---------------------------------------------------------------------------

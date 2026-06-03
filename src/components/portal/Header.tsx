@@ -36,6 +36,7 @@ const navItems = [
   { label: 'Galeri', icon: Camera, sectionId: 'galeri', isView: false, href: '#galeri' },
   { label: 'Administrasi', icon: FolderOpen, sectionId: null, isView: true, view: 'administrasi', href: '/administrasi' },
   { label: 'Mapping Pegawai', icon: Users, sectionId: null, isView: true, view: 'mapping-pegawai', href: '/mapping-pegawai' },
+  { label: 'Data KGB', icon: Calendar, sectionId: null, isView: false, href: '/kgb' },
   { label: 'Laporan', icon: FileText, sectionId: null, isView: true, view: 'laporan', href: '/laporan' },
 ];
 
