@@ -23,6 +23,13 @@ export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const token = request.cookies.get('auth-token')?.value || getBearerToken(request);
 
+  // Bypass middleware auth for self-authenticating routes (route validates x-api-key internally)
+  const selfAuthPaths = ['/api/admin/seed-passwords', '/api/migrate/firestore-to-supabase'];
+  const isSelfAuth = selfAuthPaths.includes(path);
+  if (isSelfAuth && request.headers.get('x-api-key')) {
+    return NextResponse.next();
+  }
+
   const isProtected = protectedApiPaths.some((p) => path.startsWith(p) || path === p);
   if (isProtected) {
     if (!token) {
