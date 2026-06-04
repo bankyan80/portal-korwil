@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 export async function GET(req: NextRequest) {
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  if (auth instanceof NextResponse && auth.status !== 500) return auth;
+  const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+  if (forbidden) return forbidden;
+
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
     return NextResponse.json({ documents: [] });
   }
 

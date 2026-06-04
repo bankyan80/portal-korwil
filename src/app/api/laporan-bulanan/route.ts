@@ -8,7 +8,7 @@ const bulanList = [
 ];
 
 export async function GET(req: NextRequest) {
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
 
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
 

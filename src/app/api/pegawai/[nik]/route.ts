@@ -37,7 +37,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized — tidak ada token' }, { status: 401 });
     }
 
-    if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+    if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
       return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     }
 

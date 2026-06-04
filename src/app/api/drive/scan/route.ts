@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 function getServiceAccount() {
   const envVal = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
@@ -10,6 +11,12 @@ function getServiceAccount() {
 }
 
 export async function GET(req: NextRequest) {
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  if (auth instanceof NextResponse && auth.status !== 500) return auth;
+  const forbidden = requireRole(auth, ['super_admin']);
+  if (forbidden) return forbidden;
+
   const folderId = req.nextUrl.searchParams.get('folderId') || '1dZMi_SQDwu1PD24Qv6CmJHNx1mMHqYMC';
   const deep = req.nextUrl.searchParams.get('deep') === 'true';
 

@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   if (!isFirebaseAdminConfigured || !adminDb) {
     return NextResponse.json({ error: 'Firebase Admin not configured' }, { status: 500 });
   }
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
     return NextResponse.json({ error: 'Supabase Admin not configured' }, { status: 500 });
   }
 

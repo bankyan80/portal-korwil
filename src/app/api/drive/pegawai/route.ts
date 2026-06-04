@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getAllPegawai } from '@/services/pegawai.service';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 function normalizeName(raw: string): string {
   return raw
@@ -21,6 +22,12 @@ function getServiceAccount() {
 }
 
 export async function GET(req: NextRequest) {
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  if (auth instanceof NextResponse && auth.status !== 500) return auth;
+  const forbidden = requireRole(auth, ['super_admin']);
+  if (forbidden) return forbidden;
+
   const nip = req.nextUrl.searchParams.get('nip');
   const nama = req.nextUrl.searchParams.get('nama');
 

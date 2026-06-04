@@ -38,7 +38,7 @@ async function deleteDoc(collection: string, id: string) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
     return NextResponse.json({ success: false, error: 'Database tidak dikonfigurasi' }, { status: 500 });
   }
 
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
     return NextResponse.json({ success: false, error: 'Database tidak dikonfigurasi' }, { status: 500 });
   }
 

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   const forbidden = requireRole(auth, ['super_admin']);
   if (forbidden) return forbidden;
 
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
 

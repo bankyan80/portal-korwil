@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAllPegawai } from '@/services/pegawai.service';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { google } from 'googleapis';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 type SheetConfig = {
   id: string;
@@ -95,6 +96,14 @@ function normalizeName(raw: string): string {
     .replace(/\s+/g, ' ');
 }
 
+async function checkAuth(req: NextRequest) {
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  if (auth instanceof NextResponse && auth.status !== 500) return auth;
+  const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+  if (forbidden) return forbidden;
+}
+
 function parseCSV(text: string): Record<string, string>[] {
   const lines: string[] = [];
   let current = '';
@@ -167,6 +176,9 @@ function inferDocType(filename: string): string {
 }
 
 export async function GET(req: NextRequest) {
+  const authErr = await checkAuth(req);
+  if (authErr) return authErr;
+
   const nip = req.nextUrl.searchParams.get('nip')?.replace(/\D/g, '') || '';
   const nik = req.nextUrl.searchParams.get('nik')?.replace(/\D/g, '') || '';
   const nama = req.nextUrl.searchParams.get('nama')?.trim() || '';

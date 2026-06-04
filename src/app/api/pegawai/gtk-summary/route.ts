@@ -145,8 +145,8 @@ export async function GET() {
   try {
     const sheetData = await loadFromSheets();
     const staticData = loadStaticData();
-    const firestoreData = await getAllPegawai();
-    const merged = unionAll(sheetData, unionAll(staticData, firestoreData));
+    const supabaseData = await getAllPegawai();
+    const merged = unionAll(sheetData, unionAll(staticData, supabaseData));
 
     // Seed with all schools from master data (keyed by NPSN)
     const schools: Record<string, SchoolGtk> = {};

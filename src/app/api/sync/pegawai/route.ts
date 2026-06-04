@@ -10,7 +10,7 @@ function loadData(): any[] {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
     return NextResponse.json(
       { success: false, error: 'Database tidak dikonfigurasi' },
       { status: 500 }

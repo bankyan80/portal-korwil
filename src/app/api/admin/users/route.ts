@@ -11,7 +11,7 @@ function getErrorMessage(error: unknown) {
 }
 
 async function getUserProfileFromDb(uid: string): Promise<Partial<UserProfile>> {
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) return {};
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) return {};
   try {
     const { data } = await supabaseAdmin
       .from('app_data')
@@ -25,7 +25,7 @@ async function getUserProfileFromDb(uid: string): Promise<Partial<UserProfile>> 
 }
 
 async function upsertUserProfile(uid: string, profile: Record<string, any>) {
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) return;
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) return;
   const { data: existing } = await supabaseAdmin
     .from('app_data')
     .select('data')
@@ -39,7 +39,7 @@ async function upsertUserProfile(uid: string, profile: Record<string, any>) {
 }
 
 async function deleteUserProfile(uid: string) {
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) return;
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) return;
   await supabaseAdmin
     .from('app_data')
     .delete()
@@ -96,7 +96,7 @@ export async function PATCH(request: Request) {
   const forbidden = requireRole(auth, ['super_admin']);
   if (forbidden) return forbidden;
 
-  if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
     return NextResponse.json({ success: false, error: 'Database tidak dikonfigurasi' }, { status: 500 });
   }
 
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Email harus diisi' }, { status: 400 });
     }
 
-    if (!isSupabaseAdminConfigured || !supabaseAdmin) {
+    if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
       return NextResponse.json({ success: false, error: 'Database tidak tersedia' }, { status: 500 });
     }
 

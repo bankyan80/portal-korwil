@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 type SheetConfig = {
   id: string;
@@ -133,6 +134,12 @@ function isHttpUrl(v: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  if (auth instanceof NextResponse && auth.status !== 500) return auth;
+  const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+  if (forbidden) return forbidden;
+
   const nip = req.nextUrl.searchParams.get('nip')?.replace(/\D/g, '') || '';
   const nik = req.nextUrl.searchParams.get('nik')?.replace(/\D/g, '') || '';
   const nama = req.nextUrl.searchParams.get('nama')?.trim() || '';

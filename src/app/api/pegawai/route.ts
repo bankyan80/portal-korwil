@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
+import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID || '';
 
@@ -24,6 +25,12 @@ function normalizeHeader(h: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  const token = req.cookies.get('auth-token')?.value;
+  const auth = await verifyCookieAuth(token || '');
+  if (auth instanceof NextResponse && auth.status !== 500) return auth;
+  const forbidden = requireRole(auth, ['super_admin', 'operator_sekolah']);
+  if (forbidden) return forbidden;
+
   try {
     const body = await req.json();
     const { nik, nama, sekolah } = body;
