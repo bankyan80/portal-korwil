@@ -108,6 +108,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
+      // Prefer NPSN session over Firebase Auth
+      const npsnMatch = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
+      const hasNpsnSession = npsnMatch && npsnMatch[1].startsWith('npsn:');
+
+      if (firebaseUser && hasNpsnSession) {
+        const res = await fetch('/api/auth/verify-session');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.valid && json.profile) {
+            setUser(json.profile);
+            setLoadingAuth(false);
+            return;
+          }
+        }
+      }
+
       if (firebaseUser) {
         try {
           const token = await getIdToken(firebaseUser);

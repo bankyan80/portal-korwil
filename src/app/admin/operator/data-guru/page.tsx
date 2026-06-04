@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { DataTable } from '@/components/features/DataTable';
 import { usePegawaiAll } from '@/hooks/usePegawai';
 import { useAppStore } from '@/store/app-store';
@@ -32,9 +31,25 @@ const defaultForm = {
   sertifikasi: '', sekolah: '',
 };
 
+function groupByCategory(employees: any[]) {
+  const groups: Record<string, any[]> = {};
+  for (const p of employees) {
+    const cat = p.jenis_ptk || 'Lainnya';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(p);
+  }
+  const ordered: Record<string, any[]> = {};
+  for (const opt of PTK_OPTIONS) {
+    if (groups[opt]) ordered[opt] = groups[opt];
+  }
+  for (const [k, v] of Object.entries(groups)) {
+    if (!PTK_OPTIONS.includes(k)) ordered[k] = v;
+  }
+  return ordered;
+}
+
 function GuruContent() {
   const { user } = useAppStore();
-  const router = useRouter();
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
 
@@ -43,36 +58,35 @@ function GuruContent() {
   const handleSearch = () => { setSearch(searchInput); };
   const resetSearch = () => { setSearch(''); setSearchInput(''); };
   const userSchool = user?.schoolName || '';
-  const normalizedSchool = normalizeSchool(userSchool);
+  const userNormalized = normalizeSchool(userSchool);
 
-  // Filter ONLY this operator's school across all records
-  const allPegawai = useMemo(() => {
+  // Filter by user's school if operator, otherwise show all
+  const filtered = useMemo(() => {
     const items = allDataResult?.items || [];
+    if (!userNormalized) return items;
     return items.filter(p =>
-      normalizeSchool(p.sekolah || '') === normalizedSchool
+      normalizeSchool(p.sekolah || '') === userNormalized
     );
-  }, [allDataResult, normalizedSchool]);
+  }, [allDataResult, userNormalized]);
 
-  // Group by jenis_ptk
-  const grouped = useMemo(() => {
-    const groups: Record<string, typeof allPegawai> = {};
-    for (const p of allPegawai) {
-      const cat = p.jenis_ptk || 'Lainnya';
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(p);
+  // Group by sekolah, then within each sekolah group by jenis_ptk
+  const bySchool = useMemo(() => {
+    const sekolahMap: Record<string, any[]> = {};
+    for (const p of filtered) {
+      const sch = p.sekolah || 'Tanpa Sekolah';
+      if (!sekolahMap[sch]) sekolahMap[sch] = [];
+      sekolahMap[sch].push(p);
     }
-    // Sort by PTK_OPTIONS order, others at end
-    const ordered: Record<string, typeof allPegawai> = {};
-    for (const opt of PTK_OPTIONS) {
-      if (groups[opt]) ordered[opt] = groups[opt];
-    }
-    for (const [k, v] of Object.entries(groups)) {
-      if (!PTK_OPTIONS.includes(k)) ordered[k] = v;
-    }
-    return ordered;
-  }, [allPegawai]);
+    // Sort schools alphabetically
+    const sorted = Object.entries(sekolahMap).sort(([a], [b]) => a.localeCompare(b));
+    return sorted.map(([sekolah, pegawai]) => ({
+      sekolah,
+      total: pegawai.length,
+      categories: groupByCategory(pegawai),
+    }));
+  }, [filtered]);
 
-  const total = allPegawai.length;
+  const total = filtered.length;
 
   // Edit modal state
   const [formOpen, setFormOpen] = useState(false);
@@ -154,11 +168,7 @@ function GuruContent() {
       <div className="flex items-center gap-3 mb-4">
         <h1 className="text-2xl font-bold">Data GTK</h1>
       </div>
-      <p className="text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 rounded-lg px-3 py-2 mb-4">
-        Mengelola data pegawai: <strong>{userSchool}</strong>
-      </p>
-
-      <div className="flex gap-2 mb-4 items-center">
+      <div className="flex gap-2 mb-4 items-center flex-wrap">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -185,28 +195,37 @@ function GuruContent() {
           <span className="text-sm">Gagal memuat data pegawai: {error?.message || 'Kesalahan jaringan'}. <button onClick={() => window.location.reload()} className="underline font-medium">Muat ulang</button></span>
         </div>
       )}
-      {!isLoading && !isError && !normalizedSchool && (
-        <div className="text-amber-600 bg-amber-50 rounded-lg px-4 py-3 mb-4 text-sm">
-          Data sekolah tidak ditemukan untuk akun Anda. Hubungi administrator.
+      {!isLoading && !isError && !userNormalized && filtered.length === 0 && (
+        <div className="text-muted-foreground py-4 text-sm">
+          Belum ada data pegawai.
         </div>
       )}
-      {!isLoading && !isError && normalizedSchool && allPegawai.length === 0 && (
+      {!isLoading && !isError && userNormalized && filtered.length === 0 && (
         <div className="text-muted-foreground py-4 text-sm">
           Belum ada data pegawai untuk sekolah ini.
         </div>
       )}
 
-      {/* ── Grouped by jenis_ptk ── */}
       {search && (
         <p className="text-xs text-muted-foreground mb-2">Hasil pencarian "{search}" — {total} record(s)</p>
       )}
-      {Object.entries(grouped).map(([category, items]) => (
-        <div key={category} className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <h2 className="text-base font-semibold text-blue-800 dark:text-blue-300">{category}</h2>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{items.length}</span>
+
+      {/* ── Grouped by school, then by category ── */}
+      {bySchool.map(({ sekolah, total: schoolTotal, categories }) => (
+        <div key={sekolah} className="mb-8">
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b">
+            <h2 className="text-base font-bold text-[#0d3b66] dark:text-blue-300">{sekolah}</h2>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{schoolTotal}</span>
           </div>
-          <DataTable data={items} columns={columns} keyField="nip" />
+          {Object.entries(categories).map(([category, items]) => (
+            <div key={category} className="mb-4 ml-2">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">{category}</span>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{items.length}</span>
+              </div>
+              <DataTable data={items} columns={columns} keyField="nip" />
+            </div>
+          ))}
         </div>
       ))}
 

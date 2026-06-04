@@ -84,7 +84,12 @@ function applyFilters(all: any[], jenjang: string | null, layak_pip: string | nu
   all = all.map((s: any) => s.jenjang === 'PAUD' ? { ...s, jenjang: 'KB' } : s);
   if (layak_pip) all = all.filter((s: any) => s.layak_pip === layak_pip);
   if (schoolId) {
-    all = all.filter((s: any) => s.schoolId === schoolId);
+    const q = normalizeSchool(sekolah || '');
+    all = all.filter((s: any) =>
+      s.schoolId === schoolId ||
+      s.npsn === schoolId ||
+      (sekolah && normalizeSchool(s.sekolah || s.nama_sekolah || '') === q)
+    );
   } else if (sekolah) {
     const q = normalizeSchool(sekolah);
     all = all.filter((s: any) => normalizeSchool(s.sekolah || s.nama_sekolah || '') === q);
