@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, FileText, Home, ShieldCheck, Truck, CheckCircle, AlertTriangle, MapPin, School, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { useSekolah } from '@/hooks/useSekolah';
 import { apiSet } from '@/lib/api-firestore';
 import { toast } from 'sonner';
@@ -328,6 +329,7 @@ function FormPendaftaranContent() {
       </main>
 
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 }

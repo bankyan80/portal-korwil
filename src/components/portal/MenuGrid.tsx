@@ -24,6 +24,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useDataStore } from '@/store/data-store';
+import { mockMenus } from '@/lib/mock-data';
 
 const iconMap: Record<string, LucideIcon> = {
   School,
@@ -63,6 +64,7 @@ const iconHash = (icon: string) => {
 
 export default function MenuGrid() {
   const menus = useDataStore((s) => s.menus);
+  const items = menus.length > 0 ? menus : mockMenus;
   return (
     <section className="w-full" aria-label="Menu Layanan Pendidikan">
       <div
@@ -74,10 +76,29 @@ export default function MenuGrid() {
       </div>
       <div className="bg-white border border-gray-200 border-t-0 rounded-b-lg p-3 sm:p-4 md:p-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-          {menus.filter((m) => m.active).sort((a, b) => (a.order ?? 99) - (b.order ?? 99)).map((item, idx) => {
+          {items.filter((m) => m.active).sort((a, b) => (a.order ?? 99) - (b.order ?? 99)).map((item, idx) => {
             const Icon = iconMap[item.icon] || Globe;
             const color = colorPalette[iconHash(item.icon) % colorPalette.length];
             const description = item.category || '';
+            const isExternal = item.url.startsWith('http');
+
+            const card = (
+              <div
+                className="w-full flex flex-col items-center gap-2.5 p-4 sm:p-5 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-200 cursor-pointer group text-center"
+              >
+                <div
+                  className={`w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg ${color} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-200`}
+                >
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" strokeWidth={1.8} />
+                </div>
+                <span className="text-xs sm:text-sm font-bold leading-tight" style={{ color: '#0d3b66' }}>
+                  {item.title}
+                </span>
+                <span className="text-[10px] sm:text-xs text-gray-500 leading-tight line-clamp-2">
+                  {description}
+                </span>
+              </div>
+            );
 
             return (
               <motion.div
@@ -85,30 +106,15 @@ export default function MenuGrid() {
                 whileHover={{ y: -4 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 20 }}
               >
-                <button
-                  onClick={() => {
-                    const url = item.url;
-                    if (url.startsWith('http')) {
-                      window.open(url, '_blank', 'noopener,noreferrer');
-                    } else {
-                      window.location.assign(url);
-                    }
-                  }}
-                  className="w-full flex flex-col items-center gap-2.5 p-4 sm:p-5 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-200 cursor-pointer group text-center"
-                  aria-label={item.title}
-                >
-                  <div
-                    className={`w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg ${color} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-200`}
-                  >
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" strokeWidth={1.8} />
-                  </div>
-                  <span className="text-xs sm:text-sm font-bold leading-tight" style={{ color: '#0d3b66' }}>
-                    {item.title}
-                  </span>
-                  <span className="text-[10px] sm:text-xs text-gray-500 leading-tight line-clamp-2">
-                    {description}
-                  </span>
-                </button>
+                {isExternal ? (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" aria-label={item.title}>
+                    {card}
+                  </a>
+                ) : (
+                  <a href={item.url} aria-label={item.title}>
+                    {card}
+                  </a>
+                )}
               </motion.div>
             );
           })}

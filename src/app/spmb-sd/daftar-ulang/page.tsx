@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FileText, Search, Loader2, CheckCircle, XCircle, User, MapPin, School, Calendar, Home, ShieldCheck, Truck, AlertTriangle } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
 import { apiSet } from '@/lib/api-firestore';
 import { toast } from 'sonner';
@@ -222,6 +223,7 @@ export default function DaftarUlangPage() {
       </main>
 
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 }

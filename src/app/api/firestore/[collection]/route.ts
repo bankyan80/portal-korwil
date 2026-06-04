@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ coll
   }
 
   const { collection } = await params;
-const PUBLIC_COLLECTIONS = ['announcements', 'menus', 'institution_links', 'organizations', 'contacts', 'faq', 'drive_folders'];
+const PUBLIC_COLLECTIONS = ['announcements', 'menus', 'institution_links', 'organizations', 'contacts', 'faq', 'drive_folders', 'gallery'];
 if (!PUBLIC_COLLECTIONS.includes(collection)) {
   const token = req.cookies.get('auth-token')?.value;
   const auth = await verifyCookieAuth(token || '');
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ col
   }
 
   const { collection } = await params;
-const PUBLIC_COLLECTIONS = ['announcements', 'menus', 'institution_links', 'organizations', 'contacts', 'faq', 'drive_folders'];
+const PUBLIC_COLLECTIONS = ['announcements', 'menus', 'institution_links', 'organizations', 'contacts', 'faq', 'drive_folders', 'gallery'];
 if (!PUBLIC_COLLECTIONS.includes(collection)) {
   const token = req.cookies.get('auth-token')?.value;
   const auth = await verifyCookieAuth(token || '');
@@ -128,7 +128,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ c
   }
 
   const { collection } = await params;
-const PUBLIC_COLLECTIONS = ['announcements', 'menus', 'institution_links', 'organizations', 'contacts', 'faq', 'drive_folders'];
+const PUBLIC_COLLECTIONS = ['announcements', 'menus', 'institution_links', 'organizations', 'contacts', 'faq', 'drive_folders', 'gallery'];
 if (!PUBLIC_COLLECTIONS.includes(collection)) {
   const token = req.cookies.get('auth-token')?.value;
   const auth = await verifyCookieAuth(token || '');

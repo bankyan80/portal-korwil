@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, FileText, Search, Loader2, CheckCircle, XCircle, Clock, User, MapPin, School, Calendar, Home, ShieldCheck, Truck } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
 
 interface Pendaftar {
@@ -194,6 +195,7 @@ export default function PengumumanPage() {
       </main>
 
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 }

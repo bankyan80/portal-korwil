@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, FileText, CheckCircle, XCircle, Loader2, User, MapPin, School, Calendar, Search, ArrowRight, AlertTriangle } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 
 function hitungUsia(tanggalLahir: string) {
   if (!tanggalLahir) return null;
@@ -214,6 +215,7 @@ export default function CekNikPage() {
       </main>
 
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 }
