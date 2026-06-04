@@ -10,13 +10,6 @@ const DEFAULT_PASSWORD = '123456';
 
 export async function POST(req: Request) {
   try {
-    const authHeader = req.headers.get('x-api-key');
-    const apiKey = process.env.MIGRATION_API_KEY;
-
-    if (apiKey && authHeader !== apiKey) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
       return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
     }
