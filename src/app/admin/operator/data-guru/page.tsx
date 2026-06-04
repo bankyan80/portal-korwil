@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Search, Loader2, Save, Pencil, Loader2 as LoaderIcon } from 'lucide-react';
+import { Search, Loader2, Save, Pencil, Loader2 as LoaderIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { QueryProvider } from '@/contexts/QueryProvider';
 import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
@@ -37,12 +37,11 @@ function GuruContent() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [page, setPage] = useState(1);
 
   const { data: allDataResult, isLoading, isError, error, refetch } = usePegawaiAll(search);
 
-  const handleSearch = () => { setSearch(searchInput); setPage(1); };
-  const resetSearch = () => { setSearch(''); setSearchInput(''); setPage(1); };
+  const handleSearch = () => { setSearch(searchInput); };
+  const resetSearch = () => { setSearch(''); setSearchInput(''); };
   const userSchool = user?.schoolName || '';
   const normalizedSchool = normalizeSchool(userSchool);
 
@@ -54,17 +53,26 @@ function GuruContent() {
     );
   }, [allDataResult, normalizedSchool]);
 
-  // Client-side pagination (operator table is small)
-  const PAGE_SIZE = 100;
-  const total = allPegawai.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const paginated = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return allPegawai.slice(start, start + PAGE_SIZE);
-  }, [allPegawai, page]);
+  // Group by jenis_ptk
+  const grouped = useMemo(() => {
+    const groups: Record<string, typeof allPegawai> = {};
+    for (const p of allPegawai) {
+      const cat = p.jenis_ptk || 'Lainnya';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(p);
+    }
+    // Sort by PTK_OPTIONS order, others at end
+    const ordered: Record<string, typeof allPegawai> = {};
+    for (const opt of PTK_OPTIONS) {
+      if (groups[opt]) ordered[opt] = groups[opt];
+    }
+    for (const [k, v] of Object.entries(groups)) {
+      if (!PTK_OPTIONS.includes(k)) ordered[k] = v;
+    }
+    return ordered;
+  }, [allPegawai]);
 
-  const guruCount = allPegawai.filter(p => p.jenis_ptk === 'Guru').length;
-  const tendikCount = allPegawai.filter(p => p.jenis_ptk === 'Tenaga Kependidikan').length;
+  const total = allPegawai.length;
 
   // Edit modal state
   const [formOpen, setFormOpen] = useState(false);
@@ -188,29 +196,19 @@ function GuruContent() {
         </div>
       )}
 
-      {/* ── Flat paginated table ── */}
-      <>
-        {paginated.length > 0 && (
-          <>
-        {search && (
-          <p className="text-xs text-muted-foreground mb-2">Hasil pencarian "{search}" — {total} record(s)</p>
-        )}
-        <DataTable data={paginated} columns={columns} keyField="nip" />
-        {totalPages > 1 && (
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-gray-500">
-              Halaman {page} dari {totalPages} (Total: {total})
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Sebelumnya</Button>
-              <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Berikutnya</Button>
-            </div>
+      {/* ── Grouped by jenis_ptk ── */}
+      {search && (
+        <p className="text-xs text-muted-foreground mb-2">Hasil pencarian "{search}" — {total} record(s)</p>
+      )}
+      {Object.entries(grouped).map(([category, items]) => (
+        <div key={category} className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <h2 className="text-base font-semibold text-blue-800 dark:text-blue-300">{category}</h2>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{items.length}</span>
           </div>
-        )}
-        <p className="text-xs text-muted-foreground mt-2">Guru: {guruCount} | Tendik: {tendikCount}</p>
-          </>
-        )}
-      </>
+          <DataTable data={items} columns={columns} keyField="nip" />
+        </div>
+      ))}
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="sm:max-w-lg">

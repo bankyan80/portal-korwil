@@ -141,6 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           setUser(userProfile);
+          setLoadingAuth(false);
         } catch (error) {
           console.error('Error in AuthProvider:', error);
           setUser({
@@ -152,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             createdAt: Date.now(),
             updatedAt: Date.now(),
           });
+          setLoadingAuth(false);
         }
       } else {
         const match = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
