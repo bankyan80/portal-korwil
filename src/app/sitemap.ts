@@ -8,7 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/yatim-piatu', '/kip-sd', '/bos-arkas', '/mapping-pegawai',
     '/laporan', '/rekap-laporan', '/berita', '/galeri', '/semua-galeri',
     '/semua-informasi', '/kalender', '/agenda-kegiatan',
-    '/ruang-guru', '/e-kinerja', '/dokumen-bersama', '/administrasi',
+    '/ruang-guru', '/e-kinerja', '/administrasi',
     '/organisasi', '/donasi', '/spmb-sd/cek', '/bup',
   ];
 

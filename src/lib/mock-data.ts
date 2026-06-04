@@ -111,7 +111,7 @@ export const mockMenus: MenuItem[] = [
     title: 'Dokumen Bersama',
     icon: 'FolderOpen',
     url: '/dokumen-bersama',
-    active: true,
+    active: false,
     order: 10,
     category: 'Dokumen',
   },
