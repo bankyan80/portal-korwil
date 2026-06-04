@@ -1,6 +1,8 @@
 'use client';
 
 import { useAppStore } from '@/store/app-store';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -28,6 +30,7 @@ import {
   Shield,
   RefreshCw,
   FolderOpen,
+  KeyRound,
 } from 'lucide-react';
 
 interface NavSection {
@@ -168,6 +171,17 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
       </nav>
       <div className="mx-5 border-t border-blue-800/60" />
       <div className="px-3 py-3 space-y-1">
+        {user?.role === 'operator_sekolah' && (
+          <button
+            onClick={() => { window.location.assign('/admin/operator/profil-sekolah'); }}
+            className="group flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium text-blue-200 hover:bg-white/10 hover:text-white transition-all duration-150 text-left"
+          >
+            <span className="flex items-center justify-center w-8 h-8 rounded-md bg-white/5 text-blue-300 group-hover:bg-white/10 group-hover:text-white transition-all duration-150 shrink-0">
+              <KeyRound className="w-4 h-4" />
+            </span>
+            <span className="truncate">Profil & Password</span>
+          </button>
+        )}
         <button
           onClick={() => handleNavigate('portal')}
           className="group flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium text-blue-200 hover:bg-white/10 hover:text-white transition-all duration-150 text-left"
@@ -178,7 +192,11 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
           <span className="truncate">Kembali ke Portal</span>
         </button>
         <button
-          onClick={() => {
+          onClick={async () => {
+            document.cookie = 'auth-token=; path=/; max-age=0';
+            if (auth) {
+              try { await signOut(auth); } catch {}
+            }
             setUser(null);
             setCurrentView('portal');
             onNavigate?.();

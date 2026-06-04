@@ -1,0 +1,126 @@
+import { NextResponse } from 'next/server';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
+import { adminAuth, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import crypto from 'crypto';
+
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
+
+function hashPassword(password: string): string {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+export async function POST(req: Request) {
+  try {
+    const { npsn, password } = await req.json();
+
+    if (!npsn || !password) {
+      return NextResponse.json({ error: 'NPSN dan password wajib diisi' }, { status: 400 });
+    }
+
+    if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
+      return NextResponse.json({ error: 'Database tidak tersedia' }, { status: 500 });
+    }
+
+    const { data: cred } = await supabaseAdmin
+      .from('app_data')
+      .select('*')
+      .eq('collection', 'school_passwords')
+      .eq('id', npsn)
+      .single();
+
+    if (!cred) {
+      return NextResponse.json({ error: 'NPSN tidak ditemukan. Hubungi administrator.' }, { status: 401 });
+    }
+
+    const credData = cred.data as Record<string, any>;
+
+    if (credData.passwordHash !== hashPassword(password)) {
+      return NextResponse.json({ error: 'Password salah' }, { status: 401 });
+    }
+
+    const uid = `npsn-${npsn}`;
+    const { data: existingProfile } = await supabaseAdmin
+      .from('app_data')
+      .select('*')
+      .eq('collection', 'users')
+      .eq('id', uid)
+      .single();
+
+    let profile: Record<string, any>;
+    const now = Date.now();
+
+    if (existingProfile) {
+      profile = (existingProfile.data as Record<string, any>) || {};
+      profile.lastLogin = now;
+      profile.updatedAt = now;
+      await supabaseAdmin
+        .from('app_data')
+        .update({ data: profile })
+        .eq('id', uid)
+        .eq('collection', 'users');
+    } else {
+      profile = {
+        uid,
+        email: `operator-${npsn}@sch.id`,
+        displayName: credData.schoolName || `Operator ${npsn}`,
+        role: 'operator_sekolah',
+        schoolId: npsn,
+        schoolName: credData.schoolName || '',
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+        lastLogin: now,
+      };
+      await supabaseAdmin
+        .from('app_data')
+        .upsert({ id: uid, collection: 'users', data: profile });
+    }
+
+    const sessionId = crypto.randomUUID();
+    const expiresAt = now + SESSION_DURATION_MS;
+
+    await supabaseAdmin
+      .from('app_data')
+      .upsert({
+        id: sessionId,
+        collection: 'npsn_sessions',
+        data: {
+          uid,
+          npsn,
+          role: 'operator_sekolah',
+          schoolId: npsn,
+          schoolName: credData.schoolName || '',
+          createdAt: now,
+          expiresAt,
+        },
+      });
+
+    const res = NextResponse.json({
+      success: true,
+      profile: {
+        uid,
+        email: profile.email,
+        displayName: profile.displayName,
+        role: 'operator_sekolah',
+        schoolId: npsn,
+        schoolName: credData.schoolName || '',
+        isActive: true,
+        createdAt: profile.createdAt,
+        updatedAt: now,
+        lastLogin: now,
+      },
+      method: 'npsn',
+    });
+
+    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+    res.headers.set(
+      'Set-Cookie',
+      `auth-token=npsn:${sessionId}; path=/; max-age=86400; SameSite=Lax${secure}`
+    );
+
+    return res;
+  } catch (e) {
+    console.error('Login NPSN error:', e);
+    return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });
+  }
+}

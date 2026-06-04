@@ -70,6 +70,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!auth) {
       const match = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
       if (match) {
+        if (match[1].startsWith('npsn:')) {
+          fetch('/api/auth/verify-session').then(async (res) => {
+            if (res.ok) {
+              const json = await res.json();
+              if (json.valid && json.profile) {
+                setUser(json.profile);
+              }
+            }
+          }).catch(() => {}).finally(() => setLoadingAuth(false));
+          return;
+        }
         const payload = parseJwtPayload(match[1]);
         if (payload && payload.exp && payload.exp * 1000 > Date.now()) {
           setUser({
@@ -143,10 +154,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       } else {
+        const match = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
+        if (match && match[1].startsWith('npsn:')) {
+          try {
+            const res = await fetch('/api/auth/verify-session');
+            if (res.ok) {
+              const json = await res.json();
+              if (json.valid && json.profile) {
+                setUser(json.profile);
+                setLoadingAuth(false);
+                return;
+              }
+            }
+          } catch {
+            console.warn('[AuthProvider] Gagal verifikasi sesi NPSN');
+          }
+        }
         clearAuthCookie();
         setUser(null);
+        setLoadingAuth(false);
       }
-      setLoadingAuth(false);
     });
 
     return () => { unsubscribe(); unsubscribeToken(); };

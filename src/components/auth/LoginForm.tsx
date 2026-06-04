@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, ChevronDown, ChevronUp, School } from 'lucide-react';
 import { toast } from 'sonner';
 
 const loginSchema = z.object({
@@ -74,6 +74,11 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showNpsnForm, setShowNpsnForm] = useState(false);
+  const [npsnValue, setNpsnValue] = useState('');
+  const [npsnPassword, setNpsnPassword] = useState('');
+  const [showNpsnPassword, setShowNpsnPassword] = useState(false);
+  const [isNpsnSubmitting, setIsNpsnSubmitting] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -153,6 +158,35 @@ export function LoginForm() {
        }
      } finally {
       setIsGoogleLoading(false);
+    }
+  };
+
+  const handleNpsnLogin = async () => {
+    setError(null);
+    if (!npsnValue.trim()) {
+      setError('NPSN wajib diisi');
+      return;
+    }
+    setIsNpsnSubmitting(true);
+    try {
+      const res = await fetch('/api/auth/login-npsn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ npsn: npsnValue.trim(), password: npsnPassword }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || 'Login gagal');
+        return;
+      }
+      setUser(json.profile);
+      toast.success('Login berhasil!', { description: `Selamat datang, ${json.profile.displayName}` });
+      setCurrentView('portal');
+      router.replace('/');
+    } catch {
+      setError('Terjadi kesalahan koneksi. Silakan coba lagi.');
+    } finally {
+      setIsNpsnSubmitting(false);
     }
   };
 
@@ -239,7 +273,75 @@ export function LoginForm() {
               )}
             </Button>
           </form>
-          <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+          <div className="mt-4 pt-2">
+            <button
+              type="button"
+              onClick={() => setShowNpsnForm(!showNpsnForm)}
+              className="flex items-center justify-center gap-2 w-full text-sm text-blue-700 hover:text-blue-500 transition-colors cursor-pointer py-2"
+            >
+              <School className="w-4 h-4" />
+              Login Operator (NPSN)
+              {showNpsnForm ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+
+            {showNpsnForm && (
+              <div className="mt-3 p-4 bg-blue-50 rounded-lg border border-blue-100 space-y-3">
+                <p className="text-xs text-blue-600 font-medium">
+                  Masuk menggunakan NPSN sekolah (khusus operator)
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="npsn" className="text-gray-700 font-medium">NPSN</Label>
+                  <Input
+                    id="npsn"
+                    type="text"
+                    placeholder="Masukkan NPSN sekolah"
+                    value={npsnValue}
+                    onChange={(e) => setNpsnValue(e.target.value)}
+                    disabled={isNpsnSubmitting}
+                    className="h-11 bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="npsn-password" className="text-gray-700 font-medium">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      id="npsn-password"
+                      type={showNpsnPassword ? 'text' : 'password'}
+                      placeholder="Masukkan password"
+                      value={npsnPassword}
+                      onChange={(e) => setNpsnPassword(e.target.value)}
+                      disabled={isNpsnSubmitting}
+                      className="pl-10 pr-10 h-11 bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNpsnPassword(!showNpsnPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      tabIndex={-1}
+                      aria-label={showNpsnPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                    >
+                      {showNpsnPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleNpsnLogin}
+                  disabled={isNpsnSubmitting}
+                  className="w-full h-11 bg-green-700 hover:bg-green-800 text-white font-semibold transition-colors cursor-pointer"
+                >
+                  {isNpsnSubmitting ? (
+                    <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Memproses...</span>
+                  ) : (
+                    <span className="flex items-center gap-2"><School className="w-4 h-4" />Masuk sebagai Operator</span>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-gray-100 text-center">
             <button type="button" onClick={() => setCurrentView('portal')} className="text-sm text-blue-800 hover:text-blue-600 hover:underline transition-colors cursor-pointer">
               &larr; Kembali ke Portal
             </button>

@@ -12,7 +12,7 @@ export interface AuthResult {
   isActive: boolean;
 }
 
-async function getUserProfile(uid: string): Promise<AuthResult | null> {
+export async function getUserProfile(uid: string): Promise<AuthResult | null> {
   if (isSupabaseAdminConfigured() && supabaseAdmin) {
     const { data } = await supabaseAdmin
       .from('app_data')
@@ -33,6 +33,43 @@ async function getUserProfile(uid: string): Promise<AuthResult | null> {
     }
   }
   return null;
+}
+
+export async function verifyNpsnSession(sessionId: string): Promise<AuthResult | NextResponse> {
+  if (!isSupabaseAdminConfigured() || !supabaseAdmin) {
+    return NextResponse.json({
+      error: 'Database tidak tersedia.',
+    }, { status: 500 }) as NextResponse;
+  }
+
+  const { data } = await supabaseAdmin
+    .from('app_data')
+    .select('*')
+    .eq('collection', 'npsn_sessions')
+    .eq('id', sessionId)
+    .single();
+
+  if (!data) {
+    return NextResponse.json({ error: 'Sesi tidak valid' }, { status: 401 }) as NextResponse;
+  }
+
+  const session = data.data as Record<string, any>;
+
+  if (session.expiresAt && Date.now() > session.expiresAt) {
+    await supabaseAdmin.from('app_data').delete().eq('id', sessionId).eq('collection', 'npsn_sessions');
+    return NextResponse.json({ error: 'Sesi kedaluwarsa' }, { status: 401 }) as NextResponse;
+  }
+
+  const profile = await getUserProfile(session.uid);
+  if (profile) return profile;
+
+  return {
+    uid: session.uid,
+    role: (session.role as UserRole) || 'publik',
+    schoolId: session.schoolId,
+    schoolName: session.schoolName,
+    isActive: true,
+  };
 }
 
 export async function verifyAuth(request: Request): Promise<AuthResult | NextResponse> {
@@ -62,14 +99,22 @@ export async function verifyAuth(request: Request): Promise<AuthResult | NextRes
 }
 
 export async function verifyCookieAuth(token: string): Promise<AuthResult | NextResponse> {
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) as NextResponse;
+  }
+
+  if (token.startsWith('npsn:')) {
+    const sessionId = token.split('npsn:')[1];
+    if (!sessionId) {
+      return NextResponse.json({ error: 'Invalid session token' }, { status: 401 }) as NextResponse;
+    }
+    return verifyNpsnSession(sessionId);
+  }
+
   if (!isFirebaseAdminConfigured || !adminAuth) {
     return NextResponse.json({
       error: 'Firebase Admin belum dikonfigurasi. Set FIREBASE_SERVICE_ACCOUNT_KEY di Environment Variables Vercel, lalu redeploy.',
     }, { status: 500 }) as NextResponse;
-  }
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) as NextResponse;
   }
 
   try {
