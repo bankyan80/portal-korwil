@@ -21,6 +21,7 @@ import {
   Clock,
   HeartHandshake,
   Megaphone,
+  IdCard,
   type LucideIcon,
 } from 'lucide-react';
 import { useDataStore } from '@/store/data-store';
@@ -46,6 +47,7 @@ const iconMap: Record<string, LucideIcon> = {
   Clock,
   HeartHandshake,
   Megaphone,
+  IdCard,
 };
 
 const colorPalette = [

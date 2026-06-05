@@ -160,6 +160,15 @@ export const mockMenus: MenuItem[] = [
     order: 15,
     category: 'Kepegawaian',
   },
+  {
+    id: 'menu-simpeg',
+    title: 'SIMPEG',
+    icon: 'IdCard',
+    url: 'https://simpeg-tim.vercel.app',
+    active: true,
+    order: 16,
+    category: 'Kepegawaian',
+  },
 ];
 
 // ---------------------------------------------------------------------------
