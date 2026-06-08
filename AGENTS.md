@@ -1,7 +1,8 @@
 # Session Summary
 
 ## Goal
-Fix Firebase Admin SDK initialization and migrate all Firestore data to Supabase `app_data` table.
+- Fix Firebase Admin SDK initialization and migrate all Firestore data to Supabase `app_data` table.
+- Build monthly report page (`/laporan-daftar-1`) and graduated student report (`/laporan-siswa-lulus`).
 
 ## Constraints & Preferences
 - Login tetap via Firebase Auth (client-side `signInWithEmailAndPassword`)
@@ -28,7 +29,12 @@ Fix Firebase Admin SDK initialization and migrate all Firestore data to Supabase
 - **Vercel deployment protection bypass**: `x-vercel-protection-bypass` header with token from `vercel.json`
 
 ### Remaining
-- KB AMALIA SALSABILA & KB PERMATA BUNDA — no Dapodik export files in Drive
+- (none)
+
+## New in This Session
+- Created `GET /api/siswa/lulus` — returns kelas-6 SD students grouped by school (22 schools, 872 siswa: 464 L / 408 P).
+- Created `/laporan-siswa-lulus/page.tsx` — table per sekolah with columns: No, NPSN, Nama Sekolah, L, P, Total + search filtering + stat cards.
+- Added menu item `menu-laporan-siswa-lulus` (GraduationCap icon, category Laporan, order 5) to `mockMenus`.
 
 ## Key Decisions
 - Firebase Admin SDK gak perlu migration route lagi — semua data udah di Supabase

@@ -61,6 +61,15 @@ export const mockMenus: MenuItem[] = [
     order: 4,
     category: 'Laporan',
   },
+  {
+    id: 'menu-laporan-siswa-lulus',
+    title: 'Laporan Siswa Lulus',
+    icon: 'GraduationCap',
+    url: '/laporan-siswa-lulus',
+    active: true,
+    order: 5,
+    category: 'Laporan',
+  },
 ];
 
 // ---------------------------------------------------------------------------
