@@ -52,6 +52,15 @@ export const mockMenus: MenuItem[] = [
     order: 3,
     category: 'Data',
   },
+  {
+    id: 'menu-laporan-daftar-1',
+    title: 'Laporan Daftar 1',
+    icon: 'FileText',
+    url: '/laporan-daftar-1',
+    active: true,
+    order: 4,
+    category: 'Laporan',
+  },
 ];
 
 // ---------------------------------------------------------------------------
