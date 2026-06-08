@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import pegawaiSdData from '@/data/data-pegawai.json';
 import pegawaiTkData from '@/data/data-pegawai-tk.json';
 import siswaAll from '@/data/data-siswa.json';
+import { allSekolah } from '@/data/sekolah';
 
 const bulanTa = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
@@ -52,25 +53,7 @@ export async function GET(req: NextRequest) {
     const siswaTkKbL = siswaTkKb.filter((s) => s.jk === 'L');
     const siswaTkKbP = siswaTkKb.filter((s) => s.jk === 'P');
 
-    const pegawaiBySekolah: Record<string, any[]> = {};
-    const siswaBySekolah: Record<string, any[]> = {};
-
-    [...pegawaiPerJenjang.sd, ...pegawaiPerJenjang.tk].forEach((p) => {
-      const key = p.sekolah || 'Unknown';
-      if (!pegawaiBySekolah[key]) pegawaiBySekolah[key] = [];
-      pegawaiBySekolah[key].push(p);
-    });
-
-    allSiswa.forEach((s) => {
-      const key = s.sekolah || 'Unknown';
-      if (!siswaBySekolah[key]) siswaBySekolah[key] = [];
-      siswaBySekolah[key].push(s);
-    });
-
-    const sekolahList = Array.from(new Set([
-      ...Object.keys(pegawaiBySekolah),
-      ...Object.keys(siswaBySekolah),
-    ])).sort();
+    const sekolahList = allSekolah.map((s) => s.nama).sort();
 
     const now = new Date();
     const currentMonth = now.getMonth() + 1;
