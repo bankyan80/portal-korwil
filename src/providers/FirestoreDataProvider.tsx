@@ -42,7 +42,14 @@ export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) 
       const allEmpty = [menus, announcements, gallery, organizations, institutionLinks].every(a => a.length === 0);
       const useMock = mockEnabled && allEmpty;
 
-      setMenus(useMock ? mockMenus : menus);
+      // Merge: mock menus as defaults, API data overrides/extends
+      if (!useMock) {
+        const merged = new Map(mockMenus.map(m => [m.id, m]));
+        for (const m of menus) merged.set(m.id, m);
+        setMenus(Array.from(merged.values()));
+      } else {
+        setMenus(mockMenus);
+      }
       setAnnouncements(useMock ? mockAnnouncements : announcements);
       setGalleryItems(useMock ? mockGalleryItems : gallery);
       setOrganizations(useMock ? mockOrganizations : organizations);
