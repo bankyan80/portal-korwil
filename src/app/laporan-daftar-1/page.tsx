@@ -101,7 +101,7 @@ async function fetchPegawai(): Promise<PegawaiFlat[]> {
 async function fetchSiswa(): Promise<SiswaFlat[]> {
   const all: SiswaFlat[] = [];
   let page = 1;
-  const limit = 1000;
+  const limit = 5000;
   while (true) {
     const res = await fetch(`/api/proxy/simdawa?page=${page}&limit=${limit}`);
     const json = await res.json();
