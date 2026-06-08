@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import {
   Users, BookOpen, ExternalLink,
   Loader2, BarChart3, School, ChevronDown, Table,
-  ArrowLeft, Printer,
+  ArrowLeft, Printer, RefreshCw,
 } from 'lucide-react';
 import { allSekolah } from '@/data/sekolah';
 
@@ -238,6 +238,20 @@ export default function LaporanDaftar1Page() {
   const [pegawaiList, setPegawaiList] = useState<PegawaiFlat[]>([]);
   const [siswaList, setSiswaList] = useState<SiswaFlat[]>([]);
   const [apiLoading, setApiLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const [p, s] = await Promise.all([fetchPegawai(), fetchSiswa()]);
+      setPegawaiList(p);
+      setSiswaList(s);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const detailSekolah = useMemo(() => {
     const all = groupBySekolah(pegawaiList, siswaList);
@@ -315,15 +329,25 @@ export default function LaporanDaftar1Page() {
               Data pegawai dan peserta didik per jenjang Kecamatan Lemahabang, Kabupaten Cirebon
             </p>
           </div>
-          <select
-            value={tahunAjaran}
-            onChange={(e) => setTahunAjaran(e.target.value)}
-            className="text-sm border rounded-lg px-3 py-2 bg-white shadow-sm font-medium"
-          >
-            {taOptions().map((ta) => (
-              <option key={ta} value={ta}>T.A. {ta}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="text-sm border rounded-lg px-3 py-2 bg-white shadow-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-50"
+              title="Refresh data SIMPEG & SIMDAWA"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+            <select
+              value={tahunAjaran}
+              onChange={(e) => setTahunAjaran(e.target.value)}
+              className="text-sm border rounded-lg px-3 py-2 bg-white shadow-sm font-medium"
+            >
+              {taOptions().map((ta) => (
+                <option key={ta} value={ta}>T.A. {ta}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Stat Cards */}
