@@ -50,7 +50,7 @@ const mockActivities: ActivityItem[] = [
 
 export function AdminDashboard() {
   const { setCurrentView, user } = useAppStore();
-  const { menus, announcements, galleryItems, organizations } = useDataStore();
+  const { announcements, galleryItems, organizations } = useDataStore();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,7 +59,6 @@ export function AdminDashboard() {
   }, []);
 
   const stats: StatCard[] = [
-    { label: 'Total Menu Aktif', value: menus.filter((m) => m.active).length, icon: LayoutGrid, bg: 'bg-blue-50 dark:bg-blue-950/40', iconBg: 'bg-blue-100 dark:bg-blue-900/60', iconColor: 'text-blue-600 dark:text-blue-400' },
     { label: 'Total Informasi', value: announcements.length, icon: Bell, bg: 'bg-green-50 dark:bg-green-950/40', iconBg: 'bg-green-100 dark:bg-green-900/60', iconColor: 'text-green-600 dark:text-green-400' },
     { label: 'Galeri Published', value: galleryItems.filter((g) => g.status === 'published').length, icon: Camera, bg: 'bg-amber-50 dark:bg-amber-950/40', iconBg: 'bg-amber-100 dark:bg-amber-900/60', iconColor: 'text-amber-600 dark:text-amber-400' },
     { label: 'Total Organisasi', value: organizations.length, icon: Building2, bg: 'bg-purple-50 dark:bg-purple-950/40', iconBg: 'bg-purple-100 dark:bg-purple-900/60', iconColor: 'text-purple-600 dark:text-purple-400' },
