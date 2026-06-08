@@ -32,9 +32,10 @@
 - (none)
 
 ## New in This Session
-- Created `GET /api/siswa/lulus` — returns kelas-6 SD students grouped by school (22 schools, 872 siswa: 464 L / 408 P).
-- Created `/laporan-siswa-lulus/page.tsx` — table per sekolah with columns: No, NPSN, Nama Sekolah, L, P, Total + search filtering + stat cards.
-- Added menu item `menu-laporan-siswa-lulus` (GraduationCap icon, category Laporan, order 5) to `mockMenus`.
+- Replaced local JSON imports (`data-pegawai.json`, `data-pegawai-tk.json`, `data-siswa.json`) with live API fetches from SIMPEG (`/api/proxy/simpeg`) and SIMDAWA (`/api/proxy/simdawa`) for `/laporan-daftar-1`
+- Created `/api/proxy/simpeg` and `/api/proxy/simdawa` — server-side proxy routes to bypass CORS (external APIs don't set CORS headers)
+- SIMPEG API: 282 pegawai (SD + TK), fields: `jenisKelamin`, `statusKepegawaian`, `tmtTugas`, `sekolah.namaSekolah`
+- SIMDAWA API: ~1000+ siswa (paginated, filtered to `statusSiswa === 'Aktif'`), fields: `jenisKelamin` ("Laki-laki"/"Perempuan"), `kelasKelompok`, `sekolah.namaSekolah`
 
 ## Key Decisions
 - Firebase Admin SDK gak perlu migration route lagi — semua data udah di Supabase
@@ -43,6 +44,8 @@
 - JWT token verification (`verifyCookieAuth`) masih fallback — `auth.status !== 500` bypass kalo Firebase Admin gak available
 - **Supabase `app_data` doesn't have `schools` collection** (migration data was lost/not saved) → seed passwords use static `allSekolah` from `src/data/sekolah.ts`
 - **proxy.ts middleware uses `x-api-key` bypass for seed-password & migrate routes** — no JWT needed when header matches env var
+- **External APIs (SIMPEG, SIMDAWA) proxied server-side** via `/api/proxy/*` to avoid CORS — client `fetch` goes to same-origin Next.js route
+- **Paginated fetch for SIMDAWA** (loops `?page=N&limit=1000` until <1000 results) to capture all students
 
 ## Relevant Files
 - `src/lib/firebase-admin.ts`: `normalizeServiceAccount()` + snake_case→camelCase fix
@@ -50,8 +53,11 @@
 - `src/app/api/firestore/[collection]/route.ts`: Supabase-backed CRUD (GET/POST/DELETE)
 - `src/providers/AuthProvider.tsx`: login flow — baca profil dari Supabase, fallback create
 - `scripts/migrate-firestore-to-supabase.ts`: standalone script (bisa jalan via `npx tsx`)
-- `src/data/data-pegawai.json`: 343 SD pegawai records (22 schools)
-- `src/data/data-pegawai-tk.json`: 118 TK/KB pegawai records (20 schools)
+- `src/data/data-pegawai.json`: 343 SD pegawai records (22 schools) — **no longer imported, kept for reference**
+- `src/data/data-pegawai-tk.json`: 118 TK/KB pegawai records (20 schools) — **no longer imported, kept for reference**
 - **`src/proxy.ts`**: Next.js middleware — JWT check for `/api/admin/*`, `x-api-key` bypass for seed/migrate routes
 - **`src/app/api/auth/login-npsn/route.ts`**: NPSN-based login — verifies from `school_passwords` collection, creates `npsn_sessions`, returns Set-Cookie
 - **`src/app/api/admin/seed-passwords/route.ts`**: Seeds `school_passwords` from static `allSekolah` data (bypasses missing Supabase `schools` collection)
+- **`src/app/api/proxy/simpeg/route.ts`**: Proxies GET to `https://simpeg-tim.vercel.app/api/pegawai`
+- **`src/app/api/proxy/simdawa/route.ts`**: Proxies GET to `https://simdawa.vercel.app/api/siswa`
+- **`src/app/laporan-daftar-1/page.tsx`**: Now fetches pegawai/siswa via proxy routes, `groupBySekolah(pegawaiList, siswaList)` accepts API data

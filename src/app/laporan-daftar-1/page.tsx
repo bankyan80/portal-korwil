@@ -6,9 +6,6 @@ import {
   Loader2, BarChart3, School, ChevronDown, Table,
   ArrowLeft, Printer,
 } from 'lucide-react';
-import dataPegawaiSD from '@/data/data-pegawai.json';
-import dataPegawaiTK from '@/data/data-pegawai-tk.json';
-import dataSiswa from '@/data/data-siswa.json';
 import { allSekolah } from '@/data/sekolah';
 
 interface JenjangData {
@@ -74,6 +71,58 @@ interface DetailSekolah {
   totalPegawaiP: number;
 }
 
+interface PegawaiFlat {
+  sekolah: string;
+  jk: string;
+  status_kepegawaian: string;
+  tmt: string;
+}
+
+interface SiswaFlat {
+  sekolah: string;
+  jk: string;
+  jenjang: string;
+  kelas: string;
+  rombel: string;
+}
+
+async function fetchPegawai(): Promise<PegawaiFlat[]> {
+  const res = await fetch('/api/proxy/simpeg?limit=300');
+  const json = await res.json();
+  const data: any[] = json.data || [];
+  return data.map((p) => ({
+    sekolah: p.sekolah?.namaSekolah || '',
+    jk: p.jenisKelamin,
+    status_kepegawaian: p.statusKepegawaian,
+    tmt: p.tmtTugas ? new Date(p.tmtTugas).toISOString() : '',
+  }));
+}
+
+async function fetchSiswa(): Promise<SiswaFlat[]> {
+  const all: SiswaFlat[] = [];
+  let page = 1;
+  const limit = 1000;
+  while (true) {
+    const res = await fetch(`/api/proxy/simdawa?page=${page}&limit=${limit}`);
+    const json = await res.json();
+    const data: any[] = json.siswa || [];
+    if (data.length === 0) break;
+    for (const s of data) {
+      if (s.statusSiswa !== 'Aktif') continue;
+      all.push({
+        sekolah: s.sekolah?.namaSekolah || '',
+        jk: s.jenisKelamin === 'Laki-laki' ? 'L' : 'P',
+        jenjang: s.jenjang,
+        kelas: s.kelasKelompok || '',
+        rombel: s.rombel || s.kelasKelompok || '',
+      });
+    }
+    if (data.length < limit) break;
+    page++;
+  }
+  return all;
+}
+
 function hitungMasaKerja(tmt: string): keyof MasaKerja {
   if (!tmt) return '>20';
   const tmtDate = new Date(tmt);
@@ -85,7 +134,7 @@ function hitungMasaKerja(tmt: string): keyof MasaKerja {
   return '>20';
 }
 
-function groupBySekolah(): DetailSekolah[] {
+function groupBySekolah(pegawaiList: PegawaiFlat[], siswaList: SiswaFlat[]): DetailSekolah[] {
   const sekolahMap = new Map<string, DetailSekolah>();
 
   for (const s of allSekolah) {
@@ -100,9 +149,7 @@ function groupBySekolah(): DetailSekolah[] {
     });
   }
 
-  const allPegawai = [...dataPegawaiSD, ...dataPegawaiTK];
-
-  for (const p of allPegawai) {
+  for (const p of pegawaiList) {
     let entry = sekolahMap.get(p.sekolah);
     if (!entry) {
       entry = {
@@ -128,7 +175,7 @@ function groupBySekolah(): DetailSekolah[] {
     asn.masaKerja[mk]++;
   }
 
-  for (const s of dataSiswa) {
+  for (const s of siswaList) {
     let entry = sekolahMap.get(s.sekolah);
     if (!entry) {
       entry = {
@@ -142,7 +189,7 @@ function groupBySekolah(): DetailSekolah[] {
     if (s.jk === 'L') entry.totalSiswaL++;
     else entry.totalSiswaP++;
 
-    const labelKelas = s.jenjang === 'SD' ? `Kelas ${s.kelas}` : s.rombel || `Kelompok ${s.kelas}`;
+    const labelKelas = s.kelas;
     let kelasEntry = entry.siswa.find((k) => k.kelas === labelKelas);
     if (!kelasEntry) {
       kelasEntry = { kelas: labelKelas, l: 0, p: 0, total: 0 };
@@ -188,14 +235,17 @@ export default function LaporanDaftar1Page() {
   const [detailJenjang, setDetailJenjang] = useState<'sd' | 'tkKb'>('sd');
   const [selectedSchool, setSelectedSchool] = useState<string>('');
   const [schoolFilter, setSchoolFilter] = useState('');
+  const [pegawaiList, setPegawaiList] = useState<PegawaiFlat[]>([]);
+  const [siswaList, setSiswaList] = useState<SiswaFlat[]>([]);
+  const [apiLoading, setApiLoading] = useState(true);
 
   const detailSekolah = useMemo(() => {
-    const all = groupBySekolah();
+    const all = groupBySekolah(pegawaiList, siswaList);
     const filtered = schoolFilter
       ? all.filter((s) => s.nama.toLowerCase().includes(schoolFilter.toLowerCase()))
       : all;
     return filtered.sort((a, b) => a.nama.localeCompare(b.nama));
-  }, [schoolFilter]);
+  }, [pegawaiList, siswaList, schoolFilter]);
 
   const selectedDetail = useMemo(() => {
     return detailSekolah.find((s) => s.nama === selectedSchool) || null;
@@ -211,12 +261,23 @@ export default function LaporanDaftar1Page() {
       .finally(() => setLoading(false));
   }, [tahunAjaran]);
 
-  if (loading) {
+  useEffect(() => {
+    setApiLoading(true);
+    Promise.all([fetchPegawai(), fetchSiswa()])
+      .then(([p, s]) => {
+        setPegawaiList(p);
+        setSiswaList(s);
+      })
+      .catch(console.error)
+      .finally(() => setApiLoading(false));
+  }, []);
+
+  if (loading || apiLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <Loader2 className="w-10 h-10 animate-spin text-blue-700 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Memuat data laporan...</p>
+          <p className="text-sm text-muted-foreground">Memuat data...</p>
         </div>
       </div>
     );
