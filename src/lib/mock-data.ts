@@ -63,7 +63,7 @@ export const mockMenus: MenuItem[] = [
   },
   {
     id: 'menu-laporan-siswa-lulus',
-    title: 'Laporan Siswa Lulus',
+    title: 'Rekap Alumni (SD)',
     icon: 'GraduationCap',
     url: '/laporan-siswa-lulus',
     active: true,
