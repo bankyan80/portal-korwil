@@ -3,80 +3,17 @@
 import { useState } from 'react';
 import { getRedirectPath } from '@/lib/auth';
 import {
-  Home,
-  Bell,
-  Camera,
-  Building2,
   LogOut,
   LogIn,
   User,
   Shield,
   Menu,
   X,
-  Info,
-  GraduationCap,
-  FileText,
-  Calendar,
-  FolderOpen,
-  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/app-store';
 import { useClock } from '@/hooks/use-clock';
 import { canAccessAdmin } from '@/lib/permissions';
-import type { AppView } from '@/types';
-
-const navItems = [
-  { label: 'Beranda', icon: Home, sectionId: 'hero', isView: false, href: '/' },
-  { label: 'Profil', icon: Info, sectionId: null, isView: true, view: 'profil', href: '/profil' },
-  { label: 'Organisasi', icon: Building2, sectionId: 'organisasi', isView: false, href: '#organisasi' },
-  { label: 'SPMB', icon: GraduationCap, sectionId: null, isView: true, view: 'spmb-sd', href: '/spmb-sd' },
-  { label: 'Kalender', icon: Calendar, sectionId: null, isView: true, view: 'agenda-kegiatan', href: '/agenda-kegiatan' },
-  { label: 'Berita', icon: Bell, sectionId: 'informasi', isView: false, href: '#informasi' },
-  { label: 'Galeri', icon: Camera, sectionId: 'galeri', isView: false, href: '#galeri' },
-  { label: 'Administrasi', icon: FolderOpen, sectionId: null, isView: true, view: 'administrasi', href: '/administrasi' },
-  { label: 'Mapping Pegawai', icon: Users, sectionId: null, isView: true, view: 'mapping-pegawai', href: '/mapping-pegawai' },
-  { label: 'Data KGB', icon: Calendar, sectionId: null, isView: false, href: '/kgb' },
-  { label: 'Laporan', icon: FileText, sectionId: null, isView: true, view: 'laporan', href: '/laporan' },
-];
-
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
-  const { setCurrentView } = useAppStore();
-
-  function handleNav(item: typeof navItems[0]) {
-    if (item.href && item.href.startsWith('/') && !item.href.startsWith('#')) {
-      window.location.assign(item.href);
-    } else if (item.isView && item.view) {
-      if (item.view) setCurrentView(item.view as AppView);
-    } else if (item.sectionId) {
-      const el = document.getElementById(item.sectionId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        window.location.assign(`/#${item.sectionId}`);
-      }
-    }
-    onNavigate?.();
-  }
-
-  return (
-    <>
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        return (
-          <button
-            key={item.label}
-            onClick={() => handleNav(item)}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-all duration-200 cursor-pointer"
-          >
-            <Icon className="w-4 h-4" />
-            <span>{item.label}</span>
-          </button>
-        );
-      })}
-    </>
-  );
-}
 
 function AuthSection({ onNavigate }: { onNavigate?: () => void }) {
   const { user, setUser, setCurrentView } = useAppStore();
@@ -148,22 +85,6 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
   const { user, setUser, setCurrentView } = useAppStore();
   const isAdmin = canAccessAdmin(user?.role);
 
-  function handleNav(item: typeof navItems[0]) {
-    if (item.href && item.href.startsWith('/') && !item.href.startsWith('#')) {
-      window.location.assign(item.href);
-    } else if (item.isView && item.view) {
-      if (item.view) setCurrentView(item.view as AppView);
-    } else if (item.sectionId) {
-      const el = document.getElementById(item.sectionId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        window.location.assign(`/#${item.sectionId}`);
-      }
-    }
-    onClose();
-  }
-
   function getDashboardUrlMobile(): string {
     return getRedirectPath(user?.role ?? 'publik');
   }
@@ -173,20 +94,6 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
       className="md:hidden border-t border-white/10 shadow-2xl bg-gradient-to-b from-[#0d3b66] to-[#082545]"
     >
       <div className="px-4 py-3 space-y-1">
-         {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.label}
-                onClick={() => handleNav(item)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer"
-              >
-                <Icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-           <div className="border-t border-white/10 my-2" />
           {!user ? (
             <Button
               onClick={() => {
@@ -319,15 +226,7 @@ export default function Header() {
           </div>
         </div>
       </div>
-      <div
-        className="hidden md:block bg-gradient-to-b from-[#0d3b66] to-[#072240]"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-1 py-1">
-            <NavLinks />
-          </nav>
-        </div>
-      </div>
+
       {mobileMenuOpen && (
         <MobileMenu onClose={() => setMobileMenuOpen(false)} />
       )}
