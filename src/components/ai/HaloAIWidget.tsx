@@ -69,7 +69,7 @@ export default function HaloAIWidget() {
   if (pathname?.startsWith('/login')) return null;
 
   return (
-    <>
+    <div className="no-print">
       {isDesktop ? (
         <DesktopPanel
           isOpen={isOpen}
@@ -87,7 +87,7 @@ export default function HaloAIWidget() {
           onAiStatusChange={handleAiStatusChange}
         />
       )}
-    </>
+    </div>
   )
 }
 

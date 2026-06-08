@@ -130,6 +130,11 @@ export default function RootLayout({
             <HaloAIWidget />
           </AuthProvider>
         </ThemeProvider>
+        <style>{`
+          @media print {
+            .no-print { display: none !important; }
+          }
+        `}</style>
       </body>
     </html>
   );
