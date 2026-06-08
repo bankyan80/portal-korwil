@@ -54,7 +54,7 @@ export const mockMenus: MenuItem[] = [
   },
   {
     id: 'menu-laporan-daftar-1',
-    title: 'Laporan Daftar 1',
+    title: 'DAFTAR 1',
     icon: 'FileText',
     url: '/laporan-daftar-1',
     active: true,

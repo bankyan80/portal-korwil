@@ -103,7 +103,7 @@ export default function LaporanDaftar1Page() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
               <BarChart3 className="w-7 h-7 text-blue-700" />
-              Laporan Daftar 1
+              DAFTAR 1
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Data pegawai dan peserta didik per jenjang Kecamatan Lemahabang, Kabupaten Cirebon
