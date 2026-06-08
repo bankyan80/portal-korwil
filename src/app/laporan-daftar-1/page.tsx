@@ -91,6 +91,12 @@ interface SiswaFlat {
   rombel: string;
 }
 
+interface SekolahData {
+  npsn: string;
+  namaSekolah: string;
+  kepalaSekolah: string | null;
+}
+
 async function fetchPegawai(): Promise<PegawaiFlat[]> {
   const res = await fetch('/api/proxy/simpeg?limit=300');
   const json = await res.json();
@@ -131,6 +137,17 @@ async function fetchSiswa(): Promise<SiswaFlat[]> {
   return all;
 }
 
+async function fetchSekolah(): Promise<Map<string, string | null>> {
+  const res = await fetch('/api/proxy/simpeg/sekolah');
+  const json = await res.json();
+  const data: SekolahData[] = json.data || [];
+  const map = new Map<string, string | null>();
+  for (const s of data) {
+    map.set(s.namaSekolah, s.kepalaSekolah);
+  }
+  return map;
+}
+
 function hitungMasaKerja(tmt: string): keyof MasaKerja {
   if (!tmt) return '>20';
   const tmtDate = new Date(tmt);
@@ -142,7 +159,11 @@ function hitungMasaKerja(tmt: string): keyof MasaKerja {
   return '>20';
 }
 
-function groupBySekolah(pegawaiList: PegawaiFlat[], siswaList: SiswaFlat[]): DetailSekolah[] {
+function normalizeNama(nama: string): string {
+  return nama.replace(/,.*$/, '').trim().toLowerCase();
+}
+
+function groupBySekolah(pegawaiList: PegawaiFlat[], siswaList: SiswaFlat[], kepalaSekolahMap: Map<string, string | null>): DetailSekolah[] {
   const sekolahMap = new Map<string, DetailSekolah>();
 
   for (const s of allSekolah) {
@@ -186,11 +207,14 @@ function groupBySekolah(pegawaiList: PegawaiFlat[], siswaList: SiswaFlat[]): Det
   }
 
   for (const entry of sekolahMap.values()) {
-    for (const p of pegawaiList) {
-      if (p.sekolah === entry.nama && p.jabatan === 'Kepala Sekolah') {
-        entry.kepalaSekolah = p.nama;
-        entry.nipKepalaSekolah = p.nip;
-        break;
+    // Use kepalaSekolah from sekolah data, cross-reference pegawai by name for NIP
+    const ksNama = kepalaSekolahMap.get(entry.nama);
+    if (ksNama) {
+      entry.kepalaSekolah = ksNama;
+      const normalized = normalizeNama(ksNama);
+      const pegawai = pegawaiList.find(p => normalizeNama(p.nama) === normalized && p.nip);
+      if (pegawai) {
+        entry.nipKepalaSekolah = pegawai.nip;
       }
     }
   }
@@ -258,15 +282,17 @@ export default function LaporanDaftar1Page() {
   const [schoolFilter, setSchoolFilter] = useState('');
   const [pegawaiList, setPegawaiList] = useState<PegawaiFlat[]>([]);
   const [siswaList, setSiswaList] = useState<SiswaFlat[]>([]);
+  const [kepalaSekolahMap, setKepalaSekolahMap] = useState<Map<string, string | null>>(new Map());
   const [apiLoading, setApiLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      const [p, s] = await Promise.all([fetchPegawai(), fetchSiswa()]);
+      const [p, s, ks] = await Promise.all([fetchPegawai(), fetchSiswa(), fetchSekolah()]);
       setPegawaiList(p);
       setSiswaList(s);
+      setKepalaSekolahMap(ks);
     } catch (e) {
       console.error(e);
     } finally {
@@ -275,12 +301,12 @@ export default function LaporanDaftar1Page() {
   };
 
   const detailSekolah = useMemo(() => {
-    const all = groupBySekolah(pegawaiList, siswaList);
+    const all = groupBySekolah(pegawaiList, siswaList, kepalaSekolahMap);
     const filtered = schoolFilter
       ? all.filter((s) => s.nama.toLowerCase().includes(schoolFilter.toLowerCase()))
       : all;
     return filtered.sort((a, b) => a.nama.localeCompare(b.nama));
-  }, [pegawaiList, siswaList, schoolFilter]);
+  }, [pegawaiList, siswaList, schoolFilter, kepalaSekolahMap]);
 
   const selectedDetail = useMemo(() => {
     return detailSekolah.find((s) => s.nama === selectedSchool) || null;
@@ -298,10 +324,11 @@ export default function LaporanDaftar1Page() {
 
   useEffect(() => {
     setApiLoading(true);
-    Promise.all([fetchPegawai(), fetchSiswa()])
-      .then(([p, s]) => {
+    Promise.all([fetchPegawai(), fetchSiswa(), fetchSekolah()])
+      .then(([p, s, ks]) => {
         setPegawaiList(p);
         setSiswaList(s);
+        setKepalaSekolahMap(ks);
       })
       .catch(console.error)
       .finally(() => setApiLoading(false));
