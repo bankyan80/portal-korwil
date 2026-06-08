@@ -532,7 +532,7 @@ export default function LaporanDaftar1Page() {
         </details>
 
         {/* Cetak Daftar 1 per Sekolah */}
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden print:!shadow-none">
+        <div className="bg-white rounded-xl border shadow-sm overflow-hidden print-area">
           <div className="px-5 py-4 border-b bg-slate-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 no-print">
             <div className="flex items-center gap-2">
               <Printer className="w-5 h-5 text-blue-700" />
@@ -694,6 +694,9 @@ export default function LaporanDaftar1Page() {
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .no-print { display: none !important; }
+          .max-w-7xl > *:not(.print-area) { display: none !important; }
+          .print-area { display: block !important; box-shadow: none !important; border: none !important; }
+          .print-area .no-print { display: none !important; }
         }
       `}</style>
     </div>
