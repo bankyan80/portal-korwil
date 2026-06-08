@@ -43,6 +43,15 @@ export const mockMenus: MenuItem[] = [
     order: 2,
     category: 'Kepegawaian',
   },
+  {
+    id: 'menu-simdawa',
+    title: 'SIMDAWA',
+    icon: 'Database',
+    url: 'https://simdawa.vercel.app',
+    active: true,
+    order: 3,
+    category: 'Data',
+  },
 ];
 
 // ---------------------------------------------------------------------------
