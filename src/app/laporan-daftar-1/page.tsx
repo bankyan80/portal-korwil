@@ -69,6 +69,8 @@ interface DetailSekolah {
   totalPegawai: number;
   totalPegawaiL: number;
   totalPegawaiP: number;
+  kepalaSekolah: string;
+  nipKepalaSekolah: string;
 }
 
 interface PegawaiFlat {
@@ -76,6 +78,9 @@ interface PegawaiFlat {
   jk: string;
   status_kepegawaian: string;
   tmt: string;
+  nama: string;
+  jabatan: string;
+  nip: string;
 }
 
 interface SiswaFlat {
@@ -95,6 +100,9 @@ async function fetchPegawai(): Promise<PegawaiFlat[]> {
     jk: p.jenisKelamin,
     status_kepegawaian: p.statusKepegawaian,
     tmt: p.tmtTugas ? new Date(p.tmtTugas).toISOString() : '',
+    nama: p.nama || '',
+    jabatan: p.jabatan || '',
+    nip: p.nip || '',
   }));
 }
 
@@ -146,6 +154,7 @@ function groupBySekolah(pegawaiList: PegawaiFlat[], siswaList: SiswaFlat[]): Det
       totalSiswa: 0, totalSiswaL: 0, totalSiswaP: 0,
       pegawai: [],
       totalPegawai: 0, totalPegawaiL: 0, totalPegawaiP: 0,
+      kepalaSekolah: '', nipKepalaSekolah: '',
     });
   }
 
@@ -156,6 +165,7 @@ function groupBySekolah(pegawaiList: PegawaiFlat[], siswaList: SiswaFlat[]): Det
         nama: p.sekolah, npsn: '', jenjang: '',
         siswa: [], totalSiswa: 0, totalSiswaL: 0, totalSiswaP: 0,
         pegawai: [], totalPegawai: 0, totalPegawaiL: 0, totalPegawaiP: 0,
+        kepalaSekolah: '', nipKepalaSekolah: '',
       };
       sekolahMap.set(p.sekolah, entry);
     }
@@ -175,6 +185,16 @@ function groupBySekolah(pegawaiList: PegawaiFlat[], siswaList: SiswaFlat[]): Det
     asn.masaKerja[mk]++;
   }
 
+  for (const entry of sekolahMap.values()) {
+    for (const p of pegawaiList) {
+      if (p.sekolah === entry.nama && p.jabatan === 'Kepala Sekolah') {
+        entry.kepalaSekolah = p.nama;
+        entry.nipKepalaSekolah = p.nip;
+        break;
+      }
+    }
+  }
+
   for (const s of siswaList) {
     let entry = sekolahMap.get(s.sekolah);
     if (!entry) {
@@ -182,6 +202,7 @@ function groupBySekolah(pegawaiList: PegawaiFlat[], siswaList: SiswaFlat[]): Det
         nama: s.sekolah, npsn: '', jenjang: s.jenjang || '',
         siswa: [], totalSiswa: 0, totalSiswaL: 0, totalSiswaP: 0,
         pegawai: [], totalPegawai: 0, totalPegawaiL: 0, totalPegawaiP: 0,
+        kepalaSekolah: '', nipKepalaSekolah: '',
       };
       sekolahMap.set(s.sekolah, entry);
     }
@@ -761,6 +782,32 @@ export default function LaporanDaftar1Page() {
                       </tr>
                     </tfoot>
                   </table>
+                </div>
+              </div>
+
+              {/* TTD */}
+              <div className="flex justify-between pt-8 px-4 print:px-0">
+                <div className="text-center">
+                  <p className="font-semibold">Mengetahui :</p>
+                  <p className="text-sm mt-6">Ketua Tim Kerja Disdik</p>
+                  <p className="text-sm">Kecamatan Lemahabang,</p>
+                  <div className="mt-10">
+                    <p className="font-bold underline underline-offset-4">ETI BUDIWATI, S.Pd</p>
+                    <p className="text-sm">NIP. 196910022006042005</p>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="font-semibold">
+                    Lemahabang, {new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())}
+                  </p>
+                  <p className="text-sm mt-6">
+                    Kepala {selectedDetail.jenjang === 'SD' ? `SD Negeri ${selectedDetail.nama}` : `TK/KB ${selectedDetail.nama}`}
+                  </p>
+                  <p className="text-sm">Kecamatan Lemahabang,</p>
+                  <div className="mt-10">
+                    <p className="font-bold underline underline-offset-4">{selectedDetail.kepalaSekolah || '....................................'}</p>
+                    <p className="text-sm">{selectedDetail.nipKepalaSekolah ? `NIP. ${selectedDetail.nipKepalaSekolah}` : 'NIP. ....................................'}</p>
+                  </div>
                 </div>
               </div>
             </div>
