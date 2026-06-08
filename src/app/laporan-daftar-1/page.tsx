@@ -1,10 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   Users, BookOpen, ExternalLink,
   Loader2, BarChart3, School, ChevronDown, Table,
+  ArrowLeft, Printer,
 } from 'lucide-react';
+import dataPegawaiSD from '@/data/data-pegawai.json';
+import dataPegawaiTK from '@/data/data-pegawai-tk.json';
+import dataSiswa from '@/data/data-siswa.json';
+import { allSekolah } from '@/data/sekolah';
 
 interface JenjangData {
   pegawai: { total: number; l: number; p: number; guru: number; tendik: number };
@@ -33,6 +38,128 @@ interface RekapData {
   sekolah: string[];
 }
 
+interface SiswaPerKelas {
+  kelas: string;
+  l: number;
+  p: number;
+  total: number;
+}
+
+interface MasaKerja {
+  '<5': number;
+  '5-10': number;
+  '10-20': number;
+  '>20': number;
+}
+
+interface PegawaiPerASN {
+  jenis: string;
+  l: number;
+  p: number;
+  total: number;
+  masaKerja: MasaKerja;
+}
+
+interface DetailSekolah {
+  nama: string;
+  npsn: string;
+  jenjang: string;
+  siswa: SiswaPerKelas[];
+  totalSiswa: number;
+  totalSiswaL: number;
+  totalSiswaP: number;
+  pegawai: PegawaiPerASN[];
+  totalPegawai: number;
+  totalPegawaiL: number;
+  totalPegawaiP: number;
+}
+
+function hitungMasaKerja(tmt: string): keyof MasaKerja {
+  if (!tmt) return '>20';
+  const tmtDate = new Date(tmt);
+  if (isNaN(tmtDate.getTime())) return '>20';
+  const years = (Date.now() - tmtDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+  if (years < 5) return '<5';
+  if (years < 10) return '5-10';
+  if (years < 20) return '10-20';
+  return '>20';
+}
+
+function groupBySekolah(): DetailSekolah[] {
+  const sekolahMap = new Map<string, DetailSekolah>();
+
+  for (const s of allSekolah) {
+    sekolahMap.set(s.nama, {
+      nama: s.nama,
+      npsn: s.npsn,
+      jenjang: s.jenjang,
+      siswa: [],
+      totalSiswa: 0, totalSiswaL: 0, totalSiswaP: 0,
+      pegawai: [],
+      totalPegawai: 0, totalPegawaiL: 0, totalPegawaiP: 0,
+    });
+  }
+
+  const allPegawai = [...dataPegawaiSD, ...dataPegawaiTK];
+
+  for (const p of allPegawai) {
+    let entry = sekolahMap.get(p.sekolah);
+    if (!entry) {
+      entry = {
+        nama: p.sekolah, npsn: '', jenjang: '',
+        siswa: [], totalSiswa: 0, totalSiswaL: 0, totalSiswaP: 0,
+        pegawai: [], totalPegawai: 0, totalPegawaiL: 0, totalPegawaiP: 0,
+      };
+      sekolahMap.set(p.sekolah, entry);
+    }
+    entry.totalPegawai++;
+    if (p.jk === 'L') entry.totalPegawaiL++;
+    else entry.totalPegawaiP++;
+
+    let asn = entry.pegawai.find((a) => a.jenis === p.status_kepegawaian);
+    if (!asn) {
+      asn = { jenis: p.status_kepegawaian, l: 0, p: 0, total: 0, masaKerja: { '<5': 0, '5-10': 0, '10-20': 0, '>20': 0 } };
+      entry.pegawai.push(asn);
+    }
+    asn.total++;
+    if (p.jk === 'L') asn.l++;
+    else asn.p++;
+    const mk = hitungMasaKerja(p.tmt);
+    asn.masaKerja[mk]++;
+  }
+
+  for (const s of dataSiswa) {
+    let entry = sekolahMap.get(s.sekolah);
+    if (!entry) {
+      entry = {
+        nama: s.sekolah, npsn: '', jenjang: s.jenjang || '',
+        siswa: [], totalSiswa: 0, totalSiswaL: 0, totalSiswaP: 0,
+        pegawai: [], totalPegawai: 0, totalPegawaiL: 0, totalPegawaiP: 0,
+      };
+      sekolahMap.set(s.sekolah, entry);
+    }
+    entry.totalSiswa++;
+    if (s.jk === 'L') entry.totalSiswaL++;
+    else entry.totalSiswaP++;
+
+    const labelKelas = s.jenjang === 'SD' ? `Kelas ${s.kelas}` : s.rombel || `Kelompok ${s.kelas}`;
+    let kelasEntry = entry.siswa.find((k) => k.kelas === labelKelas);
+    if (!kelasEntry) {
+      kelasEntry = { kelas: labelKelas, l: 0, p: 0, total: 0 };
+      entry.siswa.push(kelasEntry);
+    }
+    kelasEntry.total++;
+    if (s.jk === 'L') kelasEntry.l++;
+    else kelasEntry.p++;
+  }
+
+  const entries = Array.from(sekolahMap.values());
+  for (const entry of entries) {
+    entry.siswa.sort((a, b) => a.kelas.localeCompare(b.kelas, undefined, { numeric: true }));
+  }
+  return entries.filter((e) => e.totalPegawai > 0 || e.totalSiswa > 0);
+}
+
 function getCurrentTa(): string {
   const now = new Date();
   const m = now.getMonth() + 1;
@@ -59,6 +186,20 @@ export default function LaporanDaftar1Page() {
   const [tahunAjaran, setTahunAjaran] = useState(getCurrentTa());
   const [detailMonth, setDetailMonth] = useState<number | null>(null);
   const [detailJenjang, setDetailJenjang] = useState<'sd' | 'tkKb'>('sd');
+  const [selectedSchool, setSelectedSchool] = useState<string>('');
+  const [schoolFilter, setSchoolFilter] = useState('');
+
+  const detailSekolah = useMemo(() => {
+    const all = groupBySekolah();
+    const filtered = schoolFilter
+      ? all.filter((s) => s.nama.toLowerCase().includes(schoolFilter.toLowerCase()))
+      : all;
+    return filtered.sort((a, b) => a.nama.localeCompare(b.nama));
+  }, [schoolFilter]);
+
+  const selectedDetail = useMemo(() => {
+    return detailSekolah.find((s) => s.nama === selectedSchool) || null;
+  }, [selectedSchool, detailSekolah]);
 
   useEffect(() => {
     setLoading(true);
@@ -101,6 +242,10 @@ export default function LaporanDaftar1Page() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
+            <a href="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-slate-800 mb-2 transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="font-medium">Kembali</span>
+            </a>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
               <BarChart3 className="w-7 h-7 text-blue-700" />
               DAFTAR 1
@@ -385,7 +530,172 @@ export default function LaporanDaftar1Page() {
             ))}
           </div>
         </details>
+
+        {/* Cetak Daftar 1 per Sekolah */}
+        <div className="bg-white rounded-xl border shadow-sm overflow-hidden print:!shadow-none">
+          <div className="px-5 py-4 border-b bg-slate-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 no-print">
+            <div className="flex items-center gap-2">
+              <Printer className="w-5 h-5 text-blue-700" />
+              <h2 className="font-semibold text-slate-800">Cetak Daftar 1 per Sekolah</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Cari sekolah..."
+                value={schoolFilter}
+                onChange={(e) => { setSchoolFilter(e.target.value); setSelectedSchool(''); }}
+                className="text-sm border rounded-lg px-3 py-1.5 w-48"
+              />
+              {selectedDetail && (
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors"
+                >
+                  <Printer className="w-4 h-4" /> Cetak
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* School Selector */}
+          <div className="p-4 no-print">
+            <select
+              value={selectedSchool}
+              onChange={(e) => setSelectedSchool(e.target.value)}
+              className="text-sm border rounded-lg px-3 py-2 w-full sm:w-96 bg-white shadow-sm"
+            >
+              <option value="">-- Pilih Sekolah --</option>
+              {detailSekolah.map((s) => (
+                <option key={s.nama} value={s.nama}>
+                  {s.nama} (Pegawai: {s.totalPegawai} | Siswa: {s.totalSiswa})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Per School Detail */}
+          {selectedDetail && (
+            <div className="p-4 sm:p-6 space-y-6">
+              {/* Kop */}
+              <div className="text-center border-b pb-3">
+                <h3 className="text-lg font-bold uppercase">{selectedDetail.nama}</h3>
+                <p className="text-sm text-muted-foreground">NPSN: {selectedDetail.npsn || '-'}</p>
+                <p className="text-xs text-muted-foreground">Kecamatan Lemahabang, Kabupaten Cirebon</p>
+              </div>
+
+              {/* Tabel Siswa */}
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2 text-sm">
+                  <BookOpen className="w-4 h-4 text-purple-600" />
+                  Data Siswa
+                </h4>
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-slate-100">
+                        <th className="px-3 py-2 text-left font-semibold text-slate-600">No</th>
+                        <th className="px-3 py-2 text-left font-semibold text-slate-600">Kelas</th>
+                        <th className="px-3 py-2 text-center font-semibold text-slate-600">L</th>
+                        <th className="px-3 py-2 text-center font-semibold text-slate-600">P</th>
+                        <th className="px-3 py-2 text-center font-semibold text-slate-600">Jumlah</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {selectedDetail.siswa.map((k, i) => (
+                        <tr key={k.kelas} className="hover:bg-slate-50">
+                          <td className="px-3 py-1.5 text-muted-foreground">{i + 1}</td>
+                          <td className="px-3 py-1.5 font-medium">{k.kelas}</td>
+                          <td className="px-3 py-1.5 text-center">{k.l}</td>
+                          <td className="px-3 py-1.5 text-center">{k.p}</td>
+                          <td className="px-3 py-1.5 text-center font-semibold">{k.total}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-slate-50 font-bold">
+                        <td colSpan={2} className="px-3 py-1.5">Jumlah</td>
+                        <td className="px-3 py-1.5 text-center">{selectedDetail.totalSiswaL}</td>
+                        <td className="px-3 py-1.5 text-center">{selectedDetail.totalSiswaP}</td>
+                        <td className="px-3 py-1.5 text-center">{selectedDetail.totalSiswa}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
+              {/* Tabel Pegawai */}
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2 text-sm">
+                  <Users className="w-4 h-4 text-emerald-600" />
+                  Data Pegawai
+                </h4>
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-slate-100">
+                        <th className="px-3 py-2 text-left font-semibold text-slate-600" rowSpan={2}>No</th>
+                        <th className="px-3 py-2 text-left font-semibold text-slate-600" rowSpan={2}>Jenis ASN</th>
+                        <th className="px-3 py-2 text-center font-semibold text-slate-600" colSpan={2}>Gender</th>
+                        <th className="px-3 py-2 text-center font-semibold text-slate-600" colSpan={4}>Masa Kerja</th>
+                        <th className="px-3 py-2 text-center font-semibold text-slate-600" rowSpan={2}>Jumlah</th>
+                      </tr>
+                      <tr className="bg-slate-50 text-xs text-muted-foreground">
+                        <th className="px-2 py-1 text-center font-medium">L</th>
+                        <th className="px-2 py-1 text-center font-medium">P</th>
+                        <th className="px-2 py-1 text-center font-medium">&lt;5 th</th>
+                        <th className="px-2 py-1 text-center font-medium">5-10 th</th>
+                        <th className="px-2 py-1 text-center font-medium">10-20 th</th>
+                        <th className="px-2 py-1 text-center font-medium">&gt;20 th</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {selectedDetail.pegawai.map((a, i) => (
+                        <tr key={a.jenis} className="hover:bg-slate-50">
+                          <td className="px-3 py-1.5 text-muted-foreground">{i + 1}</td>
+                          <td className="px-3 py-1.5 font-medium">{a.jenis}</td>
+                          <td className="px-3 py-1.5 text-center">{a.l}</td>
+                          <td className="px-3 py-1.5 text-center">{a.p}</td>
+                          <td className="px-3 py-1.5 text-center">{a.masaKerja['<5']}</td>
+                          <td className="px-3 py-1.5 text-center">{a.masaKerja['5-10']}</td>
+                          <td className="px-3 py-1.5 text-center">{a.masaKerja['10-20']}</td>
+                          <td className="px-3 py-1.5 text-center">{a.masaKerja['>20']}</td>
+                          <td className="px-3 py-1.5 text-center font-semibold">{a.total}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-slate-50 font-bold">
+                        <td colSpan={2} className="px-3 py-1.5">Jumlah</td>
+                        <td className="px-3 py-1.5 text-center">{selectedDetail.totalPegawaiL}</td>
+                        <td className="px-3 py-1.5 text-center">{selectedDetail.totalPegawaiP}</td>
+                        <td className="px-3 py-1.5 text-center">{selectedDetail.pegawai.reduce((sum, a) => sum + a.masaKerja['<5'], 0)}</td>
+                        <td className="px-3 py-1.5 text-center">{selectedDetail.pegawai.reduce((sum, a) => sum + a.masaKerja['5-10'], 0)}</td>
+                        <td className="px-3 py-1.5 text-center">{selectedDetail.pegawai.reduce((sum, a) => sum + a.masaKerja['10-20'], 0)}</td>
+                        <td className="px-3 py-1.5 text-center">{selectedDetail.pegawai.reduce((sum, a) => sum + a.masaKerja['>20'], 0)}</td>
+                        <td className="px-3 py-1.5 text-center">{selectedDetail.totalPegawai}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!selectedDetail && (
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              Pilih sekolah untuk melihat detail Daftar 1
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Print Styles */}
+      <style>{`
+        @media print {
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }
