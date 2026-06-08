@@ -11,37 +11,64 @@ interface JenjangData {
   siswa: { total: number; l: number; p: number };
 }
 
+interface BulanData {
+  nama: string;
+  index: number;
+  calIndex: number;
+  tahun: number;
+  status: 'sudah' | 'belum';
+  sd: JenjangData;
+  tkKb: JenjangData;
+}
+
 interface RekapData {
   success: boolean;
-  tahun: number;
+  tahunAjaran: string;
   totalSekolah: number;
   totalPegawai: number;
   totalSiswa: number;
   sd: { pegawai: number; siswa: number };
   tkKb: { pegawai: number; siswa: number };
-  bulan: {
-    nama: string;
-    index: number;
-    sd: JenjangData;
-    tkKb: JenjangData;
-  }[];
+  bulan: BulanData[];
   sekolah: string[];
+}
+
+function getCurrentTa(): string {
+  const now = new Date();
+  const m = now.getMonth() + 1;
+  const y = now.getFullYear();
+  if (m >= 7) return `${y}/${y + 1}`;
+  return `${y - 1}/${y}`;
+}
+
+function taOptions(): string[] {
+  const now = new Date();
+  const m = now.getMonth() + 1;
+  const y = now.getFullYear();
+  const currentStart = m >= 7 ? y : y - 1;
+  return [
+    `${currentStart - 1}/${currentStart}`,
+    `${currentStart}/${currentStart + 1}`,
+    `${currentStart + 1}/${currentStart + 2}`,
+  ];
 }
 
 export default function LaporanDaftar1Page() {
   const [data, setData] = useState<RekapData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tahunAjaran, setTahunAjaran] = useState(getCurrentTa());
   const [detailMonth, setDetailMonth] = useState<number | null>(null);
   const [detailJenjang, setDetailJenjang] = useState<'sd' | 'tkKb'>('sd');
 
   useEffect(() => {
     setLoading(true);
-    fetch('/api/laporan-bulanan/rekap')
+    setDetailMonth(null);
+    fetch(`/api/laporan-bulanan/rekap?tahunAjaran=${encodeURIComponent(tahunAjaran)}`)
       .then((r) => r.json())
       .then((d) => { setData(d); })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [tahunAjaran]);
 
   if (loading) {
     return (
@@ -65,15 +92,8 @@ export default function LaporanDaftar1Page() {
   const selected = detailMonth ? data.bulan.find((b) => b.index === detailMonth) : null;
   const selJenjang = selected ? (detailJenjang === 'sd' ? selected.sd : selected.tkKb) : null;
 
-  const totalRow = {
-    sdPegawai: data.bulan.reduce((s, b) => s + b.sd.pegawai.total, 0) / data.bulan.length,
-    tkPegawai: data.bulan.reduce((s, b) => s + b.tkKb.pegawai.total, 0) / data.bulan.length,
-    sdSiswa: data.bulan.reduce((s, b) => s + b.sd.siswa.total, 0) / data.bulan.length,
-    tkSiswa: data.bulan.reduce((s, b) => s + b.tkKb.siswa.total, 0) / data.bulan.length,
-  };
-
-  const totalPegawai = totalRow.sdPegawai + totalRow.tkPegawai;
-  const totalSiswa = totalRow.sdSiswa + totalRow.tkSiswa;
+  const totalSudah = data.bulan.filter((b) => b.status === 'sudah').length;
+  const totalBelum = data.bulan.filter((b) => b.status === 'belum').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -89,6 +109,15 @@ export default function LaporanDaftar1Page() {
               Data pegawai dan peserta didik per jenjang Kecamatan Lemahabang, Kabupaten Cirebon
             </p>
           </div>
+          <select
+            value={tahunAjaran}
+            onChange={(e) => setTahunAjaran(e.target.value)}
+            className="text-sm border rounded-lg px-3 py-2 bg-white shadow-sm font-medium"
+          >
+            {taOptions().map((ta) => (
+              <option key={ta} value={ta}>T.A. {ta}</option>
+            ))}
+          </select>
         </div>
 
         {/* Stat Cards */}
@@ -132,8 +161,8 @@ export default function LaporanDaftar1Page() {
                 <Table className="w-5 h-5 text-amber-700" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">2</p>
-                <p className="text-xs text-muted-foreground">Jenjang (SD & TK/KB)</p>
+                <p className="text-2xl font-bold text-slate-900">{totalSudah}</p>
+                <p className="text-xs text-muted-foreground">Sudah Lapor ({totalBelum} belum)</p>
               </div>
             </div>
           </div>
@@ -143,7 +172,9 @@ export default function LaporanDaftar1Page() {
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b bg-slate-50 flex items-center gap-2">
             <Table className="w-5 h-5 text-blue-700" />
-            <h2 className="font-semibold text-slate-800">Rekap Data Per Jenjang</h2>
+            <h2 className="font-semibold text-slate-800">
+              Rekap Data – Tahun Ajaran {data.tahunAjaran}
+            </h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -160,6 +191,7 @@ export default function LaporanDaftar1Page() {
                   <th className="px-4 py-3 font-semibold text-slate-600 text-center border-l" colSpan={2}>
                     Total
                   </th>
+                  <th className="px-4 py-3 font-semibold text-slate-600 text-center border-l">Status</th>
                 </tr>
                 <tr className="bg-slate-50 text-xs text-muted-foreground">
                   <th colSpan={2}></th>
@@ -169,31 +201,44 @@ export default function LaporanDaftar1Page() {
                   <th className="px-3 py-2 text-center font-medium">Siswa</th>
                   <th className="px-3 py-2 text-center border-l font-medium">Pegawai</th>
                   <th className="px-3 py-2 text-center font-medium">Siswa</th>
+                  <th className="px-3 py-2 text-center border-l"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {data.bulan.map((b, i) => {
                   const isDetail = detailMonth === b.index;
+                  const isBelum = b.status === 'belum';
                   return (
-                    <tr key={b.index}>
+                    <tr key={b.index} className={`${isBelum ? 'bg-gray-50 text-gray-400' : ''} ${isDetail ? 'bg-blue-50' : ''}`}>
                       <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                       <td className="px-4 py-3">
-                        <button
-                          onClick={() => setDetailMonth(isDetail ? null : b.index)}
-                          className="font-medium text-slate-800 hover:text-blue-700 transition-colors"
-                        >
-                          {b.nama}
-                        </button>
+                        {isBelum ? (
+                          <span className="text-gray-400">{b.nama}</span>
+                        ) : (
+                          <button
+                            onClick={() => setDetailMonth(isDetail ? null : b.index)}
+                            className="font-medium text-slate-800 hover:text-blue-700 transition-colors"
+                          >
+                            {b.nama}
+                          </button>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center border-l font-semibold">{b.sd.pegawai.total}</td>
                       <td className="px-4 py-3 text-center font-semibold">{b.sd.siswa.total}</td>
                       <td className="px-4 py-3 text-center border-l font-semibold">{b.tkKb.pegawai.total}</td>
                       <td className="px-4 py-3 text-center font-semibold">{b.tkKb.siswa.total}</td>
-                      <td className="px-4 py-3 text-center border-l font-bold text-blue-800">
-                        {b.sd.pegawai.total + b.tkKb.pegawai.total}
-                      </td>
-                      <td className="px-4 py-3 text-center font-bold text-purple-800">
-                        {b.sd.siswa.total + b.tkKb.siswa.total}
+                      <td className="px-4 py-3 text-center border-l font-bold">{b.sd.pegawai.total + b.tkKb.pegawai.total}</td>
+                      <td className="px-4 py-3 text-center font-bold">{b.sd.siswa.total + b.tkKb.siswa.total}</td>
+                      <td className="px-4 py-3 text-center border-l">
+                        {isBelum ? (
+                          <span className="inline-flex text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-200 text-gray-500">
+                            Belum Lapor
+                          </span>
+                        ) : (
+                          <span className="inline-flex text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                            Sudah
+                          </span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -206,8 +251,11 @@ export default function LaporanDaftar1Page() {
                   <td className="px-4 py-3 text-center">{data.sd.siswa}</td>
                   <td className="px-4 py-3 text-center border-l">{data.tkKb.pegawai}</td>
                   <td className="px-4 py-3 text-center">{data.tkKb.siswa}</td>
-                  <td className="px-4 py-3 text-center border-l text-blue-800">{data.totalPegawai}</td>
-                  <td className="px-4 py-3 text-center text-purple-800">{data.totalSiswa}</td>
+                  <td className="px-4 py-3 text-center border-l">{data.totalPegawai}</td>
+                  <td className="px-4 py-3 text-center">{data.totalSiswa}</td>
+                  <td className="px-4 py-3 text-center border-l">
+                    <span className="text-xs text-muted-foreground">{totalSudah}/12</span>
+                  </td>
                 </tr>
               </tfoot>
             </table>
@@ -220,7 +268,7 @@ export default function LaporanDaftar1Page() {
             <div className="px-5 py-4 border-b bg-slate-50 flex items-center justify-between">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-blue-700" />
-                Detail {selected.nama}
+                Detail Laporan {selected.nama} – T.A. {data.tahunAjaran}
               </h3>
               <button
                 onClick={() => setDetailMonth(null)}

@@ -1,19 +1,32 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import pegawaiSdData from '@/data/data-pegawai.json';
 import pegawaiTkData from '@/data/data-pegawai-tk.json';
 import siswaAll from '@/data/data-siswa.json';
 
-const bulanList = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+const bulanTa = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
 ];
+
+const calendarIndex: Record<string, number> = {
+  Juli: 7, Agustus: 8, September: 9, Oktober: 10, November: 11, Desember: 12,
+  Januari: 1, Februari: 2, Maret: 3, April: 4, Mei: 5, Juni: 6,
+};
 
 function isTkKb(j: string) {
   return j === 'TK' || j === 'KB' || j === 'PAUD';
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const tahunAjaran = req.nextUrl.searchParams.get('tahunAjaran') || '';
+    const match = tahunAjaran.match(/^(\d{4})\/(\d{4})$/);
+    if (!match) {
+      return NextResponse.json({ success: false, error: 'Format tahunAjaran tidak valid (contoh: 2025/2026)' }, { status: 400 });
+    }
+    const taMulai = parseInt(match[1]);
+    const taSelesai = parseInt(match[2]);
+
     const allSiswa = [...siswaAll] as any[];
 
     const pegawaiPerJenjang = {
@@ -59,38 +72,52 @@ export async function GET() {
       ...Object.keys(siswaBySekolah),
     ])).sort();
 
-    const bulan = bulanList.map((nama, idx) => ({
-      nama,
-      index: idx + 1,
-      sd: {
-        pegawai: {
-          total: pegawaiPerJenjang.sd.length,
-          l: pegawaiSdL.length,
-          p: pegawaiSdP.length,
-          guru: pegawaiSdGuru.length,
-          tendik: pegawaiSdTendik.length,
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const bulan = bulanTa.map((nama, idx) => {
+      const calIdx = calendarIndex[nama];
+      const tahunBulan = calIdx >= 7 ? taMulai : taSelesai;
+
+      const isBelumLapor = tahunBulan > currentYear || (tahunBulan === currentYear && calIdx > currentMonth);
+
+      return {
+        nama,
+        index: idx + 1,
+        calIndex: calIdx,
+        tahun: tahunBulan,
+        status: isBelumLapor ? 'belum' : 'sudah',
+        sd: {
+          pegawai: {
+            total: pegawaiPerJenjang.sd.length,
+            l: pegawaiSdL.length,
+            p: pegawaiSdP.length,
+            guru: pegawaiSdGuru.length,
+            tendik: pegawaiSdTendik.length,
+          },
+          siswa: {
+            total: siswaSd.length,
+            l: siswaSdL.length,
+            p: siswaSdP.length,
+          },
         },
-        siswa: {
-          total: siswaSd.length,
-          l: siswaSdL.length,
-          p: siswaSdP.length,
+        tkKb: {
+          pegawai: {
+            total: pegawaiPerJenjang.tk.length,
+            l: pegawaiTkL.length,
+            p: pegawaiTkP.length,
+            guru: pegawaiTkGuru.length,
+            tendik: pegawaiTkTendik.length,
+          },
+          siswa: {
+            total: siswaTkKb.length,
+            l: siswaTkKbL.length,
+            p: siswaTkKbP.length,
+          },
         },
-      },
-      tkKb: {
-        pegawai: {
-          total: pegawaiPerJenjang.tk.length,
-          l: pegawaiTkL.length,
-          p: pegawaiTkP.length,
-          guru: pegawaiTkGuru.length,
-          tendik: pegawaiTkTendik.length,
-        },
-        siswa: {
-          total: siswaTkKb.length,
-          l: siswaTkKbL.length,
-          p: siswaTkKbP.length,
-        },
-      },
-    }));
+      };
+    });
 
     const totalPegawaiSd = pegawaiPerJenjang.sd.length;
     const totalPegawaiTk = pegawaiPerJenjang.tk.length;
@@ -99,7 +126,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      tahun: new Date().getFullYear(),
+      tahunAjaran,
       totalSekolah: sekolahList.length,
       totalPegawai: totalPegawaiSd + totalPegawaiTk,
       totalSiswa: totalSiswaSd + totalSiswaTkKb,
