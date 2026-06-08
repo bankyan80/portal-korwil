@@ -26,7 +26,7 @@ interface RekapData {
   sekolah: string[];
 }
 
-export default function LaporanBulananPage() {
+export default function LaporanDaftar1Page() {
   const [data, setData] = useState<RekapData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
@@ -70,7 +70,7 @@ export default function LaporanBulananPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
               <BarChart3 className="w-7 h-7 text-blue-700" />
-              Laporan Bulanan
+              Laporan Daftar 1
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Data pegawai dan peserta didik Kecamatan Lemahabang, Kabupaten Cirebon
