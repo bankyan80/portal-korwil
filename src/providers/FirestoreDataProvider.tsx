@@ -43,9 +43,13 @@ export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) 
       const useMock = mockEnabled && allEmpty;
 
       // Merge: mock menus as defaults, API data overrides/extends
+      // Only allow API items whose IDs exist in mockMenus
       if (!useMock) {
+        const allowedIds = new Set(mockMenus.map(m => m.id));
         const merged = new Map(mockMenus.map(m => [m.id, m]));
-        for (const m of menus) merged.set(m.id, m);
+        for (const m of menus) {
+          if (allowedIds.has(m.id)) merged.set(m.id, m);
+        }
         setMenus(Array.from(merged.values()));
       } else {
         setMenus(mockMenus);
