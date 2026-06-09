@@ -433,6 +433,7 @@ export function ManageDataPd() {
                         <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground">Nama Siswa</th>
                         <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground w-12">JK</th>
                         <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground w-20">Jenjang</th>
+                        <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground w-24">Kelas</th>
                         <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground hidden md:table-cell">Desa</th>
                         <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground w-20">Aksi</th>
                       </tr>
@@ -446,6 +447,7 @@ export function ManageDataPd() {
                           <td className="px-4 py-2 font-medium text-foreground whitespace-nowrap">{s.nama}</td>
                           <td className="px-4 py-2 text-center text-muted-foreground">{s.jk}</td>
                           <td className="px-4 py-2 text-center"><span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${jenjangColors[s.jenjang]}`}>{s.jenjang}</span></td>
+                          <td className="px-4 py-2 text-center font-semibold">{s.jenjang === 'SD' ? (s.kelas ? `Kelas ${s.kelas}` : '-') : s.jenjang === 'TK' || s.jenjang === 'KB' ? (s.kelas ? `Kelompok ${s.kelas}` : '-') : '-'}</td>
                           <td className="px-4 py-2 text-muted-foreground hidden md:table-cell">{s.desa || '-'}</td>
                           <td className="px-4 py-2 text-center">
                             <div className="flex items-center justify-center gap-1">
