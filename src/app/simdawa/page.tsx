@@ -181,7 +181,7 @@ export default function SimdawaPage() {
         <div className="rounded-2xl bg-white p-5 shadow-sm border">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-medium text-blue-600">Google Sheet &middot; Apps Script</p>
+              <p className="text-sm font-medium text-blue-600">Data Siswa Admin &middot; Live</p>
               <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">SIMDAWA</h1>
               <p className="text-sm text-slate-600">
                 Sistem Informasi Manajemen Data Siswa SD/TK/KB
