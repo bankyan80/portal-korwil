@@ -43,6 +43,8 @@ type SimdawaRow = {
   usia_2_3_p?: number;
   usia_3_4_l?: number;
   usia_3_4_p?: number;
+  usia_5_6_l?: number;
+  usia_5_6_p?: number;
 };
 
 type SimdawaResponse = {
@@ -475,22 +477,24 @@ function TableKB({ rows }: { rows: SimdawaRow[] }) {
   if (!rows.length) return null;
 
   return (
-    <TableWrapper title="Rekap Khusus KB">
-      <table className="w-full min-w-[1000px] border-collapse">
+    <TableWrapper title="Rekap Khusus KB (Berdasarkan Kelompok & Usia)">
+      <table className="w-full min-w-[1200px] border-collapse">
         <thead>
           <tr>
             {[
               "No",
               "Nama Lembaga",
               "NPSN",
-              "KB A L",
-              "KB A P",
-              "KB B L",
-              "KB B P",
+              "Kel. Bermain A L",
+              "Kel. Bermain A P",
+              "Kel. Bermain B L",
+              "Kel. Bermain B P",
               "Usia 2-3 L",
               "Usia 2-3 P",
               "Usia 3-4 L",
               "Usia 3-4 P",
+              "Usia 5-6 L",
+              "Usia 5-6 P",
               "Total L",
               "Total P",
               "Total",
@@ -513,6 +517,8 @@ function TableKB({ rows }: { rows: SimdawaRow[] }) {
               <Td>{row.usia_2_3_p}</Td>
               <Td>{row.usia_3_4_l}</Td>
               <Td>{row.usia_3_4_p}</Td>
+              <Td>{row.usia_5_6_l}</Td>
+              <Td>{row.usia_5_6_p}</Td>
               <Td>{row.laki_laki}</Td>
               <Td>{row.perempuan}</Td>
               <Td>{row.total_siswa}</Td>

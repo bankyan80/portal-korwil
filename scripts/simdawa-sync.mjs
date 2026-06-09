@@ -50,7 +50,7 @@ function mapKBToCol(kelompok) {
     'Kelompok Bermain B': { prefix: 'kb_b', idx: 1 },
     'Kelompok Usia 2-3 Tahun': { prefix: 'usia_2_3', idx: 0 },
     'Kelompok Usia 3-4 Tahun': { prefix: 'usia_3_4', idx: 1 },
-    'Kelompok Usia 5-6 Tahun': null,
+    'Kelompok Usia 5-6 Tahun': { prefix: 'usia_5_6', idx: 4 },
   };
   return map[kelompok] || null;
 }
@@ -66,6 +66,7 @@ const HEADERS = [
   'kelompok_a_l', 'kelompok_a_p', 'kelompok_b_l', 'kelompok_b_p',
   'kb_a_l', 'kb_a_p', 'kb_b_l', 'kb_b_p',
   'usia_2_3_l', 'usia_2_3_p', 'usia_3_4_l', 'usia_3_4_p',
+  'usia_5_6_l', 'usia_5_6_p',
 ];
 
 async function fetchAllStudents() {
@@ -178,7 +179,8 @@ function buildRows(aggregated) {
     } else if (g.jenjang === 'KB') {
       for (let i = 0; i < 6; i++) row.push('');
       row.push('', '', '', '');
-      row.push(g.kb.l[0], g.kb.p[0], g.kb.l[1], g.kb.p[1], g.kb.l[2], g.kb.p[2]);
+      row.push(g.kb.l[0], g.kb.p[0], g.kb.l[1], g.kb.p[1]);
+      row.push(g.kb.l[2], g.kb.p[2], g.kb.l[3], g.kb.p[3], g.kb.l[4], g.kb.p[4]);
     }
 
     rows.push(row);
