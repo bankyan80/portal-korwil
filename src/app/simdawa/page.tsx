@@ -1,537 +1,127 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect, useMemo } from 'react';
+import { Users, Loader2, Search } from 'lucide-react';
 
-type SimdawaRow = {
-  tahun_pelajaran?: string;
-  jenjang?: string;
-  nama_sekolah?: string;
-  npsn?: string;
-  rombel?: number;
-  laki_laki?: number;
-  perempuan?: number;
-  total_siswa?: number;
-  siswa_baru?: number;
-  mutasi_masuk?: number;
-  mutasi_keluar?: number;
-  alumni?: number;
-  terakhir_update?: string;
-
-  kelas_1_l?: number;
-  kelas_1_p?: number;
-  kelas_2_l?: number;
-  kelas_2_p?: number;
-  kelas_3_l?: number;
-  kelas_3_p?: number;
-  kelas_4_l?: number;
-  kelas_4_p?: number;
-  kelas_5_l?: number;
-  kelas_5_p?: number;
-  kelas_6_l?: number;
-  kelas_6_p?: number;
-
-  kelompok_a_l?: number;
-  kelompok_a_p?: number;
-  kelompok_b_l?: number;
-  kelompok_b_p?: number;
-
-  kb_a_l?: number;
-  kb_a_p?: number;
-  kb_b_l?: number;
-  kb_b_p?: number;
-  usia_2_3_l?: number;
-  usia_2_3_p?: number;
-  usia_3_4_l?: number;
-  usia_3_4_p?: number;
-  usia_5_6_l?: number;
-  usia_5_6_p?: number;
-};
-
-type SimdawaResponse = {
-  success?: boolean;
-  updated_at?: string;
-  data?: SimdawaRow[];
-};
-
-function toNumber(value: unknown): number {
-  const numberValue = Number(value);
-  return Number.isFinite(numberValue) ? numberValue : 0;
-}
-
-export default function SimdawaPage() {
-  const [rows, setRows] = useState<SimdawaRow[]>([]);
-  const [updatedAt, setUpdatedAt] = useState<string>("-");
+export default function SimdawaPublicPage() {
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
-  const [tahunPelajaran, setTahunPelajaran] = useState("2026/2027");
-  const [jenjang, setJenjang] = useState("SEMUA");
-  const [sekolah, setSekolah] = useState("SEMUA");
-  const [search, setSearch] = useState("");
-
-  async function loadData() {
-    try {
-      setLoading(true);
-      setError("");
-
-      let json: SimdawaResponse | null = null;
-
-      const aggregateRes = await fetch("/api/simdawa/aggregate", { cache: "no-store" });
-      if (aggregateRes.ok) {
-        json = await aggregateRes.json();
-      }
-
-      if (!json?.data?.length) {
-        const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_SIMDAWA_APPS_SCRIPT_URL || "";
-        if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("GANTI_DENGAN")) {
-          try {
-            const res = await fetch(APPS_SCRIPT_URL, { cache: "no-store" });
-            if (res.ok) json = await res.json();
-          } catch {}
-        }
-      }
-
-      if (!json?.data?.length) {
-        const fallbackRes = await fetch("/api/simdawa-data");
-        if (!fallbackRes.ok) throw new Error("Gagal memuat data SIMDAWA");
-        json = await fallbackRes.json();
-      }
-
-      setRows(Array.isArray(json.data) ? json.data : []);
-      setUpdatedAt(json.updated_at || "-");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Data SIMDAWA belum dapat dimuat.");
-      setRows([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [filterJenjang, setFilterJenjang] = useState('Semua');
+  const [filterStatus, setFilterStatus] = useState('Semua');
 
   useEffect(() => {
-    loadData();
+    fetch('/api/firestore/students')
+      .then(r => r.json())
+      .then(json => {
+        if (json.items) setData(json.items);
+        else setData([]);
+      })
+      .catch(() => setError('Gagal memuat data'))
+      .finally(() => setLoading(false));
   }, []);
 
-  const tahunOptions = useMemo(() => {
-    const values = Array.from(
-      new Set(rows.map((r) => r.tahun_pelajaran).filter(Boolean))
-    ) as string[];
-    return values.length ? values : ["2026/2027"];
-  }, [rows]);
+  const rekap = useMemo(() => {
+    let filtered = data;
+    if (filterJenjang !== 'Semua') filtered = filtered.filter(d => d.jenjang === filterJenjang);
+    if (filterStatus !== 'Semua') filtered = filtered.filter(d => d.statusSekolah === filterStatus);
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(d => d.nama?.toLowerCase().includes(q) || d.sekolah?.toLowerCase().includes(q));
+    }
 
-  const sekolahOptions = useMemo(() => {
-    return Array.from(
-      new Set(rows.map((r) => r.nama_sekolah).filter(Boolean))
-    ) as string[];
-  }, [rows]);
+    const jenjangBreakdown: Record<string, any> = {};
+    const sekolahBreakdown: Record<string, any> = {};
 
-  const filteredRows = useMemo(() => {
-    return rows.filter((row) => {
-      const matchTahun = !tahunPelajaran || row.tahun_pelajaran === tahunPelajaran;
-      const matchJenjang = jenjang === "SEMUA" || row.jenjang === jenjang;
-      const matchSekolah = sekolah === "SEMUA" || row.nama_sekolah === sekolah;
-      const q = search.toLowerCase().trim();
+    filtered.forEach(d => {
+      const jenjang = d.jenjang || 'Unknown';
+      if (!jenjangBreakdown[jenjang]) jenjangBreakdown[jenjang] = { total: 0, l: 0, p: 0, aktif: 0, mutasiMasuk: 0, mutasiKeluar: 0, alumni: 0 };
+      jenjangBreakdown[jenjang].total++;
+      if (d.jenisKelamin === 'L' || d.jenisKelamin === 'Laki-laki') jenjangBreakdown[jenjang].l++;
+      else jenjangBreakdown[jenjang].p++;
+      if (d.statusSiswa === 'Aktif') jenjangBreakdown[jenjang].aktif++;
+      if (d.statusSiswa === 'Mutasi Masuk') jenjangBreakdown[jenjang].mutasiMasuk++;
+      if (d.statusSiswa === 'Mutasi Keluar') jenjangBreakdown[jenjang].mutasiKeluar++;
+      if (d.statusSiswa === 'Lulus/Alumni') jenjangBreakdown[jenjang].alumni++;
 
-      const matchSearch =
-        !q ||
-        String(row.nama_sekolah || "").toLowerCase().includes(q) ||
-        String(row.npsn || "").toLowerCase().includes(q);
-
-      return matchTahun && matchJenjang && matchSekolah && matchSearch;
+      const sekolah = d.sekolah || d.namaSekolah || 'Unknown';
+      if (!sekolahBreakdown[sekolah]) sekolahBreakdown[sekolah] = { total: 0, l: 0, p: 0 };
+      sekolahBreakdown[sekolah].total++;
+      if (d.jenisKelamin === 'L' || d.jenisKelamin === 'Laki-laki') sekolahBreakdown[sekolah].l++;
+      else sekolahBreakdown[sekolah].p++;
     });
-  }, [rows, tahunPelajaran, jenjang, sekolah, search]);
 
-  const summary = useMemo(() => {
-    return filteredRows.reduce(
-      (acc, row) => {
-        acc.totalSiswa += toNumber(row.total_siswa);
-        acc.sd += row.jenjang === "SD" ? toNumber(row.total_siswa) : 0;
-        acc.tk += row.jenjang === "TK" ? toNumber(row.total_siswa) : 0;
-        acc.kb += row.jenjang === "KB" ? toNumber(row.total_siswa) : 0;
-        acc.laki += toNumber(row.laki_laki);
-        acc.perempuan += toNumber(row.perempuan);
-        acc.rombel += toNumber(row.rombel);
-        acc.siswaBaru += toNumber(row.siswa_baru);
-        acc.mutasiMasuk += toNumber(row.mutasi_masuk);
-        acc.mutasiKeluar += toNumber(row.mutasi_keluar);
-        acc.alumni += toNumber(row.alumni);
-        return acc;
-      },
-      {
-        totalSiswa: 0,
-        sd: 0,
-        tk: 0,
-        kb: 0,
-        laki: 0,
-        perempuan: 0,
-        rombel: 0,
-        siswaBaru: 0,
-        mutasiMasuk: 0,
-        mutasiKeluar: 0,
-        alumni: 0,
-      }
+    return { total: filtered.length, jenjangBreakdown, sekolahBreakdown };
+  }, [data, filterJenjang, filterStatus, search]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex items-center gap-3 text-gray-500"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /><span>Memuat data SIMDAWA...</span></div>
+      </div>
     );
-  }, [filteredRows]);
+  }
 
-  const sdRows = filteredRows.filter((row) => row.jenjang === "SD");
-  const tkRows = filteredRows.filter((row) => row.jenjang === "TK");
-  const kbRows = filteredRows.filter((row) => row.jenjang === "KB");
+  if (error) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50"><p className="text-red-600">{error}</p></div>;
+  }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 md:px-8">
-      <section className="mx-auto max-w-7xl space-y-6">
-        <div className="rounded-2xl bg-white p-5 shadow-sm border">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-600">Data Siswa Admin &middot; Live</p>
-              <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">SIMDAWA</h1>
-              <p className="text-sm text-slate-600">
-                Sistem Informasi Manajemen Data Siswa SD/TK/KB
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Tahun Pelajaran aktif: {tahunPelajaran} &middot; Terakhir update: {updatedAt}
-              </p>
-            </div>
-
-            <button
-              onClick={loadData}
-              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Refresh Data
-            </button>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-4 sm:px-6 py-6 sm:py-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-2">
+            <Users className="w-6 h-6 text-blue-200" />
+            <h1 className="text-xl sm:text-2xl font-bold text-white">SIMDAWA</h1>
           </div>
+          <p className="text-sm text-blue-200">Sistem Informasi Manajemen Data Warga Sekolah</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input type="text" placeholder="Cari siswa/sekolah..." value={search} onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 rounded-lg border text-sm bg-white dark:bg-gray-800" />
+          </div>
+          <select value={filterJenjang} onChange={e => setFilterJenjang(e.target.value)}
+            className="px-3 py-2 rounded-lg border text-sm bg-white dark:bg-gray-800">
+            <option value="Semua">Semua Jenjang</option>
+            <option value="SD">SD</option>
+            <option value="TK">TK</option>
+            <option value="KB">KB</option>
+          </select>
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+            className="px-3 py-2 rounded-lg border text-sm bg-white dark:bg-gray-800">
+            <option value="Semua">Negeri/Swasta</option>
+            <option value="Negeri">Negeri</option>
+            <option value="Swasta">Swasta</option>
+          </select>
         </div>
 
-        {loading && (
-          <div className="rounded-2xl bg-white p-5 text-slate-600 shadow-sm border">
-            Memuat data SIMDAWA...
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white rounded-xl border p-4 text-center"><p className="text-2xl font-bold text-gray-900">{rekap.total}</p><p className="text-xs text-muted-foreground">Total Siswa</p></div>
+          <div className="bg-white rounded-xl border p-4 text-center"><p className="text-2xl font-bold text-blue-700">{rekap.jenjangBreakdown['SD']?.total || 0}</p><p className="text-xs text-muted-foreground">SD</p></div>
+          <div className="bg-white rounded-xl border p-4 text-center"><p className="text-2xl font-bold text-purple-700">{rekap.jenjangBreakdown['TK']?.total || 0}</p><p className="text-xs text-muted-foreground">TK</p></div>
+          <div className="bg-white rounded-xl border p-4 text-center"><p className="text-2xl font-bold text-green-700">{rekap.jenjangBreakdown['KB']?.total || 0}</p><p className="text-xs text-muted-foreground">KB</p></div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
+          <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap per Sekolah</h3></div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead><tr className="bg-muted/50"><th className="px-3 py-2 text-left">Sekolah</th><th className="px-3 py-2 text-center">Total</th><th className="px-3 py-2 text-center">L</th><th className="px-3 py-2 text-center">P</th></tr></thead>
+              <tbody className="divide-y">
+                {Object.entries(rekap.sekolahBreakdown).sort().map(([sekolah, vals]: any) => (
+                  <tr key={sekolah} className="hover:bg-muted/50"><td className="px-3 py-2 font-medium">{sekolah}</td><td className="px-3 py-2 text-center">{vals.total}</td><td className="px-3 py-2 text-center">{vals.l}</td><td className="px-3 py-2 text-center">{vals.p}</td></tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-
-        {error && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && (
-          <>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
-              <SummaryCard title="Total Siswa" value={summary.totalSiswa} />
-              <SummaryCard title="Siswa SD" value={summary.sd} />
-              <SummaryCard title="Siswa TK" value={summary.tk} />
-              <SummaryCard title="Siswa KB" value={summary.kb} />
-              <SummaryCard title="Laki-laki" value={summary.laki} />
-              <SummaryCard title="Perempuan" value={summary.perempuan} />
-              <SummaryCard title="Rombel" value={summary.rombel} />
-              <SummaryCard title="Siswa Baru" value={summary.siswaBaru} />
-              <SummaryCard title="Mutasi Masuk" value={summary.mutasiMasuk} />
-              <SummaryCard title="Mutasi Keluar" value={summary.mutasiKeluar} />
-              <SummaryCard title="Alumni" value={summary.alumni} />
-              <SummaryCard title="Lembaga" value={filteredRows.length} />
-            </div>
-
-            <div className="rounded-2xl bg-white p-4 shadow-sm border">
-              <div className="grid gap-3 md:grid-cols-4">
-                <select
-                  value={tahunPelajaran}
-                  onChange={(e) => setTahunPelajaran(e.target.value)}
-                  className="rounded-xl border px-3 py-2 text-sm"
-                >
-                  {tahunOptions.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={jenjang}
-                  onChange={(e) => setJenjang(e.target.value)}
-                  className="rounded-xl border px-3 py-2 text-sm"
-                >
-                  <option value="SEMUA">Semua Jenjang</option>
-                  <option value="SD">SD</option>
-                  <option value="TK">TK</option>
-                  <option value="KB">KB</option>
-                </select>
-
-                <select
-                  value={sekolah}
-                  onChange={(e) => setSekolah(e.target.value)}
-                  className="rounded-xl border px-3 py-2 text-sm"
-                >
-                  <option value="SEMUA">Semua Sekolah/Lembaga</option>
-                  {sekolahOptions.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Cari sekolah atau NPSN..."
-                  className="rounded-xl border px-3 py-2 text-sm"
-                />
-              </div>
-            </div>
-
-            {filteredRows.length === 0 ? (
-              <div className="rounded-2xl bg-white p-5 text-slate-600 shadow-sm border">
-                Belum ada data siswa pada tahun pelajaran yang dipilih.
-              </div>
-            ) : (
-              <>
-                <TableAll rows={filteredRows} />
-                <TableSD rows={sdRows} />
-                <TableTK rows={tkRows} />
-                <TableKB rows={kbRows} />
-              </>
-            )}
-          </>
-        )}
-      </section>
-    </main>
-  );
-}
-
-function SummaryCard({ title, value }: { title: string; value: number }) {
-  return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm border">
-      <p className="text-xs text-slate-500">{title}</p>
-      <p className="mt-1 text-xl font-bold text-slate-900">
-        {value.toLocaleString("id-ID")}
-      </p>
+        </div>
+      </div>
     </div>
-  );
-}
-
-function TableWrapper({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm border">
-      <h2 className="mb-3 text-lg font-bold text-slate-900">{title}</h2>
-      <div className="overflow-x-auto">{children}</div>
-    </div>
-  );
-}
-
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th className="whitespace-nowrap border-b px-3 py-2 text-left text-xs font-semibold text-slate-600">
-      {children}
-    </th>
-  );
-}
-
-function Td({ children }: { children: React.ReactNode }) {
-  return (
-    <td className="whitespace-nowrap border-b px-3 py-2 text-sm text-slate-700">
-      {children ?? "-"}
-    </td>
-  );
-}
-
-function TableAll({ rows }: { rows: SimdawaRow[] }) {
-  return (
-    <TableWrapper title="Rekap Semua Jenjang">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr>
-            {[
-              "No",
-              "Tahun Pelajaran",
-              "Jenjang",
-              "Nama Sekolah/Lembaga",
-              "NPSN",
-              "Rombel",
-              "L",
-              "P",
-              "Total",
-              "Siswa Baru",
-              "Mutasi Masuk",
-              "Mutasi Keluar",
-              "Alumni",
-              "Update",
-            ].map((item) => (
-              <Th key={item}>{item}</Th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={`${row.npsn}-${index}`}>
-              <Td>{index + 1}</Td>
-              <Td>{row.tahun_pelajaran}</Td>
-              <Td>{row.jenjang}</Td>
-              <Td>{row.nama_sekolah}</Td>
-              <Td>{row.npsn}</Td>
-              <Td>{row.rombel}</Td>
-              <Td>{row.laki_laki}</Td>
-              <Td>{row.perempuan}</Td>
-              <Td>{row.total_siswa}</Td>
-              <Td>{row.siswa_baru}</Td>
-              <Td>{row.mutasi_masuk}</Td>
-              <Td>{row.mutasi_keluar}</Td>
-              <Td>{row.alumni}</Td>
-              <Td>{row.terakhir_update}</Td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </TableWrapper>
-  );
-}
-
-function TableSD({ rows }: { rows: SimdawaRow[] }) {
-  if (!rows.length) return null;
-
-  return (
-    <TableWrapper title="Rekap Khusus SD">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr>
-            {[
-              "No",
-              "Nama Sekolah",
-              "NPSN",
-              "I L",
-              "I P",
-              "II L",
-              "II P",
-              "III L",
-              "III P",
-              "IV L",
-              "IV P",
-              "V L",
-              "V P",
-              "VI L",
-              "VI P",
-              "Total L",
-              "Total P",
-              "Total",
-            ].map((item) => (
-              <Th key={item}>{item}</Th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={`${row.npsn}-sd-${index}`}>
-              <Td>{index + 1}</Td>
-              <Td>{row.nama_sekolah}</Td>
-              <Td>{row.npsn}</Td>
-              <Td>{row.kelas_1_l}</Td>
-              <Td>{row.kelas_1_p}</Td>
-              <Td>{row.kelas_2_l}</Td>
-              <Td>{row.kelas_2_p}</Td>
-              <Td>{row.kelas_3_l}</Td>
-              <Td>{row.kelas_3_p}</Td>
-              <Td>{row.kelas_4_l}</Td>
-              <Td>{row.kelas_4_p}</Td>
-              <Td>{row.kelas_5_l}</Td>
-              <Td>{row.kelas_5_p}</Td>
-              <Td>{row.kelas_6_l}</Td>
-              <Td>{row.kelas_6_p}</Td>
-              <Td>{row.laki_laki}</Td>
-              <Td>{row.perempuan}</Td>
-              <Td>{row.total_siswa}</Td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </TableWrapper>
-  );
-}
-
-function TableTK({ rows }: { rows: SimdawaRow[] }) {
-  if (!rows.length) return null;
-
-  return (
-    <TableWrapper title="Rekap Khusus TK">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr>
-            {["No", "Nama Lembaga", "NPSN", "A L", "A P", "B L", "B P", "Total L", "Total P", "Total"].map(
-              (item) => (
-                <Th key={item}>{item}</Th>
-              )
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={`${row.npsn}-tk-${index}`}>
-              <Td>{index + 1}</Td>
-              <Td>{row.nama_sekolah}</Td>
-              <Td>{row.npsn}</Td>
-              <Td>{row.kelompok_a_l}</Td>
-              <Td>{row.kelompok_a_p}</Td>
-              <Td>{row.kelompok_b_l}</Td>
-              <Td>{row.kelompok_b_p}</Td>
-              <Td>{row.laki_laki}</Td>
-              <Td>{row.perempuan}</Td>
-              <Td>{row.total_siswa}</Td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </TableWrapper>
-  );
-}
-
-function TableKB({ rows }: { rows: SimdawaRow[] }) {
-  if (!rows.length) return null;
-
-  return (
-    <TableWrapper title="Rekap Khusus KB (Berdasarkan Kelompok & Usia)">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr>
-            {[
-              "No",
-              "Nama Lembaga",
-              "NPSN",
-              "Kel. Bermain A L",
-              "Kel. Bermain A P",
-              "Kel. Bermain B L",
-              "Kel. Bermain B P",
-              "Usia 2-3 L",
-              "Usia 2-3 P",
-              "Usia 3-4 L",
-              "Usia 3-4 P",
-              "Usia 5-6 L",
-              "Usia 5-6 P",
-              "Total L",
-              "Total P",
-              "Total",
-            ].map((item) => (
-              <Th key={item}>{item}</Th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={`${row.npsn}-kb-${index}`}>
-              <Td>{index + 1}</Td>
-              <Td>{row.nama_sekolah}</Td>
-              <Td>{row.npsn}</Td>
-              <Td>{row.kb_a_l}</Td>
-              <Td>{row.kb_a_p}</Td>
-              <Td>{row.kb_b_l}</Td>
-              <Td>{row.kb_b_p}</Td>
-              <Td>{row.usia_2_3_l}</Td>
-              <Td>{row.usia_2_3_p}</Td>
-              <Td>{row.usia_3_4_l}</Td>
-              <Td>{row.usia_3_4_p}</Td>
-              <Td>{row.usia_5_6_l}</Td>
-              <Td>{row.usia_5_6_p}</Td>
-              <Td>{row.laki_laki}</Td>
-              <Td>{row.perempuan}</Td>
-              <Td>{row.total_siswa}</Td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </TableWrapper>
   );
 }
