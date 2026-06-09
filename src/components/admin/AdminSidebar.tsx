@@ -12,24 +12,10 @@ import type { NavItemPerm } from '@/lib/permissions';
 import type { AppView } from '@/types';
 import {
   LayoutDashboard,
-  Bell,
-  Camera,
-  Building2,
-  ExternalLink,
   Users,
-  Database,
   ArrowLeft,
   LogOut,
   GraduationCap,
-  School,
-  CalendarDays,
-  BadgeCheck,
-  FileBarChart,
-  Activity,
-  Settings,
-  Shield,
-  RefreshCw,
-  FolderOpen,
   KeyRound,
 } from 'lucide-react';
 
@@ -46,40 +32,9 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: 'Super Admin',
+    title: 'Data Siswa',
     items: [
-      { label: 'Super Dashboard', icon: Shield, view: 'super-dashboard', permission: 'manage-schools' },
-      { label: 'Data Sekolah', icon: School, view: 'super-schools', permission: 'manage-schools' },
-      { label: 'Monitoring', icon: Activity, view: 'super-monitoring', permission: 'manage-monitoring' },
-      { label: 'Pengaturan Portal', icon: Settings, view: 'super-settings', permission: 'manage-settings' },
-      { label: 'Update Data', icon: RefreshCw, view: 'super-update-data', permission: 'manage-schools' },
-      { label: 'Folder Drive', icon: FolderOpen, view: 'super-drive-mapping', permission: 'manage-schools' },
-      { label: 'Kelola Informasi', icon: Bell, view: 'admin-manage-announcements', permission: 'manage-announcements' },
-      { label: 'Kelola Galeri', icon: Camera, view: 'admin-manage-gallery', permission: 'manage-gallery' },
-      { label: 'Agenda Kegiatan', icon: CalendarDays, view: 'admin-manage-agenda-kegiatan', permission: 'manage-agenda-kegiatan' },
-      { label: 'Verifikasi Konten', icon: BadgeCheck, view: 'admin-verifikasi-konten', permission: 'manage-content-verification' },
-      { label: 'Laporan & Ekspor', icon: FileBarChart, view: 'admin-laporan', permission: 'view-reports' },
-    ],
-  },
-  {
-    title: 'Operator Sekolah',
-    items: [
-      { label: 'Laporan Bulanan', icon: FileBarChart, view: 'admin-manage-laporan-bulanan', permission: 'manage-laporan-bulanan' },
-      { label: 'Data Siswa (PD)', icon: Users, view: 'admin-manage-data-pd', permission: 'manage-data-pd' },
-      { label: 'Data Guru (GTK)', icon: Users, view: 'admin-manage-data-gtk', permission: 'manage-data-gtk' },
-      { label: 'SPMB SD', icon: GraduationCap, view: 'admin-manage-spmb-sd', permission: 'manage-spmb-sd' },
-      { label: 'TKA SD', icon: Activity, view: 'admin-manage-tka-sd', permission: 'manage-tka-sd' },
-      { label: 'KIP SD', icon: BadgeCheck, view: 'admin-manage-kip-sd', permission: 'manage-kip-sd' },
-      { label: 'Yatim Piatu', icon: BadgeCheck, view: 'admin-manage-yatim-piatu', permission: 'manage-yatim-piatu' },
-    ],
-  },
-  {
-    title: 'Pengaturan',
-    items: [
-      { label: 'Kelola Organisasi', icon: Building2, view: 'admin-manage-organizations', permission: 'manage-organizations' },
-      { label: 'Kelola Link Instansi', icon: ExternalLink, view: 'admin-manage-institution-links', permission: 'manage-institution-links' },
-      { label: 'Kelola User', icon: Users, view: 'admin-manage-users', permission: 'manage-users' },
-      { label: 'Backup & Restore', icon: Database, view: 'admin-backup-restore', permission: 'backup-restore' },
+      { label: 'Edit Data Siswa', icon: Users, view: 'admin-manage-data-pd', permission: 'manage-data-pd' },
     ],
   },
 ];
