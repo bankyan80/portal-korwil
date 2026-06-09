@@ -44,15 +44,6 @@ export const mockMenus: MenuItem[] = [
     category: 'Kepegawaian',
   },
   {
-    id: 'menu-simdawa',
-    title: 'SIMDAWA',
-    icon: 'Database',
-    url: 'https://simdawa.vercel.app',
-    active: true,
-    order: 3,
-    category: 'Data',
-  },
-  {
     id: 'menu-laporan-daftar-1',
     title: 'DAFTAR 1',
     icon: 'FileText',
