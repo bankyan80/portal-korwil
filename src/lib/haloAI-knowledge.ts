@@ -196,7 +196,7 @@ const LOCAL_KB: Record<string, LocalAnswer> = {
     confidence: 'exact',
   },
   'data gtk': {
-    answer: 'Data GTK (Guru dan Tenaga Kependidikan) bisa diakses di:\n\n[👨‍🏫 Data GTK](/master-data?tab=gtk)\n\nBerisi data lengkap guru dan tenaga kependidikan.',
+    answer: 'SIMPEG (Sistem Informasi Manajemen Pegawai) bisa diakses di:\n\n[👨‍🏫 SIMPEG](/simpeg)\n\nBerisi data pegawai SD, TK, dan KB Kecamatan Lemahabang.',
     confidence: 'exact',
   },
   'website sekolah': {

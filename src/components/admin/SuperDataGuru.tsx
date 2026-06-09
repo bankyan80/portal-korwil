@@ -226,7 +226,7 @@ export default function SuperDataGuru() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-1">Data GTK</h1>
+      <h1 className="text-2xl font-bold mb-1">SIMPEG - Data Pegawai</h1>
       <p className="text-sm text-muted-foreground mb-4">Seluruh data pendidik dan tenaga kependidikan semua sekolah</p>
       <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">Data ini sesuai dengan data Dapodik, jika ada perubahan silahkan hubungi Admin.</p>
 
