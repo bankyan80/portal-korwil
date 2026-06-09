@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import type { UserProfile } from '@/types';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription,
@@ -121,6 +121,7 @@ export function LoginForm() {
       setUser(json.profile);
       toast.success('Login berhasil!', { description: `Selamat datang, ${json.profile.displayName}` });
       setCurrentView('portal');
+      if (auth) { signOut(auth).catch(() => {}); }
       router.replace('/admin/operator');
     } catch {
       setError('Terjadi kesalahan koneksi. Silakan coba lagi.');

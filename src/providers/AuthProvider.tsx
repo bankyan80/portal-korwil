@@ -102,6 +102,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribeToken = onIdTokenChanged(firebaseAuth, async (user) => {
       if (user) {
+        const npsnMatch = document.cookie.match(/(?:^|;\s*)auth-token=([^;]*)/);
+        if (npsnMatch && npsnMatch[1].startsWith('npsn:')) return;
         const token = await getIdToken(user);
         setAuthCookie(token);
       }
