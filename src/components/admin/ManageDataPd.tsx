@@ -429,7 +429,8 @@ export function ManageDataPd() {
                       <tr className="bg-muted/50">
                         <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground w-10">No</th>
                         <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground">NIK</th>
-                        <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground">Nama</th>
+                        <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground">NISN</th>
+                        <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground">Nama Siswa</th>
                         <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground w-12">JK</th>
                         <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground w-20">Jenjang</th>
                         <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground hidden md:table-cell">Desa</th>
@@ -441,6 +442,7 @@ export function ManageDataPd() {
                         <tr key={s.id || s.nik} className="hover:bg-muted/50 transition-colors">
                           <td className="px-4 py-2 text-muted-foreground">{i + 1}</td>
                           <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{s.nik}</td>
+                          <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{s.nisn || '-'}</td>
                           <td className="px-4 py-2 font-medium text-foreground whitespace-nowrap">{s.nama}</td>
                           <td className="px-4 py-2 text-center text-muted-foreground">{s.jk}</td>
                           <td className="px-4 py-2 text-center"><span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${jenjangColors[s.jenjang]}`}>{s.jenjang}</span></td>
