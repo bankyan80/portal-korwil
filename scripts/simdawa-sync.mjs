@@ -114,6 +114,8 @@ function aggregate(students) {
         jenjang: s.jenjang,
         l: 0,
         p: 0,
+        alumniL: 0,
+        alumniP: 0,
         sd: { l: [0, 0, 0, 0, 0, 0], p: [0, 0, 0, 0, 0, 0] },
         tk: { l: [0, 0], p: [0, 0] },
         kb: { l: [0, 0, 0, 0, 0, 0], p: [0, 0, 0, 0, 0, 0] },
@@ -121,13 +123,18 @@ function aggregate(students) {
     }
 
     const g = groups[key];
-    if (s.jk === 'L') g.l++;
+    const isL = s.jk === 'L';
+    if (isL) g.l++;
     else g.p++;
 
     if (s.jenjang === 'SD') {
+      if (s.kelasKelompok === 'Kelas VI') {
+        if (isL) g.alumniL++;
+        else g.alumniP++;
+      }
       const col = mapKelasToCol(s.kelasKelompok);
       if (col) {
-        if (s.jk === 'L') g.sd.l[col.idx]++;
+        if (isL) g.sd.l[col.idx]++;
         else g.sd.p[col.idx]++;
       }
     } else if (s.jenjang === 'TK') {
@@ -162,7 +169,7 @@ function buildRows(aggregated) {
       g.l,
       g.p,
       g.l + g.p,
-      0, 0, 0, 0,
+      0, 0, 0, g.alumniL + g.alumniP,
       today,
     ];
 
@@ -214,9 +221,14 @@ async function main() {
   console.log(`Schools found: ${aggregated.length}`);
 
   // Print summary
+  let totalAlumni = 0;
   for (const g of aggregated.sort((a, b) => a.jenjang.localeCompare(b.jenjang) || a.namaSekolah.localeCompare(b.namaSekolah))) {
-    console.log(`  ${g.jenjang} | ${g.namaSekolah} (${g.npsn}) | L:${g.l} P:${g.p} Total:${g.l + g.p}`);
+    const alumni = g.alumniL + g.alumniP;
+    totalAlumni += alumni;
+    const alumniStr = alumni > 0 ? ` Alumni:${alumni}` : '';
+    console.log(`  ${g.jenjang} | ${g.namaSekolah} (${g.npsn}) | L:${g.l} P:${g.p} Total:${g.l + g.p}${alumniStr}`);
   }
+  console.log(`\nTotal alumni (SD Kelas VI): ${totalAlumni}`);
 
   // Build rows
   const rows = buildRows(aggregated);
