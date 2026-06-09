@@ -328,7 +328,7 @@ function Td({ children }: { children: React.ReactNode }) {
 function TableAll({ rows }: { rows: SimdawaRow[] }) {
   return (
     <TableWrapper title="Rekap Semua Jenjang">
-      <table className="w-full min-w-[1100px] border-collapse">
+      <table className="w-full border-collapse">
         <thead>
           <tr>
             {[
@@ -381,7 +381,7 @@ function TableSD({ rows }: { rows: SimdawaRow[] }) {
 
   return (
     <TableWrapper title="Rekap Khusus SD">
-      <table className="w-full min-w-[1300px] border-collapse">
+      <table className="w-full border-collapse">
         <thead>
           <tr>
             {[
@@ -442,7 +442,7 @@ function TableTK({ rows }: { rows: SimdawaRow[] }) {
 
   return (
     <TableWrapper title="Rekap Khusus TK">
-      <table className="w-full min-w-[800px] border-collapse">
+      <table className="w-full border-collapse">
         <thead>
           <tr>
             {["No", "Nama Lembaga", "NPSN", "A L", "A P", "B L", "B P", "Total L", "Total P", "Total"].map(
@@ -478,7 +478,7 @@ function TableKB({ rows }: { rows: SimdawaRow[] }) {
 
   return (
     <TableWrapper title="Rekap Khusus KB (Berdasarkan Kelompok & Usia)">
-      <table className="w-full min-w-[1200px] border-collapse">
+      <table className="w-full border-collapse">
         <thead>
           <tr>
             {[
