@@ -73,15 +73,21 @@ export default function SimdawaPage() {
       setLoading(true);
       setError("");
 
-      const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_SIMDAWA_APPS_SCRIPT_URL || "";
-
       let json: SimdawaResponse | null = null;
 
-      if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("GANTI_DENGAN")) {
-        try {
-          const res = await fetch(APPS_SCRIPT_URL, { cache: "no-store" });
-          if (res.ok) json = await res.json();
-        } catch {}
+      const aggregateRes = await fetch("/api/simdawa/aggregate", { cache: "no-store" });
+      if (aggregateRes.ok) {
+        json = await aggregateRes.json();
+      }
+
+      if (!json?.data?.length) {
+        const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_SIMDAWA_APPS_SCRIPT_URL || "";
+        if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("GANTI_DENGAN")) {
+          try {
+            const res = await fetch(APPS_SCRIPT_URL, { cache: "no-store" });
+            if (res.ok) json = await res.json();
+          } catch {}
+        }
       }
 
       if (!json?.data?.length) {
