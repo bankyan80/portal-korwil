@@ -51,8 +51,6 @@ type SimdawaResponse = {
   data?: SimdawaRow[];
 };
 
-const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_SIMDAWA_APPS_SCRIPT_URL || "";
-
 function toNumber(value: unknown): number {
   const numberValue = Number(value);
   return Number.isFinite(numberValue) ? numberValue : 0;
@@ -73,20 +71,23 @@ export default function SimdawaPage() {
       setLoading(true);
       setError("");
 
-      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("GANTI_DENGAN")) {
-        throw new Error("Endpoint Apps Script SIMDAWA belum diatur di .env.local");
+      const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_SIMDAWA_APPS_SCRIPT_URL || "";
+
+      let json: SimdawaResponse | null = null;
+
+      if (APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes("GANTI_DENGAN")) {
+        try {
+          const res = await fetch(APPS_SCRIPT_URL, { cache: "no-store" });
+          if (res.ok) json = await res.json();
+        } catch {}
       }
 
-      const res = await fetch(APPS_SCRIPT_URL, {
-        method: "GET",
-        cache: "no-store",
-      });
-
-      if (!res.ok) {
-        throw new Error("Gagal memuat data SIMDAWA dari Apps Script");
+      if (!json?.data?.length) {
+        const fallbackRes = await fetch("/api/simdawa-data");
+        if (!fallbackRes.ok) throw new Error("Gagal memuat data SIMDAWA");
+        json = await fallbackRes.json();
       }
 
-      const json: SimdawaResponse = await res.json();
       setRows(Array.isArray(json.data) ? json.data : []);
       setUpdatedAt(json.updated_at || "-");
     } catch (err) {
