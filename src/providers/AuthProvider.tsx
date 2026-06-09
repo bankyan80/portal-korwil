@@ -187,6 +187,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } catch {
             console.warn('[AuthProvider] Gagal verifikasi sesi NPSN');
           }
+          // NPSN cookie exists but verify failed (e.g. network glitch)
+          // Don't clear cookie — allow retry on next page load
+          setUser(null);
+          setLoadingAuth(false);
+          return;
         }
         clearAuthCookie();
         setUser(null);

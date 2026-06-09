@@ -103,7 +103,8 @@ export function LoginForm() {
         setUser(profile);
         toast.success('Login berhasil!', { description: `Selamat datang, ${profile.displayName}` });
         setCurrentView('portal');
-        router.replace('/');
+        const dest = profile.role === 'operator_sekolah' ? '/admin/operator' : profile.role === 'super_admin' ? '/admin/super' : profile.role === 'ketua_organisasi' ? '/admin/organisasi' : '/';
+        router.replace(dest);
       }
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
@@ -139,7 +140,8 @@ export function LoginForm() {
         setUser(profile);
         toast.success('Login Google berhasil!', { description: `Selamat datang, ${profile.displayName}` });
         setCurrentView('portal');
-        router.replace('/');
+        const dest = profile.role === 'operator_sekolah' ? '/admin/operator' : profile.role === 'super_admin' ? '/admin/super' : profile.role === 'ketua_organisasi' ? '/admin/organisasi' : '/';
+        router.replace(dest);
       }
      } catch (err: unknown) {
        const fbErr = err as { code?: string; message?: string };
@@ -182,7 +184,7 @@ export function LoginForm() {
       setUser(json.profile);
       toast.success('Login berhasil!', { description: `Selamat datang, ${json.profile.displayName}` });
       setCurrentView('portal');
-      router.replace('/');
+      router.replace('/admin/operator');
     } catch {
       setError('Terjadi kesalahan koneksi. Silakan coba lagi.');
     } finally {

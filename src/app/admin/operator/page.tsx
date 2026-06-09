@@ -3,8 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { normalizeSchool } from '@/lib/normalize';
-import { Users, School, FileText, Image, Megaphone, Loader2, Building2, ListTodo, CheckCircle, ExternalLink, Clock, Heart, FolderOpen } from 'lucide-react';
+import { Users, Loader2, ListTodo, CheckCircle, ExternalLink, Clock } from 'lucide-react';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
 import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
@@ -12,42 +11,13 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 export default function OperatorDashboard() {
-  const { user, setUser } = useAppStore();
+  const { user } = useAppStore();
   const router = useRouter();
   const { isLoadingAuth } = useAppStore();
-
-  const [isStatsLoading, setIsStatsLoading] = useState(true);
-  const [sCount, setSCount] = useState(0);
-  const [eCount, setECount] = useState(0);
-
-  useEffect(() => {
-    if (!user?.schoolName && !user?.schoolId) { setIsStatsLoading(false); return; }
-    const normalized = normalizeSchool(user?.schoolName || '');
-    const schoolId = user?.schoolId;
-
-    Promise.all([
-      fetch('/api/siswa/list').then(r => r.json()).catch(() => ({ siswa: [] })),
-      fetch('/api/pegawai/all?all=true').then(r => r.json()).catch(() => ({ items: [] })),
-    ]).then(([siswaRes, pegawaiRes]) => {
-      const siswa = (siswaRes.siswa || []).filter((d: any) =>
-        d.schoolId === schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized
-      );
-      const pegawai = (pegawaiRes.items || []).filter((d: any) =>
-        d.schoolId === schoolId || normalizeSchool(d.sekolah || d.schoolName || '') === normalized
-      );
-      setSCount(siswa.length);
-      setECount(pegawai.length);
-    }).finally(() => setIsStatsLoading(false));
-  }, [user?.schoolName, user?.schoolId]);
 
   const [tugasList, setTugasList] = useState<any[]>([]);
   const [tugasLoading, setTugasLoading] = useState(true);
   const [laporanHistory, setLaporanHistory] = useState<any[]>([]);
-
-  const bulanList = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-  ];
 
   const statusList = [
     { value: 'belum_lapor', label: 'Belum Lapor', className: 'bg-gray-100 text-gray-600' },
@@ -73,14 +43,11 @@ export default function OperatorDashboard() {
     } catch (e) { console.error(e); } finally { setTugasLoading(false); }
   }, [user]);
 
-  useEffect(() => {
-    fetchTugas();
-  }, [fetchTugas]);
+  useEffect(() => { fetchTugas(); }, [fetchTugas]);
 
-  // Fetch laporan bulanan history
   useEffect(() => {
     if (!user?.schoolId && !user?.schoolName) return;
-    const schoolId = user.schoolId || normalizeSchool(user?.schoolName || '').replace(/\s+/g, '-');
+    const schoolId = user.schoolId || '';
     fetch(`/api/laporan-bulanan?mode=history&schoolId=${encodeURIComponent(schoolId)}`)
       .then(r => r.json())
       .then(json => setLaporanHistory(json.items || []))
@@ -114,41 +81,20 @@ export default function OperatorDashboard() {
     );
   }
 
-  if (!user || user.role === 'publik') {
-    router.replace('/login');
-    return null;
-  }
-
-  async function handleLogout() {
-    setUser(null);
-    window.location.href = '/login';
-  }
-
   const menu = [
-    { label: 'Profil Sekolah', icon: School, desc: 'Kelola data sekolah', count: null, href: '/admin/operator/profil-sekolah' },
-    { label: 'Data Guru', icon: Users, desc: 'Kelola data pendidik dan tenaga kependidikan', count: eCount, href: '/admin/operator/data-guru' },
-    { label: 'Tambah Pegawai', icon: School, desc: 'Input data pegawai baru + upload SK', count: null, href: '/admin/operator/tambah-pegawai' },
-    { label: 'Data Siswa', icon: Users, desc: 'Kelola data peserta didik', count: sCount, href: '/admin/operator/data-siswa' },
-    { label: 'Tambah Siswa', icon: School, desc: 'Daftarkan siswa baru', count: null, href: '/admin/operator/tambah-siswa' },
-    { label: 'SPMB', icon: FileText, desc: 'Penerimaan peserta didik baru', count: null, href: '/admin/operator/spmb' },
-    { label: 'Upload Berita', icon: Megaphone, desc: 'Kirim berita sekolah', count: null, href: '/admin/operator/berita' },
-    { label: 'Upload Galeri', icon: Image, desc: 'Dokumentasi kegiatan sekolah', count: null, href: '/admin/operator/galeri' },
-    { label: 'Dokumen Bersama', icon: FolderOpen, desc: 'Upload dan kelola dokumen pegawai', count: null, href: '/admin/operator/dokumen' },
-    { label: 'Sarpras', icon: Building2, desc: 'Data sarana dan prasarana sekolah', count: null, href: '/admin/operator/sarpras' },
-    { label: 'Lapor Bulanan', icon: FileText, desc: 'Cetak & kirim laporan bulanan sekolah', count: null, href: '/admin/operator/laporan-bulanan' },
-    { label: 'Data Yatim Piatu', icon: Heart, desc: 'Kelola data siswa yatim piatu', count: null, href: '/admin/operator/yatim-piatu' },
+    { label: 'Data Siswa', icon: Users, desc: 'Kelola data peserta didik', href: '/admin/operator/data-siswa' },
   ];
 
   return (
     <AuthGuard requiredRoles={['operator_sekolah', 'super_admin']} requireActive featureName="Dashboard Operator">
     <SimpleAdminLayout>
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-0 sm:p-2">
-      <FirebaseLED userLabel={user.displayName} schoolLabel={user.schoolName} />
+      <FirebaseLED userLabel={user?.displayName} schoolLabel={user?.schoolName} />
       <div className="fixed bottom-20 right-4 z-40"><SyncStatusBadge /></div>
 
       <main className="p-6 max-w-7xl mx-auto space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {menu.slice(0, 4).map((item) => (
+          {menu.map((item) => (
             <a key={item.label} href={item.href}
               className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-5 text-left hover:shadow-md transition-shadow block">
               <div className="flex items-center gap-3">
@@ -157,32 +103,12 @@ export default function OperatorDashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{item.label}</p>
-                  {item.count !== null && (
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {isStatsLoading ? <Loader2 className="w-5 h-5 animate-spin inline" /> : item.count}
-                    </p>
-                  )}
                 </div>
               </div>
             </a>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {menu.slice(4).map((item) => (
-            <a key={item.label} href={item.href}
-              className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4 text-left hover:shadow-md transition-shadow block">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
-                  <item.icon className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
-                </div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">{item.label}</span>
-              </div>
-            </a>
-          ))}
-        </div>
-
-        {/* Tugas dari Super Admin */}
         {!tugasLoading && tugasList.length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
             <div className="px-5 py-3 border-b bg-blue-50 dark:bg-blue-900/20 flex items-center gap-2">
@@ -220,7 +146,6 @@ export default function OperatorDashboard() {
           </div>
         )}
 
-        {/* Riwayat Laporan Bulanan */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
           <div className="px-5 py-3 border-b bg-blue-50 dark:bg-blue-900/20 flex items-center gap-2">
             <Clock className="w-4 h-4 text-blue-700" />
@@ -228,7 +153,7 @@ export default function OperatorDashboard() {
           </div>
           {laporanHistory.length === 0 ? (
             <div className="px-5 py-8 text-center text-sm text-muted-foreground">
-              Belum ada laporan yang dikirim. <a href="/admin/operator/laporan-bulanan" className="text-blue-600 hover:underline font-medium">Kirim laporan →</a>
+              Belum ada laporan yang dikirim.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -239,7 +164,6 @@ export default function OperatorDashboard() {
                     <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">Tahun</th>
                     <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">Status</th>
                     <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">Tanggal Kirim</th>
-                    <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -257,11 +181,6 @@ export default function OperatorDashboard() {
                         <td className="px-4 py-2.5 text-center text-xs text-muted-foreground">
                           {item.dikirimPada ? new Date(item.dikirimPada).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
-                        <td className="px-4 py-2.5 text-center">
-                          <a href="/admin/operator/laporan-bulanan" className="text-blue-600 hover:underline text-xs font-medium">
-                            Lihat
-                          </a>
-                        </td>
                       </tr>
                     );
                   })}
@@ -273,10 +192,10 @@ export default function OperatorDashboard() {
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6">
           <h2 className="font-semibold text-gray-900 dark:text-white mb-2">
-            Selamat datang, {user.displayName}
+            Selamat datang, {user?.displayName}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Mengelola data: <strong>{user.schoolName || '-'}</strong>
+            Mengelola data: <strong>{user?.schoolName || '-'}</strong>
           </p>
         </div>
       </main>
@@ -286,4 +205,3 @@ export default function OperatorDashboard() {
     </AuthGuard>
   );
 }
-
