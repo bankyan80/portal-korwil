@@ -4,6 +4,7 @@ import type { Permission } from '@/lib/permissions';
 export const ADMIN_PATH_MAP: Record<string, AppView> = {
   'operator/data-siswa': 'admin-manage-data-pd',
   'super/data-siswa': 'admin-manage-data-pd',
+  'operator/alumni': 'admin-alumni',
 };
 
 export function getViewFromPath(pathname: string): AppView {
@@ -18,6 +19,7 @@ export function getPathFromView(view: string): string {
     portal: '/',
     admin: '/admin',
     'admin-manage-data-pd': '/admin/operator/data-siswa',
+    'admin-alumni': '/admin/operator/alumni',
   };
   return map[view] || '/admin';
 }
@@ -25,9 +27,11 @@ export function getPathFromView(view: string): string {
 export const VIEW_PERMISSION_MAP: Record<string, Permission> = {
   'admin': 'view-admin',
   'admin-manage-data-pd': 'manage-data-pd',
+  'admin-alumni': 'manage-data-pd',
 };
 
 export const VIEW_TITLES: Record<string, string> = {
   admin: 'Dashboard',
   'admin-manage-data-pd': 'Edit Data Siswa',
+  'admin-alumni': 'Data Alumni',
 };

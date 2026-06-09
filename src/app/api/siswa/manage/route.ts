@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyCookieAuth } from '@/lib/server-auth';
 import fs from 'fs';
 import path from 'path';
+import siswaData from '@/data/data-siswa.json';
 
 const OVERLAY_PATH = path.join(process.cwd(), 'src', 'data', 'overlay-siswa.json');
 
@@ -92,8 +93,11 @@ export async function POST(req: NextRequest) {
 
     if (action === 'promote') {
       const records = readOverlay();
+      const overlayNiks = new Set(records.map((r: any) => r.nik));
       let updated = 0;
-      const promoted = records.map((r: any) => {
+
+      // 1) Promote existing overlay records
+      let promoted = records.map((r: any) => {
         if (r.jenjang === 'SD' && r.status !== 'lulus') {
           updated++;
           if (r.kelas >= 6) {
@@ -103,6 +107,24 @@ export async function POST(req: NextRequest) {
         }
         return r;
       });
+
+      // 2) Import kelas 6 from main DB that aren't yet in overlay
+      const year = new Date().getFullYear();
+      for (const s of siswaData as any[]) {
+        if (overlayNiks.has(s.nik)) continue;
+        const kelas = Number(s.kelas) || 0;
+        if (s.jenjang === 'SD' && s.nik && kelas >= 6) {
+          promoted.push({
+            nik: s.nik, nama: s.nama, jk: s.jk, nisn: s.nisn || '',
+            tanggal_lahir: s.tanggal_lahir || '', sekolah: s.sekolah || '',
+            jenjang: 'SD', kelas: 6, desa: s.desa || '',
+            status: 'lulus', alasan: `Lulus ${year}`,
+            createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+          });
+          updated++;
+        }
+      }
+
       writeOverlay(promoted);
       return NextResponse.json({ success: true, promoted: updated });
     }

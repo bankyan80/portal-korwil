@@ -17,6 +17,7 @@ import {
   LogOut,
   GraduationCap,
   KeyRound,
+  BookOpen,
 } from 'lucide-react';
 
 interface NavSection {
@@ -35,6 +36,7 @@ const navSections: NavSection[] = [
     title: 'Data Siswa',
     items: [
       { label: 'Edit Data Siswa', icon: Users, view: 'admin-manage-data-pd', permission: 'manage-data-pd' },
+      { label: 'Alumni', icon: BookOpen, view: 'admin-alumni', permission: 'manage-data-pd' },
     ],
   },
 ];

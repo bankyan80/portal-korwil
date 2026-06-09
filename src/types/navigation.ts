@@ -11,6 +11,7 @@ export type AppView =
   | 'admin-tambah-pegawai'
   | 'admin-manage-data-pd'
   | 'admin-manage-laporan-bulanan'
+  | 'admin-alumni'
   | 'admin-manage-spmb-sd'
   | 'admin-manage-kip-sd'
   | 'admin-manage-yatim-piatu'

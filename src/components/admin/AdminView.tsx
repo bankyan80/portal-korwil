@@ -7,6 +7,7 @@ import { VIEW_PERMISSION_MAP } from '@/lib/navigation';
 import { AdminLayout } from './AdminLayout';
 import { AdminDashboard } from './AdminDashboard';
 import { ManageDataPd } from './ManageDataPd';
+import { ManageAlumni } from './ManageAlumni';
 
 function AdminContent() {
   const { currentView, user, setCurrentView } = useAppStore();
@@ -22,6 +23,7 @@ function AdminContent() {
   switch (currentView) {
     case 'admin': return <AdminDashboard />;
     case 'admin-manage-data-pd': return <ManageDataPd />;
+    case 'admin-alumni': return <ManageAlumni />;
     default: return <AdminDashboard />;
   }
 }

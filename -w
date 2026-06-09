@@ -1,0 +1,24 @@
+HTTP/1.1 200 OK
+Accept-Ranges: bytes
+Access-Control-Allow-Origin: *
+Age: 529
+Cache-Control: public, max-age=0, must-revalidate
+Content-Disposition: inline
+Content-Length: 27598
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.googleapis.com https://apis.google.com https://*.firebaseio.com https://*.firebaseapp.com https://*.supabase.co https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://generativelanguage.googleapis.com; frame-src 'self' https://kedinasan-e5317.firebaseapp.com https://apis.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+Content-Type: text/html; charset=utf-8
+Date: Tue, 09 Jun 2026 06:00:20 GMT
+Etag: "b4d2ebb05bc8913d8c1f704bbf3954cc"
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Strict-Transport-Security: max-age=63072000
+Vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Matched-Path: /admin/operator/data-siswa
+X-Nextjs-Prerender: 1
+X-Nextjs-Stale-Time: 300
+X-Vercel-Cache: HIT
+X-Vercel-Id: sin1::2p79v-1780984820229-05b225d912c0
+

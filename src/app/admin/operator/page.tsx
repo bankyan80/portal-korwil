@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { Users, Loader2, ListTodo, CheckCircle, ExternalLink, Clock } from 'lucide-react';
+import { Users, BookOpen, Loader2, ListTodo, CheckCircle, ExternalLink, Clock } from 'lucide-react';
 import { FirebaseLED } from '@/components/portal/FirebaseLED';
 import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
@@ -83,6 +83,7 @@ export default function OperatorDashboard() {
 
   const menu = [
     { label: 'Data Siswa', icon: Users, desc: 'Kelola data peserta didik', href: '/admin/operator/data-siswa' },
+    { label: 'Alumni', icon: BookOpen, desc: 'Data siswa lulus', href: '/admin/operator/alumni' },
   ];
 
   return (
