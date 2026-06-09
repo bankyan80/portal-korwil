@@ -84,8 +84,9 @@ export async function GET() {
         const jk = s.jk || 'L';
         if (jk === 'L') laki++; else perempuan++;
         const kelas = s.kelas;
+        const hasKelas = kelas !== null && kelas !== undefined && kelas !== '' && kelas !== 0 && kelas !== '0';
 
-        if (g.jenjang === 'SD') {
+        if (g.jenjang === 'SD' && hasKelas) {
           const k = Number(kelas);
           if (k === 1) { if (jk === 'L') kelas_1_l++; else kelas_1_p++; siswaBaru++; }
           else if (k === 2) { if (jk === 'L') kelas_2_l++; else kelas_2_p++; }
@@ -93,26 +94,21 @@ export async function GET() {
           else if (k === 4) { if (jk === 'L') kelas_4_l++; else kelas_4_p++; }
           else if (k === 5) { if (jk === 'L') kelas_5_l++; else kelas_5_p++; }
           else if (k === 6) { if (jk === 'L') kelas_6_l++; else kelas_6_p++; }
-          else { if (jk === 'L') kelas_1_l++; else kelas_1_p++; }
-        } else if (g.jenjang === 'TK') {
-          const k = String(kelas || '');
+        } else if (g.jenjang === 'TK' && hasKelas) {
+          const k = String(kelas);
           if (['B', '2', '3', 'C'].includes(k)) {
             if (jk === 'L') kelompok_b_l++; else kelompok_b_p++;
           } else if (['A', '1'].includes(k)) {
             if (jk === 'L') kelompok_a_l++; else kelompok_a_p++;
             siswaBaru++;
-          } else {
-            if (jk === 'L') kelompok_a_l++; else kelompok_a_p++;
           }
-        } else if (g.jenjang === 'KB') {
-          const k = String(kelas || '');
+        } else if (g.jenjang === 'KB' && hasKelas) {
+          const k = String(kelas);
           if (['B', '2', '3', 'C'].includes(k)) {
             if (jk === 'L') kb_b_l++; else kb_b_p++;
           } else if (['A', '1'].includes(k)) {
             if (jk === 'L') kb_a_l++; else kb_a_p++;
             siswaBaru++;
-          } else {
-            if (jk === 'L') kb_a_l++; else kb_a_p++;
           }
         }
       }
