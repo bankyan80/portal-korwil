@@ -7,7 +7,7 @@ import { ArrowLeft, FileText, Users, CheckCircle, Clock, XCircle, Search, Loader
 import { apiSet } from '@/lib/api-firestore';
 import { toast } from 'sonner';
 import Footer from '@/components/portal/Footer';
-import MobileBottomNav from '@/components/layout/MobileBottomNav';
+
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
 
 interface Pendaftar {
@@ -209,7 +209,6 @@ export default function AdminPage() {
         )}
       </main>
       <Footer />
-      <MobileBottomNav />
     </div>
   );
 }

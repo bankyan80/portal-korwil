@@ -2,7 +2,7 @@
 
 import { ArrowLeft, BarChart3, Loader2 } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
-import MobileBottomNav from '@/components/layout/MobileBottomNav';
+
 import RekapDashboard from '@/components/laporan/RekapDashboard';
 
 export default function LaporanBulananPage() {
@@ -29,7 +29,8 @@ export default function LaporanBulananPage() {
       </main>
 
       <div className="print:hidden"><Footer /></div>
-      <div className="print:hidden"><MobileBottomNav /></div>
+
+
     </div>
   );
 }

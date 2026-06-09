@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ArrowLeft, School, Users, ClipboardList, FileText, CheckCircle, Home, ShieldCheck, Truck, Bell, UserCheck } from 'lucide-react';
 import Footer from '@/components/portal/Footer';
-import MobileBottomNav from '@/components/layout/MobileBottomNav';
+
 
 export default function SPMBSD() {
   return (
@@ -81,7 +81,8 @@ export default function SPMBSD() {
       </main>
 
       <Footer />
-      <MobileBottomNav />
+
+
     </div>
   );
 }

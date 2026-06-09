@@ -1,39 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { Loader2, Building2, Calendar, FileText, Image, Megaphone, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 
 export default function OrganisasiDashboard() {
-  const { user, setUser, isLoadingAuth } = useAppStore();
+  const { user } = useAppStore();
   const router = useRouter();
 
-  if (isLoadingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex items-center gap-3 text-gray-500">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          <span>Memuat...</span>
-        </div>
-      </div>
-    );
-  }
-
   if (!user) return null;
-
-  const menu = [
-    { label: 'Profil Organisasi', icon: Building2, desc: 'Kelola profil dan struktur organisasi', href: '/admin/organisasi/profil' },
-    { label: 'Program Kerja', icon: FileText, desc: 'Program kerja organisasi', href: '/admin/organisasi/program-kerja' },
-    { label: 'Agenda', icon: Calendar, desc: 'Kalender agenda organisasi', href: '/admin/organisasi/agenda' },
-    { label: 'Berita', icon: Megaphone, desc: 'Kelola berita dan pengumuman', href: '/admin/organisasi/berita' },
-    { label: 'Galeri', icon: Image, desc: 'Dokumentasi kegiatan', href: '/admin/organisasi/galeri' },
-  ];
-
-  async function handleLogout() {
-    window.location.href = '/login';
-  }
 
   return (
     <AuthGuard requiredRoles={['ketua_organisasi', 'super_admin']} requireActive featureName="Dashboard Organisasi">
@@ -43,32 +19,14 @@ export default function OrganisasiDashboard() {
           <h1 className="text-lg font-bold text-white">Dashboard Organisasi</h1>
           <p className="text-sm text-blue-200">{user.displayName} • {user.organization || 'Organisasi'}</p>
         </div>
-        <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-300 hover:text-red-200">
+        <button onClick={() => window.location.href = '/login'} className="flex items-center gap-2 text-sm text-red-300 hover:text-red-200">
           <LogOut className="w-4 h-4" /> Logout
         </button>
       </header>
 
       <main className="p-6 max-w-7xl mx-auto space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {menu.map((item) => (
-            <a key={item.label} href={item.href}
-              className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-5 text-left hover:shadow-md transition-shadow block">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
-                  <item.icon className="w-5 h-5 text-purple-700 dark:text-purple-300" />
-                </div>
-                <p className="font-semibold text-gray-900 dark:text-white">{item.label}</p>
-              </div>
-              <p className="text-xs text-muted-foreground ml-14">{item.desc}</p>
-            </a>
-          ))}
-        </div>
-
         <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-2">Selamat datang, {user.displayName}</h2>
-          <p className="text-sm text-muted-foreground">
-            Dashboard ini akan menampilkan agenda, berita terbaru, dan statistik organisasi Anda.
-          </p>
+          <p className="text-sm text-muted-foreground">Organisasi Dashboard</p>
         </div>
       </main>
     </div>

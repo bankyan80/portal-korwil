@@ -25,21 +25,7 @@ interface NavSection {
   items: NavItemPerm[];
 }
 
-const navSections: NavSection[] = [
-  {
-    title: 'Umum',
-    items: [
-      { label: 'Dashboard', icon: LayoutDashboard, view: 'admin', permission: 'view-admin' },
-    ],
-  },
-  {
-    title: 'Data Siswa',
-    items: [
-      { label: 'Edit Data Siswa', icon: Users, view: 'admin-manage-data-pd', permission: 'manage-data-pd' },
-      { label: 'Alumni', icon: BookOpen, view: 'admin-alumni', permission: 'manage-data-pd' },
-    ],
-  },
-];
+const navSections: NavSection[] = [];
 
 const roleLabels: Record<string, string> = {
   admin: 'Administrator',
