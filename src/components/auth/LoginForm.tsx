@@ -2,12 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useAppStore } from '@/store/app-store';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import type { UserProfile } from '@/types';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription,
@@ -15,29 +12,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, School } from 'lucide-react';
+import { Lock, AlertCircle, Eye, EyeOff, School } from 'lucide-react';
 import { toast } from 'sonner';
-
-const loginSchema = z.object({
-  email: z.string().email('Format email tidak valid'),
-  password: z.string().min(6, 'Password minimal 6 karakter'),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
-
-const firebaseErrors: Record<string, string> = {
-  'auth/invalid-credential': 'Email atau password salah. Silakan coba lagi.',
-  'auth/user-not-found': 'Akun tidak ditemukan. Silakan periksa email Anda.',
-  'auth/wrong-password': 'Password salah. Silakan coba lagi.',
-  'auth/too-many-requests': 'Terlalu banyak percobaan login. Silakan coba lagi nanti.',
-  'auth/invalid-email': 'Format email tidak valid.',
-  'auth/network-request-failed': 'Koneksi internet terputus. Silakan coba lagi.',
-  'auth/popup-closed-by-user': 'Login Google dibatalkan.',
-  'auth/cancelled-popup-request': 'Login dibatalkan.',
-  'auth/popup-blocked': 'Popup diblokir oleh browser. Silakan izinkan popup.',
-  'auth/unauthorized-domain': 'Domain tidak diizinkan. Pastikan domain sudah ditambahkan di Firebase Console.',
-  'auth/operation-not-allowed': 'Google Sign-In belum diaktifkan. Silakan hubungi administrator.',
-};
 
 async function getOrCreateUserProfile(uid: string, email: string, displayName: string | null): Promise<UserProfile> {
   try {
@@ -70,49 +46,12 @@ async function getOrCreateUserProfile(uid: string, email: string, displayName: s
 export function LoginForm() {
   const { setUser, setCurrentView } = useAppStore();
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [npsnValue, setNpsnValue] = useState('');
   const [npsnPassword, setNpsnPassword] = useState('');
   const [showNpsnPassword, setShowNpsnPassword] = useState(false);
   const [isNpsnSubmitting, setIsNpsnSubmitting] = useState(false);
-
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
-  });
-
-  const onSubmit = async (data: LoginFormData) => {
-    setError(null);
-    setIsSubmitting(true);
-    try {
-      if (!auth) {
-        setError('Firebase belum dikonfigurasi. Hubungi administrator.');
-        return;
-      }
-      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-      if (userCredential.user) {
-        const profile = await getOrCreateUserProfile(
-          userCredential.user.uid,
-          userCredential.user.email || data.email,
-          userCredential.user.displayName
-        );
-        setUser(profile);
-        toast.success('Login berhasil!', { description: `Selamat datang, ${profile.displayName}` });
-        setCurrentView('portal');
-        const dest = profile.role === 'operator_sekolah' ? '/admin/operator' : profile.role === 'super_admin' ? '/admin/super' : profile.role === 'ketua_organisasi' ? '/admin/organisasi' : '/';
-        router.replace(dest);
-      }
-    } catch (err: unknown) {
-      const fbErr = err as { code?: string; message?: string };
-      console.error('Login error:', fbErr);
-      setError(firebaseErrors[fbErr.code || ''] || 'Terjadi kesalahan saat login. Silakan coba lagi.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleGoogleLogin = async () => {
     setError(null);
@@ -153,10 +92,9 @@ export function LoginForm() {
          setError('Domain ini tidak diizinkan. Silakan tambahkan domain di Firebase Console → Authentication → Settings → Authorized domains.');
        } else if (fbErr.code === 'auth/popup-blocked') {
          setError('Popup login diblokir oleh browser. Silakan izinkan popup untuk situs ini.');
-       } else {
-         const errorMsg = firebaseErrors[fbErr.code || ''] || fbErr.message || 'Gagal login dengan Google.';
-         setError(`${errorMsg} (Error: ${fbErr.code || 'unknown'})`);
-       }
+        } else {
+          setError(fbErr.message || 'Gagal login dengan Google.');
+        }
      } finally {
       setIsGoogleLoading(false);
     }
@@ -276,41 +214,6 @@ export function LoginForm() {
               )}
             </Button>
           </div>
-
-          <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400">atau</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 font-medium">Alamat Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input id="email" type="email" placeholder="contoh@lemahabang.sch.id" autoComplete="email" disabled={isSubmitting || isGoogleLoading} className="pl-10 h-11" {...register('email')} />
-              </div>
-              {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="Masukkan password" autoComplete="current-password" disabled={isSubmitting || isGoogleLoading} className="pl-10 pr-10 h-11" {...register('password')} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors" tabIndex={-1} aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}>
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password.message}</p>}
-            </div>
-            <Button type="submit" disabled={isSubmitting || isGoogleLoading} className="w-full h-11 bg-blue-800 hover:bg-blue-900 text-white font-semibold transition-colors cursor-pointer">
-              {isSubmitting ? (
-                <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Memproses...</span>
-              ) : (
-                <span className="flex items-center gap-2"><LogIn className="w-4 h-4" />Masuk</span>
-              )}
-            </Button>
-          </form>
 
           {/* Google Icon */}
           <div className="mt-4 pt-4 border-t border-gray-100 text-center space-y-3">
