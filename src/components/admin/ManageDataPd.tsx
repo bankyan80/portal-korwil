@@ -179,33 +179,32 @@ export function ManageDataPd() {
     load();
   }, [isOperator, userSchool, user?.schoolId, refreshKey]);
 
-  const [page, setPage] = useState(1);
-  const [filterJenjang, setFilterJenjang] = useState<string>('ALL');
-  const [filterKelas, setFilterKelas] = useState<string>('ALL');
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-
-  const filteredSiswa = useMemo(() => {
-    let items = allSiswa;
-    if (filterJenjang !== 'ALL') items = items.filter(s => s.jenjang === filterJenjang);
-    if (filterKelas !== 'ALL') items = items.filter(s => String(s.kelas) === filterKelas);
-    const q = search.toLowerCase();
-    return q ? items.filter(s => s.nama.toLowerCase().includes(q) || s.nik.includes(q)) : items;
-  }, [allSiswa, search, filterJenjang, filterKelas]);
-
-  const sortedSiswa = useMemo(() => {
-    return [...filteredSiswa].sort((a, b) => {
-      const kelasA = a.jenjang === 'SD' ? (a.kelas || 999) : 999;
-      const kelasB = b.jenjang === 'SD' ? (b.kelas || 999) : 999;
-      return kelasB - kelasA;
-    });
-  }, [filteredSiswa]);
-
-  const totalPages = Math.ceil(sortedSiswa.length / itemsPerPage);
-  const paginatedSiswa = sortedSiswa.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-
   const totalSiswa = allSiswa.length;
   const totalL = allSiswa.filter(s => s.jk === 'L').length;
   const totalP = allSiswa.filter(s => s.jk === 'P').length;
+
+  // Group siswa by class, ordered: SD 6→1, TK/KB Kelompok B → A, then lainnya
+  const groupedByKelas = useMemo(() => {
+    const groups: { label: string; key: string; siswa: SiswaRecord[] }[] = [];
+    for (let k = 6; k >= 1; k--) {
+      const siswa = allSiswa.filter(s => s.jenjang === 'SD' && s.kelas === k);
+      if (siswa.length) groups.push({ label: `Kelas ${k}`, key: `sd-${k}`, siswa });
+    }
+    const sdNoKelas = allSiswa.filter(s => s.jenjang === 'SD' && (!s.kelas || s.kelas < 1));
+    if (sdNoKelas.length) groups.push({ label: 'SD (Tanpa Kelas)', key: 'sd-nocls', siswa: sdNoKelas });
+    // TK: Kelompok B → A
+    for (const j of ['TK', 'KB'] as const) {
+      const kelompokB = allSiswa.filter(s => s.jenjang === j && (s.kelas === 'B' || s.kelas === 2 || s.kelas === 'C' || s.kelas === 3));
+      if (kelompokB.length) groups.push({ label: `${j} Kelompok B`, key: `${j}-b`, siswa: kelompokB });
+      const kelompokA = allSiswa.filter(s => s.jenjang === j && (s.kelas === 'A' || s.kelas === 1));
+      if (kelompokA.length) groups.push({ label: `${j} Kelompok A`, key: `${j}-a`, siswa: kelompokA });
+      const lainnya = allSiswa.filter(s => s.jenjang === j && s.kelas !== 'A' && s.kelas !== 1 && s.kelas !== 'B' && s.kelas !== 2 && s.kelas !== 'C' && s.kelas !== 3);
+      if (lainnya.length) groups.push({ label: j, key: j, siswa: lainnya });
+    }
+    const lain = allSiswa.filter(s => !['SD','TK','KB'].includes(s.jenjang));
+    if (lain.length) groups.push({ label: 'Lainnya', key: 'lain', siswa: lain });
+    return groups;
+  }, [allSiswa]);
 
   function openAdd() {
     setEditingId(null);
@@ -363,7 +362,7 @@ export function ManageDataPd() {
     );
   }
 
-  // OPERATOR VIEW: Detail student list with CRUD
+  // OPERATOR VIEW: Detail student list grouped by class (6→1)
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -391,81 +390,12 @@ export function ManageDataPd() {
         Mengelola data siswa: <strong>{userSchool}</strong>
       </p>
 
-      {allSiswa.some(s => s.jenjang === 'SD') && (
-        <div className="rounded-xl border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-muted/50">
-                  <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground">Kelas</th>
-                  <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">L</th>
-                  <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">P</th>
-                  <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {[1,2,3,4,5,6].map(k => {
-                  const siswa = allSiswa.filter(s => s.jenjang === 'SD' && s.kelas === k);
-                  const l = siswa.filter(s => s.jk === 'L').length;
-                  const p = siswa.filter(s => s.jk === 'P').length;
-                  return (
-                    <tr key={k} className="hover:bg-muted/50 transition-colors">
-                      <td className="px-4 py-2.5 font-medium text-foreground">Kelas {k}</td>
-                      <td className="px-4 py-2.5 text-center text-muted-foreground">{l}</td>
-                      <td className="px-4 py-2.5 text-center text-muted-foreground">{p}</td>
-                      <td className="px-4 py-2.5 text-center font-semibold text-foreground">{l + p}</td>
-                    </tr>
-                  );
-                })}
-                {(() => {
-                  const siswa = allSiswa.filter(s => s.jenjang === 'SD' && !s.kelas);
-                  const l = siswa.filter(s => s.jk === 'L').length;
-                  const p = siswa.filter(s => s.jk === 'P').length;
-                  return l + p > 0 ? (
-                    <tr className="hover:bg-muted/50 transition-colors">
-                      <td className="px-4 py-2.5 font-medium text-muted-foreground">-</td>
-                      <td className="px-4 py-2.5 text-center text-muted-foreground">{l}</td>
-                      <td className="px-4 py-2.5 text-center text-muted-foreground">{p}</td>
-                      <td className="px-4 py-2.5 text-center font-semibold text-foreground">{l + p}</td>
-                    </tr>
-                  ) : null;
-                })()}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-            {['ALL','SD','TK','KB','TPA','SPS','RA'].map(j => (
-              <button key={j} onClick={() => { setFilterJenjang(j); setPage(1); }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${filterJenjang === j ? 'bg-blue-800 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                {j === 'ALL' ? 'Semua' : j}
-              </button>
-            ))}
-          </div>
-          {filterJenjang === 'SD' && (
-            <select value={filterKelas} onChange={(e) => { setFilterKelas(e.target.value); setPage(1); }}
-              className="text-xs border rounded-lg px-2 py-1.5 bg-background text-foreground">
-              <option value="ALL">Semua Kelas</option>
-              {[1,2,3,4,5,6].map(k => <option key={k} value={k}>Kelas {k}</option>)}
-            </select>
-          )}
-          <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setPage(1); }}
-            className="text-xs border rounded-lg px-2 py-1.5 bg-background text-foreground">
-            {[10,20,50,100].map(n => <option key={n} value={n}>{n} baris</option>)}
-          </select>
-        </div>
-        <div className="relative w-full sm:w-56">
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input type="text" placeholder="Cari NIK/nama..." value={search} onChange={(e) => setSearch(e.target.value)}
             className="pl-9 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-full bg-background text-foreground" />
         </div>
-      </div>
-
-      <div className="flex items-center gap-2 flex-wrap">
         <Button onClick={() => { setCsvUrl(''); setImportResult(null); setImportOpen(true); }} variant="outline" className="gap-2">
           <Upload className="w-4 h-4" /> Import Dapodik
         </Button>
@@ -476,65 +406,59 @@ export function ManageDataPd() {
         <Button onClick={openAdd} className="bg-blue-800 hover:bg-blue-900 text-white gap-2"><Plus className="w-4 h-4" /> Tambah</Button>
       </div>
 
-      {sortedSiswa.length === 0 ? (
+      {allSiswa.length === 0 ? (
         <AdminEmptyState icon={School} title="Belum ada data" description="Tambahkan data siswa baru" />
       ) : (
-        <div className="rounded-xl border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-muted/50">
-                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">No</th>
-                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">NIK</th>
-                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Nama</th>
-                  <th className="px-4 py-3 text-center font-semibold text-muted-foreground">JK</th>
-                  <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Kelas</th>
-                  <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Jenjang</th>
-                  <th className="px-4 py-3 text-left font-semibold text-muted-foreground hidden md:table-cell">Desa</th>
-                  <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {paginatedSiswa.map((s, i) => (
-                  <tr key={s.id || s.nik} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-4 py-3 text-muted-foreground">{(page - 1) * itemsPerPage + i + 1}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{s.nik}</td>
-                    <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{s.nama}</td>
-                    <td className="px-4 py-3 text-center text-muted-foreground">{s.jk}</td>
-                    <td className="px-4 py-3 text-center font-semibold">
-                      {s.jenjang === 'SD' ? (
-                        typeof s.kelas === 'number' && s.kelas > 0
-                          ? `Kelas ${s.kelas}`
-                          : 'Tidak Ada Kelas'
-                      ) : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-center"><span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${jenjangColors[s.jenjang]}`}>{s.jenjang}</span></td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{s.desa || '-'}</td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => openEdit(s)}><Pencil className="w-3.5 h-3.5" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => setDeleteId(s.id || '')}><Trash2 className="w-3.5 h-3.5" /></Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="px-4 py-3 border-t text-xs text-muted-foreground flex items-center justify-between">
-            <span>{sortedSiswa.length} siswa</span>
-            {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Prev</Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <Button key={p} variant={p === page ? 'default' : 'outline'} size="sm"
-                    className={p === page ? 'bg-blue-800 hover:bg-blue-900 text-white' : ''}
-                    onClick={() => setPage(p)}>{p}</Button>
-                ))}
-                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next</Button>
+        <div className="space-y-6">
+          {groupedByKelas.map(group => {
+            const filtered = search
+              ? group.siswa.filter(s => s.nama.toLowerCase().includes(search.toLowerCase()) || s.nik.includes(search))
+              : group.siswa;
+            if (!filtered.length) return null;
+            const l = filtered.filter(s => s.jk === 'L').length;
+            const p = filtered.filter(s => s.jk === 'P').length;
+            return (
+              <div key={group.key} className="rounded-xl border bg-card overflow-hidden">
+                <div className="px-4 py-2.5 bg-muted/30 border-b flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">{group.label}</h3>
+                  <span className="text-xs text-muted-foreground">L: {l} &middot; P: {p} &middot; Total: {l + p}</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground w-10">No</th>
+                        <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground">NIK</th>
+                        <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground">Nama</th>
+                        <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground w-12">JK</th>
+                        <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground w-20">Jenjang</th>
+                        <th className="px-4 py-2.5 text-left font-semibold text-muted-foreground hidden md:table-cell">Desa</th>
+                        <th className="px-4 py-2.5 text-center font-semibold text-muted-foreground w-20">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {filtered.map((s, i) => (
+                        <tr key={s.id || s.nik} className="hover:bg-muted/50 transition-colors">
+                          <td className="px-4 py-2 text-muted-foreground">{i + 1}</td>
+                          <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{s.nik}</td>
+                          <td className="px-4 py-2 font-medium text-foreground whitespace-nowrap">{s.nama}</td>
+                          <td className="px-4 py-2 text-center text-muted-foreground">{s.jk}</td>
+                          <td className="px-4 py-2 text-center"><span className={`inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full ${jenjangColors[s.jenjang]}`}>{s.jenjang}</span></td>
+                          <td className="px-4 py-2 text-muted-foreground hidden md:table-cell">{s.desa || '-'}</td>
+                          <td className="px-4 py-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600" onClick={() => openEdit(s)}><Pencil className="w-3 h-3" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => setDeleteId(s.id || '')}><Trash2 className="w-3 h-3" /></Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            )}
-          </div>
+            );
+          })}
         </div>
       )}
 
