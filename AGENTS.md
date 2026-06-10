@@ -25,27 +25,35 @@
 - **Data sync from simpeg-tim**: 22 schools, 292 pegawai, 2 PLT → Supabase (via POST to Vercel API).
 - **Data sync from simdawa**: 7.010 siswa → Supabase.
 - **Cleanup**: 6.260 duplicate student records removed (old UUID-based vs new NISN-based).
-- **Final counts**: 45 schools, 398 employees, 7.880 students, 22 kepala sekolah identified.
-- Build: sukses 115 routes, 0 error.
+- **Fix schoolId matching**: `sync-data/route.ts` — strip "kecamatan lemahabang", normalize namaSekolah, match with SD/TK/KB/PAUD prefix. Remove wrong default schoolId.
+- **Cleanup school-* duplicates**: 9 `school-{npsn}` records deleted via cleanup route.
+- **Created `/api/admin/fix-siswa`**: cursor-based endpoint for targeted student schoolId fix (handles Vercel 10s timeout via resume).
+- **Fixed 1.176 student schoolIds**: from wrong default `20215216` → correct NPSN via matching.
+- **Final counts**: 45 schools, 398 employees, 6.780 students (701 without schoolId = NIK-based, no school name), 22 kepala sekolah, 45 mapping sekolah.
+- 6 public pages verified OK: /master-data-sekolah, /simdawa, /simpeg, /mapping-pegawai, /sirubin, /rekap-pendidikan.
+- Build: sukses 117 routes, 0 error.
 
 ### In Progress
 - (none)
 
 ### Blocked
 - Supabase env vars empty in `.env.local` — only available on Vercel.
-- Sync-data API only processes ≤1000 students due to Supabase JS client default limit (mitigated with `.limit(100000)`).
+- Sync-data API times out (10s Vercel Hobby) when iterating all 6.780 students for updates. Use `/api/admin/fix-siswa` instead for targeted fixes.
 
 ## Key Decisions
 - **Sync approach**: POST directly to Vercel `/api/firestore/[collection]` with NIK/NISN as record IDs, batch 50 concurrent.
 - **Auth for admin API**: Firebase ID token via cookie + .NET `WebRequest` (PowerShell `Invoke-WebRequest` ignores Cookie header).
 - **Password reset**: Firebase Admin SDK via `scripts/reset-pass.ts` (service-account on disk).
 - **Duplicate cleanup**: Client-side batch deletions (concurrent 50) faster than Vercel serverless (10s limit).
-- **Data volume**: ~7.880 students after dedup (from 14.250 including UUID duplicates).
+- **School name matching**: Normalize student name (lowercase, strip "kecamatan lemahabang"), build index with & without SD/TK/KB/PAUD prefix, fallback partial match.
+- **School dedup**: `school-{npsn}` prefix records are duplicates from old sync, safe to delete.
 
 ## Relevant Files (new/changed this session)
 - `src/app/api/firestore/[collection]/route.ts`: offset pagination, total count, PUBLIC_COLLECTIONS updated.
-- `src/app/api/admin/cleanup/route.ts`: server-side dedup endpoint.
-- `src/app/api/admin/sync-data/route.ts`: `.limit(100000)` for all Supabase queries.
+- `src/app/api/admin/cleanup/route.ts`: server-side dedup + school-* removal + student schoolId clear.
+- `src/app/api/admin/sync-data/route.ts`: improved name matching, no wrong default schoolId.
+- `src/app/api/admin/fix-siswa/route.ts`: NEW — cursor-based targeted schoolId fix endpoint.
+- `src/app/api/admin/seed-data/route.ts`: unchanged.
 - `src/proxy.ts`: selfAuthPaths includes sync-data, seed-data, cleanup.
 - `scripts/sync-from-local.ts`: imported data from simpeg-tim + simdawa (deleted).
 - `scripts/cleanup2.mjs`: client-side dedup with batch concurrent deletes (deleted).

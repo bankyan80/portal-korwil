@@ -12,7 +12,7 @@ export default function SimdawaPublicPage() {
   const [filterStatus, setFilterStatus] = useState('Semua');
 
   useEffect(() => {
-    fetch('/api/firestore/students')
+    fetch('/api/firestore/students?limit=10000')
       .then(r => r.json())
       .then(json => {
         if (json.items) setData(json.items);

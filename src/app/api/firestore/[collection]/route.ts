@@ -35,6 +35,37 @@ if (!PUBLIC_COLLECTIONS.includes(collection)) {
       return NextResponse.json({ exists: true, data: { id: data.id, ...(data.data as object) } });
     }
 
+    const MAX_PAGE = 1000;
+
+    if (limit > MAX_PAGE || offset > 0) {
+      const allItems: any[] = [];
+      let lastId = '';
+      const desired = limit > MAX_PAGE ? limit : MAX_PAGE;
+      while (allItems.length < desired) {
+        let pageQuery = supabaseAdmin
+          .from('app_data')
+          .select('id, data', { count: 'exact' })
+          .eq('collection', collection)
+          .order('id')
+          .limit(MAX_PAGE);
+        if (lastId) pageQuery = pageQuery.gt('id', lastId);
+        if (field && value) pageQuery = pageQuery.filter(`data->>${field}`, 'eq', value);
+        const { data: pageData, count } = await pageQuery;
+        if (!pageData || pageData.length === 0) {
+          const items = allItems.map((r: any) => ({ id: r.id, ...(r.data as object) }));
+          return NextResponse.json({ items, count: items.length, total: count || 0 });
+        }
+        allItems.push(...pageData);
+        lastId = pageData[pageData.length - 1].id;
+        if (pageData.length < MAX_PAGE) break;
+      }
+      const total = allItems.length;
+      let items = allItems.map((r: any) => ({ id: r.id, ...(r.data as object) }));
+      if (offset > 0) items = items.slice(offset, offset + limit);
+      else if (limit <= MAX_PAGE) items = items.slice(0, limit);
+      return NextResponse.json({ items, count: items.length, total });
+    }
+
     let query = supabaseAdmin
       .from('app_data')
       .select('*', { count: 'exact' })

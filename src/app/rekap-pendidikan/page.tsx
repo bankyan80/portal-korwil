@@ -15,7 +15,7 @@ export default function RekapPendidikanPublicPage() {
   useEffect(() => {
     Promise.all([
       fetch('/api/firestore/schools').then(r => r.json()),
-      fetch('/api/firestore/students').then(r => r.json()),
+      fetch('/api/firestore/students?limit=10000').then(r => r.json()),
       fetch('/api/firestore/employees').then(r => r.json()),
       fetch('/api/firestore/employee_mappings').then(r => r.json()),
       fetch('/api/firestore/sirubin_reports').then(r => r.json()),

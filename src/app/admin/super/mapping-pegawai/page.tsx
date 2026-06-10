@@ -42,7 +42,7 @@ export default function SuperMappingPegawai() {
     try {
       const [eRes, sRes] = await Promise.all([
         fetch('/api/firestore/employees'),
-        fetch('/api/firestore/students'),
+        fetch('/api/firestore/students?limit=10000'),
       ]);
       const employees = (await eRes.json()).items || [];
       const students = (await sRes.json()).items || [];

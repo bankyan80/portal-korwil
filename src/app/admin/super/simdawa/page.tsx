@@ -52,6 +52,7 @@ const defaultForm: Partial<StudentData> = {
 export default function SuperSimdawa() {
   const { user } = useAppStore();
   const [data, setData] = useState<StudentData[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [schools, setSchools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -67,12 +68,13 @@ export default function SuperSimdawa() {
   const fetchData = useCallback(async () => {
     try {
       const [sRes, scRes] = await Promise.all([
-        fetch('/api/firestore/students'),
+        fetch('/api/firestore/students?limit=10000'),
         fetch('/api/firestore/schools'),
       ]);
       const sJson = await sRes.json();
       const scJson = await scRes.json();
       setData(sJson.items || []);
+      setTotalCount(sJson.total || 0);
       setSchools(scJson.items || []);
     } catch {} finally {
       setLoading(false);
@@ -180,7 +182,7 @@ export default function SuperSimdawa() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-6 py-4">
         <h1 className="text-lg font-bold text-white flex items-center gap-2"><Users className="w-5 h-5" /> SIMDAWA</h1>
-        <p className="text-sm text-blue-200">{user.displayName} • {data.length} siswa</p>
+        <p className="text-sm text-blue-200">{user.displayName} • {totalCount} siswa</p>
       </header>
       <main className="p-6 max-w-7xl mx-auto space-y-4">
         <div className="grid grid-cols-4 gap-3">
