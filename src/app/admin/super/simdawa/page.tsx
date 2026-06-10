@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { Users, Plus, Pencil, Trash2, Search, Loader2 } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, Search, Loader2, GraduationCap } from 'lucide-react';
 import { ExportButton } from '@/components/shared/ExportButton';
 import { ImportButton } from '@/components/shared/ImportButton';
 import AuthGuard from '@/components/auth/AuthGuard';
@@ -65,6 +65,10 @@ export default function SuperSimdawa() {
   const [form, setForm] = useState<Partial<StudentData>>({ ...defaultForm });
   const [statusFilter, setStatusFilter] = useState('Semua');
   const [error, setError] = useState('');
+  const [naikKelasRunning, setNaikKelasRunning] = useState(false);
+  const [naikKelasLog, setNaikKelasLog] = useState<string[]>([]);
+  const [naikKelasResult, setNaikKelasResult] = useState<any>(null);
+  const [showNaikKelas, setShowNaikKelas] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -155,6 +159,39 @@ export default function SuperSimdawa() {
     } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); }
   };
 
+  const handleNaikKelas = async () => {
+    setNaikKelasRunning(true);
+    setNaikKelasLog([]);
+    setNaikKelasResult(null);
+    let cursor = '';
+    let totalProcessed = 0;
+    let totalNaik = 0;
+    let totalAlumni = 0;
+    let totalErrors = 0;
+    const logs: string[] = [];
+    try {
+      while (true) {
+        const url = `/api/admin/naik-kelas${cursor ? `?cursor=${cursor}` : ''}`;
+        const res = await fetch(url, { method: 'POST' });
+        const json = await res.json();
+        logs.push(...(json.log || []));
+        setNaikKelasLog([...logs]);
+        totalProcessed += json.processed || 0;
+        totalNaik += json.naikKelas || 0;
+        totalAlumni += json.jadiAlumni || 0;
+        totalErrors += json.errors || 0;
+        if (json.done || !json.nextCursor) break;
+        cursor = json.nextCursor;
+      }
+      setNaikKelasResult({ processed: totalProcessed, naikKelas: totalNaik, jadiAlumni: totalAlumni, errors: totalErrors });
+    } catch (e: any) {
+      logs.push(`Error: ${e.message}`);
+      setNaikKelasLog([...logs]);
+    } finally {
+      setNaikKelasRunning(false);
+    }
+  };
+
   if (!user) return null;
 
   const sdCount = data.filter(s => getSchoolJenjang(s.schoolId) === 'SD').length;
@@ -232,6 +269,10 @@ export default function SuperSimdawa() {
           </select>
           <ExportButton collection="students" />
           <ImportButton collection="students" onSuccess={() => { setLoading(true); fetchData(); }} />
+          <button onClick={() => setShowNaikKelas(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-700 text-white rounded-lg text-sm font-medium hover:bg-purple-800 whitespace-nowrap">
+            <GraduationCap className="w-4 h-4" /> Naik Kelas
+          </button>
           <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg text-sm font-medium hover:bg-blue-800 shrink-0">
             <Plus className="w-4 h-4" /> Tambah
           </button>
@@ -349,6 +390,67 @@ export default function SuperSimdawa() {
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editId ? 'Simpan' : 'Tambah'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showNaikKelas && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => { if (!naikKelasRunning) setShowNaikKelas(false) }}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <h3 className="font-bold text-lg flex items-center gap-2"><GraduationCap className="w-5 h-5" /> Kenaikan Kelas</h3>
+              <button onClick={() => { if (!naikKelasRunning) setShowNaikKelas(false) }} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              {!naikKelasResult && (
+                <div className="space-y-3">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                    <p className="font-medium">Tahun Ajaran 2025/2026 → 2026/2027</p>
+                    <ul className="mt-2 text-xs list-disc list-inside space-y-1 text-amber-700">
+                      <li>SD kelas 6 → Alumni</li>
+                      <li>SD kelas 1-5 → naik 1 tingkat</li>
+                      <li>TK/KB Kelompok B → Alumni</li>
+                      <li>TK/KB Kelompok A → Kelompok B</li>
+                    </ul>
+                  </div>
+                  {naikKelasLog.length > 0 && (
+                    <div className="bg-gray-50 rounded-lg border p-3 max-h-40 overflow-y-auto text-xs font-mono space-y-0.5">
+                      {naikKelasLog.map((l, i) => <p key={i} className={l.startsWith('Error') ? 'text-red-600' : 'text-gray-600'}>{l}</p>)}
+                    </div>
+                  )}
+                </div>
+              )}
+              {naikKelasResult && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 text-center space-y-2">
+                  <GraduationCap className="w-8 h-8 mx-auto text-green-600" />
+                  <p className="font-semibold">Kenaikan Kelas Selesai</p>
+                  <div className="grid grid-cols-3 gap-3 mt-3">
+                    <div><p className="text-lg font-bold">{naikKelasResult.naikKelas}</p><p className="text-xs">Naik Kelas</p></div>
+                    <div><p className="text-lg font-bold">{naikKelasResult.jadiAlumni}</p><p className="text-xs">Jadi Alumni</p></div>
+                    <div><p className={`text-lg font-bold ${naikKelasResult.errors > 0 ? 'text-red-600' : ''}`}>{naikKelasResult.errors}</p><p className="text-xs">Error</p></div>
+                  </div>
+                  {naikKelasLog.length > 0 && (
+                    <div className="bg-white rounded-lg border p-3 max-h-32 overflow-y-auto text-xs font-mono text-gray-600 text-left mt-2">
+                      {naikKelasLog.map((l, i) => <p key={i}>{l}</p>)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t flex justify-end gap-3">
+              {!naikKelasRunning && !naikKelasResult && (
+                <button onClick={() => setShowNaikKelas(false)} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50">Batal</button>
+              )}
+              {!naikKelasResult ? (
+                <button onClick={handleNaikKelas} disabled={naikKelasRunning}
+                  className="px-4 py-2 bg-purple-700 text-white rounded-lg text-sm font-medium hover:bg-purple-800 disabled:opacity-50 flex items-center gap-2">
+                  {naikKelasRunning && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {naikKelasRunning ? 'Memproses...' : 'Jalankan Kenaikan Kelas'}
+                </button>
+              ) : (
+                <button onClick={() => { setShowNaikKelas(false); setNaikKelasResult(null); setNaikKelasLog([]); }}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-medium hover:bg-gray-800">Tutup</button>
+              )}
             </div>
           </div>
         </div>
