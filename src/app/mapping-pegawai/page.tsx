@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { MapPin, Loader2, Search } from 'lucide-react';
+import { MapPin, Loader2, Search, Download } from 'lucide-react';
+import { exportToExcel } from '@/components/laporan/ExportButton';
 
 export default function MappingPegawaiPublicPage() {
   const [data, setData] = useState<any[]>([]);
@@ -86,6 +87,24 @@ export default function MappingPegawaiPublicPage() {
             <option value="Negeri">Negeri</option>
             <option value="Swasta">Swasta</option>
           </select>
+          <button onClick={() => exportToExcel(filtered.map(m => ({
+            'Sekolah': m.namaSekolah,
+            'Jenjang': m.jenjang,
+            'Status': schoolStatusMap[m.schoolId] || '-',
+            'Pegawai Tersedia': m.totalPegawaiTersedia || 0,
+            'Kebutuhan Ideal': m.totalKebutuhanIdeal || 0,
+            'Selisih': (m.totalPegawaiTersedia || 0) - (m.totalKebutuhanIdeal || 0),
+          })), [
+            { header: 'Sekolah', key: 'Sekolah' },
+            { header: 'Jenjang', key: 'Jenjang' },
+            { header: 'Status', key: 'Status' },
+            { header: 'Pegawai Tersedia', key: 'Pegawai Tersedia' },
+            { header: 'Kebutuhan Ideal', key: 'Kebutuhan Ideal' },
+            { header: 'Selisih', key: 'Selisih' },
+          ], `mapping-pegawai-${Date.now()}`)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-medium hover:bg-green-800 whitespace-nowrap">
+            <Download className="w-4 h-4" /> Excel
+          </button>
         </div>
 
         {filtered.length === 0 ? (
@@ -117,7 +136,7 @@ export default function MappingPegawaiPublicPage() {
                     <tr key={m.id} className="hover:bg-muted/50">
                       <td className="px-3 py-2 font-medium">{m.namaSekolah}</td>
                       <td className="px-3 py-2 text-center"><span className={`text-xs px-2 py-0.5 rounded-full ${m.jenjang === 'SD' ? 'bg-blue-100 text-blue-700' : m.jenjang === 'TK' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>{m.jenjang}</span></td>
-                      <td className="px-3 py-2 text-center text-xs">{m.statusSekolah}</td>
+                      <td className="px-3 py-2 text-center text-xs">{schoolStatusMap[m.schoolId] || '-'}</td>
                       <td className="px-3 py-2 text-center">{m.jumlahRombel || 0}</td>
                       <td className="px-3 py-2 text-center">{m.jumlahSiswa || 0}</td>
                       <td className="px-3 py-2 text-center">{m.totalPegawaiTersedia || 0}</td>
