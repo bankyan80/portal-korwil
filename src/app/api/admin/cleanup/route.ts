@@ -28,11 +28,26 @@ export async function POST(request: NextRequest) {
 
     const log: string[] = [];
 
+    // Helper: get all records with pagination
+    async function getAllPaginated(collection: string) {
+      const all: any[] = [];
+      const BATCH = 1000;
+      let offset = 0;
+      while (true) {
+        const { data } = await supabaseAdmin
+          .from('app_data')
+          .select('*')
+          .eq('collection', collection)
+          .range(offset, offset + BATCH - 1);
+        if (!data || data.length === 0) break;
+        all.push(...data);
+        offset += BATCH;
+      }
+      return all;
+    }
+
     // Cleanup employees: keep records where id === nik, delete older UUID records
-    const { data: employees } = await supabaseAdmin
-      .from('app_data')
-      .select('*')
-      .eq('collection', 'employees');
+    const employees = await getAllPaginated('employees');
 
     let empDeleted = 0;
     if (employees?.length) {
@@ -47,10 +62,7 @@ export async function POST(request: NextRequest) {
     log.push(`Employees: ${employees?.length || 0} total, ${empDeleted} deleted`);
 
     // Cleanup students: group by nisn, keep one record per nisn
-    const { data: students } = await supabaseAdmin
-      .from('app_data')
-      .select('*')
-      .eq('collection', 'students');
+    const students = await getAllPaginated('students');
 
     let stuDeleted = 0;
     if (students?.length) {
