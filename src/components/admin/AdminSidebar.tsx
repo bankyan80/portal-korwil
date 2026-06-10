@@ -29,6 +29,7 @@ const superAdminNav: NavItem[] = [
   { label: 'SIRUBIN', icon: ClipboardList, href: '/admin/super/sirubin' },
   { label: 'Rekap Pendidikan', icon: BarChart3, href: '/admin/super/rekap-pendidikan' },
   { label: 'Validasi Data', icon: Shield, href: '/admin/super/validasi-data' },
+  { label: 'Alumni', icon: GraduationCap, href: '/admin/super/alumni' },
   { label: 'Manajemen Operator', icon: UserCog, href: '/admin/super/manajemen-operator' },
   { label: 'Pengaturan Sistem', icon: Settings, href: '/admin/super/pengaturan-sistem' },
 ];
@@ -41,6 +42,7 @@ const operatorNav: NavItem[] = [
   { label: 'Mapping Pegawai', icon: MapPin, href: '/admin/operator/mapping-pegawai' },
   { label: 'SIRUBIN', icon: ClipboardList, href: '/admin/operator/sirubin' },
   { label: 'Rekap Sekolah', icon: BarChart3, href: '/admin/operator/rekap-sekolah' },
+  { label: 'Alumni', icon: GraduationCap, href: '/admin/operator/alumni' },
   { label: 'Catatan Perbaikan', icon: FileText, href: '/admin/operator/catatan-perbaikan' },
 ];
 

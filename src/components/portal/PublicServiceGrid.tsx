@@ -1,6 +1,6 @@
 'use client';
 
-import { School, Users, MapPin, ClipboardList, BarChart3, BookOpen, type LucideIcon } from 'lucide-react';
+import { School, Users, MapPin, ClipboardList, BarChart3, BookOpen, GraduationCap, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 
 interface ServiceCard {
@@ -81,6 +81,18 @@ const services: ServiceCard[] = [
     icon: BarChart3,
     desc: 'Rekap gabungan data pendidikan Kecamatan Lemahabang berdasarkan data valid.',
     href: '/rekap-pendidikan',
+    badges: [
+      { label: 'SD', variant: 'jenjang' },
+      { label: 'TK', variant: 'jenjang' },
+      { label: 'KB', variant: 'jenjang' },
+    ],
+  },
+  {
+    id: 'alumni',
+    label: 'Alumni',
+    icon: GraduationCap,
+    desc: 'Data penelusuran lulusan SD, TK, dan KB — melanjutkan dan tidak melanjutkan.',
+    href: '/alumni',
     badges: [
       { label: 'SD', variant: 'jenjang' },
       { label: 'TK', variant: 'jenjang' },
