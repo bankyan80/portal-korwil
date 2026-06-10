@@ -1,7 +1,49 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
 import { verifyCookieAuth, requireRole } from '@/lib/server-auth';
-import { allSekolah } from '@/data/sekolah';
+import { allSekolah, type BaseSekolah } from '@/data/sekolah';
+
+function normalizeSchoolName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/kecamatan\s+lemahabang/gi, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function buildSchoolIndex(schools: BaseSekolah[]): Map<string, string> {
+  const idx = new Map<string, string>();
+  for (const s of schools) {
+    const npsn = s.npsn;
+    const original = s.nama.toLowerCase();
+    idx.set(original, npsn);
+    const normalized = original.replace(/^(sd|tk|kb|paud)\s+/, '').trim();
+    if (normalized !== original) idx.set(normalized, npsn);
+  }
+  return idx;
+}
+
+function matchStudentSchool(
+  studentNamaSekolah: string | undefined | null,
+  allSchools: BaseSekolah[],
+  index: Map<string, string>
+): string | null {
+  if (!studentNamaSekolah) return null;
+  const name = normalizeSchoolName(studentNamaSekolah);
+  if (!name) return null;
+
+  const direct = index.get(name);
+  if (direct) return direct;
+
+  for (const [key, npsn] of index) {
+    if (key.includes(name) || name.includes(key)) {
+      return npsn;
+    }
+  }
+
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,14 +63,13 @@ export async function POST(request: NextRequest) {
     }
 
     const log: string[] = [];
+    const schoolIndex = buildSchoolIndex(allSekolah);
 
     // 1. Seed schools from static data (NPSN as ID)
     let seededSchools = 0;
-    const schoolIdMap: Record<string, string> = {}; // nama -> npsn
 
     for (const school of allSekolah) {
       const npsn = school.npsn;
-      schoolIdMap[school.nama.toLowerCase()] = npsn;
 
       const { error } = await supabaseAdmin
         .from('app_data')
@@ -77,7 +118,7 @@ export async function POST(request: NextRequest) {
       return all;
     }
 
-    // 2. Sync employees: match schoolId by name fallback
+    // 2. Sync employees: match schoolId by name
     const existingEmployees = await getAllPaginated('employees');
 
     let mappedEmployees = 0;
@@ -87,29 +128,14 @@ export async function POST(request: NextRequest) {
     if (existingEmployees?.length) {
       for (const emp of existingEmployees) {
         const d = emp.data as Record<string, any>;
+        const namaSekolah = d.namaSekolah || d.sekolah || '';
         let schoolId = d.schoolId || '';
 
-        // If schoolId doesn't match any seeded school, try by name
-        if (schoolId && !allSekolah.some(s => s.npsn === schoolId)) {
-          const nameKey = (d.namaSekolah || d.sekolah || '').toLowerCase();
-          const match = schoolIdMap[nameKey];
-          if (match) {
-            schoolId = match;
-          } else {
-            // Try partial match
-            for (const [key, npsn] of Object.entries(schoolIdMap)) {
-              if (nameKey.includes(key) || key.includes(nameKey)) {
-                schoolId = npsn;
-                break;
-              }
-            }
-          }
-        }
-
-        // Default to first SD school if still no match
-        if (!schoolId) {
-          const defaultSd = allSekolah.find(s => s.jenjang === 'SD');
-          if (defaultSd) schoolId = defaultSd.npsn;
+        if (namaSekolah) {
+          const match = matchStudentSchool(namaSekolah, allSekolah, schoolIndex);
+          schoolId = match || '';
+        } else if (schoolId && !allSekolah.some(s => s.npsn === schoolId)) {
+          schoolId = '';
         }
 
         const updates: Record<string, any> = {};
@@ -148,7 +174,7 @@ export async function POST(request: NextRequest) {
     log.push(`Kepala Sekolah: ${kepalaSekolah} teridentifikasi`);
     log.push(`Plt. Kepala Sekolah: ${pltKepalaSekolah} teridentifikasi`);
 
-    // 3. Sync students: match schoolId by name fallback
+    // 3. Sync students: match schoolId by name
     const existingStudents = await getAllPaginated('students');
 
     let mappedStudents = 0;
@@ -156,26 +182,12 @@ export async function POST(request: NextRequest) {
     if (existingStudents?.length) {
       for (const stu of existingStudents) {
         const d = stu.data as Record<string, any>;
-        let schoolId = d.schoolId || '';
+        const namaSekolah = d.namaSekolah || d.sekolah || '';
+        let schoolId = '';
 
-        if (schoolId && !allSekolah.some(s => s.npsn === schoolId)) {
-          const nameKey = (d.namaSekolah || d.sekolah || '').toLowerCase();
-          const match = schoolIdMap[nameKey];
-          if (match) {
-            schoolId = match;
-          } else {
-            for (const [key, npsn] of Object.entries(schoolIdMap)) {
-              if (nameKey.includes(key) || key.includes(nameKey)) {
-                schoolId = npsn;
-                break;
-              }
-            }
-          }
-        }
-
-        if (!schoolId) {
-          const defaultSd = allSekolah.find(s => s.jenjang === 'SD');
-          if (defaultSd) schoolId = defaultSd.npsn;
+        if (namaSekolah) {
+          const match = matchStudentSchool(namaSekolah, allSekolah, schoolIndex);
+          if (match) schoolId = match;
         }
 
         if (schoolId !== d.schoolId) {

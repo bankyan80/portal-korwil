@@ -98,6 +98,41 @@ export async function POST(request: NextRequest) {
     }
     log.push(`Students: ${students?.length || 0} total, ${stuDeleted} deleted`);
 
+    // Cleanup schools: remove records with school- prefix (duplicates from old sync)
+    const schools = await getAllPaginated('schools');
+    let schoolDeleted = 0;
+    if (schools?.length) {
+      for (const sch of schools) {
+        if (sch.id.startsWith('school-')) {
+          await supabaseAdmin.from('app_data').delete().eq('id', sch.id).eq('collection', 'schools');
+          schoolDeleted++;
+        }
+      }
+    }
+    log.push(`Schools: ${schools?.length || 0} total, ${schoolDeleted} school-* duplicates deleted`);
+
+    // Fix students: clear schoolId for students without namaSekolah
+    // (they got wrong default schoolId from earlier sync-data runs)
+    let studentsFixed = 0;
+    if (students?.length) {
+      for (const stu of students) {
+        const d = stu.data as Record<string, any>;
+        const hasNama = !!(d.namaSekolah || d.sekolah);
+        if (!hasNama && d.schoolId) {
+          const { error } = await supabaseAdmin
+            .from('app_data')
+            .update({
+              data: { ...d, schoolId: '', updatedAt: Date.now() },
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', stu.id)
+            .eq('collection', 'students');
+          if (!error) studentsFixed++;
+        }
+      }
+    }
+    log.push(`Students: ${studentsFixed} schoolId cleared (no namaSekolah)`);
+
     return NextResponse.json({ success: true, log });
   } catch (error) {
     console.error('[cleanup] error:', error);
