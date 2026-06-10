@@ -72,7 +72,7 @@ export default function OperatorRekapSekolah() {
               <div className="bg-white rounded-xl border p-4 text-center">
                 <div className="flex justify-center mb-2"><BarChart3 className="w-6 h-6 text-amber-600" /></div>
                 <p className="text-2xl font-bold">{students.length ? Math.round((siswaAktif.length / students.length) * 100) : 0}%</p>
-                <p className="text-xs text-muted-foreground">Siswa Aktif</p>
+                <p className="text-xs text-muted-foreground">Aktif (%)</p>
               </div>
             </div>
 

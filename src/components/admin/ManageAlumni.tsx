@@ -100,7 +100,6 @@ export function ManageAlumni() {
       const json = await res.json();
       if (json.success) {
         toast.success(`${json.promoted} siswa SD berhasil naik kelas`);
-        window.location.reload();
       } else {
         toast.error(json.error || 'Gagal menaikkan kelas');
       }

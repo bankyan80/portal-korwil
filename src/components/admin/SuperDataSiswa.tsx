@@ -5,6 +5,7 @@ import { useSiswa } from '@/hooks/useSiswa';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
+import { LoadingState } from '@/components/shared/LoadingState';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 100;
@@ -90,7 +91,7 @@ function SiswaTable({ title, data, isLoading, error, columns, sortFn }: {
       <div className="text-xs text-muted-foreground mb-2">
         {sorted.length} siswa{totalPages > 1 ? ' - Halaman ' + page + '/' + totalPages : ''}
       </div>
-      {isLoading && <div>Memuat data...</div>}
+      {isLoading && <LoadingState />}
       {error && <div className="text-red-500">Gagal memuat data</div>}
       {data && <DataTable data={paginated} columns={columns} keyField="nik" />}
       {totalPages > 1 && (

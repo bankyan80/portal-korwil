@@ -183,7 +183,7 @@ export default function SuperSimdawa() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-6 py-4">
         <h1 className="text-lg font-bold text-white flex items-center gap-2"><Users className="w-5 h-5" /> SIMDAWA</h1>
-        <p className="text-sm text-blue-200">{user.displayName} • {totalCount} siswa</p>
+        <p className="text-sm text-blue-200">{user.displayName || ''} • {totalCount} siswa</p>
       </header>
       <main className="p-6 max-w-7xl mx-auto space-y-4">
         {error && (

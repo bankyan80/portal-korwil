@@ -29,7 +29,7 @@ export default function OperatorDashboard() {
       <main className="p-6 max-w-7xl mx-auto space-y-6">
         <div className="mb-4">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Beranda Operator</h1>
-          <p className="text-sm text-muted-foreground">{user.schoolName || user.displayName}</p>
+          <p className="text-sm text-muted-foreground">{user.schoolName || user.displayName || ''}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

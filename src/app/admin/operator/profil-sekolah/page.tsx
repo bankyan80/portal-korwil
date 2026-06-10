@@ -117,7 +117,7 @@ export default function OperatorProfilSekolah() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Jumlah Rombel</label>
-                  <input type="number" value={form.jumlahRombel || ''} onChange={e => setForm(f => ({ ...f, jumlahRombel: Number(e.target.value) }))} className="w-full px-3 py-2 rounded-lg border text-sm" />
+                  <input type="number" value={form.jumlahRombel ?? ''} onChange={e => setForm(f => ({ ...f, jumlahRombel: Number(e.target.value) }))} className="w-full px-3 py-2 rounded-lg border text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Status Aktif</label>

@@ -54,7 +54,7 @@ export default function OperatorSimdawa() {
   const [error, setError] = useState('');
 
   const fetchData = useCallback(async () => {
-    if (!user?.schoolId) { setLoading(false); return; }
+    if (!user?.schoolId) { setError('Sekolah belum ditentukan. Hubungi admin.'); setLoading(false); return; }
     try {
       const res = await fetch(`/api/firestore/students?field=schoolId&value=${user.schoolId}`);
       const json = await res.json();

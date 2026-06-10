@@ -132,7 +132,6 @@ export function ManageDataPd() {
     if (!isOperator) return;
 
     let unsubscribe: (() => void) | null = null;
-    let loadingDone = false;
 
     async function load() {
       let dbSiswa: SiswaRecord[] = [];
@@ -169,7 +168,6 @@ export function ManageDataPd() {
       const finalData = [...overlayRecords, ...dbSiswa.filter(s => !mergedNiks.has(s.nik))];
       setAllSiswa(finalData);
       setLoading(false);
-      loadingDone = true;
     }
 
     load();
