@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
           .from('app_data')
           .select('*')
           .eq('collection', collection)
+          .order('id')
           .range(offset, offset + BATCH - 1);
         if (!data || data.length === 0) break;
         all.push(...data);
