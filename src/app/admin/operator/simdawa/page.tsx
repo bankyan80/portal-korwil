@@ -90,6 +90,8 @@ export default function OperatorSimdawa() {
 
   const handleSave = async () => {
     if (!form.nama || !form.schoolId) return;
+    if (form.nisn && !/^\d{10}$/.test(form.nisn)) { setError('NISN harus 10 digit angka'); return; }
+    if (form.nik && !/^\d{16}$/.test(form.nik)) { setError('NIK harus 16 digit angka'); return; }
     setSaving(true);
     try {
       const res = await fetch('/api/firestore/students', {

@@ -69,7 +69,7 @@ export default function SuperPengaturanSistem() {
             {seeding ? 'Proses...' : 'Seed Data Sekolah'}
           </button>
           {seedMessage && (
-            <p className="mt-3 text-sm text-green-700">{seedMessage}</p>
+            <p className={`mt-3 text-sm ${seedMessage.startsWith('Gagal') ? 'text-red-600' : 'text-green-700'}`}>{seedMessage}</p>
           )}
         </div>
 
@@ -98,7 +98,7 @@ export default function SuperPengaturanSistem() {
           {syncLog.length > 0 && (
             <div className="mt-3 space-y-1">
               {syncLog.map((msg, i) => (
-                <p key={i} className="text-sm text-green-700">{msg}</p>
+                <p key={i} className={`text-sm ${msg.startsWith('Gagal') || msg.includes('ERROR') ? 'text-red-600' : 'text-green-700'}`}>{msg}</p>
               ))}
             </div>
           )}

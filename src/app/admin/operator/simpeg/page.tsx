@@ -95,6 +95,8 @@ export default function OperatorSimpeg() {
 
   const handleSave = async () => {
     if (!form.nama || !form.schoolId) return;
+    if (form.nik && !/^\d{16}$/.test(form.nik)) { setError('NIK harus 16 digit angka'); return; }
+    if (form.nip && !/^\d{18}$/.test(form.nip)) { setError('NIP harus 18 digit angka'); return; }
     setSaving(true);
     try {
       const res = await fetch('/api/firestore/employees', {

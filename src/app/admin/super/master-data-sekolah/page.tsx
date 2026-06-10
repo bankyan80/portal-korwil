@@ -91,6 +91,7 @@ export default function SuperMasterDataSekolah() {
 
   const handleSave = async () => {
     if (!form.namaSekolah || !form.npsn) return;
+    if (!/^\d{8}$/.test(form.npsn)) { setError('NPSN harus 8 digit angka'); return; }
     setSaving(true);
     try {
       const res = await fetch('/api/firestore/schools', {
@@ -256,7 +257,7 @@ export default function SuperMasterDataSekolah() {
             </div>
             <div className="px-6 py-4 border-t flex justify-end gap-3">
               <button onClick={() => setShowForm(false)} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50">Batal</button>
-              <button onClick={handleSave} disabled={saving || !form.namaSekolah || !form.npsn}
+              <button onClick={handleSave} disabled={saving || !form.namaSekolah || !/^\d{8}$/.test(form.npsn || '')}
                 className="px-4 py-2 bg-blue-700 text-white rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 flex items-center gap-2">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editId ? 'Simpan' : 'Tambah'}
