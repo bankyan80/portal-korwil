@@ -24,7 +24,7 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value || getBearerToken(request);
 
   // Bypass middleware auth for self-authenticating routes (route validates x-api-key internally)
-  const selfAuthPaths = ['/api/admin/seed-passwords', '/api/migrate/firestore-to-supabase'];
+  const selfAuthPaths = ['/api/admin/seed-passwords', '/api/admin/sync-data', '/api/admin/seed-data', '/api/migrate/firestore-to-supabase'];
   const isSelfAuth = selfAuthPaths.includes(path);
   if (isSelfAuth && request.headers.get('x-api-key')) {
     return NextResponse.next();

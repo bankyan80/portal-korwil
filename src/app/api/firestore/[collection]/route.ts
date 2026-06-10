@@ -19,6 +19,7 @@ if (!PUBLIC_COLLECTIONS.includes(collection)) {
   const orderByField = searchParams.get('orderBy');
   const orderDir = searchParams.get('orderDir') || 'asc';
   const limit = parseInt(searchParams.get('limit') || '100', 10);
+  const offset = parseInt(searchParams.get('offset') || '0', 10);
   const field = searchParams.get('field');
   const value = searchParams.get('value');
 
@@ -36,7 +37,7 @@ if (!PUBLIC_COLLECTIONS.includes(collection)) {
 
     let query = supabaseAdmin
       .from('app_data')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('collection', collection);
 
     if (field && value) {
@@ -47,18 +48,13 @@ if (!PUBLIC_COLLECTIONS.includes(collection)) {
       query = query.order(`data->>${orderByField}`, { ascending: orderDir === 'asc' });
     }
 
-    query = query.limit(limit);
+    query = query.range(offset, offset + limit - 1);
 
-    const { data, error } = await Promise.race([
-      Promise.resolve(query),
-      new Promise<{ data: null; error: { message: string } }>((_, reject) =>
-        setTimeout(() => reject(new Error('Database timeout')), 7000)
-      ),
-    ]);
+    const { data, error, count } = await query;
     if (error) throw error;
 
     const items = (data || []).map((r) => ({ id: r.id, ...(r.data as object) }));
-    return NextResponse.json({ items, count: items.length });
+    return NextResponse.json({ items, count: items.length, total: count });
   } catch (e) {
     console.error(`[firestore/${collection}] GET error:`, e);
     return NextResponse.json({ items: [], count: 0 });
