@@ -28,7 +28,6 @@ const superAdminNav: NavItem[] = [
   { label: 'Mapping Pegawai', icon: MapPin, href: '/admin/super/mapping-pegawai' },
   { label: 'SIRUBIN', icon: ClipboardList, href: '/admin/super/sirubin' },
   { label: 'Rekap Pendidikan', icon: BarChart3, href: '/admin/super/rekap-pendidikan' },
-  { label: 'Validasi Data', icon: Shield, href: '/admin/super/validasi-data' },
   { label: 'Alumni', icon: GraduationCap, href: '/admin/super/alumni' },
   { label: 'Manajemen Operator', icon: UserCog, href: '/admin/super/manajemen-operator' },
   { label: 'Pengaturan Sistem', icon: Settings, href: '/admin/super/pengaturan-sistem' },
