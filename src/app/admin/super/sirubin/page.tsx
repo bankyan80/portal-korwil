@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
-import { ClipboardList, LogOut, ArrowLeft, Loader2, CheckCircle, XCircle, Send, Lock } from 'lucide-react';
+import { ClipboardList, LogOut, ArrowLeft, Loader2, CheckCircle, XCircle, Send, Lock, Eye, Printer } from 'lucide-react';
 import { ExportButton } from '@/components/shared/ExportButton';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { DataTable } from '@/components/shared/DataTable';
@@ -29,17 +29,23 @@ export default function SuperSirubin() {
   const [filterTahun, setFilterTahun] = useState(new Date().getFullYear());
   const [filterStatus, setFilterStatus] = useState('Semua');
   const [error, setError] = useState('');
+  const [laporanBulanan, setLaporanBulanan] = useState<any[]>([]);
+  const [printReport, setPrintReport] = useState<any | null>(null);
+  const [showPrint, setShowPrint] = useState(false);
+  const [loadingPrint, setLoadingPrint] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [rRes, sRes] = await Promise.all([
+      const [rRes, sRes, lRes] = await Promise.all([
         fetch('/api/firestore/sirubin_reports'),
         fetch('/api/firestore/schools'),
+        fetch('/api/laporan-bulanan').then(r => r.json()).catch(() => ({ items: [] })),
       ]);
       const rJson = await rRes.json();
       const sJson = await sRes.json();
       setData(rJson.items || []);
       setSchools(sJson.items || []);
+      setLaporanBulanan(lRes.items || []);
     } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
     }
@@ -75,6 +81,20 @@ export default function SuperSirubin() {
     }
   };
 
+  const handleView = async (report: any) => {
+    setLoadingPrint(true);
+    setPrintReport(null);
+    setShowPrint(true);
+    const nama = (report.namaSekolah || report.sekolah || '').toLowerCase().trim();
+    const found = laporanBulanan.find(l =>
+      l.sekolah?.toLowerCase().includes(nama) && l.bulan === bulanList[filterBulan - 1]?.label && l.tahun === filterTahun
+    ) || laporanBulanan.find(l =>
+      l.sekolahId === report.schoolId && l.bulan === bulanList[filterBulan - 1]?.label && l.tahun === filterTahun
+    );
+    setPrintReport(found || null);
+    setLoadingPrint(false);
+  };
+
   const schoolsWithoutReport = schools.filter(s => !laporanFiltered.find(r => r.schoolId === s.id));
   const sudah = laporanFiltered.filter(r => r.statusLaporan === 'Terkirim' || r.statusLaporan === 'Valid' || r.statusLaporan === 'Terkunci');
   const valid = laporanFiltered.filter(r => r.statusLaporan === 'Valid' || r.statusLaporan === 'Terkunci');
@@ -108,16 +128,22 @@ export default function SuperSirubin() {
     {
       key: 'actions', label: 'Aksi', className: 'text-center', sortable: false,
       render: (r: any) => {
-        if (r.statusLaporan === 'Terkunci') return <span className="text-xs text-muted-foreground">Terkunci</span>;
+        const isSubmitted = r.statusLaporan === 'Terkirim' || r.statusLaporan === 'Valid' || r.statusLaporan === 'Terkunci';
         return (
-          <div className="flex items-center justify-center gap-2">
-            {r.statusLaporan !== 'Valid' && (
+          <div className="flex items-center justify-center gap-1">
+            {isSubmitted && (
+              <button onClick={() => handleView(r)}
+                className="p-1.5 rounded hover:bg-blue-50 text-blue-600" title="Lihat Laporan">
+                <Eye className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {r.statusLaporan !== 'Valid' && r.statusLaporan !== 'Terkunci' && (
               <button onClick={() => handleValidate(r.id, 'Valid')} disabled={processing === r.id}
                 className="p-1.5 rounded hover:bg-green-50 text-green-600 disabled:opacity-50">
                 {processing === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
               </button>
             )}
-            {r.statusLaporan !== 'Perlu Perbaikan' && (
+            {r.statusLaporan !== 'Perlu Perbaikan' && r.statusLaporan !== 'Terkunci' && (
               <button onClick={() => handleValidate(r.id, 'Perlu Perbaikan')} disabled={processing === r.id}
                 className="p-1.5 rounded hover:bg-red-50 text-red-600 disabled:opacity-50">
                 <XCircle className="w-3.5 h-3.5" />
@@ -191,6 +217,143 @@ export default function SuperSirubin() {
         )}
       </main>
     </div>
+      {showPrint && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-8" onClick={() => setShowPrint(false)}>
+          <div className="bg-white shadow-2xl w-full max-w-4xl mx-4 rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b px-6 py-3 flex items-center justify-between z-10 print:hidden">
+              <h3 className="font-bold text-lg">Laporan Bulanan</h3>
+              <div className="flex items-center gap-2">
+                <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg text-sm font-medium hover:bg-blue-800">
+                  <Printer className="w-4 h-4" /> Cetak
+                </button>
+                <button onClick={() => setShowPrint(false)} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50">Tutup</button>
+              </div>
+            </div>
+            {loadingPrint ? (
+              <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
+            ) : !printReport ? (
+              <div className="px-6 py-12 text-center text-muted-foreground">
+                <p>Data laporan belum ditemukan untuk periode ini</p>
+              </div>
+            ) : (
+              <div className="px-6 py-6 space-y-6 text-sm print:px-4 print:py-2">
+                {/* Kop */}
+                <div className="text-center border-b pb-4 print:pb-2">
+                  <h2 className="font-bold text-lg">LAPORAN BULANAN</h2>
+                  <p className="text-base font-semibold">{printReport.bulan} {printReport.tahun}</p>
+                  <p className="text-xs text-muted-foreground">Korwil Bidang Pendidikan Kecamatan Lemahabang</p>
+                </div>
+
+                {/* Data Sekolah */}
+                <div>
+                  <h3 className="font-bold text-sm bg-gray-100 px-3 py-1.5 -mx-6 px-6 print:-mx-4 print:px-4">A. DATA SEKOLAH</h3>
+                  <table className="w-full mt-2">
+                    <tbody className="divide-y text-sm">
+                      {[
+                        ['Nama Sekolah', printReport.dataSekolah?.nama || printReport.sekolah || '-'],
+                        ['NPSN', printReport.dataSekolah?.npsn || printReport.npsn || '-'],
+                        ['Jenjang', printReport.dataSekolah?.jenjang || '-'],
+                        ['Status', printReport.dataSekolah?.status || '-'],
+                        ['Alamat', printReport.dataSekolah?.alamat || '-'],
+                        ['Desa', printReport.dataSekolah?.desa || '-'],
+                        ['Kepala Sekolah', printReport.dataSekolah?.kepalaSekolah || '-'],
+                      ].map(([label, value]) => (
+                        <tr key={label} className="hover:bg-gray-50">
+                          <td className="px-3 py-1.5 font-medium w-48">{label}</td>
+                          <td className="px-3 py-1.5">{value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Data Siswa */}
+                {printReport.dataSiswa && (
+                  <div>
+                    <h3 className="font-bold text-sm bg-gray-100 px-3 py-1.5 -mx-6 px-6 print:-mx-4 print:px-4">B. DATA SISWA</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
+                      {[
+                        ['Total', printReport.dataSiswa.total],
+                        ['Laki-laki', printReport.dataSiswa.total_l],
+                        ['Perempuan', printReport.dataSiswa.total_p],
+                      ].map(([label, value]) => (
+                        <div key={label} className="bg-gray-50 rounded-lg border px-3 py-2 text-center">
+                          <p className="text-lg font-bold">{value ?? '-'}</p>
+                          <p className="text-xs text-muted-foreground">{label}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <table className="w-full mt-2 text-sm">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="px-3 py-1.5 text-left">Kelas</th>
+                          <th className="px-3 py-1.5 text-center">L</th>
+                          <th className="px-3 py-1.5 text-center">P</th>
+                          <th className="px-3 py-1.5 text-center">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {Array.from({ length: 6 }, (_, i) => {
+                          const k = `kelas${i + 1}`;
+                          const l = printReport.dataSiswa[`${k}_l`];
+                          const p = printReport.dataSiswa[`${k}_p`];
+                          const total = (l || 0) + (p || 0);
+                          if (total === 0 && !l && !p) return null;
+                          return (
+                            <tr key={k}>
+                              <td className="px-3 py-1 font-medium">Kelas {i + 1}</td>
+                              <td className="px-3 py-1 text-center">{l ?? '-'}</td>
+                              <td className="px-3 py-1 text-center">{p ?? '-'}</td>
+                              <td className="px-3 py-1 text-center font-semibold">{total || '-'}</td>
+                            </tr>
+                          );
+                        })}
+                        <tr className="bg-gray-50 font-semibold">
+                          <td className="px-3 py-1">Jumlah</td>
+                          <td className="px-3 py-1 text-center">{printReport.dataSiswa.total_l || '-'}</td>
+                          <td className="px-3 py-1 text-center">{printReport.dataSiswa.total_p || '-'}</td>
+                          <td className="px-3 py-1 text-center">{printReport.dataSiswa.total || '-'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Absensi */}
+                {printReport.dataAbsen && (
+                  <div>
+                    <h3 className="font-bold text-sm bg-gray-100 px-3 py-1.5 -mx-6 px-6 print:-mx-4 print:px-4">C. ABSENSI GURU & TENDIK</h3>
+                    <table className="w-full mt-2">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="px-3 py-1.5 text-left">Keterangan</th>
+                          <th className="px-3 py-1.5 text-center">Sakit</th>
+                          <th className="px-3 py-1.5 text-center">Izin</th>
+                          <th className="px-3 py-1.5 text-center">Tanpa Keterangan</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="px-3 py-1.5 font-medium">Jumlah</td>
+                          <td className="px-3 py-1.5 text-center">{printReport.dataAbsen.sakit ?? '-'}</td>
+                          <td className="px-3 py-1.5 text-center">{printReport.dataAbsen.izin ?? '-'}</td>
+                          <td className="px-3 py-1.5 text-center">{printReport.dataAbsen.tanpa_keterangan ?? '-'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Status */}
+                <div className="border-t pt-3 text-xs text-muted-foreground flex items-center justify-between print:pt-1">
+                  <span>Dikirim: {printReport.dikirimPada ? new Date(printReport.dikirimPada).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                  <span className="font-medium">{printReport.sekolah || ''}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </AuthGuard>
   );
 }
