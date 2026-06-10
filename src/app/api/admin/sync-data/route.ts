@@ -55,12 +55,27 @@ export async function POST(request: NextRequest) {
     }
     log.push(`Seed sekolah: ${seededSchools}/${allSekolah.length}`);
 
+    // Helper: get all records with pagination
+    async function getAllPaginated(collection: string) {
+      const all: any[] = [];
+      const BATCH = 1000;
+      let offset = 0;
+      while (true) {
+        const { data } = await supabaseAdmin
+          .from('app_data')
+          .select('*')
+          .eq('collection', collection)
+          .order('id')
+          .range(offset, offset + BATCH - 1);
+        if (!data || data.length === 0) break;
+        all.push(...data);
+        offset += BATCH;
+      }
+      return all;
+    }
+
     // 2. Sync employees: match schoolId by name fallback
-    const { data: existingEmployees } = await supabaseAdmin
-      .from('app_data')
-      .select('*')
-      .eq('collection', 'employees')
-      .limit(100000);
+    const existingEmployees = await getAllPaginated('employees');
 
     let mappedEmployees = 0;
     let kepalaSekolah = 0;
@@ -131,11 +146,7 @@ export async function POST(request: NextRequest) {
     log.push(`Plt. Kepala Sekolah: ${pltKepalaSekolah} teridentifikasi`);
 
     // 3. Sync students: match schoolId by name fallback
-    const { data: existingStudents } = await supabaseAdmin
-      .from('app_data')
-      .select('*')
-      .eq('collection', 'students')
-      .limit(100000);
+    const existingStudents = await getAllPaginated('students');
 
     let mappedStudents = 0;
 
@@ -180,16 +191,8 @@ export async function POST(request: NextRequest) {
     log.push(`Siswa: ${existingStudents?.length || 0} total, ${mappedStudents} diperbarui`);
 
     // 4. Sync employee_mappings (regenerate from fresh data)
-    const { data: freshEmployees } = await supabaseAdmin
-      .from('app_data')
-      .select('*')
-      .eq('collection', 'employees')
-      .limit(100000);
-    const { data: freshStudents } = await supabaseAdmin
-      .from('app_data')
-      .select('*')
-      .eq('collection', 'students')
-      .limit(100000);
+    const freshEmployees = await getAllPaginated('employees');
+    const freshStudents = await getAllPaginated('students');
 
     const employeesBySchool: Record<string, any[]> = {};
     const studentsBySchool: Record<string, any[]> = {};
