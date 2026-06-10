@@ -17,8 +17,8 @@ export default function OperatorRekapSekolah() {
   useEffect(() => {
     if (!user?.schoolId) { setLoading(false); return; }
     Promise.all([
-      fetch(`/api/firestore/students?field=schoolId&value=${user.schoolId}`).then(r => r.json()),
-      fetch(`/api/firestore/employees?field=schoolId&value=${user.schoolId}`).then(r => r.json()),
+      fetch(`/api/firestore/students?limit=1000&field=schoolId&value=${user.schoolId}`).then(r => r.json()),
+      fetch(`/api/firestore/employees?limit=1000&field=schoolId&value=${user.schoolId}`).then(r => r.json()),
       fetch(`/api/firestore/sirubin_reports?field=schoolId&value=${user.schoolId}`).then(r => r.json()),
     ])
       .then(([sJson, eJson, rJson]) => {

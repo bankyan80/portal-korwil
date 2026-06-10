@@ -56,7 +56,7 @@ export default function OperatorSimdawa() {
   const fetchData = useCallback(async () => {
     if (!user?.schoolId) { setError('Sekolah belum ditentukan. Hubungi admin.'); setLoading(false); return; }
     try {
-      const res = await fetch(`/api/firestore/students?field=schoolId&value=${user.schoolId}`);
+      const res = await fetch(`/api/firestore/students?limit=1000&field=schoolId&value=${user.schoolId}`);
       const json = await res.json();
       setData(json.items || []);
     } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {

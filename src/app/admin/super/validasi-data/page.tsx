@@ -26,7 +26,7 @@ export default function SuperValidasiData() {
       const [scRes, stRes, eRes] = await Promise.all([
         fetch('/api/firestore/schools'),
         fetch('/api/firestore/students?limit=10000'),
-        fetch('/api/firestore/employees'),
+        fetch('/api/firestore/employees?limit=1000'),
       ]);
       setSchools((await scRes.json()).items || []);
       setStudents((await stRes.json()).items || []);

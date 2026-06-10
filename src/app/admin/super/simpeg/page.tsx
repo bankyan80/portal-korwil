@@ -56,6 +56,7 @@ const defaultForm: Partial<EmployeeData> = {
 export default function SuperSimpeg() {
   const { user } = useAppStore();
   const [data, setData] = useState<EmployeeData[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [schools, setSchools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -72,12 +73,13 @@ export default function SuperSimpeg() {
   const fetchData = useCallback(async () => {
     try {
       const [eRes, scRes] = await Promise.all([
-        fetch('/api/firestore/employees'),
+        fetch('/api/firestore/employees?limit=1000'),
         fetch('/api/firestore/schools'),
       ]);
       const eJson = await eRes.json();
       const scJson = await scRes.json();
       setData(eJson.items || []);
+      setTotalCount(eJson.total || 0);
       setSchools(scJson.items || []);
     } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
@@ -180,7 +182,7 @@ export default function SuperSimpeg() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-gradient-to-b from-[#1a5276] to-[#0d3b66] px-6 py-4">
         <h1 className="text-lg font-bold text-white flex items-center gap-2"><BookOpen className="w-5 h-5" /> SIMPEG</h1>
-        <p className="text-sm text-blue-200">{user.displayName || ''} • {data.length} pegawai</p>
+        <p className="text-sm text-blue-200">{user.displayName || ''} • {totalCount} pegawai</p>
       </header>
       <main className="p-6 max-w-7xl mx-auto space-y-4">
         {error && (
