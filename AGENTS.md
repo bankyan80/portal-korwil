@@ -1,63 +1,51 @@
 # Session Summary
 
 ## Goal
-- Fix Firebase Admin SDK initialization and migrate all Firestore data to Supabase `app_data` table.
-- Build monthly report page (`/laporan-daftar-1`) and graduated student report (`/laporan-siswa-lulus`).
+- Build portal-dinas with 6 service menus, Super Admin (10 menu) and Operator (8 menu) dashboards, full CRUD, seed/sync data, export/import Excel.
+- Sync latest pegawai/siswa data from `simpeg-tim` and `simdawa` local projects to Supabase.
 
 ## Constraints & Preferences
-- Login tetap via Firebase Auth (client-side `signInWithEmailAndPassword`)
-- User profile dibaca dari Supabase via `GET /api/firestore/users?id=UID` (baca `app_data`)
-- User baru otomatis tersimpan ke Supabase via `apiSetUser` di `AuthProvider.tsx`
-- Semua collection Firestore dimigrasi ke `app_data` (28 collections)
-- `MIGRATION_API_KEY` env var untuk auth API route migrasi (header `x-api-key`)
+- Jenjang: SD, TK, KB. Status: Negeri, Swasta.
+- Semua data via `/api/firestore/[collection]` generic CRUD (Supabase `app_data` table).
+- Auth: Firebase Auth client-side, cookie `auth-token` for API auth.
+- `PUBLIC_COLLECTIONS` allows public GET/POST/DELETE without auth.
 
 ## Progress
 
 ### Done
-- Root cause: Google service account JSON pakai `project_id` (snake_case) tapi `firebase-admin.ts` ngecek `serviceAccount.projectId` (camelCase) → selalu `undefined` → `app = null`
-- Fix: tambah `normalizeServiceAccount()` di `firebase-admin.ts` yang mapping `project_id`→`projectId`, `client_email`→`clientEmail`, dll
-- Fix standalone script `scripts/migrate-firestore-to-supabase.ts` — sama (snake_case bug)
-- Fix API key auth: migration route terima `x-api-key` header sebagai alternatif cookie
-- Fix upsert: `onConflict: 'collection,id'` → `onConflict: 'id'` (tidak ada composite constraint)
-- **Migrasi sukses: 7.970 dokumen dari 28 collections** — users(36), schools(45), students(7.324), employees(469), dll
-- Login flow: Firebase Auth → `onAuthStateChanged` → `apiGetUser(uid)` → `GET /api/firestore/users?id=UID` → Supabase `app_data`
-- AuthProvider udah handle fallback: kalo user gak ditemukan di Supabase, bikin baru dengan role `publik` / `super_admin`
-- **Discovered: `src/proxy.ts` is Next.js middleware** (Next.js 16 recognizes `export function proxy` as middleware) — blocks `/api/admin/*` routes with 401 if no `auth-token` cookie or valid JWT
-- **`x-api-key` bypass in proxy.ts**: `/api/admin/seed-passwords` and `/api/migrate/firestore-to-supabase` skip middleware auth when `x-api-key` header matches `MIGRATION_API_KEY`
-- **Sekolah login (`/api/auth/login-npsn`) works**: seeds 45 schools with password `123456` from static `src/data/sekolah.ts` data (bypasses missing `schools` collection in Supabase `app_data`)
-- **`curl.exe` mis-handles JSON in PowerShell** — use `Invoke-WebRequest` instead for API testing
-- **Vercel deployment protection bypass**: `x-vercel-protection-bypass` header with token from `vercel.json`
+- Built 10 Super Admin pages + 8 Operator pages + 6 public service pages.
+- Built CRUD pages: master-data-sekolah, simdawa (students), simpeg (employees), mapping-pegawai, sirubin, rekap-pendidikan, validasi-data, manajemen-operator, pengaturan-sistem.
+- Built seed data API (`/api/admin/seed-data`): 45 schools + employee_mappings + system_settings.
+- Built sync data API (`/api/admin/sync-data`): match schoolId, identify kepala sekolah, regenerate mapping.
+- Built export/import Excel: dynamic `/api/admin/export/[collection]` and `/api/admin/import/[collection]` + ExportButton/ImportButton components.
+- Added `offset` + `total` pagination to `/api/firestore/[collection]` GET handler.
+- Added `schools`, `students`, `employees` to PUBLIC_COLLECTIONS — all 6 public pages now load.
+- Created `/api/admin/cleanup` — server-side dedup endpoint.
+- Added `/api/admin/sync-data`, `/api/admin/seed-data`, `/api/admin/cleanup` to proxy.ts selfAuthPaths.
+- **Data sync from simpeg-tim**: 22 schools, 292 pegawai, 2 PLT → Supabase (via POST to Vercel API).
+- **Data sync from simdawa**: 7.010 siswa → Supabase.
+- **Cleanup**: 6.260 duplicate student records removed (old UUID-based vs new NISN-based).
+- **Final counts**: 45 schools, 398 employees, 7.880 students, 22 kepala sekolah identified.
+- Build: sukses 115 routes, 0 error.
 
-### Remaining
+### In Progress
 - (none)
 
-## New in This Session
-- Replaced local JSON imports (`data-pegawai.json`, `data-pegawai-tk.json`, `data-siswa.json`) with live API fetches from SIMPEG (`/api/proxy/simpeg`) and SIMDAWA (`/api/proxy/simdawa`) for `/laporan-daftar-1`
-- Created `/api/proxy/simpeg` and `/api/proxy/simdawa` — server-side proxy routes to bypass CORS (external APIs don't set CORS headers)
-- SIMPEG API: 282 pegawai (SD + TK), fields: `jenisKelamin`, `statusKepegawaian`, `tmtTugas`, `sekolah.namaSekolah`
-- SIMDAWA API: ~1000+ siswa (paginated, filtered to `statusSiswa === 'Aktif'`), fields: `jenisKelamin` ("Laki-laki"/"Perempuan"), `kelasKelompok`, `sekolah.namaSekolah`
+### Blocked
+- Supabase env vars empty in `.env.local` — only available on Vercel.
+- Sync-data API only processes ≤1000 students due to Supabase JS client default limit (mitigated with `.limit(100000)`).
 
 ## Key Decisions
-- Firebase Admin SDK gak perlu migration route lagi — semua data udah di Supabase
-- `api/firestore/[collection]` route udah fully on Supabase sejak fix collection Promise (Next.js 16)
-- API key auth (`x-api-key`) di migration route bisa dihapus kalo udah gak dipake
-- JWT token verification (`verifyCookieAuth`) masih fallback — `auth.status !== 500` bypass kalo Firebase Admin gak available
-- **Supabase `app_data` doesn't have `schools` collection** (migration data was lost/not saved) → seed passwords use static `allSekolah` from `src/data/sekolah.ts`
-- **proxy.ts middleware uses `x-api-key` bypass for seed-password & migrate routes** — no JWT needed when header matches env var
-- **External APIs (SIMPEG, SIMDAWA) proxied server-side** via `/api/proxy/*` to avoid CORS — client `fetch` goes to same-origin Next.js route
-- **Paginated fetch for SIMDAWA** (loops `?page=N&limit=1000` until <1000 results) to capture all students
+- **Sync approach**: POST directly to Vercel `/api/firestore/[collection]` with NIK/NISN as record IDs, batch 50 concurrent.
+- **Auth for admin API**: Firebase ID token via cookie + .NET `WebRequest` (PowerShell `Invoke-WebRequest` ignores Cookie header).
+- **Password reset**: Firebase Admin SDK via `scripts/reset-pass.ts` (service-account on disk).
+- **Duplicate cleanup**: Client-side batch deletions (concurrent 50) faster than Vercel serverless (10s limit).
+- **Data volume**: ~7.880 students after dedup (from 14.250 including UUID duplicates).
 
-## Relevant Files
-- `src/lib/firebase-admin.ts`: `normalizeServiceAccount()` + snake_case→camelCase fix
-- `src/app/api/migrate/firestore-to-supabase/route.ts`: migration endpoint + API key auth
-- `src/app/api/firestore/[collection]/route.ts`: Supabase-backed CRUD (GET/POST/DELETE)
-- `src/providers/AuthProvider.tsx`: login flow — baca profil dari Supabase, fallback create
-- `scripts/migrate-firestore-to-supabase.ts`: standalone script (bisa jalan via `npx tsx`)
-- `src/data/data-pegawai.json`: 343 SD pegawai records (22 schools) — **no longer imported, kept for reference**
-- `src/data/data-pegawai-tk.json`: 118 TK/KB pegawai records (20 schools) — **no longer imported, kept for reference**
-- **`src/proxy.ts`**: Next.js middleware — JWT check for `/api/admin/*`, `x-api-key` bypass for seed/migrate routes
-- **`src/app/api/auth/login-npsn/route.ts`**: NPSN-based login — verifies from `school_passwords` collection, creates `npsn_sessions`, returns Set-Cookie
-- **`src/app/api/admin/seed-passwords/route.ts`**: Seeds `school_passwords` from static `allSekolah` data (bypasses missing Supabase `schools` collection)
-- **`src/app/api/proxy/simpeg/route.ts`**: Proxies GET to `https://simpeg-tim.vercel.app/api/pegawai`
-- **`src/app/api/proxy/simdawa/route.ts`**: Proxies GET to `https://simdawa.vercel.app/api/siswa`
-- **`src/app/laporan-daftar-1/page.tsx`**: Now fetches pegawai/siswa via proxy routes, `groupBySekolah(pegawaiList, siswaList)` accepts API data
+## Relevant Files (new/changed this session)
+- `src/app/api/firestore/[collection]/route.ts`: offset pagination, total count, PUBLIC_COLLECTIONS updated.
+- `src/app/api/admin/cleanup/route.ts`: server-side dedup endpoint.
+- `src/app/api/admin/sync-data/route.ts`: `.limit(100000)` for all Supabase queries.
+- `src/proxy.ts`: selfAuthPaths includes sync-data, seed-data, cleanup.
+- `scripts/sync-from-local.ts`: imported data from simpeg-tim + simdawa (deleted).
+- `scripts/cleanup2.mjs`: client-side dedup with batch concurrent deletes (deleted).

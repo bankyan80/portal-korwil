@@ -59,7 +59,8 @@ export async function POST(request: NextRequest) {
     const { data: existingEmployees } = await supabaseAdmin
       .from('app_data')
       .select('*')
-      .eq('collection', 'employees');
+      .eq('collection', 'employees')
+      .limit(100000);
 
     let mappedEmployees = 0;
     let kepalaSekolah = 0;
@@ -133,7 +134,8 @@ export async function POST(request: NextRequest) {
     const { data: existingStudents } = await supabaseAdmin
       .from('app_data')
       .select('*')
-      .eq('collection', 'students');
+      .eq('collection', 'students')
+      .limit(100000);
 
     let mappedStudents = 0;
 
@@ -181,11 +183,13 @@ export async function POST(request: NextRequest) {
     const { data: freshEmployees } = await supabaseAdmin
       .from('app_data')
       .select('*')
-      .eq('collection', 'employees');
+      .eq('collection', 'employees')
+      .limit(100000);
     const { data: freshStudents } = await supabaseAdmin
       .from('app_data')
       .select('*')
-      .eq('collection', 'students');
+      .eq('collection', 'students')
+      .limit(100000);
 
     const employeesBySchool: Record<string, any[]> = {};
     const studentsBySchool: Record<string, any[]> = {};
