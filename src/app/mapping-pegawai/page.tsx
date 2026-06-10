@@ -12,6 +12,7 @@ export default function MappingPegawaiPublicPage() {
   const [search, setSearch] = useState('');
   const [filterJenjang, setFilterJenjang] = useState('Semua');
   const [filterStatus, setFilterStatus] = useState('Semua');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const schoolStatusMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -91,14 +92,38 @@ export default function MappingPegawaiPublicPage() {
             'Sekolah': m.namaSekolah,
             'Jenjang': m.jenjang,
             'Status': schoolStatusMap[m.schoolId] || '-',
-            'Pegawai Tersedia': m.totalPegawaiTersedia || 0,
+            'Rombel': m.jumlahRombel || 0,
+            'Siswa': m.jumlahSiswa || 0,
+            'ASN Guru': m.asnGuru || 0,
+            'ASN Tendik': m.asnTendik || 0,
+            'PPPK Guru': m.pppkGuru || 0,
+            'PPPK Tendik': m.pppkTendik || 0,
+            'PPPK PW Guru': m.pppkWGuru || 0,
+            'PPPK PW Tendik': m.pppWkTendik || 0,
+            'Honorer Guru': m.honorerGuru || 0,
+            'Honorer Tendik': m.honorerTendik || 0,
+            'Lainnya Guru': m.lainnyaGuru || 0,
+            'Lainnya Tendik': m.lainnyaTendik || 0,
+            'Total Tersedia': m.totalPegawaiTersedia || 0,
             'Kebutuhan Ideal': m.totalKebutuhanIdeal || 0,
             'Selisih': (m.totalPegawaiTersedia || 0) - (m.totalKebutuhanIdeal || 0),
           })), [
             { header: 'Sekolah', key: 'Sekolah' },
             { header: 'Jenjang', key: 'Jenjang' },
             { header: 'Status', key: 'Status' },
-            { header: 'Pegawai Tersedia', key: 'Pegawai Tersedia' },
+            { header: 'Rombel', key: 'Rombel' },
+            { header: 'Siswa', key: 'Siswa' },
+            { header: 'ASN Guru', key: 'ASN Guru' },
+            { header: 'ASN Tendik', key: 'ASN Tendik' },
+            { header: 'PPPK Guru', key: 'PPPK Guru' },
+            { header: 'PPPK Tendik', key: 'PPPK Tendik' },
+            { header: 'PPPK PW Guru', key: 'PPPK PW Guru' },
+            { header: 'PPPK PW Tendik', key: 'PPPK PW Tendik' },
+            { header: 'Honorer Guru', key: 'Honorer Guru' },
+            { header: 'Honorer Tendik', key: 'Honorer Tendik' },
+            { header: 'Lainnya Guru', key: 'Lainnya Guru' },
+            { header: 'Lainnya Tendik', key: 'Lainnya Tendik' },
+            { header: 'Total Tersedia', key: 'Total Tersedia' },
             { header: 'Kebutuhan Ideal', key: 'Kebutuhan Ideal' },
             { header: 'Selisih', key: 'Selisih' },
           ], `mapping-pegawai-${Date.now()}`)}
@@ -132,25 +157,62 @@ export default function MappingPegawaiPublicPage() {
                 {filtered.map((m) => {
                   const selisih = (m.totalPegawaiTersedia || 0) - (m.totalKebutuhanIdeal || 0);
                   const statusMap = selisih < 0 ? 'Kurang' : selisih > 0 ? 'Lebih' : 'Cukup';
+                  const open = expandedId === m.id;
+                  const categories = [
+                    { label: 'ASN', guru: m.asnGuru || 0, tendik: m.asnTendik || 0 },
+                    { label: 'PPPK', guru: m.pppkGuru || 0, tendik: m.pppkTendik || 0 },
+                    { label: 'PPPK PW', guru: m.pppkWGuru || 0, tendik: m.pppWkTendik || 0 },
+                    { label: 'Honorer', guru: m.honorerGuru || 0, tendik: m.honorerTendik || 0 },
+                    { label: 'Lainnya', guru: m.lainnyaGuru || 0, tendik: m.lainnyaTendik || 0 },
+                  ];
                   return (
-                    <tr key={m.id} className="hover:bg-muted/50">
-                      <td className="px-3 py-2 font-medium">{m.namaSekolah}</td>
-                      <td className="px-3 py-2 text-center"><span className={`text-xs px-2 py-0.5 rounded-full ${m.jenjang === 'SD' ? 'bg-blue-100 text-blue-700' : m.jenjang === 'TK' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>{m.jenjang}</span></td>
-                      <td className="px-3 py-2 text-center text-xs">{schoolStatusMap[m.schoolId] || '-'}</td>
-                      <td className="px-3 py-2 text-center">{m.jumlahRombel || 0}</td>
-                      <td className="px-3 py-2 text-center">{m.jumlahSiswa || 0}</td>
-                      <td className="px-3 py-2 text-center">{m.totalPegawaiTersedia || 0}</td>
-                      <td className="px-3 py-2 text-center">{m.totalKebutuhanIdeal || 0}</td>
-                      <td className={`px-3 py-2 text-center font-bold ${selisih < 0 ? 'text-red-600' : selisih > 0 ? 'text-green-600' : 'text-gray-600'}`}>
-                        {selisih > 0 ? `+${selisih}` : selisih}
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          statusMap === 'Cukup' ? 'bg-green-100 text-green-700' :
-                          statusMap === 'Kurang' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                        }`}>{statusMap}</span>
-                      </td>
-                    </tr>
+                    <>
+                      <tr key={m.id} className="hover:bg-muted/50">
+                        <td className="px-3 py-2 font-medium">{m.namaSekolah}</td>
+                        <td className="px-3 py-2 text-center"><span className={`text-xs px-2 py-0.5 rounded-full ${m.jenjang === 'SD' ? 'bg-blue-100 text-blue-700' : m.jenjang === 'TK' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>{m.jenjang}</span></td>
+                        <td className="px-3 py-2 text-center text-xs">{schoolStatusMap[m.schoolId] || '-'}</td>
+                        <td className="px-3 py-2 text-center">{m.jumlahRombel || 0}</td>
+                        <td className="px-3 py-2 text-center">{m.jumlahSiswa || 0}</td>
+                        <td className="px-3 py-2 text-center">
+                          <button onClick={() => setExpandedId(open ? null : m.id)}
+                            className="font-semibold text-blue-700 hover:text-blue-900 underline decoration-dotted">
+                            {m.totalPegawaiTersedia || 0}
+                          </button>
+                        </td>
+                        <td className="px-3 py-2 text-center">{m.totalKebutuhanIdeal || 0}</td>
+                        <td className={`px-3 py-2 text-center font-bold ${selisih < 0 ? 'text-red-600' : selisih > 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                          {selisih > 0 ? `+${selisih}` : selisih}
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            statusMap === 'Cukup' ? 'bg-green-100 text-green-700' :
+                            statusMap === 'Kurang' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                          }`}>{statusMap}</span>
+                        </td>
+                      </tr>
+                      {open && (
+                        <tr key={`${m.id}-detail`}>
+                          <td colSpan={9} className="px-6 py-3 bg-gray-50 dark:bg-gray-750">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                              {categories.map(c => {
+                                const total = c.guru + c.tendik;
+                                if (total === 0) return null;
+                                return (
+                                  <div key={c.label} className="bg-white dark:bg-gray-800 rounded-lg border px-3 py-2 text-sm">
+                                    <div className="font-semibold text-gray-700 dark:text-gray-300 mb-1">{c.label}</div>
+                                    <div className="text-xs space-y-0.5">
+                                      <span className="text-blue-700 dark:text-blue-300">Guru: {c.guru}</span>
+                                      <br />
+                                      <span className="text-purple-700 dark:text-purple-300">Tendik: {c.tendik}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   );
                 })}
               </tbody>
