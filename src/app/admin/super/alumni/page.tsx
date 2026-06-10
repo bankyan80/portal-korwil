@@ -26,6 +26,7 @@ export default function SuperAlumni() {
   const [filterJenjang, setFilterJenjang] = useState('Semua');
   const [filterAlumniStatus, setFilterAlumniStatus] = useState('');
   const [filterSchool, setFilterSchool] = useState('Semua');
+  const [filterTahun, setFilterTahun] = useState('Semua');
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<any>({});
@@ -76,10 +77,13 @@ export default function SuperAlumni() {
 
   const merged = allAlumni();
 
+  const uniqueTahun = [...new Set(merged.map(a => a.tahunLulus).filter(Boolean))].sort((a: any, b: any) => Number(b) - Number(a));
+
   const filtered = merged.filter(d => {
     if (filterJenjang !== 'Semua' && d.jenjang !== filterJenjang) return false;
     if (filterAlumniStatus && d.alumniStatus !== filterAlumniStatus) return false;
     if (filterSchool !== 'Semua' && d.schoolId !== filterSchool) return false;
+    if (filterTahun !== 'Semua' && d.tahunLulus !== filterTahun) return false;
     if (search) {
       const q = search.toLowerCase();
       return d.nama?.toLowerCase().includes(q) || d.nisn?.includes(q) || d.nik?.includes(q);
@@ -207,6 +211,10 @@ export default function SuperAlumni() {
           <select value={filterSchool} onChange={e => setFilterSchool(e.target.value)} className="px-3 py-2 rounded-lg border text-sm bg-white">
             <option value="Semua">Semua Sekolah</option>
             {schools.map(s => <option key={s.id} value={s.id}>{s.namaSekolah}</option>)}
+          </select>
+          <select value={filterTahun} onChange={e => setFilterTahun(e.target.value)} className="px-3 py-2 rounded-lg border text-sm bg-white">
+            <option value="Semua">Semua Tahun</option>
+            {uniqueTahun.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
           <select value={filterAlumniStatus} onChange={e => setFilterAlumniStatus(e.target.value)} className="px-3 py-2 rounded-lg border text-sm bg-white">
             {statusAlumniOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}

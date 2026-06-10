@@ -12,6 +12,7 @@ export default function OperatorAlumni() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [filterAlumniStatus, setFilterAlumniStatus] = useState('');
+  const [filterTahun, setFilterTahun] = useState('Semua');
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<any>({});
@@ -31,8 +32,11 @@ export default function OperatorAlumni() {
 
   useEffect(() => { if (schoolId) fetchData(); else setLoading(false); }, [schoolId, fetchData]);
 
+  const uniqueTahun = [...new Set(alumni.map(a => a.tahunLulus).filter(Boolean))].sort((a: any, b: any) => Number(b) - Number(a));
+
   const filtered = alumni.filter(d => {
     if (filterAlumniStatus && d.alumniStatus !== filterAlumniStatus) return false;
+    if (filterTahun !== 'Semua' && d.tahunLulus !== filterTahun) return false;
     if (search) {
       const q = search.toLowerCase();
       return d.nama?.toLowerCase().includes(q) || d.nisn?.includes(q) || d.nik?.includes(q);
@@ -121,6 +125,10 @@ export default function OperatorAlumni() {
             <option value="">Semua Status</option>
             <option value="melanjutkan">Melanjutkan</option>
             <option value="tidak_melanjutkan">Tidak Melanjutkan</option>
+          </select>
+          <select value={filterTahun} onChange={e => setFilterTahun(e.target.value)} className="px-3 py-2 rounded-lg border text-sm bg-white">
+            <option value="Semua">Semua Tahun</option>
+            {uniqueTahun.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
           <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg text-sm font-medium hover:bg-blue-800 shrink-0">
             <Plus className="w-4 h-4" /> Tambah

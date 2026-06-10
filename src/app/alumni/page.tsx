@@ -11,6 +11,7 @@ export default function PublicAlumni() {
   const [filterJenjang, setFilterJenjang] = useState('Semua');
   const [filterStatus, setFilterStatus] = useState('Semua');
   const [filterSchool, setFilterSchool] = useState('Semua');
+  const [filterTahun, setFilterTahun] = useState('Semua');
   const [viewDetail, setViewDetail] = useState<any>(null);
 
   useEffect(() => {
@@ -29,6 +30,11 @@ export default function PublicAlumni() {
   const tidakMelanjutkan = alumni.filter(a => a.alumniStatus === 'tidak_melanjutkan');
   const belumDiisi = alumni.filter(a => !a.alumniStatus);
 
+  const uniqueTahun = useMemo(() => {
+    const years = new Set(alumni.map(a => a.tahunLulus).filter(Boolean));
+    return Array.from(years).sort((a, b) => Number(b) - Number(a));
+  }, [alumni]);
+
   const filtered = useMemo(() => {
     return alumni.filter(d => {
       if (filterJenjang !== 'Semua' && d.jenjang !== filterJenjang) return false;
@@ -37,13 +43,14 @@ export default function PublicAlumni() {
         if (filterStatus !== 'belum' && d.alumniStatus !== filterStatus) return false;
       }
       if (filterSchool !== 'Semua' && d.schoolId !== filterSchool) return false;
+      if (filterTahun !== 'Semua' && d.tahunLulus !== filterTahun) return false;
       if (search) {
         const q = search.toLowerCase();
         return d.nama?.toLowerCase().includes(q) || d.nisn?.includes(q) || d.nik?.includes(q);
       }
       return true;
     });
-  }, [alumni, filterJenjang, filterStatus, filterSchool, search]);
+  }, [alumni, filterJenjang, filterStatus, filterSchool, filterTahun, search]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f8f9ff] via-white to-[#f0f4ff]">
@@ -80,6 +87,10 @@ export default function PublicAlumni() {
             <select value={filterSchool} onChange={e => setFilterSchool(e.target.value)} className="px-3 py-2 rounded-lg border text-sm">
               <option value="Semua">Semua Sekolah</option>
               {schools.map(s => <option key={s.id} value={s.id}>{s.namaSekolah}</option>)}
+            </select>
+            <select value={filterTahun} onChange={e => setFilterTahun(e.target.value)} className="px-3 py-2 rounded-lg border text-sm">
+              <option value="Semua">Semua Tahun</option>
+              {uniqueTahun.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
             <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-3 py-2 rounded-lg border text-sm">
               <option value="Semua">Semua Status</option>
