@@ -10,13 +10,21 @@ async function getToken() {
   return (await r.json()).idToken;
 }
 
-async function getAll(collection, token, limit = 10000) {
-  const r = await fetch(`${API}/${collection}?limit=${limit}`, {
-    headers: { Cookie: `auth-token=${token}` },
-  });
-  const data = await r.json();
-  if (data.error) throw new Error(JSON.stringify(data.error));
-  return data.items || [];
+async function getAll(collection, token, batchSize = 1000) {
+  const allItems = [];
+  let offset = 0;
+  while (true) {
+    const r = await fetch(`${API}/${collection}?limit=${batchSize}&offset=${offset}&orderBy=id`, {
+      headers: { Cookie: `auth-token=${token}` },
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(JSON.stringify(data.error));
+    if (!data.items || data.items.length === 0) break;
+    allItems.push(...data.items);
+    if (data.items.length < batchSize) break;
+    offset += batchSize;
+  }
+  return allItems;
 }
 
 async function deleteRecord(collection, id, token) {
