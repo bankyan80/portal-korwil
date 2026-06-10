@@ -55,21 +55,24 @@ export async function POST(request: NextRequest) {
     }
     log.push(`Seed sekolah: ${seededSchools}/${allSekolah.length}`);
 
-    // Helper: get all records with pagination
+    // Helper: get all records with cursor-based pagination
     async function getAllPaginated(collection: string) {
       const all: any[] = [];
       const BATCH = 1000;
-      let offset = 0;
+      let lastId = '';
       while (true) {
-        const { data } = await supabaseAdmin
+        let query = supabaseAdmin
           .from('app_data')
           .select('*')
           .eq('collection', collection)
           .order('id')
-          .range(offset, offset + BATCH - 1);
+          .limit(BATCH);
+        if (lastId) query = query.gt('id', lastId);
+        const { data, error } = await query;
+        if (error) { console.error(`[getAllPaginated] ${collection}:`, error); break; }
         if (!data || data.length === 0) break;
         all.push(...data);
-        offset += BATCH;
+        lastId = data[data.length - 1].id;
       }
       return all;
     }
