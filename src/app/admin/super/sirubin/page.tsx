@@ -28,6 +28,7 @@ export default function SuperSirubin() {
   const [filterBulan, setFilterBulan] = useState(new Date().getMonth() + 1);
   const [filterTahun, setFilterTahun] = useState(new Date().getFullYear());
   const [filterStatus, setFilterStatus] = useState('Semua');
+  const [error, setError] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
@@ -39,7 +40,7 @@ export default function SuperSirubin() {
       const sJson = await sRes.json();
       setData(rJson.items || []);
       setSchools(sJson.items || []);
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
     }
   }, []);
@@ -69,7 +70,7 @@ export default function SuperSirubin() {
       });
       setLoading(true);
       await fetchData();
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setProcessing(null);
     }
   };
@@ -145,6 +146,12 @@ export default function SuperSirubin() {
         </div>
       </header>
       <main className="p-6 max-w-7xl mx-auto space-y-4">
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">&times;</button>
+          </div>
+        )}
         <div className="grid grid-cols-5 gap-3">
           {[{ label: 'Total Sekolah', value: schools.length, color: '' },
             { label: 'Total Laporan', value: laporanFiltered.length, color: '' },

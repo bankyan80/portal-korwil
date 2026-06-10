@@ -19,6 +19,7 @@ export default function SuperValidasiData() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('Semua');
+  const [error, setError] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
@@ -30,7 +31,7 @@ export default function SuperValidasiData() {
       setSchools((await scRes.json()).items || []);
       setStudents((await stRes.json()).items || []);
       setEmployees((await eRes.json()).items || []);
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
     }
   }, []);
@@ -83,7 +84,7 @@ export default function SuperValidasiData() {
         setLoading(true);
         await fetchData();
       }
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setProcessing(null);
     }
   };
@@ -144,6 +145,12 @@ export default function SuperValidasiData() {
         </div>
       </header>
       <main className="p-6 max-w-7xl mx-auto space-y-4">
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">&times;</button>
+          </div>
+        )}
         <div className="grid grid-cols-4 gap-3">
           <div className="bg-white rounded-xl border p-3 text-center">
             <p className="text-xl font-bold">{validations.length}</p>

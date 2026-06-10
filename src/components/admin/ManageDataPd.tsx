@@ -141,10 +141,8 @@ export function ManageDataPd() {
           ? `/api/siswa/list?schoolId=${user.schoolId}&sekolah=${encodeURIComponent(userSchool)}`
           : `/api/siswa/list?sekolah=${encodeURIComponent(userSchool)}`;
 
-        console.log(`[ManageDataPd] Fetching API: ${apiUrl}`);
         const res = await fetch(apiUrl);
         const json = await res.json();
-        console.log(`[ManageDataPd] API Result Count: ${json.siswa?.length || 0}`);
         dbSiswa = (json.siswa || [])
           .map((s: any) => ({
             id: s.id || s.nik,
@@ -157,7 +155,6 @@ export function ManageDataPd() {
 
       let overlayRecords: SiswaRecord[] = [];
       try {
-        console.log(`[ManageDataPd] Fetching overlay data...`);
         const res = await fetch('/api/siswa/manage');
         const json = await res.json();
         overlayRecords = (json.records || []).map((s: any) => ({
@@ -170,7 +167,6 @@ export function ManageDataPd() {
 
       const mergedNiks = new Set(overlayRecords.map(s => s.nik));
       const finalData = [...overlayRecords, ...dbSiswa.filter(s => !mergedNiks.has(s.nik))];
-      console.log(`[ManageDataPd] Final Merged Count: ${finalData.length} (${overlayRecords.length} from overlay)`);
       setAllSiswa(finalData);
       setLoading(false);
       loadingDone = true;

@@ -64,6 +64,7 @@ export default function SuperSimdawa() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<StudentData>>({ ...defaultForm });
   const [statusFilter, setStatusFilter] = useState('Semua');
+  const [error, setError] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
@@ -76,7 +77,7 @@ export default function SuperSimdawa() {
       setData(sJson.items || []);
       setTotalCount(sJson.total || 0);
       setSchools(scJson.items || []);
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
     }
   }, []);
@@ -138,7 +139,7 @@ export default function SuperSimdawa() {
         setLoading(true);
         await fetchData();
       }
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setSaving(false);
     }
   };
@@ -149,7 +150,7 @@ export default function SuperSimdawa() {
       await fetch(`/api/firestore/students?id=${id}`, { method: 'DELETE' });
       setLoading(true);
       await fetchData();
-    } catch {}
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); }
   };
 
   if (!user) return null;
@@ -185,6 +186,12 @@ export default function SuperSimdawa() {
         <p className="text-sm text-blue-200">{user.displayName} • {totalCount} siswa</p>
       </header>
       <main className="p-6 max-w-7xl mx-auto space-y-4">
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">&times;</button>
+          </div>
+        )}
         <div className="grid grid-cols-4 gap-3">
           <div className="bg-white rounded-xl border p-3 text-center"><p className="text-xl font-bold">{data.length}</p><p className="text-xs text-muted-foreground">Total</p></div>
           <div className="bg-white rounded-xl border p-3 text-center"><p className="text-xl font-bold text-blue-700">{sdCount}</p><p className="text-xs text-muted-foreground">SD</p></div>

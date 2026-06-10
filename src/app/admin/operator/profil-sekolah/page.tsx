@@ -13,6 +13,7 @@ export default function OperatorProfilSekolah() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<any>({});
+  const [error, setError] = useState('');
 
   const fetchData = async () => {
     if (!user?.schoolId) { setLoading(false); return; }
@@ -21,7 +22,7 @@ export default function OperatorProfilSekolah() {
       const json = await res.json();
       setData(json.data || null);
       setForm(json.data || {});
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
     }
   };
@@ -46,7 +47,7 @@ export default function OperatorProfilSekolah() {
         setData({ ...form });
         setEditing(false);
       }
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setSaving(false);
     }
   };
@@ -58,6 +59,12 @@ export default function OperatorProfilSekolah() {
     <SimpleAdminLayout>
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="p-6 max-w-3xl mx-auto space-y-4">
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">&times;</button>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold flex items-center gap-2"><School className="w-5 h-5" /> Profil Sekolah/Lembaga</h1>
           {!editing && (

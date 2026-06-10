@@ -5,18 +5,27 @@ import { Users, Loader2, Search } from 'lucide-react';
 
 export default function SimdawaPublicPage() {
   const [data, setData] = useState<any[]>([]);
+  const [schools, setSchools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [filterJenjang, setFilterJenjang] = useState('Semua');
   const [filterStatus, setFilterStatus] = useState('Semua');
 
+  const schoolStatusMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const s of schools) map[s.id] = s.statusSekolah;
+    return map;
+  }, [schools]);
+
   useEffect(() => {
-    fetch('/api/firestore/students?limit=10000')
-      .then(r => r.json())
-      .then(json => {
-        if (json.items) setData(json.items);
-        else setData([]);
+    Promise.all([
+      fetch('/api/firestore/students?limit=10000').then(r => r.json()),
+      fetch('/api/firestore/schools').then(r => r.json()),
+    ])
+      .then(([sJson, scJson]) => {
+        if (sJson.items) setData(sJson.items);
+        if (scJson.items) setSchools(scJson.items);
       })
       .catch(() => setError('Gagal memuat data'))
       .finally(() => setLoading(false));
@@ -25,7 +34,7 @@ export default function SimdawaPublicPage() {
   const rekap = useMemo(() => {
     let filtered = data;
     if (filterJenjang !== 'Semua') filtered = filtered.filter(d => d.jenjang === filterJenjang);
-    if (filterStatus !== 'Semua') filtered = filtered.filter(d => d.statusSekolah === filterStatus);
+    if (filterStatus !== 'Semua') filtered = filtered.filter(d => schoolStatusMap[d.schoolId] === filterStatus);
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(d => d.nama?.toLowerCase().includes(q) || d.sekolah?.toLowerCase().includes(q));
@@ -53,7 +62,7 @@ export default function SimdawaPublicPage() {
     });
 
     return { total: filtered.length, jenjangBreakdown, sekolahBreakdown };
-  }, [data, filterJenjang, filterStatus, search]);
+  }, [data, filterJenjang, filterStatus, search, schoolStatusMap]);
 
   if (loading) {
     return (

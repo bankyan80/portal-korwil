@@ -5,6 +5,7 @@ import { ClipboardList, Loader2, Search, CheckCircle, XCircle } from 'lucide-rea
 
 export default function SirubinPublicPage() {
   const [data, setData] = useState<any[]>([]);
+  const [schools, setSchools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterJenjang, setFilterJenjang] = useState('Semua');
@@ -14,12 +15,20 @@ export default function SirubinPublicPage() {
 
   const bulanList = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
+  const schoolStatusMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const s of schools) map[s.id] = s.statusSekolah;
+    return map;
+  }, [schools]);
+
   useEffect(() => {
-    fetch('/api/firestore/sirubin_reports')
-      .then(r => r.json())
-      .then(json => {
-        if (json.items) setData(json.items);
-        else setData([]);
+    Promise.all([
+      fetch('/api/firestore/sirubin_reports?limit=10000').then(r => r.json()),
+      fetch('/api/firestore/schools').then(r => r.json()),
+    ])
+      .then(([sJson, scJson]) => {
+        if (sJson.items) setData(sJson.items);
+        if (scJson.items) setSchools(scJson.items);
       })
       .catch(() => setError('Gagal memuat data'))
       .finally(() => setLoading(false));
@@ -28,9 +37,9 @@ export default function SirubinPublicPage() {
   const filtered = useMemo(() => {
     let result = data.filter(d => d.bulan === bulan && d.tahun === tahun);
     if (filterJenjang !== 'Semua') result = result.filter(d => d.jenjang === filterJenjang);
-    if (filterStatus !== 'Semua') result = result.filter(d => d.statusSekolah === filterStatus);
+    if (filterStatus !== 'Semua') result = result.filter(d => schoolStatusMap[d.schoolId] === filterStatus);
     return result;
-  }, [data, filterJenjang, filterStatus, bulan, tahun]);
+  }, [data, filterJenjang, filterStatus, bulan, tahun, schoolStatusMap]);
 
   const sudahKirim = filtered.filter(d => d.statusLaporan === 'Terkirim' || d.statusLaporan === 'Valid' || d.statusLaporan === 'Terkunci');
   const belumKirim = filtered.filter(d => d.statusLaporan === 'Belum Dibuat' || d.statusLaporan === 'Draft');

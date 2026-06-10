@@ -25,6 +25,7 @@ export default function OperatorSirubin() {
   const [targetBulan, setTargetBulan] = useState(new Date().getMonth() + 1);
   const [targetTahun, setTargetTahun] = useState(new Date().getFullYear());
   const [catatan, setCatatan] = useState('');
+  const [error, setError] = useState('');
 
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
@@ -36,7 +37,7 @@ export default function OperatorSirubin() {
       const res = await fetch(`/api/firestore/sirubin_reports?field=schoolId&value=${user.schoolId}`);
       const json = await res.json();
       setReports(json.items || []);
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
     }
   }, [user?.schoolId]);
@@ -76,7 +77,7 @@ export default function OperatorSirubin() {
         setLoading(true);
         await fetchData();
       }
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setSending(false);
     }
   };
@@ -98,6 +99,12 @@ export default function OperatorSirubin() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="p-6 max-w-7xl mx-auto space-y-4">
         <h1 className="text-lg font-bold flex items-center gap-2"><ClipboardList className="w-5 h-5" /> SIRUBIN</h1>
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">&times;</button>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-white rounded-xl border p-4 text-center">

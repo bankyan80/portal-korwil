@@ -12,6 +12,7 @@ export default function OperatorRekapSekolah() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!user?.schoolId) { setLoading(false); return; }
@@ -25,7 +26,7 @@ export default function OperatorRekapSekolah() {
         setEmployees(eJson.items || []);
         setReports(rJson.items || []);
       })
-      .catch(() => {})
+      .catch((e: any) => setError(e.message || 'Terjadi kesalahan'))
       .finally(() => setLoading(false));
   }, [user?.schoolId]);
 
@@ -41,6 +42,12 @@ export default function OperatorRekapSekolah() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="p-6 max-w-7xl mx-auto space-y-4">
         <h1 className="text-lg font-bold flex items-center gap-2"><BarChart3 className="w-5 h-5" /> Rekap {user.schoolName || 'Sekolah'}</h1>
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">&times;</button>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /></div>

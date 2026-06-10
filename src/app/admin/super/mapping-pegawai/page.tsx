@@ -18,6 +18,7 @@ export default function SuperMappingPegawai() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
@@ -29,7 +30,7 @@ export default function SuperMappingPegawai() {
       const sJson = await sRes.json();
       setMappings(mJson.items || []);
       setSchools(sJson.items || []);
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
     }
   }, []);
@@ -81,9 +82,7 @@ export default function SuperMappingPegawai() {
       setMessage(`Sync selesai: ${created} sekolah diproses`);
       setLoading(true);
       await fetchData();
-    } catch {
-      setMessage('Gagal sync');
-    } finally {
+    } catch (e: any) { setError(e.message || 'Gagal sync'); setMessage('Gagal sync'); } finally {
       setSyncing(false);
     }
   };
@@ -132,6 +131,12 @@ export default function SuperMappingPegawai() {
         </div>
       </header>
       <main className="p-6 max-w-7xl mx-auto space-y-4">
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">&times;</button>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={handleSync} disabled={syncing} className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50">

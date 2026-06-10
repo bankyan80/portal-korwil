@@ -15,6 +15,7 @@ export default function SuperRekapPendidikan() {
   const [students, setStudents] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -29,7 +30,7 @@ export default function SuperRekapPendidikan() {
         setEmployees(eJson.items || []);
         setReports(rJson.items || []);
       })
-      .catch(() => {})
+      .catch((e: any) => setError(e.message || 'Terjadi kesalahan'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -79,6 +80,12 @@ export default function SuperRekapPendidikan() {
         </div>
       </header>
       <main className="p-6 max-w-7xl mx-auto space-y-6">
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">&times;</button>
+          </div>
+        )}
         {loading ? <LoadingState /> : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -92,12 +99,12 @@ export default function SuperRekapPendidikan() {
               <div className="bg-white rounded-xl border p-5">
                 <h3 className="font-semibold text-sm mb-4 text-muted-foreground uppercase tracking-wide">Sekolah per Jenjang</h3>
                 <div className="space-y-3">
-                  {[{ label: 'SD', count: sd.length, pct: Math.round((sd.length / schools.length) * 100) },
-                    { label: 'TK', count: tk.length, pct: Math.round((tk.length / schools.length) * 100) },
-                    { label: 'KB', count: kb.length, pct: Math.round((kb.length / schools.length) * 100) },
+                  {[{ label: 'SD', count: sd.length, pct: schools.length ? Math.round((sd.length / schools.length) * 100) : 0 },
+                    { label: 'TK', count: tk.length, pct: schools.length ? Math.round((tk.length / schools.length) * 100) : 0 },
+                    { label: 'KB', count: kb.length, pct: schools.length ? Math.round((kb.length / schools.length) * 100) : 0 },
                   ].map(s => (
                     <div key={s.label}>
-                      <div className="flex justify-between text-sm mb-1"><span className="font-medium">SD {s.label === 'SD' ? '' : s.label === 'TK' ? '' : ''}</span><span>{s.count} ({s.pct}%)</span></div>
+                      <div className="flex justify-between text-sm mb-1"><span className="font-medium">{s.label}</span><span>{s.count} ({s.pct}%)</span></div>
                       <div className="w-full bg-gray-100 rounded-full h-2"><div className="bg-blue-600 h-2 rounded-full" style={{ width: `${s.pct}%` }} /></div>
                     </div>
                   ))}

@@ -67,6 +67,7 @@ export default function SuperSimpeg() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<EmployeeData>>({ ...defaultForm });
+  const [error, setError] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
@@ -78,7 +79,7 @@ export default function SuperSimpeg() {
       const scJson = await scRes.json();
       setData(eJson.items || []);
       setSchools(scJson.items || []);
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
     }
   }, []);
@@ -140,7 +141,7 @@ export default function SuperSimpeg() {
         setLoading(true);
         await fetchData();
       }
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setSaving(false);
     }
   };
@@ -151,7 +152,7 @@ export default function SuperSimpeg() {
       await fetch(`/api/firestore/employees?id=${id}`, { method: 'DELETE' });
       setLoading(true);
       await fetchData();
-    } catch {}
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); }
   };
 
   if (!user) return null;
@@ -182,6 +183,12 @@ export default function SuperSimpeg() {
         <p className="text-sm text-blue-200">{user.displayName} • {data.length} pegawai</p>
       </header>
       <main className="p-6 max-w-7xl mx-auto space-y-4">
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">&times;</button>
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

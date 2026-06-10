@@ -56,6 +56,7 @@ export default function OperatorSimpeg() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<EmployeeData>>({ ...defaultForm });
+  const [error, setError] = useState('');
 
   const fetchData = useCallback(async () => {
     if (!user?.schoolId) { setLoading(false); return; }
@@ -63,7 +64,7 @@ export default function OperatorSimpeg() {
       const res = await fetch(`/api/firestore/employees?field=schoolId&value=${user.schoolId}`);
       const json = await res.json();
       setData(json.items || []);
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
     }
   }, [user?.schoolId]);
@@ -111,7 +112,7 @@ export default function OperatorSimpeg() {
         setLoading(true);
         await fetchData();
       }
-    } catch {} finally {
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setSaving(false);
     }
   };
@@ -122,7 +123,7 @@ export default function OperatorSimpeg() {
       await fetch(`/api/firestore/employees?id=${id}`, { method: 'DELETE' });
       setLoading(true);
       await fetchData();
-    } catch {}
+    } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); }
   };
 
   if (!user) return null;
@@ -150,6 +151,12 @@ export default function OperatorSimpeg() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="p-6 max-w-7xl mx-auto space-y-4">
         <h1 className="text-lg font-bold flex items-center gap-2"><BookOpen className="w-5 h-5" /> SIMPEG</h1>
+        {error && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">&times;</button>
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
