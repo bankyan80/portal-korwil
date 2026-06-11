@@ -56,6 +56,19 @@ puter/
 scripts/sync-data.mjs.log
 *.xlsx
 
+# data mix / sync files
+data_mix/
+scripts/sync-data-mix.mjs
+scripts/sync-full.mjs
+sync-data-mix-log.json
+sync-full-log.json
+sync-*.log
+
+# env / secrets
+.env.prod
+.env*.local
+token.txt
+
 .vercel
 
 puter
