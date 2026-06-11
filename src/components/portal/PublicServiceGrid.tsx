@@ -1,6 +1,6 @@
 'use client';
 
-import { School, Users, MapPin, ClipboardList, BarChart3, BookOpen, GraduationCap, type LucideIcon } from 'lucide-react';
+import { School, Users, MapPin, ClipboardList, BarChart3, BookOpen, GraduationCap, Receipt, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 
 interface ServiceCard {
@@ -97,6 +97,18 @@ const services: ServiceCard[] = [
       { label: 'SD', variant: 'jenjang' },
       { label: 'TK', variant: 'jenjang' },
       { label: 'KB', variant: 'jenjang' },
+    ],
+  },
+  {
+    id: 'lapor-pajak',
+    label: 'Lapor Pajak',
+    icon: Receipt,
+    desc: 'Pelaporan pajak per triwulan untuk SD, TK, dan KB Kecamatan Lemahabang.',
+    href: '/lapor-pajak',
+    badges: [
+      { label: 'Triwulan', variant: 'status' },
+      { label: 'PPN', variant: 'status' },
+      { label: 'PPH', variant: 'status' },
     ],
   },
 ];
