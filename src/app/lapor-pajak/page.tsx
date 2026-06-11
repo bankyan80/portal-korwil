@@ -28,12 +28,14 @@ interface School {
 
 const TRIMULAN = ['1', '2', '3', '4'];
 
+const fmt = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 function currency(n: number) {
-  return new Intl.NumberFormat('id-ID').format(n || 0);
+  return fmt.format(n || 0);
 }
 
 function formatRupiahTanpaRp(value: number) {
-  return Number(value || 0).toLocaleString('id-ID');
+  return fmt.format(value || 0);
 }
 
 function hitungNilaiPajak(ppn: number, pph21: number, pph23: number) {
