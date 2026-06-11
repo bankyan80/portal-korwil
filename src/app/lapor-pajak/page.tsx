@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Loader2, Plus, Search, Receipt, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, Plus, Search, Receipt, CheckCircle2, XCircle, AlertTriangle, Download } from 'lucide-react';
+import { exportToExcel } from '@/components/laporan/ExportButton';
 
 interface LaporPajak {
   id: string;
@@ -22,6 +23,7 @@ interface School {
   namaSekolah: string;
   statusSekolah: string;
   kecamatan: string;
+  jenjang: string;
 }
 
 const TRIMULAN = ['1', '2', '3', '4'];
@@ -72,11 +74,13 @@ export default function LaporPajakPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const schoolsSD = useMemo(() => schools.filter(s => s.jenjang === 'SD'), [schools]);
+
   const sekolahMap = useMemo(() => {
     const m = new Map<string, School>();
-    for (const s of schools) m.set(s.npsn, s);
+    for (const s of schoolsSD) m.set(s.npsn, s);
     return m;
-  }, [schools]);
+  }, [schoolsSD]);
 
   const laporanBySekolah = useMemo(() => {
     const m = new Map<string, LaporPajak[]>();
@@ -91,10 +95,10 @@ export default function LaporPajakPage() {
   const sekolahSudahLapor = useMemo(() => {
     const sudah = new Set<string>();
     for (const d of data) sudah.add(d.npsn);
-    const belum = schools.filter(s => !sudah.has(s.npsn));
-    const sudahArr = schools.filter(s => sudah.has(s.npsn));
+    const belum = schoolsSD.filter(s => !sudah.has(s.npsn));
+    const sudahArr = schoolsSD.filter(s => sudah.has(s.npsn));
     return { sudah: sudahArr, belum };
-  }, [data, schools]);
+  }, [data, schoolsSD]);
 
   useEffect(() => {
     if (!formNpsn) return;
@@ -206,7 +210,7 @@ export default function LaporPajakPage() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Lapor Pajak</h1>
-            <p className="text-sm text-gray-500">Pelaporan pajak per triwulan SD, TK, KB Kecamatan Lemahabang</p>
+            <p className="text-sm text-gray-500">Pelaporan pajak per triwulan SD Kecamatan Lemahabang</p>
           </div>
         </div>
 
@@ -266,7 +270,7 @@ export default function LaporPajakPage() {
                 </tr>
               </thead>
               <tbody>
-                {schools.map(s => {
+                {schoolsSD.map(s => {
                   const laporan = laporanBySekolah.get(s.npsn) || [];
                   const sudahLapor = laporan.length > 0;
                   const triwulanList = [...new Set(laporan.map(l => l.triwulan))].sort();
@@ -321,6 +325,39 @@ export default function LaporPajakPage() {
                 <option value="Semua">Semua Triwulan</option>
                 {TRIMULAN.map(t => <option key={t} value={t}>Triwulan {t}</option>)}
               </select>
+              <button
+                onClick={() => exportToExcel(filtered.map(d => ({
+                  namaSekolah: d.namaSekolah,
+                  npsn: d.npsn,
+                  triwulan: `Triwulan ${d.triwulan}`,
+                  ppnBelum: d.pajakBelumSetor?.ppn || 0,
+                  pph21Belum: d.pajakBelumSetor?.pph21 || 0,
+                  pph23Belum: d.pajakBelumSetor?.pph23 || 0,
+                  nilaiBelum: d.pajakBelumSetor?.nilaiKeseluruhan || 0,
+                  ppnSudah: d.pajakSudahSetor?.ppn || 0,
+                  pph21Sudah: d.pajakSudahSetor?.pph21 || 0,
+                  pph23Sudah: d.pajakSudahSetor?.pph23 || 0,
+                  nilaiSudah: d.pajakSudahSetor?.nilaiKeseluruhan || 0,
+                  keterangan: KETERANGAN.find(k => k.value === d.keterangan)?.label || d.keterangan,
+                })), [
+                  { header: 'Nama Sekolah', key: 'namaSekolah' },
+                  { header: 'NPSN', key: 'npsn' },
+                  { header: 'Triwulan', key: 'triwulan' },
+                  { header: 'PPN Belum Setor', key: 'ppnBelum' },
+                  { header: 'PPH21 Belum Setor', key: 'pph21Belum' },
+                  { header: 'PPH23 Belum Setor', key: 'pph23Belum' },
+                  { header: 'Nilai Belum Setor', key: 'nilaiBelum' },
+                  { header: 'PPN Sudah Setor', key: 'ppnSudah' },
+                  { header: 'PPH21 Sudah Setor', key: 'pph21Sudah' },
+                  { header: 'PPH23 Sudah Setor', key: 'pph23Sudah' },
+                  { header: 'Nilai Sudah Setor', key: 'nilaiSudah' },
+                  { header: 'Keterangan', key: 'keterangan' },
+                ], `lapor-pajak-${filterTriwulan}-${Date.now()}`)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-medium hover:bg-green-800 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Unduh Excel
+              </button>
             </div>
           </div>
           <div className="overflow-x-auto">
