@@ -62,7 +62,7 @@ export default function SimdawaPublicPage() {
       if (d.jenisKelamin === 'L' || d.jenisKelamin === 'Laki-laki') sekolahBreakdown[sekolah].l++;
       else sekolahBreakdown[sekolah].p++;
 
-      if (d.kelas != null) {
+      if (jenjang === 'SD' && d.kelas != null) {
         const k = `Kelas ${d.kelas}`;
         if (!kelasBreakdown[k]) kelasBreakdown[k] = { total: 0, l: 0, p: 0 };
         kelasBreakdown[k].total++;
@@ -70,7 +70,7 @@ export default function SimdawaPublicPage() {
         else kelasBreakdown[k].p++;
       }
 
-      if (d.kelompok != null) {
+      if ((jenjang === 'TK' || jenjang === 'KB') && d.kelompok != null) {
         const k = `Kelompok ${d.kelompok}`;
         if (!kelompokBreakdown[k]) kelompokBreakdown[k] = { total: 0, l: 0, p: 0 };
         kelompokBreakdown[k].total++;
@@ -152,7 +152,7 @@ export default function SimdawaPublicPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.keys(rekap.kelasBreakdown).length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
-              <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap per Kelas</h3></div>
+              <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap per Kelas (SD)</h3></div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead><tr className="bg-muted/50"><th className="px-3 py-2 text-left">Kelas</th><th className="px-3 py-2 text-center">Total</th><th className="px-3 py-2 text-center">L</th><th className="px-3 py-2 text-center">P</th></tr></thead>
@@ -167,7 +167,7 @@ export default function SimdawaPublicPage() {
           )}
           {Object.keys(rekap.kelompokBreakdown).length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
-              <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap per Kelompok</h3></div>
+              <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap per Kelompok (TK/KB)</h3></div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead><tr className="bg-muted/50"><th className="px-3 py-2 text-left">Kelompok</th><th className="px-3 py-2 text-center">Total</th><th className="px-3 py-2 text-center">L</th><th className="px-3 py-2 text-center">P</th></tr></thead>
