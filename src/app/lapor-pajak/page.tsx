@@ -488,15 +488,15 @@ export default function LaporPajakPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">PPN</label>
-                    <input type="number" min="0" value={formBlmPpn || ''} onChange={e => setFormBlmPpn(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    <input type="number" min="0" value={formBlmPpn || ''} onChange={e => setFormBlmPpn(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">PPH 21</label>
-                    <input type="number" min="0" value={formBlmPph21 || ''} onChange={e => setFormBlmPph21(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    <input type="number" min="0" value={formBlmPph21 || ''} onChange={e => setFormBlmPph21(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">PPH 23</label>
-                    <input type="number" min="0" value={formBlmPph23 || ''} onChange={e => setFormBlmPph23(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    <input type="number" min="0" value={formBlmPph23 || ''} onChange={e => setFormBlmPph23(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">Nilai Keseluruhan</label>
@@ -511,15 +511,15 @@ export default function LaporPajakPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">PPN</label>
-                    <input type="number" min="0" value={formSdhPpn || ''} onChange={e => setFormSdhPpn(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    <input type="number" min="0" value={formSdhPpn || ''} onChange={e => setFormSdhPpn(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">PPH 21</label>
-                    <input type="number" min="0" value={formSdhPph21 || ''} onChange={e => setFormSdhPph21(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    <input type="number" min="0" value={formSdhPph21 || ''} onChange={e => setFormSdhPph21(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">PPH 23</label>
-                    <input type="number" min="0" value={formSdhPph23 || ''} onChange={e => setFormSdhPph23(Number(e.target.value))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    <input type="number" min="0" value={formSdhPph23 || ''} onChange={e => setFormSdhPph23(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">Nilai Keseluruhan</label>
