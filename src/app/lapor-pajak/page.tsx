@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Loader2, Plus, Search, Receipt, CheckCircle2, XCircle, AlertTriangle, Download } from 'lucide-react';
+import { Loader2, Plus, Search, Receipt, CheckCircle2, XCircle, AlertTriangle, Download, Clock, Send, ExternalLink } from 'lucide-react';
 import { exportToExcel } from '@/components/laporan/ExportButton';
 
 interface LaporPajak {
@@ -84,6 +84,28 @@ function getKeteranganPajak(nilaiBelumSetor: number, nilaiSudahSetor: number) {
   return 'Pajak Januari-Maret Lebih bayar: ' + formatRupiahTanpaRp(sudah - belum);
 }
 
+function getStatusTriwulan(sekolah: School, triwulan: string, laporan: LaporPajak[], tahun: string) {
+  const l = laporan.find(item =>
+    String(item.npsn) === String(sekolah.npsn) &&
+    String(item.triwulan) === String(triwulan)
+  );
+  if (!l) return { status: 'belum', label: 'Belum', className: 'text-red-600', icon: 'x' };
+  if (l.keterangan?.includes('sedang proses') || l.keterangan?.includes('menunggu'))
+    return { status: 'proses', label: 'Proses', className: 'text-yellow-600', icon: 'clock' };
+  return { status: 'sudah', label: 'Sudah', className: 'text-green-600', icon: 'check' };
+}
+
+function hitungProgresSekolah(sekolah: School, laporan: LaporPajak[], tahun: string) {
+  const jumlahSudah = TRIMULAN.filter(tw => getStatusTriwulan(sekolah, tw, laporan, tahun).status === 'sudah').length;
+  return { jumlahSudah, totalTriwulan: 4, persen: Math.round((jumlahSudah / 4) * 100) };
+}
+
+function getStatusAkhir(progres: { persen: number }) {
+  if (progres.persen === 100) return 'Lengkap';
+  if (progres.persen === 0) return 'Belum Lapor';
+  return 'Belum Lengkap';
+}
+
 export default function LaporPajakPage() {
   const [data, setData] = useState<LaporPajak[]>([]);
   const [schools, setSchools] = useState<School[]>([]);
@@ -91,7 +113,10 @@ export default function LaporPajakPage() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [filterTriwulan, setFilterTriwulan] = useState('Semua');
+  const [filterStatus, setFilterStatus] = useState('Semua');
+  const [filterTahun, setFilterTahun] = useState(new Date().getFullYear().toString());
   const [showModal, setShowModal] = useState(false);
+  const [detailSekolah, setDetailSekolah] = useState<School | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Form state
@@ -260,36 +285,39 @@ export default function LaporPajakPage() {
           </div>
         </div>
 
-        {/* Progress */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl border p-4 sm:p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-100"><CheckCircle2 className="w-5 h-5 text-green-700" /></div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{sekolahSudahLapor.sudah.length}</p>
-                <p className="text-xs text-gray-500">Sekolah Sudah Lapor</p>
+        {/* Summary Cards */}
+        {(() => {
+          const totalSekolah = schoolsSD.length;
+          const progresList = schoolsSD.map(s => ({ sekolah: s, progres: hitungProgresSekolah(s, data, filterTahun) }));
+          const lengkap = progresList.filter(p => p.progres.persen === 100).length;
+          const belumLapor = progresList.filter(p => p.progres.persen === 0).length;
+          const belumLengkap = totalSekolah - lengkap - belumLapor;
+          const kepatuhan = totalSekolah > 0 ? Math.round((lengkap / totalSekolah) * 100) : 0;
+          return (
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+              <div className="bg-white rounded-xl border p-4">
+                <p className="text-2xl font-bold text-gray-900">{totalSekolah}</p>
+                <p className="text-xs text-gray-500">Total Sekolah</p>
+              </div>
+              <div className="bg-white rounded-xl border p-4">
+                <p className="text-2xl font-bold text-green-700">{lengkap}</p>
+                <p className="text-xs text-gray-500">Lengkap 4 TW</p>
+              </div>
+              <div className="bg-white rounded-xl border p-4">
+                <p className="text-2xl font-bold text-amber-700">{belumLengkap}</p>
+                <p className="text-xs text-gray-500">Belum Lengkap</p>
+              </div>
+              <div className="bg-white rounded-xl border p-4">
+                <p className="text-2xl font-bold text-red-700">{belumLapor}</p>
+                <p className="text-xs text-gray-500">Belum Lapor</p>
+              </div>
+              <div className="bg-white rounded-xl border p-4">
+                <p className="text-2xl font-bold text-blue-700">{kepatuhan}%</p>
+                <p className="text-xs text-gray-500">Kepatuhan</p>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded-xl border p-4 sm:p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-red-100"><XCircle className="w-5 h-5 text-red-700" /></div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{sekolahSudahLapor.belum.length}</p>
-                <p className="text-xs text-gray-500">Sekolah Belum Lapor</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border p-4 sm:p-5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-100"><Receipt className="w-5 h-5 text-blue-700" /></div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{data.length}</p>
-                <p className="text-xs text-gray-500">Total Laporan</p>
-              </div>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Tombol Lapor */}
         <div className="mb-6">
@@ -302,51 +330,190 @@ export default function LaporPajakPage() {
           </button>
         </div>
 
-        {/* Daftar Sekolah Sudah/Belum Lapor */}
+        {/* Tabel Progres Matrix */}
         <div className="bg-white rounded-xl border mb-6">
-          <div className="p-4 sm:p-5 border-b">
-            <h2 className="font-semibold text-gray-900">Progres Daftar Sekolah yang Sudah dan Belum Lapor</h2>
+          <div className="p-4 sm:p-5 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h2 className="font-semibold text-gray-900">Progres Laporan Per Triwulan</h2>
+            <div className="flex flex-wrap gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input type="text" placeholder="Cari sekolah..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 pr-3 py-2 text-sm border rounded-lg w-40" />
+              </div>
+              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-3 py-2 text-sm border rounded-lg">
+                <option value="Semua">Semua Status</option>
+                <option value="Lengkap">Lengkap</option>
+                <option value="Belum Lengkap">Belum Lengkap</option>
+                <option value="Belum Lapor">Belum Lapor</option>
+              </select>
+              <select value={filterTriwulan} onChange={e => setFilterTriwulan(e.target.value)} className="px-3 py-2 text-sm border rounded-lg">
+                <option value="Semua">Semua Triwulan</option>
+                {TRIMULAN.map(t => <option key={t} value={t}>Triwulan {t}</option>)}
+              </select>
+              <button onClick={() => {
+                const rows = schoolsSD.map(s => {
+                  const progres = hitungProgresSekolah(s, data, filterTahun);
+                  const row: any = { namaSekolah: s.namaSekolah, npsn: s.npsn };
+                  TRIMULAN.forEach(tw => { row[`tw${tw}`] = getStatusTriwulan(s, tw, data, filterTahun).status === 'sudah' ? 'Sudah' : 'Belum'; });
+                  row.progres = `${progres.persen}%`;
+                  row.statusAkhir = getStatusAkhir(progres);
+                  return row;
+                });
+                const cols = [
+                  { header: 'Nama Sekolah', key: 'namaSekolah' },
+                  { header: 'NPSN', key: 'npsn' },
+                  ...TRIMULAN.map(tw => ({ header: `TW ${tw}`, key: `tw${tw}` })),
+                  { header: 'Progres', key: 'progres' },
+                  { header: 'Status Akhir', key: 'statusAkhir' },
+                ];
+                exportToExcel(rows, cols, `progres-pajak-${Date.now()}`);
+              }} className="inline-flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg text-sm font-medium hover:bg-green-800">
+                <Download className="w-4 h-4" /> Export
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-gray-50">
+                  <th className="text-center px-2 py-3 font-medium text-gray-600 w-10">No</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Nama Sekolah</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                  <th className="text-center px-2 py-3 font-medium text-gray-600">NPSN</th>
+                  {TRIMULAN.map(tw => <th key={tw} className="text-center px-2 py-3 font-medium text-gray-600">TW {tw}</th>)}
+                  <th className="text-center px-3 py-3 font-medium text-gray-600">Progres</th>
+                  <th className="text-center px-3 py-3 font-medium text-gray-600">Status</th>
+                  <th className="text-center px-3 py-3 font-medium text-gray-600">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {schoolsSD.map(s => {
-                  const laporan = laporanBySekolah.get(s.npsn) || [];
-                  const sudahLapor = laporan.length > 0;
-                  const triwulanList = [...new Set(laporan.map(l => l.triwulan))].sort();
-                  return (
-                    <tr key={s.npsn} className="border-b last:border-0 hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">{s.namaSekolah}</div>
-                        <div className="text-xs text-gray-400">{s.npsn}</div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {sudahLapor ? (
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-                            <span className="text-green-700 font-medium">Sudah Lapor</span>
-                            <span className="text-xs text-gray-400">(Triwulan {triwulanList.join(', ')})</span>
+                {schoolsSD
+                  .filter(s => {
+                    if (search) {
+                      const q = search.toLowerCase();
+                      return s.namaSekolah.toLowerCase().includes(q) || s.npsn.includes(q);
+                    }
+                    return true;
+                  })
+                  .filter(s => {
+                    const progres = hitungProgresSekolah(s, data, filterTahun);
+                    const status = getStatusAkhir(progres);
+                    if (filterStatus !== 'Semua' && status !== filterStatus) return false;
+                    if (filterTriwulan !== 'Semua') {
+                      const st = getStatusTriwulan(s, filterTriwulan, data, filterTahun).status;
+                      if (st !== 'sudah') return false;
+                    }
+                    return true;
+                  })
+                  .map((s, i) => {
+                    const progres = hitungProgresSekolah(s, data, filterTahun);
+                    const statusAkhir = getStatusAkhir(progres);
+                    const statusColor = statusAkhir === 'Lengkap' ? 'text-green-700 bg-green-50' : statusAkhir === 'Belum Lapor' ? 'text-red-700 bg-red-50' : 'text-amber-700 bg-amber-50';
+                    return (
+                      <tr key={s.npsn} className="border-b hover:bg-gray-50">
+                        <td className="text-center px-2 py-3 text-gray-500">{i + 1}</td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-900">{s.namaSekolah}</div>
+                        </td>
+                        <td className="text-center px-2 py-3 text-xs text-gray-500">{s.npsn}</td>
+                        {TRIMULAN.map(tw => {
+                          const st = getStatusTriwulan(s, tw, data, filterTahun);
+                          return (
+                            <td key={tw} className="text-center px-2 py-3">
+                              {st.status === 'sudah' ? <CheckCircle2 className="w-5 h-5 text-green-600 mx-auto" />
+                                : st.status === 'proses' ? <Clock className="w-5 h-5 text-yellow-600 mx-auto" />
+                                : <XCircle className="w-5 h-5 text-red-300 mx-auto" />}
+                            </td>
+                          );
+                        })}
+                        <td className="text-center px-3 py-3">
+                          <div className="flex items-center gap-2 justify-center">
+                            <div className="w-16 h-2 rounded-full bg-gray-200 overflow-hidden">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${progres.persen}%`, backgroundColor: progres.persen === 100 ? '#16a34a' : progres.persen > 0 ? '#d97706' : '#ef4444' }} />
+                            </div>
+                            <span className="text-xs font-medium text-gray-600">{progres.persen}%</span>
                           </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <XCircle className="w-4 h-4 text-red-400 shrink-0" />
-                            <span className="text-red-500">Belum Lapor</span>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                          <div className="text-[10px] text-gray-400">{progres.jumlahSudah}/{progres.totalTriwulan} TW</div>
+                        </td>
+                        <td className="text-center px-3 py-3">
+                          <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${statusColor}`}>{statusAkhir}</span>
+                        </td>
+                        <td className="text-center px-3 py-3">
+                          <button onClick={() => setDetailSekolah(s)} className="text-xs text-blue-600 hover:underline">Detail</button>
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
-        </div>
+          </div>
+
+        {/* Detail Modal */}
+        {detailSekolah && (() => {
+          const s = detailSekolah;
+          const progres = hitungProgresSekolah(s, data, filterTahun);
+          const statusAkhir = getStatusAkhir(progres);
+          const pesan = `Yth. Operator ${s.namaSekolah}, mohon segera melengkapi laporan pajak triwulan yang belum dikirim pada aplikasi Portal Korwil. Terima kasih.`;
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3" onClick={() => setDetailSekolah(null)}>
+              <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
+                <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-4 sm:p-5 border-b">
+                  <h2 className="text-lg font-bold text-gray-900">Detail Progres</h2>
+                  <button onClick={() => setDetailSekolah(null)} className="p-1.5 hover:bg-gray-100 rounded-lg"><XCircle className="w-5 h-5 text-gray-400" /></button>
+                </div>
+                <div className="p-4 sm:p-5 space-y-4">
+                  <div>
+                    <p className="text-base font-bold text-gray-900">{s.namaSekolah}</p>
+                    <p className="text-xs text-gray-500">NPSN: {s.npsn} • {s.kecamatan}</p>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {TRIMULAN.map(tw => {
+                      const st = getStatusTriwulan(s, tw, data, filterTahun);
+                      const laporan = data.find(l => String(l.npsn) === String(s.npsn) && String(l.triwulan) === String(tw));
+                      return (
+                        <div key={tw} className={`text-center p-3 rounded-xl border ${st.status === 'sudah' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                          <p className="text-xs font-medium text-gray-500 mb-1">TW {tw}</p>
+                          {st.status === 'sudah' ? <CheckCircle2 className="w-6 h-6 text-green-600 mx-auto" /> : <XCircle className="w-6 h-6 text-red-400 mx-auto" />}
+                          <p className={`text-xs font-medium mt-1 ${st.status === 'sudah' ? 'text-green-700' : 'text-red-600'}`}>{st.label}</p>
+                          {laporan && <p className="text-[10px] text-gray-400 mt-1">Rp{currency(laporan.pajakBelumSetor?.nilaiKeseluruhan || 0)}</p>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4 border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">Progres</span>
+                      <span className="text-sm font-bold">{progres.persen}%</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${progres.persen}%`, backgroundColor: progres.persen === 100 ? '#16a34a' : '#d97706' }} />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">{progres.jumlahSudah} dari {progres.totalTriwulan} triwulan</p>
+                  </div>
+                  <div className={`text-center p-3 rounded-xl border ${statusAkhir === 'Lengkap' ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+                    <p className="text-sm font-semibold">{statusAkhir}</p>
+                  </div>
+                  {statusAkhir !== 'Lengkap' && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-gray-500">Pengingat:</p>
+                      <div className="bg-gray-50 rounded-lg p-3 border text-xs text-gray-700 whitespace-pre-wrap">{pesan}</div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { navigator.clipboard.writeText(pesan); alert('Pesan disalin!'); }} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border rounded-lg text-sm hover:bg-gray-50">
+                          <Send className="w-4 h-4" /> Salin
+                        </button>
+                        <a href={`https://wa.me/?text=${encodeURIComponent(pesan)}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
+                          <ExternalLink className="w-4 h-4" /> WhatsApp
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="px-5 py-4 border-t flex justify-end">
+                  <button onClick={() => setDetailSekolah(null)} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50">Tutup</button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Daftar Laporan */}
         <div className="bg-white rounded-xl border">
