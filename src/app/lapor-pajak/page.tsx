@@ -28,18 +28,50 @@ interface School {
 
 const TRIMULAN = ['1', '2', '3', '4'];
 
-const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 });
+const fmt = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 });
 
 function currency(n: number) {
   return fmt.format(n || 0);
+}
+
+function formatRupiah(value: any) {
+  return `Rp${fmt.format(parseNominalPajak(value))}`;
 }
 
 function formatRupiahTanpaRp(value: number) {
   return fmt.format(value || 0);
 }
 
-function hitungNilaiPajak(ppn: number, pph21: number, pph23: number) {
-  return Number(ppn || 0) + Number(pph21 || 0) + Number(pph23 || 0);
+function parseNominalPajak(value: any): number {
+  if (value === null || value === undefined) return 0;
+  let raw = String(value).trim();
+  if (!raw) return 0;
+  raw = raw.replace(/Rp/gi, '').replace(/\s/g, '').replace(/[^\d.,-]/g, '');
+  const hasComma = raw.includes(',');
+  const hasDot = raw.includes('.');
+  if (hasComma && hasDot) {
+    const lastComma = raw.lastIndexOf(',');
+    const lastDot = raw.lastIndexOf('.');
+    if (lastDot > lastComma) {
+      raw = raw.replace(/,/g, '');
+    } else {
+      raw = raw.replace(/\./g, '');
+      raw = raw.replace(',', '.');
+    }
+  } else if (hasComma && !hasDot) {
+    raw = raw.replace(',', '.');
+  } else if (hasDot && !hasComma) {
+    const parts = raw.split('.');
+    if (parts.length === 2 && parts[1].length === 3) {
+      raw = raw.replace(/\./g, '');
+    }
+  }
+  const num = Number(raw);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function hitungNilaiPajak(ppn: any, pph21: any, pph23: any) {
+  return parseNominalPajak(ppn) + parseNominalPajak(pph21) + parseNominalPajak(pph23);
 }
 
 function getKeteranganPajak(nilaiBelumSetor: number, nilaiSudahSetor: number) {
@@ -68,12 +100,12 @@ export default function LaporPajakPage() {
   const [formNamaSekolah, setFormNamaSekolah] = useState('');
   const [formStatus, setFormStatus] = useState('');
   const [formKecamatan, setFormKecamatan] = useState('');
-  const [formBlmPpn, setFormBlmPpn] = useState(0);
-  const [formBlmPph21, setFormBlmPph21] = useState(0);
-  const [formBlmPph23, setFormBlmPph23] = useState(0);
-  const [formSdhPpn, setFormSdhPpn] = useState(0);
-  const [formSdhPph21, setFormSdhPph21] = useState(0);
-  const [formSdhPph23, setFormSdhPph23] = useState(0);
+  const [formBlmPpn, setFormBlmPpn] = useState('');
+  const [formBlmPph21, setFormBlmPph21] = useState('');
+  const [formBlmPph23, setFormBlmPph23] = useState('');
+  const [formSdhPpn, setFormSdhPpn] = useState('');
+  const [formSdhPph21, setFormSdhPph21] = useState('');
+  const [formSdhPph23, setFormSdhPph23] = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -143,8 +175,8 @@ export default function LaporPajakPage() {
         namaSekolah: formNamaSekolah,
         statusSekolah: formStatus,
         kecamatan: formKecamatan,
-        pajakBelumSetor: { ppn: formBlmPpn, pph21: formBlmPph21, pph23: formBlmPph23, nilaiKeseluruhan: nilaiBlm },
-        pajakSudahSetor: { ppn: formSdhPpn, pph21: formSdhPph21, pph23: formSdhPph23, nilaiKeseluruhan: nilaiSdh },
+        pajakBelumSetor: { ppn: parseNominalPajak(formBlmPpn), pph21: parseNominalPajak(formBlmPph21), pph23: parseNominalPajak(formBlmPph23), nilaiKeseluruhan: parseNominalPajak(nilaiBlm) },
+        pajakSudahSetor: { ppn: parseNominalPajak(formSdhPpn), pph21: parseNominalPajak(formSdhPph21), pph23: parseNominalPajak(formSdhPph23), nilaiKeseluruhan: parseNominalPajak(nilaiSdh) },
         keterangan: autoKeterangan,
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -172,12 +204,12 @@ export default function LaporPajakPage() {
     setFormNamaSekolah('');
     setFormStatus('');
     setFormKecamatan('');
-    setFormBlmPpn(0);
-    setFormBlmPph21(0);
-    setFormBlmPph23(0);
-    setFormSdhPpn(0);
-    setFormSdhPph21(0);
-    setFormSdhPph23(0);
+    setFormBlmPpn('');
+    setFormBlmPph21('');
+    setFormBlmPph23('');
+    setFormSdhPpn('');
+    setFormSdhPph21('');
+    setFormSdhPph23('');
   }
 
   const filtered = useMemo(() => {
@@ -483,50 +515,50 @@ export default function LaporPajakPage() {
               </div>
 
               {/* Pajak Belum Setor */}
-              <div>
-                <h3 className="text-sm font-semibold text-gray-800 mb-2">Pajak Belum Setor Triwulan {formTriwulan || '...'}</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">PPN</label>
-                    <input type="number" min="0" value={formBlmPpn || ''} onChange={e => setFormBlmPpn(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">PPH 21</label>
-                    <input type="number" min="0" value={formBlmPph21 || ''} onChange={e => setFormBlmPph21(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">PPH 23</label>
-                    <input type="number" min="0" value={formBlmPph23 || ''} onChange={e => setFormBlmPph23(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Nilai Keseluruhan</label>
-                    <div className="w-full px-3 py-2 border rounded-lg text-sm bg-blue-50 font-semibold text-blue-700">Rp{currency(nilaiBlm)}</div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-2">Pajak Belum Setor Triwulan {formTriwulan || '...'}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">PPN</label>
+                      <input type="text" inputMode="decimal" value={formBlmPpn} onChange={e => setFormBlmPpn(e.target.value)} onBlur={e => { const v = parseNominalPajak(e.target.value); setFormBlmPpn(v ? fmt.format(v) : ''); }} placeholder="0,00" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">PPH 21</label>
+                      <input type="text" inputMode="decimal" value={formBlmPph21} onChange={e => setFormBlmPph21(e.target.value)} onBlur={e => { const v = parseNominalPajak(e.target.value); setFormBlmPph21(v ? fmt.format(v) : ''); }} placeholder="0,00" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">PPH 23</label>
+                      <input type="text" inputMode="decimal" value={formBlmPph23} onChange={e => setFormBlmPph23(e.target.value)} onBlur={e => { const v = parseNominalPajak(e.target.value); setFormBlmPph23(v ? fmt.format(v) : ''); }} placeholder="0,00" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Nilai Keseluruhan</label>
+                      <div className="w-full px-3 py-2 border rounded-lg text-sm bg-blue-50 font-semibold text-blue-700">{formatRupiah(nilaiBlm)}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Pajak Sudah Setor */}
-              <div>
-                <h3 className="text-sm font-semibold text-gray-800 mb-2">Pajak Sudah Setor Triwulan {formTriwulan || '...'}</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">PPN</label>
-                    <input type="number" min="0" value={formSdhPpn || ''} onChange={e => setFormSdhPpn(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">PPH 21</label>
-                    <input type="number" min="0" value={formSdhPph21 || ''} onChange={e => setFormSdhPph21(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">PPH 23</label>
-                    <input type="number" min="0" value={formSdhPph23 || ''} onChange={e => setFormSdhPph23(Number(e.target.value.replace(/,/g, '')))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Nilai Keseluruhan</label>
-                    <div className="w-full px-3 py-2 border rounded-lg text-sm bg-green-50 font-semibold text-green-700">Rp{currency(nilaiSdh)}</div>
+                {/* Pajak Sudah Setor */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-2">Pajak Sudah Setor Triwulan {formTriwulan || '...'}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">PPN</label>
+                      <input type="text" inputMode="decimal" value={formSdhPpn} onChange={e => setFormSdhPpn(e.target.value)} onBlur={e => { const v = parseNominalPajak(e.target.value); setFormSdhPpn(v ? fmt.format(v) : ''); }} placeholder="0,00" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">PPH 21</label>
+                      <input type="text" inputMode="decimal" value={formSdhPph21} onChange={e => setFormSdhPph21(e.target.value)} onBlur={e => { const v = parseNominalPajak(e.target.value); setFormSdhPph21(v ? fmt.format(v) : ''); }} placeholder="0,00" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">PPH 23</label>
+                      <input type="text" inputMode="decimal" value={formSdhPph23} onChange={e => setFormSdhPph23(e.target.value)} onBlur={e => { const v = parseNominalPajak(e.target.value); setFormSdhPph23(v ? fmt.format(v) : ''); }} placeholder="0,00" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Nilai Keseluruhan</label>
+                      <div className="w-full px-3 py-2 border rounded-lg text-sm bg-green-50 font-semibold text-green-700">{formatRupiah(nilaiSdh)}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
               {/* Keterangan */}
               <div className="bg-gray-50 rounded-xl p-4 border">
