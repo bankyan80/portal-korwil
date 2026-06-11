@@ -140,6 +140,30 @@ export default function OperatorProfilSekolah() {
                   <div><span className="text-muted-foreground">Kecamatan:</span> <span className="font-medium">{data.kecamatan || 'Lemahabang'}</span></div>
                   <div><span className="text-muted-foreground">Rombel:</span> <span className="font-medium">{data.jumlahRombel || '-'}</span></div>
                 </div>
+                {data.kepalaSekolah && (
+                  <div className="border-t pt-4 mt-2">
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">Kepala Sekolah</h3>
+                    <p className="font-medium">{data.kepalaSekolah}</p>
+                    {data.nipKepalaSekolah && <p className="text-xs text-muted-foreground">NIP: {data.nipKepalaSekolah}</p>}
+                  </div>
+                )}
+                <div className="border-t pt-4 mt-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-3">Data Satuan Pendidikan</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-blue-50 rounded-xl p-3 text-center">
+                      <p className="text-2xl font-bold text-blue-700">{data.jumlahSiswa ?? '-'}</p>
+                      <p className="text-[10px] text-blue-600">Siswa</p>
+                    </div>
+                    <div className="bg-green-50 rounded-xl p-3 text-center">
+                      <p className="text-2xl font-bold text-green-700">{data.jumlahGuru ?? '-'}</p>
+                      <p className="text-[10px] text-green-600">Guru</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-xl p-3 text-center">
+                      <p className="text-2xl font-bold text-purple-700">{data.jumlahTendik ?? '-'}</p>
+                      <p className="text-[10px] text-purple-600">Tendik</p>
+                    </div>
+                  </div>
+                </div>
               </>
             )}
             {editing && (
