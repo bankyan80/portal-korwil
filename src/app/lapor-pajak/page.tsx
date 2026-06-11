@@ -28,7 +28,7 @@ interface School {
 
 const TRIMULAN = ['1', '2', '3', '4'];
 
-const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2 });
 
 function currency(n: number) {
   return fmt.format(n || 0);
