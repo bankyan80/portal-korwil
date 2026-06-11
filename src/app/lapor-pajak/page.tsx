@@ -27,14 +27,27 @@ interface School {
 }
 
 const TRIMULAN = ['1', '2', '3', '4'];
-const KETERANGAN = [
-  { value: 'sudah_bayar', label: 'Sudah Bayar' },
-  { value: 'kurang_bayar', label: 'Kurang Bayar' },
-  { value: 'lebih_bayar', label: 'Lebih Bayar' },
-];
 
 function currency(n: number) {
   return new Intl.NumberFormat('id-ID').format(n || 0);
+}
+
+function formatRupiahTanpaRp(value: number) {
+  return Number(value || 0).toLocaleString('id-ID');
+}
+
+function hitungNilaiPajak(ppn: number, pph21: number, pph23: number) {
+  return Number(ppn || 0) + Number(pph21 || 0) + Number(pph23 || 0);
+}
+
+function getKeteranganPajak(nilaiBelumSetor: number, nilaiSudahSetor: number) {
+  const belum = Number(nilaiBelumSetor || 0);
+  const sudah = Number(nilaiSudahSetor || 0);
+  if (belum === 0 && sudah === 0) return 'Pajak Januari-Maret belum dibayar';
+  if (belum > 0 && sudah === 0) return 'Pajak Januari-Maret belum dibayar';
+  if (belum === sudah) return 'Pajak Januari-Maret sudah dibayar';
+  if (belum > sudah) return 'Pajak Januari-Maret Kurang bayar: ' + formatRupiahTanpaRp(belum - sudah);
+  return 'Pajak Januari-Maret Lebih bayar: ' + formatRupiahTanpaRp(sudah - belum);
 }
 
 export default function LaporPajakPage() {
@@ -59,7 +72,6 @@ export default function LaporPajakPage() {
   const [formSdhPpn, setFormSdhPpn] = useState(0);
   const [formSdhPph21, setFormSdhPph21] = useState(0);
   const [formSdhPph23, setFormSdhPph23] = useState(0);
-  const [formKeterangan, setFormKeterangan] = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -114,12 +126,13 @@ export default function LaporPajakPage() {
     }
   }, [formNpsn, sekolahMap]);
 
-  const nilaiBlm = useMemo(() => formBlmPpn + formBlmPph21 + formBlmPph23, [formBlmPpn, formBlmPph21, formBlmPph23]);
-  const nilaiSdh = useMemo(() => formSdhPpn + formSdhPph21 + formSdhPph23, [formSdhPpn, formSdhPph21, formSdhPph23]);
+  const nilaiBlm = useMemo(() => hitungNilaiPajak(formBlmPpn, formBlmPph21, formBlmPph23), [formBlmPpn, formBlmPph21, formBlmPph23]);
+  const nilaiSdh = useMemo(() => hitungNilaiPajak(formSdhPpn, formSdhPph21, formSdhPph23), [formSdhPpn, formSdhPph21, formSdhPph23]);
+  const autoKeterangan = useMemo(() => getKeteranganPajak(nilaiBlm, nilaiSdh), [nilaiBlm, nilaiSdh]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!formTriwulan || !formNpsn || !formKeterangan) return;
+    if (!formTriwulan || !formNpsn) return;
     setSubmitting(true);
     try {
       const body = {
@@ -130,7 +143,7 @@ export default function LaporPajakPage() {
         kecamatan: formKecamatan,
         pajakBelumSetor: { ppn: formBlmPpn, pph21: formBlmPph21, pph23: formBlmPph23, nilaiKeseluruhan: nilaiBlm },
         pajakSudahSetor: { ppn: formSdhPpn, pph21: formSdhPph21, pph23: formSdhPph23, nilaiKeseluruhan: nilaiSdh },
-        keterangan: formKeterangan,
+        keterangan: autoKeterangan,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
@@ -163,7 +176,6 @@ export default function LaporPajakPage() {
     setFormSdhPpn(0);
     setFormSdhPph21(0);
     setFormSdhPph23(0);
-    setFormKeterangan('');
   }
 
   const filtered = useMemo(() => {
@@ -338,7 +350,7 @@ export default function LaporPajakPage() {
                   pph21Sudah: d.pajakSudahSetor?.pph21 || 0,
                   pph23Sudah: d.pajakSudahSetor?.pph23 || 0,
                   nilaiSudah: d.pajakSudahSetor?.nilaiKeseluruhan || 0,
-                  keterangan: KETERANGAN.find(k => k.value === d.keterangan)?.label || d.keterangan,
+                  keterangan: d.keterangan,
                 })), [
                   { header: 'Nama Sekolah', key: 'namaSekolah' },
                   { header: 'NPSN', key: 'npsn' },
@@ -515,24 +527,9 @@ export default function LaporPajakPage() {
               </div>
 
               {/* Keterangan */}
-              <div>
+              <div className="bg-gray-50 rounded-xl p-4 border">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
-                <div className="flex flex-wrap gap-2">
-                  {KETERANGAN.map(k => (
-                    <button
-                      key={k.value}
-                      type="button"
-                      onClick={() => setFormKeterangan(k.value)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                        formKeterangan === k.value
-                          ? 'bg-blue-700 text-white border-blue-700'
-                          : 'bg-white text-gray-600 border-gray-300 hover:border-blue-300'
-                      }`}
-                    >
-                      {k.label}
-                    </button>
-                  ))}
-                </div>
+                <p className="text-base font-semibold text-blue-700">{autoKeterangan}</p>
               </div>
 
               {/* Submit */}
@@ -562,22 +559,15 @@ export default function LaporPajakPage() {
 }
 
 function KeteranganBadge({ value }: { value: string }) {
-  const item = KETERANGAN.find(k => k.value === value);
-  if (!item) return <span className="text-gray-400">-</span>;
-  const colors: Record<string, string> = {
-    sudah_bayar: 'bg-green-100 text-green-700',
-    kurang_bayar: 'bg-red-100 text-red-700',
-    lebih_bayar: 'bg-yellow-100 text-yellow-700',
-  };
-  const icons: Record<string, React.ReactNode> = {
-    sudah_bayar: <CheckCircle2 className="w-3.5 h-3.5" />,
-    kurang_bayar: <AlertTriangle className="w-3.5 h-3.5" />,
-    lebih_bayar: <AlertTriangle className="w-3.5 h-3.5" />,
-  };
+  const isSudah = value.includes('sudah dibayar');
+  const isKurang = value.includes('Kurang bayar');
+  const isLebih = value.includes('Lebih bayar');
+  const colors = isSudah ? 'bg-green-100 text-green-700' : isKurang ? 'bg-red-100 text-red-700' : isLebih ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600';
+  const icon = isSudah ? <CheckCircle2 className="w-3.5 h-3.5" /> : isKurang || isLebih ? <AlertTriangle className="w-3.5 h-3.5" /> : null;
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${colors[value] || ''}`}>
-      {icons[value]}
-      {item.label}
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${colors}`}>
+      {icon}
+      {value}
     </span>
   );
 }
