@@ -42,6 +42,8 @@ export default function SimdawaPublicPage() {
 
     const jenjangBreakdown: Record<string, any> = {};
     const sekolahBreakdown: Record<string, any> = {};
+    const kelasBreakdown: Record<string, any> = {};
+    const kelompokBreakdown: Record<string, any> = {};
 
     filtered.forEach(d => {
       const jenjang = d.jenjang || 'Unknown';
@@ -59,9 +61,25 @@ export default function SimdawaPublicPage() {
       sekolahBreakdown[sekolah].total++;
       if (d.jenisKelamin === 'L' || d.jenisKelamin === 'Laki-laki') sekolahBreakdown[sekolah].l++;
       else sekolahBreakdown[sekolah].p++;
+
+      if (d.kelas != null) {
+        const k = `Kelas ${d.kelas}`;
+        if (!kelasBreakdown[k]) kelasBreakdown[k] = { total: 0, l: 0, p: 0 };
+        kelasBreakdown[k].total++;
+        if (d.jenisKelamin === 'L' || d.jenisKelamin === 'Laki-laki') kelasBreakdown[k].l++;
+        else kelasBreakdown[k].p++;
+      }
+
+      if (d.kelompok != null) {
+        const k = `Kelompok ${d.kelompok}`;
+        if (!kelompokBreakdown[k]) kelompokBreakdown[k] = { total: 0, l: 0, p: 0 };
+        kelompokBreakdown[k].total++;
+        if (d.jenisKelamin === 'L' || d.jenisKelamin === 'Laki-laki') kelompokBreakdown[k].l++;
+        else kelompokBreakdown[k].p++;
+      }
     });
 
-    return { total: filtered.length, jenjangBreakdown, sekolahBreakdown };
+    return { total: filtered.length, jenjangBreakdown, sekolahBreakdown, kelasBreakdown, kelompokBreakdown };
   }, [data, filterJenjang, filterStatus, search, schoolStatusMap]);
 
   if (loading) {
@@ -129,6 +147,39 @@ export default function SimdawaPublicPage() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.keys(rekap.kelasBreakdown).length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
+              <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap per Kelas</h3></div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="bg-muted/50"><th className="px-3 py-2 text-left">Kelas</th><th className="px-3 py-2 text-center">Total</th><th className="px-3 py-2 text-center">L</th><th className="px-3 py-2 text-center">P</th></tr></thead>
+                  <tbody className="divide-y">
+                    {Object.entries(rekap.kelasBreakdown).sort().map(([kelas, vals]: any) => (
+                      <tr key={kelas} className="hover:bg-muted/50"><td className="px-3 py-2 font-medium">{kelas}</td><td className="px-3 py-2 text-center">{vals.total}</td><td className="px-3 py-2 text-center">{vals.l}</td><td className="px-3 py-2 text-center">{vals.p}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {Object.keys(rekap.kelompokBreakdown).length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
+              <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap per Kelompok</h3></div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="bg-muted/50"><th className="px-3 py-2 text-left">Kelompok</th><th className="px-3 py-2 text-center">Total</th><th className="px-3 py-2 text-center">L</th><th className="px-3 py-2 text-center">P</th></tr></thead>
+                  <tbody className="divide-y">
+                    {Object.entries(rekap.kelompokBreakdown).sort().map(([kelompok, vals]: any) => (
+                      <tr key={kelompok} className="hover:bg-muted/50"><td className="px-3 py-2 font-medium">{kelompok}</td><td className="px-3 py-2 text-center">{vals.total}</td><td className="px-3 py-2 text-center">{vals.l}</td><td className="px-3 py-2 text-center">{vals.p}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
