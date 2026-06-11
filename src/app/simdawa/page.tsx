@@ -80,7 +80,7 @@ export default function SimdawaPublicPage() {
     });
 
     const kelasList = Array.from(allKelas).filter(k => k !== '_unknown').sort((a, b) => Number(a) - Number(b));
-    const kelompokList = Array.from(allKelompok).filter(k => k !== '_unknown').sort((a, b) => Number(a) - Number(b));
+    const kelompokList = Array.from(allKelompok).filter(k => k !== '_unknown').sort((a, b) => Number(a) - Number(b)).map(k => ({ value: k, label: `Kelompok ${String.fromCharCode(64 + Number(k))}` }));
 
     return { total: filtered.length, jenjangBreakdown, sdSekolah, tkSekolah, kelasList, kelompokList };
   }, [data, filterJenjang, filterStatus, search, schoolStatusMap]);
@@ -192,17 +192,17 @@ export default function SimdawaPublicPage() {
                   <tr className="bg-muted/50">
                     <th className="px-2 py-2 text-left whitespace-nowrap">Nama Sekolah</th>
                     {rekap.kelompokList.map(k => (
-                      <th key={k} colSpan={2} className="px-1 py-2 text-center text-xs border-l">Kelompok {k}</th>
+                      <th key={k.value} colSpan={2} className="px-1 py-2 text-center text-xs border-l">{k.label}</th>
                     ))}
                     <th colSpan={2} className="px-2 py-2 text-center text-xs border-l">Total</th>
                   </tr>
                   <tr className="bg-muted/30">
                     <th className="px-2 py-1"></th>
                     {rekap.kelompokList.map(k => (
-                      <th key={`${k}s`} className="px-1 py-1 text-center text-[10px] text-muted-foreground border-l w-7">L</th>
+                      <th key={`${k.value}s`} className="px-1 py-1 text-center text-[10px] text-muted-foreground border-l w-7">L</th>
                     ))}
                     {rekap.kelompokList.map(k => (
-                      <th key={`${k}p`} className="px-1 py-1 text-center text-[10px] text-muted-foreground w-7">P</th>
+                      <th key={`${k.value}p`} className="px-1 py-1 text-center text-[10px] text-muted-foreground w-7">P</th>
                     ))}
                     <th className="px-1 py-1 text-center text-[10px] text-muted-foreground border-l w-7">L</th>
                     <th className="px-1 py-1 text-center text-[10px] text-muted-foreground w-7">P</th>
@@ -213,10 +213,10 @@ export default function SimdawaPublicPage() {
                     <tr key={sekolah} className="hover:bg-muted/50">
                       <td className="px-2 py-1.5 text-xs font-medium whitespace-nowrap">{sekolah}</td>
                       {rekap.kelompokList.map(k => (
-                        <td key={`${sekolah}${k}l`} className="px-1 py-1.5 text-center text-xs border-l">{vals.kelompok[k]?.l || 0}</td>
+                        <td key={`${sekolah}${k.value}l`} className="px-1 py-1.5 text-center text-xs border-l">{vals.kelompok[k.value]?.l || 0}</td>
                       ))}
                       {rekap.kelompokList.map(k => (
-                        <td key={`${sekolah}${k}p`} className="px-1 py-1.5 text-center text-xs">{vals.kelompok[k]?.p || 0}</td>
+                        <td key={`${sekolah}${k.value}p`} className="px-1 py-1.5 text-center text-xs">{vals.kelompok[k.value]?.p || 0}</td>
                       ))}
                       <td className="px-1 py-1.5 text-center text-xs font-semibold border-l">{vals.total.l}</td>
                       <td className="px-1 py-1.5 text-center text-xs font-semibold">{vals.total.p}</td>
