@@ -262,6 +262,61 @@ export async function POST(request: NextRequest) {
     }
     log.push(`Mapping pegawai: ${mappingsCreated} sekolah diperbarui`);
 
+    // 5. Sync kepala sekolah & data satuan pendidikan ke record sekolah
+    const existingSchools = await getAllPaginated('schools');
+    const schoolDataByNpsn: Record<string, Record<string, any>> = {};
+    for (const s of existingSchools || []) {
+      schoolDataByNpsn[s.id] = s.data as Record<string, any>;
+    }
+
+    const kepalaBySchool: Record<string, { nama: string; nip: string }> = {};
+    for (const e of freshEmployees || []) {
+      const d = e.data as Record<string, any>;
+      if (d.isKepalaSekolah && d.schoolId) {
+        kepalaBySchool[d.schoolId] = { nama: d.nama || '', nip: d.nip || '' };
+      }
+    }
+
+    let schoolsUpdated = 0;
+    for (const school of allSekolah) {
+      const npsn = school.npsn;
+      const pegawai = employeesBySchool[npsn] || [];
+      const siswa = studentsBySchool[npsn] || [];
+      const kepala = kepalaBySchool[npsn];
+      const existing = schoolDataByNpsn[npsn] || {};
+
+      const jumlahSiswa = siswa.filter(s => s.statusSiswa === 'Aktif').length;
+      const jumlahGuru = pegawai.filter(p => p.statusAktif === 'Aktif' && (p.jenis_ptk || '').toLowerCase() === 'guru mapel').length;
+      const jumlahTendik = pegawai.filter(p => p.statusAktif === 'Aktif' && (p.jenis_ptk || '').toLowerCase() !== 'guru mapel').length;
+      const rombelSet = new Set<string>();
+      for (const s of siswa) { if (s.rombel) rombelSet.add(s.rombel); }
+
+      const schoolUpdates: Record<string, any> = {
+        updatedAt: Date.now(),
+      };
+
+      if (kepala) {
+        schoolUpdates.kepalaSekolah = kepala.nama;
+        schoolUpdates.nipKepalaSekolah = kepala.nip || '';
+      }
+      schoolUpdates.jumlahSiswa = jumlahSiswa;
+      schoolUpdates.jumlahRombel = rombelSet.size || 1;
+      schoolUpdates.jumlahGuru = jumlahGuru;
+      schoolUpdates.jumlahTendik = jumlahTendik;
+
+      const { error } = await supabaseAdmin
+        .from('app_data')
+        .update({
+          data: { ...existing, ...schoolUpdates },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', npsn)
+        .eq('collection', 'schools');
+      if (!error) schoolsUpdated++;
+    }
+    log.push(`Data satuan pendidikan: ${schoolsUpdated} sekolah diperbarui`);
+    log.push(`Kepala sekolah tersync: ${Object.keys(kepalaBySchool).length} sekolah`);
+
     return NextResponse.json({ success: true, log });
   } catch (error) {
     console.error('[sync-data] error:', error);
