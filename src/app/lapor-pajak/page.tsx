@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Loader2, Plus, Search, Receipt, CheckCircle2, XCircle, AlertTriangle, Download, Clock, Send, ExternalLink } from 'lucide-react';
+import { Loader2, Plus, Search, Receipt, CheckCircle2, XCircle, AlertTriangle, Download, Clock, Send, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { exportToExcel } from '@/components/laporan/ExportButton';
 
 interface LaporPajak {
@@ -116,6 +116,7 @@ export default function LaporPajakPage() {
   const [filterStatus, setFilterStatus] = useState('Semua');
   const [filterTahun, setFilterTahun] = useState(new Date().getFullYear().toString());
   const [showModal, setShowModal] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [detailSekolah, setDetailSekolah] = useState<School | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -203,17 +204,28 @@ export default function LaporPajakPage() {
         pajakBelumSetor: { ppn: parseNominalPajak(formBlmPpn), pph21: parseNominalPajak(formBlmPph21), pph23: parseNominalPajak(formBlmPph23), nilaiKeseluruhan: parseNominalPajak(nilaiBlm) },
         pajakSudahSetor: { ppn: parseNominalPajak(formSdhPpn), pph21: parseNominalPajak(formSdhPph21), pph23: parseNominalPajak(formSdhPph23), nilaiKeseluruhan: parseNominalPajak(nilaiSdh) },
         keterangan: autoKeterangan,
-        createdAt: Date.now(),
         updatedAt: Date.now(),
       };
-      const res = await fetch('/api/firestore/lapor_pajak', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: body }),
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error);
-      setData(prev => [{ id: json.id, ...body }, ...prev]);
+      if (editId) {
+        const res = await fetch(`/api/firestore/lapor_pajak?id=${editId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: body, merge: true }),
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error);
+        setData(prev => prev.map(d => d.id === editId ? { id: editId, ...body, createdAt: d.createdAt } : d));
+      } else {
+        const bodyWithCreated = { ...body, createdAt: Date.now() };
+        const res = await fetch('/api/firestore/lapor_pajak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: bodyWithCreated }),
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error);
+        setData(prev => [{ id: json.id, ...bodyWithCreated }, ...prev]);
+      }
       setShowModal(false);
       resetForm();
     } catch (e: any) {
@@ -223,7 +235,36 @@ export default function LaporPajakPage() {
     }
   }
 
+  function handleEdit(l: LaporPajak) {
+    setEditId(l.id);
+    setFormTriwulan(l.triwulan);
+    setFormNpsn(l.npsn);
+    setFormNamaSekolah(l.namaSekolah);
+    setFormStatus(l.statusSekolah);
+    setFormKecamatan(l.kecamatan);
+    setFormBlmPpn(l.pajakBelumSetor?.ppn ? fmt.format(l.pajakBelumSetor.ppn) : '');
+    setFormBlmPph21(l.pajakBelumSetor?.pph21 ? fmt.format(l.pajakBelumSetor.pph21) : '');
+    setFormBlmPph23(l.pajakBelumSetor?.pph23 ? fmt.format(l.pajakBelumSetor.pph23) : '');
+    setFormSdhPpn(l.pajakSudahSetor?.ppn ? fmt.format(l.pajakSudahSetor.ppn) : '');
+    setFormSdhPph21(l.pajakSudahSetor?.pph21 ? fmt.format(l.pajakSudahSetor.pph21) : '');
+    setFormSdhPph23(l.pajakSudahSetor?.pph23 ? fmt.format(l.pajakSudahSetor.pph23) : '');
+    setShowModal(true);
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Hapus laporan pajak ini?')) return;
+    try {
+      const res = await fetch(`/api/firestore/lapor_pajak?id=${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error);
+      setData(prev => prev.filter(d => d.id !== id));
+    } catch (e: any) {
+      alert('Gagal: ' + e.message);
+    }
+  }
+
   function resetForm() {
+    setEditId(null);
     setFormTriwulan('');
     setFormNpsn('');
     setFormNamaSekolah('');
@@ -583,6 +624,7 @@ export default function LaporPajakPage() {
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Pajak Belum Setor</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Pajak Sudah Setor</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Keterangan</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -603,6 +645,12 @@ export default function LaporPajakPage() {
                       <td className="px-4 py-3">
                         <KeteranganBadge value={l.keterangan} />
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button onClick={() => handleEdit(l)} className="p-1.5 rounded hover:bg-blue-50 text-blue-600" title="Ubah"><Pencil className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleDelete(l.id)} className="p-1.5 rounded hover:bg-red-50 text-red-600" title="Hapus"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -617,7 +665,7 @@ export default function LaporPajakPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3">
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl">
             <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-4 sm:p-5 border-b">
-              <h2 className="text-lg font-bold text-gray-900">Lapor Pajak Per Triwulan</h2>
+              <h2 className="text-lg font-bold text-gray-900">{editId ? 'Ubah Laporan Pajak' : 'Lapor Pajak Per Triwulan'}</h2>
               <button onClick={() => { setShowModal(false); resetForm(); }} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
                 <XCircle className="w-5 h-5 text-gray-400" />
               </button>
@@ -629,6 +677,7 @@ export default function LaporPajakPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Triwulan</label>
                   <select
+                    disabled={!!editId}
                     required
                     value={formTriwulan}
                     onChange={e => setFormTriwulan(e.target.value)}
@@ -642,6 +691,7 @@ export default function LaporPajakPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">NPSN</label>
                   <input
                     type="text"
+                    readOnly={!!editId}
                     required
                     value={formNpsn}
                     onChange={e => setFormNpsn(e.target.value)}
@@ -748,7 +798,7 @@ export default function LaporPajakPage() {
                   className="px-5 py-2.5 text-sm font-medium text-white bg-blue-700 rounded-xl hover:bg-blue-800 disabled:opacity-50 inline-flex items-center gap-2"
                 >
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {submitting ? 'Menyimpan...' : 'Simpan Laporan'}
+                  {submitting ? 'Menyimpan...' : editId ? 'Simpan Perubahan' : 'Simpan Laporan'}
                 </button>
               </div>
             </form>
