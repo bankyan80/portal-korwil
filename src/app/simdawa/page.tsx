@@ -41,9 +41,10 @@ export default function SimdawaPublicPage() {
     }
 
     const jenjangBreakdown: Record<string, any> = {};
-    const sekolahBreakdown: Record<string, any> = {};
-    const kelasBreakdown: Record<string, any> = {};
-    const kelompokBreakdown: Record<string, any> = {};
+    const sdSekolah: Record<string, any> = {};
+    const tkSekolah: Record<string, any> = {};
+    const allKelas = new Set<string>();
+    const allKelompok = new Set<string>();
 
     filtered.forEach(d => {
       const jenjang = d.jenjang || 'Unknown';
@@ -57,29 +58,31 @@ export default function SimdawaPublicPage() {
       if (d.statusSiswa === 'Lulus/Alumni') jenjangBreakdown[jenjang].alumni++;
 
       const sekolah = d.sekolah || d.namaSekolah || 'Unknown';
-      if (!sekolahBreakdown[sekolah]) sekolahBreakdown[sekolah] = { total: 0, l: 0, p: 0 };
-      sekolahBreakdown[sekolah].total++;
-      if (d.jenisKelamin === 'L' || d.jenisKelamin === 'Laki-laki') sekolahBreakdown[sekolah].l++;
-      else sekolahBreakdown[sekolah].p++;
+      const isL = d.jenisKelamin === 'L' || d.jenisKelamin === 'Laki-laki';
 
-      if (jenjang === 'SD' && d.kelas != null) {
-        const k = `Kelas ${d.kelas}`;
-        if (!kelasBreakdown[k]) kelasBreakdown[k] = { total: 0, l: 0, p: 0 };
-        kelasBreakdown[k].total++;
-        if (d.jenisKelamin === 'L' || d.jenisKelamin === 'Laki-laki') kelasBreakdown[k].l++;
-        else kelasBreakdown[k].p++;
+      if (jenjang === 'SD') {
+        if (!sdSekolah[sekolah]) sdSekolah[sekolah] = { total: { l: 0, p: 0 }, kelas: {} };
+        sdSekolah[sekolah].total[isL ? 'l' : 'p']++;
+        const k = d.kelas != null ? String(d.kelas) : '_unknown';
+        if (!sdSekolah[sekolah].kelas[k]) sdSekolah[sekolah].kelas[k] = { l: 0, p: 0 };
+        sdSekolah[sekolah].kelas[k][isL ? 'l' : 'p']++;
+        allKelas.add(k);
       }
 
-      if ((jenjang === 'TK' || jenjang === 'KB') && d.kelompok != null) {
-        const k = `Kelompok ${d.kelompok}`;
-        if (!kelompokBreakdown[k]) kelompokBreakdown[k] = { total: 0, l: 0, p: 0 };
-        kelompokBreakdown[k].total++;
-        if (d.jenisKelamin === 'L' || d.jenisKelamin === 'Laki-laki') kelompokBreakdown[k].l++;
-        else kelompokBreakdown[k].p++;
+      if (jenjang === 'TK' || jenjang === 'KB') {
+        if (!tkSekolah[sekolah]) tkSekolah[sekolah] = { total: { l: 0, p: 0 }, kelompok: {} };
+        tkSekolah[sekolah].total[isL ? 'l' : 'p']++;
+        const k = d.kelompok != null ? String(d.kelompok) : '_unknown';
+        if (!tkSekolah[sekolah].kelompok[k]) tkSekolah[sekolah].kelompok[k] = { l: 0, p: 0 };
+        tkSekolah[sekolah].kelompok[k][isL ? 'l' : 'p']++;
+        allKelompok.add(k);
       }
     });
 
-    return { total: filtered.length, jenjangBreakdown, sekolahBreakdown, kelasBreakdown, kelompokBreakdown };
+    const kelasList = Array.from(allKelas).filter(k => k !== '_unknown').sort((a, b) => Number(a) - Number(b));
+    const kelompokList = Array.from(allKelompok).filter(k => k !== '_unknown').sort((a, b) => Number(a) - Number(b));
+
+    return { total: filtered.length, jenjangBreakdown, sdSekolah, tkSekolah, kelasList, kelompokList };
   }, [data, filterJenjang, filterStatus, search, schoolStatusMap]);
 
   if (loading) {
@@ -135,52 +138,95 @@ export default function SimdawaPublicPage() {
           <div className="bg-white rounded-xl border p-4 text-center"><p className="text-2xl font-bold text-green-700">{rekap.jenjangBreakdown['KB']?.total || 0}</p><p className="text-xs text-muted-foreground">KB</p></div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
-          <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap per Sekolah</h3></div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead><tr className="bg-muted/50"><th className="px-3 py-2 text-left">Sekolah</th><th className="px-3 py-2 text-center">Total</th><th className="px-3 py-2 text-center">L</th><th className="px-3 py-2 text-center">P</th></tr></thead>
-              <tbody className="divide-y">
-                {Object.entries(rekap.sekolahBreakdown).sort().map(([sekolah, vals]: any) => (
-                  <tr key={sekolah} className="hover:bg-muted/50"><td className="px-3 py-2 font-medium">{sekolah}</td><td className="px-3 py-2 text-center">{vals.total}</td><td className="px-3 py-2 text-center">{vals.l}</td><td className="px-3 py-2 text-center">{vals.p}</td></tr>
-                ))}
-              </tbody>
-            </table>
+        {Object.keys(rekap.sdSekolah).length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
+            <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap Jenjang SD</h3></div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="px-2 py-2 text-left whitespace-nowrap">Nama Sekolah</th>
+                    {rekap.kelasList.map(k => (
+                      <th key={k} colSpan={2} className="px-1 py-2 text-center text-xs border-l">Kelas {k}</th>
+                    ))}
+                    <th colSpan={2} className="px-2 py-2 text-center text-xs border-l">Total</th>
+                  </tr>
+                  <tr className="bg-muted/30">
+                    <th className="px-2 py-1"></th>
+                    {rekap.kelasList.map(k => (
+                      <th key={`${k}s`} className="px-1 py-1 text-center text-[10px] text-muted-foreground border-l w-7">L</th>
+                    ))}
+                    {rekap.kelasList.map(k => (
+                      <th key={`${k}p`} className="px-1 py-1 text-center text-[10px] text-muted-foreground w-7">P</th>
+                    ))}
+                    <th className="px-1 py-1 text-center text-[10px] text-muted-foreground border-l w-7">L</th>
+                    <th className="px-1 py-1 text-center text-[10px] text-muted-foreground w-7">P</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {Object.entries(rekap.sdSekolah).sort().map(([sekolah, vals]: any) => (
+                    <tr key={sekolah} className="hover:bg-muted/50">
+                      <td className="px-2 py-1.5 text-xs font-medium whitespace-nowrap">{sekolah}</td>
+                      {rekap.kelasList.map(k => (
+                        <td key={`${sekolah}${k}l`} className="px-1 py-1.5 text-center text-xs border-l">{vals.kelas[k]?.l || 0}</td>
+                      ))}
+                      {rekap.kelasList.map(k => (
+                        <td key={`${sekolah}${k}p`} className="px-1 py-1.5 text-center text-xs">{vals.kelas[k]?.p || 0}</td>
+                      ))}
+                      <td className="px-1 py-1.5 text-center text-xs font-semibold border-l">{vals.total.l}</td>
+                      <td className="px-1 py-1.5 text-center text-xs font-semibold">{vals.total.p}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.keys(rekap.kelasBreakdown).length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
-              <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap per Kelas (SD)</h3></div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr className="bg-muted/50"><th className="px-3 py-2 text-left">Kelas</th><th className="px-3 py-2 text-center">Total</th><th className="px-3 py-2 text-center">L</th><th className="px-3 py-2 text-center">P</th></tr></thead>
-                  <tbody className="divide-y">
-                    {Object.entries(rekap.kelasBreakdown).sort().map(([kelas, vals]: any) => (
-                      <tr key={kelas} className="hover:bg-muted/50"><td className="px-3 py-2 font-medium">{kelas}</td><td className="px-3 py-2 text-center">{vals.total}</td><td className="px-3 py-2 text-center">{vals.l}</td><td className="px-3 py-2 text-center">{vals.p}</td></tr>
+        {Object.keys(rekap.tkSekolah).length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
+            <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap Jenjang TK/KB</h3></div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="px-2 py-2 text-left whitespace-nowrap">Nama Sekolah</th>
+                    {rekap.kelompokList.map(k => (
+                      <th key={k} colSpan={2} className="px-1 py-2 text-center text-xs border-l">Kelompok {k}</th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-          {Object.keys(rekap.kelompokBreakdown).length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
-              <div className="px-4 py-3 border-b bg-gray-50 dark:bg-gray-900"><h3 className="font-semibold text-sm">Rekap per Kelompok (TK/KB)</h3></div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr className="bg-muted/50"><th className="px-3 py-2 text-left">Kelompok</th><th className="px-3 py-2 text-center">Total</th><th className="px-3 py-2 text-center">L</th><th className="px-3 py-2 text-center">P</th></tr></thead>
-                  <tbody className="divide-y">
-                    {Object.entries(rekap.kelompokBreakdown).sort().map(([kelompok, vals]: any) => (
-                      <tr key={kelompok} className="hover:bg-muted/50"><td className="px-3 py-2 font-medium">{kelompok}</td><td className="px-3 py-2 text-center">{vals.total}</td><td className="px-3 py-2 text-center">{vals.l}</td><td className="px-3 py-2 text-center">{vals.p}</td></tr>
+                    <th colSpan={2} className="px-2 py-2 text-center text-xs border-l">Total</th>
+                  </tr>
+                  <tr className="bg-muted/30">
+                    <th className="px-2 py-1"></th>
+                    {rekap.kelompokList.map(k => (
+                      <th key={`${k}s`} className="px-1 py-1 text-center text-[10px] text-muted-foreground border-l w-7">L</th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                    {rekap.kelompokList.map(k => (
+                      <th key={`${k}p`} className="px-1 py-1 text-center text-[10px] text-muted-foreground w-7">P</th>
+                    ))}
+                    <th className="px-1 py-1 text-center text-[10px] text-muted-foreground border-l w-7">L</th>
+                    <th className="px-1 py-1 text-center text-[10px] text-muted-foreground w-7">P</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {Object.entries(rekap.tkSekolah).sort().map(([sekolah, vals]: any) => (
+                    <tr key={sekolah} className="hover:bg-muted/50">
+                      <td className="px-2 py-1.5 text-xs font-medium whitespace-nowrap">{sekolah}</td>
+                      {rekap.kelompokList.map(k => (
+                        <td key={`${sekolah}${k}l`} className="px-1 py-1.5 text-center text-xs border-l">{vals.kelompok[k]?.l || 0}</td>
+                      ))}
+                      {rekap.kelompokList.map(k => (
+                        <td key={`${sekolah}${k}p`} className="px-1 py-1.5 text-center text-xs">{vals.kelompok[k]?.p || 0}</td>
+                      ))}
+                      <td className="px-1 py-1.5 text-center text-xs font-semibold border-l">{vals.total.l}</td>
+                      <td className="px-1 py-1.5 text-center text-xs font-semibold">{vals.total.p}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
