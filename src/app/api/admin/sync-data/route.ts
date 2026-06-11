@@ -286,8 +286,21 @@ export async function POST(request: NextRequest) {
       const existing = schoolDataByNpsn[npsn] || {};
 
       const jumlahSiswa = siswa.filter(s => s.statusSiswa === 'Aktif').length;
-      const jumlahGuru = pegawai.filter(p => p.statusAktif === 'Aktif' && (p.jenis_ptk || '').toLowerCase() === 'guru mapel').length;
-      const jumlahTendik = pegawai.filter(p => p.statusAktif === 'Aktif' && (p.jenis_ptk || '').toLowerCase() !== 'guru mapel').length;
+
+      const aktif = pegawai.filter(p => p.statusAktif === 'Aktif');
+      const jumlahGuru = aktif.filter(p => {
+        const j = (p.jabatan || '').toLowerCase();
+        const jk = (p.jenis_ptk || '').toLowerCase();
+        const r = (p.role || '').toLowerCase();
+        if (j.includes('tenaga') || jk === 'tenaga kependidikan' || r === 'tendik') return false;
+        return j.includes('guru') || jk === 'guru' || r === 'guru' || p.isKepalaSekolah === true;
+      }).length;
+      const jumlahTendik = aktif.filter(p => {
+        const j = (p.jabatan || '').toLowerCase();
+        const jk = (p.jenis_ptk || '').toLowerCase();
+        const r = (p.role || '').toLowerCase();
+        return j.includes('tenaga') || jk === 'tenaga kependidikan' || r === 'tendik';
+      }).length;
       const rombelSet = new Set<string>();
       for (const s of siswa) { if (s.rombel) rombelSet.add(s.rombel); }
 
