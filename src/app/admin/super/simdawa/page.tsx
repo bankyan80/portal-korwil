@@ -59,7 +59,7 @@ export default function SuperSimdawa() {
   const [search, setSearch] = useState('');
   const [filterJenjang, setFilterJenjang] = useState('Semua');
   const [filterSchool, setFilterSchool] = useState('Semua');
-  const [filterStatus, setFilterStatus] = useState('Semua');
+  const [filterStatus, setFilterStatus] = useState('Aktif');
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<StudentData>>({ ...defaultForm });

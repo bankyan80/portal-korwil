@@ -46,7 +46,7 @@ export default function OperatorSimdawa() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('Semua');
+  const [filterStatus, setFilterStatus] = useState('Aktif');
   const [filterKelas, setFilterKelas] = useState('Semua');
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
