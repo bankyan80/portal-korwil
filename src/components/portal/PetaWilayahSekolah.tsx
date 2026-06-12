@@ -258,7 +258,7 @@ export default function PetaWilayahSekolah() {
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Map */}
             <div className="flex-1">
-              <div className="rounded-lg overflow-hidden border border-gray-200 h-[520px] max-md:h-[420px]">
+              <div className="relative rounded-lg overflow-hidden border border-gray-200 h-[520px] max-md:h-[420px] isolate z-0">
                 <MapContainer
                   center={DEFAULT_CENTER}
                   zoom={DEFAULT_ZOOM}
