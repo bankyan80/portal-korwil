@@ -76,7 +76,7 @@ export default function HeroSection() {
                 DINAS PENDIDIKAN
               </h2>
               <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold" style={{ color: '#0d3b66' }}>
-                PORTAL TIM KERJA KECAMATAN LEMAHABANG
+                PORTAL TIM KERJA BIDANG SD KECAMATAN LEMAHABANG
               </h3>
               <div className="flex items-center gap-3">
                 <div className="h-0.5 flex-1 max-w-[60px]" style={{ backgroundColor: '#d4af37' }} />
