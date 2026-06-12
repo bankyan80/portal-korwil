@@ -22,9 +22,29 @@ export default function OperatorAlumni() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch(`/api/firestore/alumni?limit=10000`).then(r => r.json());
-      const items = (res.items || []).filter((d: any) => d.schoolId === schoolId);
-      setAlumni(items);
+      const [aRes, sRes] = await Promise.all([
+        fetch('/api/firestore/alumni?limit=10000').then(r => r.json()),
+        fetch('/api/firestore/students?limit=10000').then(r => r.json()),
+      ]);
+      const alumniItems = (aRes.items || []).filter((d: any) => d.schoolId === schoolId);
+      const alumniNiks = new Set(alumniItems.map((d: any) => d.nisn || d.nik));
+      const studentItems = (sRes.items || [])
+        .filter((s: any) => s.schoolId === schoolId && (s.statusSiswa === 'Alumni' || s.statusSiswa === 'Lulus/Alumni'))
+        .filter((s: any) => !alumniNiks.has(s.nisn || s.nik))
+        .map((s: any) => ({
+          id: '',
+          nisn: s.nisn || '',
+          nik: s.nik || '',
+          nama: s.nama || '',
+          jenisKelamin: s.jenisKelamin || s.jk || '',
+          schoolId: s.schoolId || '',
+          namaSekolah: s.namaSekolah || '',
+          jenjang: s.jenjang || '',
+          tahunLulus: s.tahunLulus || '',
+          alumniStatus: '',
+          alumniDetail: '',
+        }));
+      setAlumni([...alumniItems, ...studentItems]);
     } catch (e: any) { setError(e.message || 'Terjadi kesalahan'); } finally {
       setLoading(false);
     }

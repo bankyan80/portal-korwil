@@ -4,7 +4,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { GraduationCap, Search, Loader2, School } from 'lucide-react';
 
 export default function PublicAlumni() {
-  const [alumni, setAlumni] = useState<any[]>([]);
+  const [alumniData, setAlumniData] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [schools, setSchools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -17,26 +18,54 @@ export default function PublicAlumni() {
   useEffect(() => {
     Promise.all([
       fetch('/api/firestore/alumni?limit=10000').then(r => r.json()),
+      fetch('/api/firestore/students?limit=10000').then(r => r.json()),
       fetch('/api/firestore/schools').then(r => r.json()),
-    ]).then(([aRes, sRes]) => {
-      setAlumni(aRes.items || []);
-      setSchools(sRes.items || []);
+    ]).then(([aRes, sRes, scRes]) => {
+      setAlumniData(aRes.items || []);
+      setStudents((sRes.items || []).filter((s: any) => s.statusSiswa === 'Alumni' || s.statusSiswa === 'Lulus/Alumni'));
+      setSchools(scRes.items || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const getSchoolName = (id: string) => schools.find(s => s.id === id)?.namaSekolah || id;
 
-  const melanjutkan = alumni.filter(a => a.alumniStatus === 'melanjutkan');
-  const tidakMelanjutkan = alumni.filter(a => a.alumniStatus === 'tidak_melanjutkan');
-  const belumDiisi = alumni.filter(a => !a.alumniStatus);
+  const allAlumni = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const d of alumniData) map.set(d.nisn || d.nik, d);
+    for (const s of students) {
+      const key = s.nisn || s.nik;
+      if (!map.has(key)) {
+        map.set(key, {
+          id: '',
+          nisn: s.nisn || '',
+          nik: s.nik || '',
+          nama: s.nama || '',
+          jenisKelamin: s.jenisKelamin || s.jk || '',
+          schoolId: s.schoolId || '',
+          namaSekolah: s.namaSekolah || getSchoolName(s.schoolId),
+          jenjang: s.jenjang || '',
+          tahunLulus: s.tahunLulus || '',
+          alumniStatus: '',
+          alumniDetail: '',
+        });
+      }
+    }
+    return Array.from(map.values());
+  }, [alumniData, students, getSchoolName]);
+
+  const alumni = allAlumni;
+
+  const melanjutkan = allAlumni.filter(a => a.alumniStatus === 'melanjutkan');
+  const tidakMelanjutkan = allAlumni.filter(a => a.alumniStatus === 'tidak_melanjutkan');
+  const belumDiisi = allAlumni.filter(a => !a.alumniStatus);
 
   const uniqueTahun = useMemo(() => {
-    const years = new Set(alumni.map(a => a.tahunLulus).filter(Boolean));
+    const years = new Set(allAlumni.map(a => a.tahunLulus).filter(Boolean));
     return Array.from(years).sort((a, b) => Number(b) - Number(a));
-  }, [alumni]);
+  }, [allAlumni]);
 
   const filtered = useMemo(() => {
-    return alumni.filter(d => {
+    return allAlumni.filter(d => {
       if (filterJenjang !== 'Semua' && d.jenjang !== filterJenjang) return false;
       if (filterStatus !== 'Semua') {
         if (filterStatus === 'belum' && d.alumniStatus) return false;
