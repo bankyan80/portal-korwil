@@ -175,7 +175,7 @@ export default function Header() {
                 Dinas Pendidikan
               </h1>
               <p className="text-xs lg:text-sm text-blue-100 leading-tight mt-0.5">
-                Portal Tim Kerja Kecamatan Lemahabang
+                Portal Tim Kerja Bidang SD Kecamatan Lemahabang
               </p>
               <p className="text-xs text-blue-200/80 leading-tight">
                 Dinas Pendidikan Kabupaten Cirebon

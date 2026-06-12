@@ -74,14 +74,22 @@ function hitungNilaiPajak(ppn: any, pph21: any, pph23: any) {
   return parseNominalPajak(ppn) + parseNominalPajak(pph21) + parseNominalPajak(pph23);
 }
 
-function getKeteranganPajak(nilaiBelumSetor: number, nilaiSudahSetor: number) {
+const PERIODE_TRIWULAN: Record<string, string> = {
+  '1': 'Januari-Maret',
+  '2': 'April-Juni',
+  '3': 'Juli-September',
+  '4': 'Oktober-Desember',
+};
+
+function getKeteranganPajak(nilaiBelumSetor: number, nilaiSudahSetor: number, triwulan: string) {
   const belum = Number(nilaiBelumSetor || 0);
   const sudah = Number(nilaiSudahSetor || 0);
-  if (belum === 0 && sudah === 0) return 'Pajak Januari-Maret belum dibayar';
-  if (belum > 0 && sudah === 0) return 'Pajak Januari-Maret belum dibayar';
-  if (belum === sudah) return 'Pajak Januari-Maret sudah dibayar';
-  if (belum > sudah) return 'Pajak Januari-Maret Kurang bayar: ' + formatRupiahTanpaRp(belum - sudah);
-  return 'Pajak Januari-Maret Lebih bayar: ' + formatRupiahTanpaRp(sudah - belum);
+  const periode = PERIODE_TRIWULAN[triwulan] || `Triwulan ${triwulan}`;
+  if (belum === 0 && sudah === 0) return `Pajak ${periode} belum dibayar`;
+  if (belum > 0 && sudah === 0) return `Pajak ${periode} belum dibayar`;
+  if (belum === sudah) return `Pajak ${periode} sudah dibayar`;
+  if (belum > sudah) return `Pajak ${periode} Kurang bayar: ` + formatRupiahTanpaRp(belum - sudah);
+  return `Pajak ${periode} Lebih bayar: ` + formatRupiahTanpaRp(sudah - belum);
 }
 
 function getStatusTriwulan(sekolah: School, triwulan: string, laporan: LaporPajak[], tahun: string) {
@@ -188,7 +196,7 @@ export default function LaporPajakPage() {
 
   const nilaiBlm = useMemo(() => hitungNilaiPajak(formBlmPpn, formBlmPph21, formBlmPph23), [formBlmPpn, formBlmPph21, formBlmPph23]);
   const nilaiSdh = useMemo(() => hitungNilaiPajak(formSdhPpn, formSdhPph21, formSdhPph23), [formSdhPpn, formSdhPph21, formSdhPph23]);
-  const autoKeterangan = useMemo(() => getKeteranganPajak(nilaiBlm, nilaiSdh), [nilaiBlm, nilaiSdh]);
+  const autoKeterangan = useMemo(() => getKeteranganPajak(nilaiBlm, nilaiSdh, formTriwulan), [nilaiBlm, nilaiSdh, formTriwulan]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -633,7 +641,7 @@ export default function LaporPajakPage() {
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Belum ada laporan</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">Belum ada laporan</td></tr>
                 ) : (
                   filtered.map(l => (
                     <tr key={l.id} className="border-b last:border-0 hover:bg-gray-50">
