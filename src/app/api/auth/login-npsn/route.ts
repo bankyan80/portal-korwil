@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase-admin';
 import { adminAuth, isFirebaseAdminConfigured } from '@/lib/firebase-admin';
+import { allSekolah } from '@/data/sekolah';
 import crypto from 'crypto';
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
@@ -28,11 +29,28 @@ export async function POST(req: Request) {
       .eq('id', npsn)
       .single();
 
-    if (!cred) {
-      return NextResponse.json({ error: 'NPSN tidak ditemukan. Hubungi administrator.' }, { status: 401 });
-    }
+    let credData: Record<string, any>;
 
-    const credData = cred.data as Record<string, any>;
+    if (!cred) {
+      // Auto-seed: cari NPSN di data sekolah lokal, jika ada buat password default
+      const school = allSekolah.find(s => s.npsn === npsn);
+      if (!school) {
+        return NextResponse.json({ error: 'NPSN tidak ditemukan. Hubungi administrator.' }, { status: 401 });
+      }
+      const now = Date.now();
+      credData = {
+        npsn: school.npsn,
+        schoolName: school.nama,
+        passwordHash: hashPassword('123456'),
+        createdAt: now,
+        updatedAt: now,
+      };
+      await supabaseAdmin
+        .from('app_data')
+        .upsert({ id: npsn, collection: 'school_passwords', data: credData });
+    } else {
+      credData = cred.data as Record<string, any>;
+    }
 
     if (credData.passwordHash !== hashPassword(password)) {
       return NextResponse.json({ error: 'Password salah' }, { status: 401 });
