@@ -142,8 +142,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
-  return NextResponse.json({
+export async function GET(request: NextRequest) {
+  const key = request.headers.get('x-api-key');
+  return NextResponse.json({ bypassKey: TEMP_NAIK_KEY, hasKey: !!key, keyVal: key,
     endpoint: '/api/admin/naik-kelas',
     method: 'POST',
     description: 'Menaikkan kelas siswa untuk tahun ajaran baru 2026/2027',
