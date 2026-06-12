@@ -5,7 +5,7 @@ import { verifyAuth, requireRole } from '@/lib/server-auth';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const storageBucket = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'portal-files';
-const allowedRoles = ['super_admin', 'operator_sekolah', 'ketua_organisasi'] as const;
+const allowedRoles = ['super_admin', 'operator_sekolah'] as const;
 const schoolScopedCategories = new Set([
   'laporan_bulanan',
   'galeri',

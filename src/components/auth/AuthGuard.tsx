@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/app-store'
 import AccessValidation from './AccessValidation'
 import { Loader2 } from 'lucide-react'
 
-type UserRole = 'super_admin' | 'operator_sekolah' | 'ketua_organisasi' | 'publik'
+type UserRole = 'super_admin' | 'operator_sekolah' | 'publik'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -178,7 +178,6 @@ function getDashboardRoute(role: string): string {
   switch (role) {
     case 'super_admin': return '/admin/super'
     case 'operator_sekolah': return '/admin/operator'
-    case 'ketua_organisasi': return '/admin/organisasi'
     default: return '/login'
   }
 }

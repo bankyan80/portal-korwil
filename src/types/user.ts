@@ -1,4 +1,4 @@
-export type UserRole = 'super_admin' | 'ketua_organisasi' | 'operator_sekolah' | 'publik';
+export type UserRole = 'super_admin' | 'operator_sekolah' | 'publik';
 
 export interface UserProfile {
   uid: string;
@@ -9,8 +9,6 @@ export interface UserProfile {
   schoolId?: string;
   schoolName?: string;
   jabatan?: string;
-  organizationId?: string;
-  organization?: string;
   phone?: string;
   isActive: boolean;
   createdAt: number;

@@ -53,28 +53,6 @@ export interface GalleryItem {
   createdAt: number;
 }
 
-export interface Organization {
-  id: string;
-  name: string;
-  logo: string;
-  leader: string;
-  contact: string;
-  active: boolean;
-  description?: string;
-  vision?: string;
-  mission?: string[];
-  board?: { jabatan: string; nama: string }[];
-}
-
-export interface InstitutionLink {
-  id: string;
-  name: string;
-  logo: string;
-  url: string;
-  active: boolean;
-  order: number;
-}
-
 export interface HeroData {
   name: string;
   title: string;

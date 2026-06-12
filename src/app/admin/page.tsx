@@ -22,9 +22,6 @@ export default function AdminPage() {
       case 'super_admin':
         router.replace('/admin/super');
         break;
-      case 'ketua_organisasi':
-        router.replace('/admin/organisasi');
-        break;
       default:
         router.replace('/');
     }

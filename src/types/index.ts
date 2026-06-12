@@ -1,7 +1,7 @@
 export type { UserRole, UserProfile } from './user';
 export type {
   MenuItem, Announcement, GalleryItem, GalleryCategory, GalleryStatus, GalleryImageFile,
-  Organization, InstitutionLink, HeroData, FooterData,
+  HeroData, FooterData,
 } from './portal';
 export type {
   StatusValidasi, YatimCategory,

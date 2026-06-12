@@ -4,7 +4,7 @@ import { verifyCookieAuth } from '@/lib/server-auth';
 import { normalizeSchool, getCanonicalSchoolName } from '@/lib/normalize';
 import siswaData from '@/data/data-siswa.json';
 
-const PRIVILEGED_ROLES = new Set(['super_admin', 'operator_sekolah', 'ketua_organisasi']);
+const PRIVILEGED_ROLES = new Set(['super_admin', 'operator_sekolah']);
 
 function decodeJwtPayload(token: string) {
   try {

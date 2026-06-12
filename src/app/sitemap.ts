@@ -9,7 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/laporan', '/rekap-laporan', '/berita', '/galeri', '/semua-galeri',
     '/semua-informasi', '/kalender', '/agenda-kegiatan',
     '/ruang-guru', '/e-kinerja', '/administrasi',
-    '/organisasi', '/donasi', '/spmb-sd/cek', '/bup',
+    '/donasi', '/spmb-sd/cek', '/bup',
   ];
 
   return pages.map(path => ({

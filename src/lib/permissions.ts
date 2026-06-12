@@ -5,8 +5,6 @@ export type Permission =
   | 'view-admin'
   | 'manage-announcements'
   | 'manage-gallery'
-  | 'manage-organizations'
-  | 'manage-institution-links'
   | 'manage-users'
   | 'manage-documents'
   | 'backup-restore'
@@ -33,8 +31,6 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'view-admin',
     'manage-announcements',
     'manage-gallery',
-    'manage-organizations',
-    'manage-institution-links',
     'manage-users',
     'manage-documents',
     'backup-restore',
@@ -69,18 +65,6 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'manage-news',
     'manage-class-recap',
   ],
-  ketua_organisasi: [
-    'view-admin',
-    'manage-announcements',
-    'manage-gallery',
-    'manage-organizations',
-    'manage-users',
-    'manage-agenda-kegiatan',
-    'manage-content-verification',
-    'view-reports',
-    'manage-news',
-    'manage-calendar',
-  ],
   publik: [],
 };
 
@@ -107,7 +91,6 @@ export function filterNavItems(items: NavItemPerm[], role: UserRole | undefined)
 export function getAdminDashboardRoute(role: UserRole | undefined): string {
   switch (role) {
     case 'super_admin': return '/admin/super';
-    case 'ketua_organisasi': return '/admin/organisasi';
     case 'operator_sekolah': return '/admin/operator';
     default: return '/login';
   }

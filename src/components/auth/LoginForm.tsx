@@ -78,7 +78,7 @@ export function LoginForm() {
         setUser(profile);
         toast.success('Login Google berhasil!', { description: `Selamat datang, ${profile.displayName}` });
         setCurrentView('portal');
-        const dest = profile.role === 'operator_sekolah' ? '/admin/operator' : profile.role === 'super_admin' ? '/admin/super' : profile.role === 'ketua_organisasi' ? '/admin/organisasi' : '/';
+        const dest = profile.role === 'operator_sekolah' ? '/admin/operator' : profile.role === 'super_admin' ? '/admin/super' : '/';
         router.replace(dest);
       }
      } catch (err: unknown) {

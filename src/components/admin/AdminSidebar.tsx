@@ -48,7 +48,6 @@ const operatorNav: NavItem[] = [
 const roleLabels: Record<string, string> = {
   super_admin: 'Super Admin',
   operator_sekolah: 'Operator',
-  ketua_organisasi: 'Ketua Organisasi',
   publik: 'Pengguna',
 };
 

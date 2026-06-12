@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Users, Mail, Shield, Search, RefreshCw, Building2, School, Pencil, Save, Plus, Loader2 } from 'lucide-react';
+import { Users, Mail, Shield, Search, RefreshCw, School, Pencil, Save, Plus, Loader2 } from 'lucide-react';
 import { useSort } from '@/hooks/useSort';
 import { SortableHeader } from '@/components/ui/SortableHeader';
 import { toast } from 'sonner';
@@ -26,14 +26,12 @@ import { AdminEmptyState, AdminTableSkeleton } from '@/components/shared/AdminTa
 const roleConfig: Record<string, { label: string; className: string }> = {
   super_admin: { label: 'Super Admin', className: 'bg-red-100 text-red-800 border-red-200' },
   operator_sekolah: { label: 'Operator Sekolah', className: 'bg-blue-100 text-blue-800 border-blue-200' },
-  ketua_organisasi: { label: 'Ketua Organisasi', className: 'bg-purple-100 text-purple-800 border-purple-200' },
   publik: { label: 'Pengguna', className: 'bg-gray-100 text-gray-600 border-gray-200' },
 };
 
 const roleOptions: { value: UserRole; label: string }[] = [
   { value: 'super_admin', label: 'Super Admin' },
   { value: 'operator_sekolah', label: 'Operator Sekolah' },
-  { value: 'ketua_organisasi', label: 'Ketua Organisasi' },
   { value: 'publik', label: 'Pengguna' },
 ];
 
@@ -44,7 +42,7 @@ function getInitials(name: string) {
 }
 
 function getAffiliation(user: UserProfile) {
-  return user.schoolName || user.organization || '-';
+  return user.schoolName || '-';
 }
 
 const PAGE_SIZE = 20;
@@ -59,9 +57,8 @@ export function ManageUsers() {
   const [editSchool, setEditSchool] = useState('');
   const [editOrg, setEditOrg] = useState('');
   const [addOpen, setAddOpen] = useState(false);
-  const [addForm, setAddForm] = useState({ email: '', role: 'operator_sekolah' as UserRole, schoolId: '', organizationId: '' });
+  const [addForm, setAddForm] = useState({ email: '', role: 'operator_sekolah' as UserRole, schoolId: '' });
   const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
-  const [orgs, setOrgs] = useState<{ id: string; name: string }[]>([]);
   const [adding, setAdding] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -81,19 +78,16 @@ export function ManageUsers() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [usersJson, schoolsJson, orgsJson] = await Promise.all([
+        const [usersJson, schoolsJson] = await Promise.all([
           apiGet('users'),
           apiGet('schools'),
-          apiGet('organizations'),
         ]);
         
         const usersList: UserProfile[] = (usersJson.items || []).map((d: any) => ({ ...d, uid: d.id || d.uid }));
         const schoolsList: { id: string; name: string }[] = (schoolsJson.items || []).map((d: any) => ({ id: d.id, name: d.name || '' }));
-        const orgsList: { id: string; name: string }[] = (orgsJson.items || []).map((d: any) => ({ id: d.id, name: d.name || '' }));
         
         setUsers(usersList);
         setSchools(schoolsList);
-        setOrgs(orgsList);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching manage users data:', err);
@@ -120,21 +114,16 @@ export function ManageUsers() {
     setEditUser(user);
     const matchSchool = schools.find(s => s.name === user.schoolName || s.id === user.schoolId);
     setEditSchool(matchSchool?.id || user.schoolName || '');
-    const matchOrg = orgs.find(o => o.name === user.organization || o.id === user.organizationId);
-    setEditOrg(matchOrg?.id || user.organization || '');
-  }, [schools, orgs]);
+  }, [schools]);
 
   const saveAffiliation = useCallback(async () => {
     if (!editUser) return;
     setUpdating(editUser.uid);
     try {
       const matchSchool = schools.find(s => s.id === editSchool || s.name === editSchool);
-      const matchOrg = orgs.find(o => o.id === editOrg || o.name === editOrg);
       const body: Record<string, unknown> = { updatedAt: Date.now() };
       if (matchSchool) { body.schoolId = matchSchool.id; body.schoolName = matchSchool.name; }
       else { body.schoolName = editSchool; }
-      if (matchOrg) { body.organizationId = matchOrg.id; body.organization = matchOrg.name; }
-      else { body.organization = editOrg; }
       await apiSet('users', editUser.uid, body, true);
       setUsers((prev) => prev.map((u) => u.uid === editUser.uid ? { ...u, ...body } : u));
       toast.success('Berhasil diperbarui');
@@ -278,7 +267,6 @@ export function ManageUsers() {
                       <button onClick={() => openEditAffiliation(user)}
                         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-blue-600 transition-colors group">
                         {user.role === 'operator_sekolah' && <School className="w-3.5 h-3.5 shrink-0" />}
-                        {user.role === 'ketua_organisasi' && <Building2 className="w-3.5 h-3.5 shrink-0" />}
                         <span className="truncate max-w-[180px]">{getAffiliation(user)}</span>
                         <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       </button>
@@ -296,55 +284,20 @@ export function ManageUsers() {
       <Dialog open={!!editUser} onOpenChange={(o) => { if (!o) setEditUser(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit {editUser?.role === 'operator_sekolah' ? 'Sekolah' : 'Organisasi'}</DialogTitle>
-            <DialogDescription>Perbarui relasi sekolah atau organisasi untuk akun ini.</DialogDescription>
+            <DialogTitle>Edit Sekolah</DialogTitle>
+            <DialogDescription>Perbarui relasi sekolah untuk akun ini.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <p className="text-sm font-medium text-foreground">{editUser?.displayName}</p>
-            {editUser?.role === 'operator_sekolah' && (
-              <div className="space-y-2">
-                <Label>Sekolah</Label>
-                <Select value={editSchool} onValueChange={setEditSchool}>
-                  <SelectTrigger><SelectValue placeholder="Pilih sekolah" /></SelectTrigger>
-                  <SelectContent>
-                    {schools.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {editUser?.role === 'ketua_organisasi' && (
-              <div className="space-y-2">
-                <Label>Organisasi</Label>
-                <Select value={editOrg} onValueChange={setEditOrg}>
-                  <SelectTrigger><SelectValue placeholder="Pilih organisasi" /></SelectTrigger>
-                  <SelectContent>
-                    {orgs.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {(editUser?.role === 'super_admin' || editUser?.role === 'publik') && (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label>Sekolah (opsional)</Label>
-                  <Select value={editSchool} onValueChange={setEditSchool}>
-                    <SelectTrigger><SelectValue placeholder="Pilih sekolah" /></SelectTrigger>
-                    <SelectContent>
-                      {schools.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Organisasi (opsional)</Label>
-                  <Select value={editOrg} onValueChange={setEditOrg}>
-                    <SelectTrigger><SelectValue placeholder="Pilih organisasi" /></SelectTrigger>
-                    <SelectContent>
-                      {orgs.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Sekolah</Label>
+              <Select value={editSchool} onValueChange={setEditSchool}>
+                <SelectTrigger><SelectValue placeholder="Pilih sekolah" /></SelectTrigger>
+                <SelectContent>
+                  {schools.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditUser(null)}>Batal</Button>
@@ -372,7 +325,7 @@ export function ManageUsers() {
             </div>
             <div className="space-y-2">
               <Label>Role</Label>
-              <Select value={addForm.role} onValueChange={v => setAddForm(f => ({ ...f, role: v as UserRole, schoolId: '', organizationId: '' }))}>
+              <Select value={addForm.role} onValueChange={v => setAddForm(f => ({ ...f, role: v as UserRole, schoolId: '' }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {roleOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
@@ -386,17 +339,6 @@ export function ManageUsers() {
                   <SelectTrigger><SelectValue placeholder="Pilih sekolah" /></SelectTrigger>
                   <SelectContent>
                     {schools.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {addForm.role === 'ketua_organisasi' && (
-              <div className="space-y-2">
-                <Label>Organisasi</Label>
-                <Select value={addForm.organizationId} onValueChange={v => setAddForm(f => ({ ...f, organizationId: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Pilih organisasi" /></SelectTrigger>
-                  <SelectContent>
-                    {orgs.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

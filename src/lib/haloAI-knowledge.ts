@@ -175,10 +175,6 @@ const LOCAL_KB: Record<string, LocalAnswer> = {
     answer: 'Kalender pendidikan bisa diakses di:\n\n[📅 Kalender](/kalender)\n\nBerisi kalender akademik dan jadwal kegiatan pendidikan.',
     confidence: 'exact',
   },
-  'organisasi': {
-    answer: 'Struktur organisasi bisa diakses di:\n\n[🏢 Organisasi](/organisasi)\n\nBerisi struktur organisasi Dinas Pendidikan Kecamatan Lemahabang.',
-    confidence: 'exact',
-  },
   'bup': {
     answer: 'BUP (Buku Umum Perpustakaan) bisa diakses di:\n\n[📚 BUP](/bup)\n\nHalaman ini berisi data perpustakaan sekolah.',
     confidence: 'exact',
@@ -247,7 +243,6 @@ const KEYWORD_MAP: Record<string, string[]> = {
   'berita': ['berita', 'informasi', 'pengumuman', 'artikel', 'news'],
   'donasi': ['donasi', 'donasi', 'sumbangan'],
   'kalender': ['kalender pendidikan', 'kalender akademik'],
-  'organisasi': ['organisasi', 'struktur organisasi'],
   'bup': ['bup', 'buku umum perpustakaan', 'perpustakaan'],
   'dapodik': ['dapodik', 'data pokok pendidikan'],
   'data paud': ['data paud', 'paud'],

@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiSet, apiDelete } from '@/lib/api-firestore';
 import { useDataStore } from '@/store/data-store';
-import type { MenuItem, Announcement, GalleryItem, Organization, InstitutionLink, UserProfile } from '@/types';
+import type { MenuItem, Announcement, GalleryItem, UserProfile } from '@/types';
 
 export interface FirestoreCrudHook<T extends { id: string }> {
   items: T[];
@@ -139,20 +139,6 @@ export function useGalleryCrud(): FirestoreCrudHook<GalleryItem> {
   const setItems = useDataStore((s) => s.setGalleryItems);
   const ready = useDataStore((s) => s.ready);
   return useFirestoreCrudInternal({ path: 'gallery', items, loading: !ready, setItems });
-}
-
-export function useOrganizationsCrud(): FirestoreCrudHook<Organization> {
-  const items = useDataStore((s) => s.organizations);
-  const setItems = useDataStore((s) => s.setOrganizations);
-  const ready = useDataStore((s) => s.ready);
-  return useFirestoreCrudInternal({ path: 'organizations', items, loading: !ready, setItems });
-}
-
-export function useInstitutionLinksCrud(): FirestoreCrudHook<InstitutionLink> {
-  const items = useDataStore((s) => s.institutionLinks);
-  const setItems = useDataStore((s) => s.setInstitutionLinks);
-  const ready = useDataStore((s) => s.ready);
-  return useFirestoreCrudInternal({ path: 'institution_links', items, loading: !ready, setItems });
 }
 
 type UserDoc = UserProfile & { id: string };

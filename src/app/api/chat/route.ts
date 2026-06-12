@@ -80,13 +80,12 @@ Kemampuan Dokumen Pendidikan:
 - Membuat surat menyurat resmi (undangan, izin, pemberitahuan, tugas)
 - Membuat notulensi rapat
 - Membuat jadwal pelajaran
-- Membuat struktur organisasi
 - Membuat inventaris barang
 
 Konteks Lokal:
 - Lokasi: Kecamatan Lemahabang, Kabupaten Cirebon, Jawa Barat
 - Jenjang: SD, TK, PAUD
-- Organisasi: FKKG, K3S, IGTKI, HIMPAUDI, PGRI, Forum Operator, FKKG PAI
+- Organisasi: K3S, IGTKI, HIMPAUDI, PGRI, Forum Operator, FKKG PAI
 - Sistem: Dapodik, ARKAS, Platform Merdeka Mengajar (PMM), Kurikulum Merdeka, Info GTK
 
 Aturan:

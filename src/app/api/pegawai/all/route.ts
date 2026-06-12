@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyCookieAuth } from '@/lib/server-auth';
 import { getAllPegawai } from '@/services/pegawai.service';
 
-const PRIVILEGED_ROLES = new Set(['super_admin', 'operator_sekolah', 'ketua_organisasi']);
+const PRIVILEGED_ROLES = new Set(['super_admin', 'operator_sekolah']);
 const BUP_AGE = 60;
 
 function decodeJwtPayload(token: string) {

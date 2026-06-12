@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useDataStore } from '@/store/data-store';
-import { mockMenus, mockAnnouncements, mockGalleryItems, mockOrganizations, mockInstitutionLinks } from '@/lib/mock-data';
-import type { MenuItem, Announcement, GalleryItem, Organization, InstitutionLink } from '@/types';
+import { mockMenus, mockAnnouncements, mockGalleryItems } from '@/lib/mock-data';
+import type { MenuItem, Announcement, GalleryItem } from '@/types';
 
 interface FirestoreDataProviderProps {
   children: React.ReactNode;
@@ -23,8 +23,6 @@ export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) 
   const setMenus = useDataStore((s) => s.setMenus);
   const setAnnouncements = useDataStore((s) => s.setAnnouncements);
   const setGalleryItems = useDataStore((s) => s.setGalleryItems);
-  const setOrganizations = useDataStore((s) => s.setOrganizations);
-  const setInstitutionLinks = useDataStore((s) => s.setInstitutionLinks);
   const setReady = useDataStore((s) => s.setReady);
 
   const [loading, setLoading] = useState(true);
@@ -36,10 +34,8 @@ export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) 
       apiGetCollection<MenuItem>('menus', 'order'),
       apiGetCollection<Announcement>('announcements', 'createdAt'),
       apiGetCollection<GalleryItem>('gallery', 'createdAt'),
-      apiGetCollection<Organization>('organizations'),
-      apiGetCollection<InstitutionLink>('institution_links', 'order'),
-    ]).then(([menus, announcements, gallery, organizations, institutionLinks]) => {
-      const allEmpty = [menus, announcements, gallery, organizations, institutionLinks].every(a => a.length === 0);
+    ]).then(([menus, announcements, gallery]) => {
+      const allEmpty = [menus, announcements, gallery].every(a => a.length === 0);
       const useMock = mockEnabled && allEmpty;
 
       // Merge: mock menus as defaults, API data overrides/extends
@@ -56,13 +52,11 @@ export function FirestoreDataProvider({ children }: FirestoreDataProviderProps) 
       }
       setAnnouncements(useMock ? mockAnnouncements : announcements);
       setGalleryItems(useMock ? mockGalleryItems : gallery);
-      setOrganizations(useMock ? mockOrganizations : organizations);
-      setInstitutionLinks(useMock ? mockInstitutionLinks : institutionLinks);
     }).finally(() => {
       setLoading(false);
       setReady(true);
     });
-  }, [setMenus, setAnnouncements, setGalleryItems, setOrganizations, setInstitutionLinks, setReady]);
+  }, [setMenus, setAnnouncements, setGalleryItems, setReady]);
 
   return <>{children}</>;
 }

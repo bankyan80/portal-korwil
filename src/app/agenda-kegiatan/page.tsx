@@ -30,7 +30,7 @@ export default function AgendaKegiatanPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
-  const canManage = user && ['super_admin', 'operator_sekolah', 'ketua_organisasi'].includes(user.role);
+  const canManage = user && ['super_admin', 'operator_sekolah'].includes(user.role);
 
   const filtered = data.filter((d) =>
     !search || d.title?.toLowerCase().includes(search.toLowerCase()) || d.tanggal?.includes(search)
