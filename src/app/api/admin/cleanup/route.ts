@@ -9,8 +9,6 @@ export async function POST(request: NextRequest) {
     const MIGRATION_API_KEY = process.env.MIGRATION_API_KEY;
     if (apiKey && MIGRATION_API_KEY && apiKey === MIGRATION_API_KEY) {
       authorized = true;
-    } else if (apiKey === 'temp-naik-kelas-bypass') {
-      authorized = true;
     } else {
       const authToken = request.cookies.get('auth-token')?.value;
       if (authToken) {
