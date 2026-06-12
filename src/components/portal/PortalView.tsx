@@ -1,15 +1,17 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Header from '@/components/portal/Header';
 import HeroSection from '@/components/portal/HeroSection';
 import PublicServiceGrid from '@/components/portal/PublicServiceGrid';
-import Announcements from '@/components/portal/Announcements';
 import Gallery from '@/components/portal/Gallery';
 import Organizations from '@/components/portal/Organizations';
 import InstitutionLinks from '@/components/portal/InstitutionLinks';
 import Footer from '@/components/portal/Footer';
 import { FirebaseLED } from './FirebaseLED';
 import { SyncStatusBadge } from '@/components/SyncStatusBadge';
+
+const PetaWilayahSekolah = dynamic(() => import('@/components/portal/PetaWilayahSekolah'), { ssr: false });
 
 export default function PortalView() {
   return (
@@ -21,7 +23,7 @@ export default function PortalView() {
         <HeroSection />
         <PublicServiceGrid />
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 sm:space-y-12 md:pb-20">
-          <div id="informasi"><Announcements /></div>
+          <div id="peta"><PetaWilayahSekolah /></div>
           <div id="galeri"><Gallery /></div>
           <div id="organisasi"><Organizations /></div>
           <InstitutionLinks />
