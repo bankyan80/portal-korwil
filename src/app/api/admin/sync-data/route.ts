@@ -301,8 +301,13 @@ export async function POST(request: NextRequest) {
         const r = (p.role || '').toLowerCase();
         return j.includes('tenaga') || jk === 'tenaga kependidikan' || r === 'tendik';
       }).length;
-      const rombelSet = new Set<string>();
-      for (const s of siswa) { if (s.rombel) rombelSet.add(s.rombel); }
+      const perKelas: Record<string, number> = {};
+      for (const s of siswa.filter(s => s.statusSiswa === 'Aktif')) {
+        const key = (s.kelas || s.kelompok || '').toString().trim();
+        if (key) perKelas[key] = (perKelas[key] || 0) + 1;
+      }
+      const kapasitas = school.jenjang === 'SD' ? 28 : school.jenjang === 'TK' ? 20 : 15;
+      const jumlahRombelFinal = Object.values(perKelas).reduce((sum, count) => sum + Math.max(1, Math.ceil(count / kapasitas)), 0);
 
       const schoolUpdates: Record<string, any> = {
         updatedAt: Date.now(),
@@ -313,7 +318,7 @@ export async function POST(request: NextRequest) {
         schoolUpdates.nipKepalaSekolah = kepala.nip || '';
       }
       schoolUpdates.jumlahSiswa = jumlahSiswa;
-      schoolUpdates.jumlahRombel = rombelSet.size || 1;
+      schoolUpdates.jumlahRombel = jumlahRombelFinal || 1;
       schoolUpdates.jumlahGuru = jumlahGuru;
       schoolUpdates.jumlahTendik = jumlahTendik;
 
