@@ -303,6 +303,8 @@ export default function SuperSimpeg() {
                 <div>
                   <label className="block text-sm font-medium mb-1">Pendidikan Terakhir</label>
                   <select value={form.pendidikanTerakhir || 'S1'} onChange={e => setForm(f => ({ ...f, pendidikanTerakhir: e.target.value }))} className="w-full px-3 py-2 rounded-lg border text-sm">
+                    <option value="SD">SD</option>
+                    <option value="SMP">SMP</option>
                     <option value="SMA">SMA</option>
                     <option value="D1">D1</option>
                     <option value="D2">D2</option>
