@@ -68,7 +68,7 @@ export default function OperatorSimdawa() {
 
   const filtered = data.filter(s => {
     if (filterStatus !== 'Semua' && s.statusSiswa !== filterStatus) return false;
-    if (filterKelas !== 'Semua' && s.kelas !== filterKelas) return false;
+    if (filterKelas !== 'Semua' && s.kelas !== filterKelas && s.kelompok !== filterKelas) return false;
     if (search) {
       const q = search.toLowerCase();
       return s.nama?.toLowerCase().includes(q) || s.nisn?.includes(q) || s.nik?.includes(q);
@@ -128,8 +128,8 @@ export default function OperatorSimdawa() {
   const columns = [
     { key: 'nama', label: 'Nama', render: (r: StudentData) => <span className="font-medium">{r.nama}</span> },
     { key: 'nisn', label: 'NISN', className: 'text-center' },
-    { key: 'jenisKelamin', label: 'L/P', className: 'text-center', render: (r: StudentData) => r.jenisKelamin === 'L' ? 'L' : 'P' },
-    { key: 'kelas', label: 'Kelas', className: 'text-center' },
+    { key: 'jenisKelamin', label: 'L/P', className: 'text-center', render: (r: StudentData) => r.jenisKelamin || r.jk || '-' },
+    { key: 'kelas', label: 'Kelas', className: 'text-center', render: (r: StudentData) => r.kelas || r.kelompok || '-' },
     { key: 'statusSiswa', label: 'Status', className: 'text-center', render: (r: StudentData) => <StatusBadge status={r.statusSiswa || 'Aktif'} /> },
     {
       key: 'actions', label: 'Aksi', className: 'text-center', sortable: false,

@@ -202,7 +202,7 @@ export default function SuperSimdawa() {
     { key: 'nama', label: 'Nama', render: (r: StudentData) => <span className="font-medium">{r.nama}</span> },
     { key: 'nisn', label: 'NISN', className: 'text-center' },
     { key: 'nik', label: 'NIK', className: 'text-center' },
-    { key: 'jenisKelamin', label: 'L/P', className: 'text-center' },
+    { key: 'jenisKelamin', label: 'L/P', className: 'text-center', render: (r: StudentData) => r.jenisKelamin || r.jk || '-' },
     { key: 'kelas', label: 'Kelas', className: 'text-center', render: (r: StudentData) => r.kelas || r.kelompok || '-' },
     { key: 'sekolah', label: 'Sekolah', className: 'text-center', render: (r: StudentData) => <span className="text-xs">{getSchoolName(r.schoolId)}</span> },
     { key: 'statusSiswa', label: 'Status', className: 'text-center', render: (r: StudentData) => <StatusBadge status={r.statusSiswa || 'Aktif'} /> },
