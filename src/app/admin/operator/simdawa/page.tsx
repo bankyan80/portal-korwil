@@ -13,7 +13,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 
 const kelasOptions = ['1', '2', '3', '4', '5', '6', 'A', 'B', 'KB'];
-const statusSiswaOptions = ['Aktif', 'Tidak Aktif', 'Mutasi', 'Lulus', 'Keluar'];
+const statusSiswaOptions = ['Aktif', 'Tidak Aktif', 'Mutasi', 'Alumni', 'Keluar'];
 
 interface StudentData {
   id: string;

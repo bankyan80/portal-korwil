@@ -265,7 +265,7 @@ export default function SuperSimdawa() {
             <option value="Siswa Baru">Siswa Baru</option>
             <option value="Mutasi Masuk">Mutasi Masuk</option>
             <option value="Mutasi Keluar">Mutasi Keluar</option>
-            <option value="Lulus/Alumni">Lulus/Alumni</option>
+            <option value="Alumni">Alumni</option>
           </select>
           <ExportButton collection="students" />
           <ImportButton collection="students" onSuccess={() => { setLoading(true); fetchData(); }} />
@@ -346,7 +346,7 @@ export default function SuperSimdawa() {
                     <option value="Mutasi Masuk">Mutasi Masuk</option>
                     <option value="Mutasi Keluar">Mutasi Keluar</option>
                     <option value="Keluar">Keluar</option>
-                    <option value="Lulus/Alumni">Lulus/Alumni</option>
+                    <option value="Alumni">Alumni</option>
                   </select>
                 </div>
                 <div>
