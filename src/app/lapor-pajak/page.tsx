@@ -581,8 +581,10 @@ export default function LaporPajakPage() {
               </select>
               <button
                 onClick={() => exportToExcel(filtered.map(d => ({
-                  namaSekolah: d.namaSekolah,
                   npsn: d.npsn,
+                  namaSekolah: d.namaSekolah,
+                  statusSekolah: d.statusSekolah,
+                  kecamatan: d.kecamatan,
                   triwulan: `Triwulan ${d.triwulan}`,
                   ppnBelum: d.pajakBelumSetor?.ppn || 0,
                   pph21Belum: d.pajakBelumSetor?.pph21 || 0,
@@ -594,8 +596,10 @@ export default function LaporPajakPage() {
                   nilaiSudah: d.pajakSudahSetor?.nilaiKeseluruhan || 0,
                   keterangan: d.keterangan,
                 })), [
-                  { header: 'Nama Sekolah', key: 'namaSekolah' },
                   { header: 'NPSN', key: 'npsn' },
+                  { header: 'Nama Sekolah', key: 'namaSekolah' },
+                  { header: 'Status Sekolah', key: 'statusSekolah' },
+                  { header: 'Kecamatan', key: 'kecamatan' },
                   { header: 'Triwulan', key: 'triwulan' },
                   { header: 'PPN Belum Setor', key: 'ppnBelum' },
                   { header: 'PPH21 Belum Setor', key: 'pph21Belum' },
