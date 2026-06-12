@@ -8,6 +8,7 @@ import Gallery from '@/components/portal/Gallery';
 import Organizations from '@/components/portal/Organizations';
 import InstitutionLinks from '@/components/portal/InstitutionLinks';
 import Footer from '@/components/portal/Footer';
+import ChatBot from '@/components/portal/ChatBot';
 import { FirebaseLED } from './FirebaseLED';
 import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 
@@ -30,6 +31,7 @@ export default function PortalView() {
         </div>
       </main>
       <div id="kontak"><Footer /></div>
+      <ChatBot />
     </div>
   );
 }
