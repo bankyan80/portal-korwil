@@ -36,6 +36,11 @@ export function proxy(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // NPSN session token (npsn:uuid) — verified server-side by API route
+    if (token.startsWith('npsn:')) {
+      return NextResponse.next();
+    }
+
     // Basic JWT decode; verifikasi penuh dilakukan di API route via server-auth.ts.
     try {
       const payload = decodeJwtPayload(token);
