@@ -25,8 +25,8 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   icons: {
-    icon: "/portalnew.png",
-    apple: "/portalnew.png",
+    icon: "/logokab.png",
+    apple: "/logokab.png",
   },
   manifest: "/manifest.json",
   description:
