@@ -124,13 +124,13 @@ if (!PUBLIC_COLLECTIONS.includes(collection)) {
         const merged = { ...(existing?.data as object || {}), ...data, updatedAt: Date.now() };
         const { error } = await supabaseAdmin
           .from('app_data')
-          .upsert({ id, collection, data: merged, updated_at: new Date().toISOString() });
+          .upsert({ id, collection, data: merged });
         if (error) throw error;
       } else {
         const record = { ...data, updatedAt: Date.now() };
         const { error } = await supabaseAdmin
           .from('app_data')
-          .upsert({ id, collection, data: record, updated_at: new Date().toISOString() });
+          .upsert({ id, collection, data: record });
         if (error) throw error;
       }
       return NextResponse.json({ success: true, id });
