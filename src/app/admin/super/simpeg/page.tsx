@@ -39,7 +39,7 @@ interface EmployeeData {
 }
 
 const jabatanOptions = [
-  'Kepala Sekolah', 'Kepala TK', 'Kepala KB',
+  'Kepala Sekolah', 'Plt Kepala Sekolah', 'Kepala TK', 'Kepala KB',
   'Guru Kelas', 'Guru PAI', 'Guru PJOK', 'Guru Mapel',
   'Guru TK', 'Pendidik TK', 'Pendidik KB',
   'Tendik', 'Operator',
