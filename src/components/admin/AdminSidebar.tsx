@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
@@ -8,10 +9,12 @@ import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { ChangePasswordDialog } from '@/components/operator/ChangePasswordDialog';
 import {
   LayoutDashboard, School, Users, BookOpen, MapPin,
   ClipboardList, BarChart3, Shield, UserCog, Settings,
-  LogOut, GraduationCap, FileText, ArrowLeft,
+  LogOut, GraduationCap, FileText, ArrowLeft, KeyRound,
 } from 'lucide-react';
 
 interface NavItem {
@@ -62,6 +65,7 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
   const pathname = usePathname();
   const { user, setUser, setCurrentView } = useAppStore();
 
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const isAdmin = pathname?.startsWith('/admin/super');
   const isOperator = pathname?.startsWith('/admin/operator');
   const navItems = isAdmin ? superAdminNav : isOperator ? operatorNav : [];
@@ -123,8 +127,21 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
           <span className="flex items-center justify-center w-8 h-8 rounded-md bg-white/5 text-blue-300 group-hover:bg-white/10 group-hover:text-white transition-all duration-150 shrink-0">
             <ArrowLeft className="w-4 h-4" />
           </span>
-          <span className="truncate">Kembali ke Portal</span>
+          <span className="truncate">Dashboard Publik</span>
         </Link>
+        <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
+          <DialogTrigger asChild>
+            <button className="group flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium text-blue-200 hover:bg-white/10 hover:text-white transition-all duration-150 text-left">
+              <span className="flex items-center justify-center w-8 h-8 rounded-md bg-white/5 text-blue-300 group-hover:bg-white/10 group-hover:text-white transition-all duration-150 shrink-0">
+                <KeyRound className="w-4 h-4" />
+              </span>
+              <span className="truncate">Ubah Kata Sandi</span>
+            </button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <ChangePasswordDialog onClose={() => setShowChangePassword(false)} />
+          </DialogContent>
+        </Dialog>
         <button
           onClick={async () => {
             document.cookie = 'auth-token=; path=/; max-age=0';
