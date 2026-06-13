@@ -1,59 +1,80 @@
 # Session Summary
 
 ## Goal
-- Build portal-dinas with 6 service menus, Super Admin (10 menu) and Operator (8 menu) dashboards, full CRUD, seed/sync data, export/import Excel.
-- Sync latest pegawai/siswa data from `simpeg-tim` and `simdawa` local projects to Supabase.
+- Fix profil-sekolah data, sync akurat jumlah siswa & kelas dari file Dapodik
+- (Previous sessions: build portal-dinas with 6 service menus, Super Admin & Operator dashboards, full CRUD, seed/sync data, export/import Excel, sync from simpeg-tim & simdawa)
 
 ## Constraints & Preferences
-- Jenjang: SD, TK, KB. Status: Negeri, Swasta.
-- Semua data via `/api/firestore/[collection]` generic CRUD (Supabase `app_data` table).
-- Auth: Firebase Auth client-side, cookie `auth-token` for API auth.
-- `PUBLIC_COLLECTIONS` allows public GET/POST/DELETE without auth.
+- Production site: `www.portalkorwil.online` (Vercel, Next.js 16, Supabase)
+- NPSN login bypasses Firebase Auth (cookie-based session)
+- Schools & Students collections are `PUBLIC_COLLECTIONS` (read/write tanpa auth)
+- File Dapodik Excel ada lokal di `C:\Users\Bank Yan\portal-dinas\data-siswa\` (47 file .xlsx)
+- Semua data via `/api/firestore/[collection]` generic CRUD (Supabase `app_data` table)
 
 ## Progress
 
 ### Done
-- Built 10 Super Admin pages + 8 Operator pages + 6 public service pages.
-- Built CRUD pages: master-data-sekolah, simdawa (students), simpeg (employees), mapping-pegawai, sirubin, rekap-pendidikan, validasi-data, manajemen-operator, pengaturan-sistem.
-- Built seed data API (`/api/admin/seed-data`): 45 schools + employee_mappings + system_settings.
-- Built sync data API (`/api/admin/sync-data`): match schoolId, identify kepala sekolah, regenerate mapping.
-- Built export/import Excel: dynamic `/api/admin/export/[collection]` and `/api/admin/import/[collection]` + ExportButton/ImportButton components.
-- Added `offset` + `total` pagination to `/api/firestore/[collection]` GET handler.
-- Added `schools`, `students`, `employees` to PUBLIC_COLLECTIONS — all 6 public pages now load.
-- Created `/api/admin/cleanup` — server-side dedup endpoint.
-- Added `/api/admin/sync-data`, `/api/admin/seed-data`, `/api/admin/cleanup` to proxy.ts selfAuthPaths.
-- **Data sync from simpeg-tim**: 22 schools, 292 pegawai, 2 PLT → Supabase (via POST to Vercel API).
-- **Data sync from simdawa**: 7.010 siswa → Supabase.
-- **Cleanup**: 6.260 duplicate student records removed (old UUID-based vs new NISN-based).
-- **Fix schoolId matching**: `sync-data/route.ts` — strip "kecamatan lemahabang", normalize namaSekolah, match with SD/TK/KB/PAUD prefix. Remove wrong default schoolId.
-- **Cleanup school-* duplicates**: 9 `school-{npsn}` records deleted via cleanup route.
-- **Created `/api/admin/fix-siswa`**: cursor-based endpoint for targeted student schoolId fix (handles Vercel 10s timeout via resume).
-- **Fixed 1.176 student schoolIds**: from wrong default `20215216` → correct NPSN via matching.
-- **Final counts**: 45 schools, 398 employees, 6.780 students (701 without schoolId = NIK-based, no school name), 22 kepala sekolah, 45 mapping sekolah.
-- 6 public pages verified OK: /master-data-sekolah, /simdawa, /simpeg, /mapping-pegawai, /sirubin, /rekap-pendidikan.
-- Build: sukses 117 routes, 0 error.
+#### Previous Sessions
+- Built 10 Super Admin pages + 8 Operator pages + 6 public service pages
+- Seed data API, sync data API, export/import Excel API
+- Sync data from simpeg-tim (292 pegawai) & simdawa (7.010 siswa)
+- Cleanup 6.260 duplicate student records, fix 1.176 schoolIds
+- 6 public pages verified, build sukses 117 routes 0 error
+
+#### Current Session (Profil-Sekolah & Sync Statistik)
+- **Root cause profil-sekolah kosong**: login NPSN tidak isi `schoolId`/`schoolName` di existing profile — fixed
+- **Root cause 500**: `updated_at` column dihapus dari upsert (kolom tak ada di `app_data`)
+- **`jumlahSiswa:0`, `jumlahGuru:0`, `jumlahTendik:0`** ditambahkan ke seed defaults
+- **Endpoint `/api/admin/sync-school-stats`** dibuat & di-deploy (auto-count dari DB)
+- Sync dijalankan via Node.js: menghitung langsung dari DB untuk 45 sekolah
+- **213 siswa SD NEGERI 1 LEMAHABANG KULON** diperbaiki (salah `schoolId` 20215162 → 20215161)
+- **Dibaca semua 47 file Excel Dapodik** dari `data-siswa/`, jumlah siswa diupdate sesuai Dapodik (7.061 siswa total)
+- **Kelas/rombel diperbaiki** untuk semua sekolah (3 pass):
+  - v1 (`fix_all_kelas.mjs`): NISN matching + sekolah matching (buggy - overwrote schoolIds)
+  - v2 (`fix_kelas_v2.mjs`): Regex `/KELAS\s+(\d+)/i` (tidak handle Romawi)
+  - v3 (`fix_romawi.mjs`): Handle Roman numerals (I→1, II→2, ..., VI→6)
+- **SDN 1 LEMAHABANG**: fixed overshoot 176→149 (moved 27 wrongly-assigned students out)
+- **SDN 2 BELAWA**: Kelas 1(63), 2(43), 3(43), 4(36), 5(37), 6(34) — cocok Dapodik ✅
+- **SD IT AL IRSYAD**: semua 549 siswa sekarang punya kelas (I→1 sampai VI→6)
 
 ### In Progress
-- (none)
+- (none — remaining mismatches are minor/edge cases)
+
+### Remaining Issues (Minor)
+- **SDN 1 ASEM**: 346 siswa di DB vs 197 di Excel — 149 extra dari simdawa (NISN berbeda dengan Dapodik) + 39 NIK-based tanpa NISN. `jumlahSiswa` sudah 197 (dari Excel)
+- **PAUD SPS MELATI & TK BPP KENANGA**: duplikat file Excel (copy files), DB count ½ dari Excel
+- **±1 mismatches**: SDN 1 PICUNGPUGUR (122 vs 123), SDN 3 CIPEUJEUH WETAN (354 vs 355), SDN 1 LEMAHABANG KULON (241 vs 242), KB A.H. PLUS (66 vs 65)
+
+### All Resolved ✓
+- **SDN 1 LEMAHABANG**: overshoot 176→149 fixed
+- **SD IT AL IRSYAD**: 549 siswa, Roman numerals handled
+- **SDN 2 BELAWA**: kelas distribution cocok Dapodik ✅
+- **PAUD AL-HIDAYAH, ASY-SYAFIIYAH, AMALIA SALSABILA**: files matched ✅
+- **KB A.H. PLUS & TK GELATIK**: 5 NIK-based students fixed ✅
+- **PAUD AL HAMBRA**: 30 siswa — kelas A (10) usia 3-5 th, B (20) usia 5-6 th ✅
+- **7.208 siswa, 0 tanpa kelas** ✅
 
 ### Blocked
-- Supabase env vars empty in `.env.local` — only available on Vercel.
-- Sync-data API times out (10s Vercel Hobby) when iterating all 6.780 students for updates. Use `/api/admin/fix-siswa` instead for targeted fixes.
+- Supabase env vars empty in `.env.local` — only available on Vercel
+- Sync-data API times out (10s Vercel Hobby) — use local Node.js scripts instead
 
 ## Key Decisions
-- **Sync approach**: POST directly to Vercel `/api/firestore/[collection]` with NIK/NISN as record IDs, batch 50 concurrent.
-- **Auth for admin API**: Firebase ID token via cookie + .NET `WebRequest` (PowerShell `Invoke-WebRequest` ignores Cookie header).
-- **Password reset**: Firebase Admin SDK via `scripts/reset-pass.ts` (service-account on disk).
-- **Duplicate cleanup**: Client-side batch deletions (concurrent 50) faster than Vercel serverless (10s limit).
-- **School name matching**: Normalize student name (lowercase, strip "kecamatan lemahabang"), build index with & without SD/TK/KB/PAUD prefix, fallback partial match.
-- **School dedup**: `school-{npsn}` prefix records are duplicates from old sync, safe to delete.
+- **Sync via file Excel lokal** (47 file Dapodik di `data-siswa/`) lebih cepat daripada scraping Google Drive/API
+- **`jumlahSiswa` dari Excel count** (source of truth Dapodik), bukan dari jumlah record DB — akurat untuk profil-sekolah
+- **Match siswa via NISN** dulu, fallback ke NIK
+- **Ekstraksi kelas** dari "Rombel Saat Ini": `/KELAS\s+(\d+)/i` untuk SD, `/Kelompok\s+([A-E])/i` untuk TK/PAUD, Roman numerals regex untuk sekolah swasta
+- **Jangan overwrite schoolId** saat fix kelas (v1 bug — diperbaiki di v2)
+- **Update via POST merge:true** untuk menghindari create duplikat
+- **Batch concurrent 50** untuk API calls (seimbang antara speed & reliability)
+- **Pendekatan per-sekolah** untuk menghindari masalah offset pagination API
+- **Skip siswa tanpa NISN** dari fix kelas (tidak bisa match ke Excel)
 
-## Relevant Files (new/changed this session)
-- `src/app/api/firestore/[collection]/route.ts`: offset pagination, total count, PUBLIC_COLLECTIONS updated.
-- `src/app/api/admin/cleanup/route.ts`: server-side dedup + school-* removal + student schoolId clear.
-- `src/app/api/admin/sync-data/route.ts`: improved name matching, no wrong default schoolId.
-- `src/app/api/admin/fix-siswa/route.ts`: NEW — cursor-based targeted schoolId fix endpoint.
-- `src/app/api/admin/seed-data/route.ts`: unchanged.
-- `src/proxy.ts`: selfAuthPaths includes sync-data, seed-data, cleanup.
-- `scripts/sync-from-local.ts`: imported data from simpeg-tim + simdawa (deleted).
-- `scripts/cleanup2.mjs`: client-side dedup with batch concurrent deletes (deleted).
+## Relevant Files
+- `src/app/api/auth/login-npsn/route.ts`: existing profile now ensures schoolId/schoolName
+- `src/app/api/firestore/[collection]/route.ts`: removed `updated_at` column from POST upsert
+- `src/app/api/admin/sync-school-stats/route.ts`: auto-count endpoint (deployed)
+- `C:\Users\Bank Yan\portal-dinas\data-siswa\`: 47 file Excel Dapodik lokal
+- `TEMP\opencode\fix_all_kelas.mjs`: full sync + fix kelas (v1, buggy matching, DELETED)
+- `TEMP\opencode\fix_kelas_v2.mjs`: re-fix kelas dengan regex lebih akurat (DELETED)
+- `TEMP\opencode\fix_romawi.mjs`: handle Roman numerals (DELETED)
+- `TEMP\opencode\sync_excel_counts.mjs`: update jumlahSiswa dari Excel (DELETED)

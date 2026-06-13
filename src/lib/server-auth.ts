@@ -61,7 +61,19 @@ export async function verifyNpsnSession(sessionId: string): Promise<AuthResult |
   }
 
   const profile = await getUserProfile(session.uid);
-  if (profile) return profile;
+  if (profile) {
+    // Ensure schoolId/schoolName from session if profile is missing them
+    if (!profile.schoolId && session.schoolId) {
+      await supabaseAdmin
+        .from('app_data')
+        .update({ data: { ...profile, schoolId: session.schoolId, schoolName: session.schoolName || '' } })
+        .eq('id', session.uid)
+        .eq('collection', 'users');
+      profile.schoolId = session.schoolId;
+      profile.schoolName = profile.schoolName || session.schoolName || '';
+    }
+    return profile;
+  }
 
   return {
     uid: session.uid,

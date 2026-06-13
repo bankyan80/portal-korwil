@@ -28,14 +28,16 @@ export async function GET(req: Request) {
     }
   }
 
+  const authResult = result as any;
   return NextResponse.json({
     valid: true,
-    profile: fullProfile || {
-      uid: result.uid,
-      role: result.role,
-      schoolId: result.schoolId,
-      schoolName: result.schoolName,
-      isActive: result.isActive,
+    profile: {
+      ...(fullProfile || {}),
+      uid: fullProfile?.uid || authResult.uid,
+      role: fullProfile?.role || authResult.role,
+      isActive: fullProfile?.isActive ?? authResult.isActive ?? true,
+      schoolId: fullProfile?.schoolId || authResult.schoolId || '',
+      schoolName: fullProfile?.schoolName || authResult.schoolName || '',
     },
   });
 }
