@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { MapPin, Loader2, Save, Download } from 'lucide-react';
+import { MapPin, Loader2, Save, Download, RotateCcw } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { SimpleAdminLayout } from '@/components/admin/SimpleAdminLayout';
 import { exportToExcel } from '@/components/laporan/ExportButton';
@@ -33,50 +33,117 @@ export default function OperatorMappingPegawai() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const calculateFromSimpeg = useCallback(async (schoolId: string) => {
+    try {
+      const res = await fetch(`/api/firestore/employees?field=schoolId&value=${schoolId}`);
+      const json = await res.json();
+      const pegawai = json.items || [];
+      const cat = {
+        guruPai: { pns: 0, pppk: 0, pppkW: 0, nas: 0, nam: 0, nan: 0 },
+        guruPenjaskes: { pns: 0, pppk: 0, pppkW: 0, nas: 0, nam: 0, nan: 0 },
+        guruKelas: { pns: 0, pppk: 0, pppkW: 0, nas: 0, nam: 0, nan: 0 },
+        tendik: { pns: 0, pppk: 0, pppkW: 0, nas: 0, nam: 0, nan: 0 },
+      };
+      const jabatanCat = (j: string) => {
+        const jl = (j || '').toLowerCase();
+        if (jl.includes('guru pai')) return 'guruPai';
+        if (jl.includes('guru penjaskes') || jl.includes('guru pjok')) return 'guruPenjaskes';
+        if (jl.includes('guru') || jl.includes('pendidik')) return 'guruKelas';
+        return 'tendik';
+      };
+      const statusKey = (s: string) => {
+        const sl = (s || '').toLowerCase();
+        if (sl.includes('pns')) return 'pns';
+        if (sl.includes('pppk paruh')) return 'pppkW';
+        if (sl.includes('pppk')) return 'pppk';
+        if (sl.includes('serdik')) return 'nas';
+        if (sl.includes('honor')) return 'nam';
+        return 'nan';
+      };
+      pegawai.forEach((e: any) => {
+        const c = jabatanCat(e.jabatan);
+        const s = statusKey(e.statusPegawai);
+        if (cat[c] && cat[c][s] !== undefined) cat[c][s]++;
+        else cat.tendik.nan++;
+      });
+      return cat;
+    } catch { return null; }
+  }, []);
+
   useEffect(() => {
     if (!user?.schoolId) { setLoading(false); return; }
     Promise.all([
       fetch(`/api/firestore/schools?id=${user.schoolId}`).then(r => r.json()),
       fetch(`/api/firestore/employee_mappings?field=schoolId&value=${user.schoolId}`).then(r => r.json()),
     ])
-      .then(([sRes, mRes]) => {
+      .then(async ([sRes, mRes]) => {
         const schoolData = sRes.data || sRes;
         setSchool(schoolData);
         const item = mRes.items?.[0] || mRes.data;
-        if (item) {
-          setMapping(item);
-          setForm({
-            tahunPelajaran: item.tahunPelajaran || tahunAjaran,
-            jumlahSiswa: item.jumlahSiswa || 0,
-            jumlahRombel: item.jumlahRombel || 0,
-            pnsGuruPai: item.pnsGuruPai || 0,
-            pppkGuruPai: item.pppkGuruPai || 0,
-            pppkWGuruPai: item.pppkWGuruPai || 0,
-            nonAsnSerdikGuruPai: item.nonAsnSerdikGuruPai || 0,
-            nonAsnMurniGuruPai: item.nonAsnMurniGuruPai || 0,
-            nonAsnNonDapodikGuruPai: item.nonAsnNonDapodikGuruPai || 0,
-            pnsGuruPenjaskes: item.pnsGuruPenjaskes || 0,
-            pppkGuruPenjaskes: item.pppkGuruPenjaskes || 0,
-            pppkWGuruPenjaskes: item.pppkWGuruPenjaskes || 0,
-            nonAsnSerdikGuruPenjaskes: item.nonAsnSerdikGuruPenjaskes || 0,
-            nonAsnMurniGuruPenjaskes: item.nonAsnMurniGuruPenjaskes || 0,
-            nonAsnNonDapodikGuruPenjaskes: item.nonAsnNonDapodikGuruPenjaskes || 0,
-            pnsGuruKelas: item.pnsGuruKelas || 0,
-            pppkGuruKelas: item.pppkGuruKelas || 0,
-            pppkWGuruKelas: item.pppkWGuruKelas || 0,
-            nonAsnSerdikGuruKelas: item.nonAsnSerdikGuruKelas || 0,
-            nonAsnMurniGuruKelas: item.nonAsnMurniGuruKelas || 0,
-            nonAsnNonDapodikGuruKelas: item.nonAsnNonDapodikGuruKelas || 0,
-            pnsTendik: item.pnsTendik || 0,
-            nonAsnSerdikTendik: item.nonAsnSerdikTendik || 0,
-            nonAsnMurniTendik: item.nonAsnMurniTendik || 0,
-            nonAsnNonDapodikTendik: item.nonAsnNonDapodikTendik || 0,
-          });
+        const fromMap = item ? {
+          tahunPelajaran: item.tahunPelajaran || tahunAjaran,
+          jumlahSiswa: item.jumlahSiswa || 0,
+          jumlahRombel: item.jumlahRombel || 0,
+          pnsGuruPai: item.pnsGuruPai || 0,
+          pppkGuruPai: item.pppkGuruPai || 0,
+          pppkWGuruPai: item.pppkWGuruPai || 0,
+          nonAsnSerdikGuruPai: item.nonAsnSerdikGuruPai || 0,
+          nonAsnMurniGuruPai: item.nonAsnMurniGuruPai || 0,
+          nonAsnNonDapodikGuruPai: item.nonAsnNonDapodikGuruPai || 0,
+          pnsGuruPenjaskes: item.pnsGuruPenjaskes || 0,
+          pppkGuruPenjaskes: item.pppkGuruPenjaskes || 0,
+          pppkWGuruPenjaskes: item.pppkWGuruPenjaskes || 0,
+          nonAsnSerdikGuruPenjaskes: item.nonAsnSerdikGuruPenjaskes || 0,
+          nonAsnMurniGuruPenjaskes: item.nonAsnMurniGuruPenjaskes || 0,
+          nonAsnNonDapodikGuruPenjaskes: item.nonAsnNonDapodikGuruPenjaskes || 0,
+          pnsGuruKelas: item.pnsGuruKelas || 0,
+          pppkGuruKelas: item.pppkGuruKelas || 0,
+          pppkWGuruKelas: item.pppkWGuruKelas || 0,
+          nonAsnSerdikGuruKelas: item.nonAsnSerdikGuruKelas || 0,
+          nonAsnMurniGuruKelas: item.nonAsnMurniGuruKelas || 0,
+          nonAsnNonDapodikGuruKelas: item.nonAsnNonDapodikGuruKelas || 0,
+          pnsTendik: item.pnsTendik || 0,
+          nonAsnSerdikTendik: item.nonAsnSerdikTendik || 0,
+          nonAsnMurniTendik: item.nonAsnMurniTendik || 0,
+          nonAsnNonDapodikTendik: item.nonAsnNonDapodikTendik || 0,
+        } : null;
+
+        if (fromMap && user?.schoolId) {
+          const fromSimpeg = await calculateFromSimpeg(user.schoolId);
+          if (fromSimpeg) {
+            setForm({
+              ...fromMap,
+              pnsGuruPai: fromSimpeg.guruPai.pns,
+              pppkGuruPai: fromSimpeg.guruPai.pppk,
+              pppkWGuruPai: fromSimpeg.guruPai.pppkW,
+              nonAsnSerdikGuruPai: fromSimpeg.guruPai.nas,
+              nonAsnMurniGuruPai: fromSimpeg.guruPai.nam,
+              nonAsnNonDapodikGuruPai: fromSimpeg.guruPai.nan,
+              pnsGuruPenjaskes: fromSimpeg.guruPenjaskes.pns,
+              pppkGuruPenjaskes: fromSimpeg.guruPenjaskes.pppk,
+              pppkWGuruPenjaskes: fromSimpeg.guruPenjaskes.pppkW,
+              nonAsnSerdikGuruPenjaskes: fromSimpeg.guruPenjaskes.nas,
+              nonAsnMurniGuruPenjaskes: fromSimpeg.guruPenjaskes.nam,
+              nonAsnNonDapodikGuruPenjaskes: fromSimpeg.guruPenjaskes.nan,
+              pnsGuruKelas: fromSimpeg.guruKelas.pns,
+              pppkGuruKelas: fromSimpeg.guruKelas.pppk,
+              pppkWGuruKelas: fromSimpeg.guruKelas.pppkW,
+              nonAsnSerdikGuruKelas: fromSimpeg.guruKelas.nas,
+              nonAsnMurniGuruKelas: fromSimpeg.guruKelas.nam,
+              nonAsnNonDapodikGuruKelas: fromSimpeg.guruKelas.nan,
+              pnsTendik: fromSimpeg.tendik.pns,
+              nonAsnSerdikTendik: fromSimpeg.tendik.nas,
+              nonAsnMurniTendik: fromSimpeg.tendik.nam,
+              nonAsnNonDapodikTendik: fromSimpeg.tendik.nan,
+            });
+          }
+        } else if (fromMap) {
+          setForm(fromMap);
         }
       })
       .catch((e: any) => setError(e.message || 'Gagal memuat data'))
       .finally(() => setLoading(false));
-  }, [user?.schoolId]);
+  }, [user?.schoolId, calculateFromSimpeg]);
 
   const sum = (prefix: string, fields: string[]) => fields.reduce((a, f) => a + (Number(form[f]) || 0), 0);
 
@@ -231,6 +298,26 @@ export default function OperatorMappingPegawai() {
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold flex items-center gap-2"><MapPin className="w-5 h-5" /> Mapping Pegawai</h1>
           <div className="flex items-center gap-2">
+            <button onClick={async () => {
+              if (!user?.schoolId) return;
+              const c = await calculateFromSimpeg(user.schoolId);
+              if (c) setForm(f => ({
+                ...f,
+                pnsGuruPai: c.guruPai.pns, pppkGuruPai: c.guruPai.pppk,
+                pppkWGuruPai: c.guruPai.pppkW, nonAsnSerdikGuruPai: c.guruPai.nas,
+                nonAsnMurniGuruPai: c.guruPai.nam, nonAsnNonDapodikGuruPai: c.guruPai.nan,
+                pnsGuruPenjaskes: c.guruPenjaskes.pns, pppkGuruPenjaskes: c.guruPenjaskes.pppk,
+                pppkWGuruPenjaskes: c.guruPenjaskes.pppkW, nonAsnSerdikGuruPenjaskes: c.guruPenjaskes.nas,
+                nonAsnMurniGuruPenjaskes: c.guruPenjaskes.nam, nonAsnNonDapodikGuruPenjaskes: c.guruPenjaskes.nan,
+                pnsGuruKelas: c.guruKelas.pns, pppkGuruKelas: c.guruKelas.pppk,
+                pppkWGuruKelas: c.guruKelas.pppkW, nonAsnSerdikGuruKelas: c.guruKelas.nas,
+                nonAsnMurniGuruKelas: c.guruKelas.nam, nonAsnNonDapodikGuruKelas: c.guruKelas.nan,
+                pnsTendik: c.tendik.pns, nonAsnSerdikTendik: c.tendik.nas,
+                nonAsnMurniTendik: c.tendik.nam, nonAsnNonDapodikTendik: c.tendik.nan,
+              }));
+            }} className="flex items-center gap-2 px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700">
+              <RotateCcw className="w-4 h-4" /> SIMPEG
+            </button>
             <button onClick={handleExport} className="flex items-center gap-2 px-3 py-1.5 bg-green-700 text-white rounded-lg text-sm font-medium hover:bg-green-800">
               <Download className="w-4 h-4" /> Excel
             </button>
