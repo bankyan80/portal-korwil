@@ -116,14 +116,13 @@ if (!PUBLIC_COLLECTIONS.includes(collection)) {
     // Validasi operator: employee_mappings hanya boleh untuk sekolah sendiri
     if (collection === 'employee_mappings') {
       const token = req.cookies.get('auth-token')?.value;
-      const auth = await verifyCookieAuth(token || '');
-      if (auth instanceof NextResponse) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-      if (auth.role === 'operator_sekolah') {
-        const payloadSchoolId = data.schoolId || data.sekolah_id || '';
-        if (payloadSchoolId !== auth.schoolId) {
-          return NextResponse.json({ error: 'Anda tidak memiliki akses untuk mengubah data sekolah lain.' }, { status: 403 });
+      if (token) {
+        const auth = await verifyCookieAuth(token);
+        if (!(auth instanceof NextResponse) && auth.role === 'operator_sekolah') {
+          const payloadSchoolId = data.schoolId || data.sekolah_id || '';
+          if (payloadSchoolId !== auth.schoolId) {
+            return NextResponse.json({ error: 'Anda tidak memiliki akses untuk mengubah data sekolah lain.' }, { status: 403 });
+          }
         }
       }
     }
