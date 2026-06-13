@@ -71,6 +71,8 @@ export async function POST(req: Request) {
       profile = (existingProfile.data as Record<string, any>) || {};
       profile.lastLogin = now;
       profile.updatedAt = now;
+      profile.schoolId = profile.schoolId || npsn;
+      profile.schoolName = profile.schoolName || credData.schoolName || '';
       await supabaseAdmin
         .from('app_data')
         .update({ data: profile })
